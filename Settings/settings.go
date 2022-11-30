@@ -3,65 +3,70 @@ package Settings
 import (
 	"errors"
 	"fmt"
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/widget"
 	"gopkg.in/yaml.v3"
 	"log"
 	"os"
+	"reflect"
+	"strconv"
 )
 
-type conf struct {
+//goland:noinspection GoSnakeCaseUsage
+type Conf struct {
 	// Whisper Settings
-	AiDevice                string `yaml:"ai_device"`
-	WhisperTask             string `yaml:"whisper_task"`
-	CurrentLanguage         string `yaml:"current_language"`
-	Model                   string `yaml:"model"`
-	ConditionOnPreviousText string `yaml:"condition_on_previous_text"`
+	Ai_device                  string
+	Whisper_task               string
+	Current_language           string
+	Model                      string
+	Condition_on_previous_text bool
 
 	// text translate settings
-	TxtTranslate      bool   `yaml:"txt_translate"`
-	SrcLang           string `yaml:"src_lang"`
-	TrgLang           string `yaml:"trg_lang"`
-	TxtAscii          string `yaml:"txt_ascii"`
-	TxtTranslator     string `yaml:"txt_translator"`
-	TxtTranslatorSize string `yaml:"txt_translator_size"`
+	Txt_translate       bool
+	Src_lang            string
+	Trg_lang            string
+	Txt_ascii           bool
+	Txt_translator      string
+	Txt_translator_size string
 
 	// websocket settings
-	WebsocketIp   string `yaml:"websocket_ip"`
-	WebsocketPort int    `yaml:"websocket_port"`
+	Websocket_ip   string
+	Websocket_port int
 
 	// OSC settings
-	OscIp              string `yaml:"osc_ip"`
-	OscPort            int    `yaml:"osc_port"`
-	OscAddress         string `yaml:"osc_address"`
-	OscTypingIndicator bool   `yaml:"osc_typing_indicator"`
-	OscConvertAscii    bool   `yaml:"osc_convert_ascii"`
+	Osc_ip               string
+	Osc_port             int
+	Osc_address          string
+	Osc_typing_indicator bool
+	Osc_convert_ascii    bool
 
 	// OCR settings
-	OcrLang       string `yaml:"ocr_lang"`
-	OcrWindowName string `yaml:"ocr_window_name"`
+	Ocr_lang        string
+	Ocr_window_name string
 
 	// TTS settings
-	TtsEnabled     bool     `yaml:"tts_enabled"`
-	TtsAiDevice    string   `yaml:"tts_ai_device"`
-	TtsAnswer      bool     `yaml:"tts_answer"`
-	DeviceOutIndex int      `yaml:"device_out_index"`
-	TtsModel       []string `yaml:"tts_model"`
-	TtsVoice       string   `yaml:"tts_voice"`
+	Tts_enabled      bool
+	Tts_ai_device    string
+	Tts_answer       bool
+	Device_out_index int
+	Tts_model        []string
+	Tts_voice        string
 
 	// FLAN-T5 settings
-	FlanEnabled                    bool   `yaml:"flan_enabled"`
-	FlanSize                       string `yaml:"flan_size"`
-	FlanBits                       int    `yaml:"flan_bits"`
-	FlanDevice                     string `yaml:"flan_device"`
-	FlanWhisperAnswer              bool   `yaml:"flan_whisper_answer"`
-	FlanProcessOnlyQuestions       bool   `yaml:"flan_process_only_questions"`
-	FlanOscPrefix                  string `yaml:"flan_osc_prefix"`
-	FlanTranslateToSpeakerLanguage bool   `yaml:"flan_translate_to_speaker_language"`
-	FlanPrompt                     string `yaml:"flan_prompt"`
-	FlanMemory                     string `yaml:"flan_memory"`
-	FlanConditioningHistory        int    `yaml:"flan_conditioning_history"`
+	Flan_enabled                       bool
+	Flan_size                          string
+	Flan_bits                          int
+	Flan_device                        string
+	Flan_whisper_answer                bool
+	Flan_process_only_questions        bool
+	Flan_osc_prefix                    string
+	Flan_translate_to_speaker_language bool
+	Flan_prompt                        string
+	Flan_memory                        string
+	//Flan_conditioning_history          int
 }
 
-var Config conf
+var Config Conf
 
 var (
 	ErrNoValue      = errors.New("no value for field 'value'")
@@ -128,6 +133,42 @@ func confLoader(c interface{}, configFile string) interface{} {
 	return c
 }
 
-func (c *conf) GetConf(configFile string) *conf {
-	return confLoader(c, configFile).(*conf)
+func (c *Conf) GetConf(configFile string) *Conf {
+	return confLoader(c, configFile).(*Conf)
+}
+
+var Form *widget.Form
+
+func BuildSettingsForm() fyne.CanvasObject {
+	settingsForm := widget.NewForm()
+
+	settingsFields := reflect.ValueOf(Config)
+
+	for i := 0; i < settingsFields.NumField(); i++ {
+		if settingsFields.Field(i).CanInterface() {
+			settingsName := settingsFields.Type().Field(i).Name
+			settingsValue := settingsFields.Field(i).Interface()
+			settingsType := settingsFields.Field(i).Type().Name()
+
+			switch settingsType {
+			case "string":
+				settingsWidget := widget.NewEntry()
+				settingsWidget.SetText(settingsValue.(string))
+				settingsForm.Append(settingsName, settingsWidget)
+			case "int":
+				//settingsWidget := widget.NewSlider(0, 100)
+				//settingsWidget.SetValue(float64(settingsValue.(int)))
+				//settingsForm.Append(settingsName, settingsWidget)
+
+				settingsWidget := widget.NewEntry()
+				settingsWidget.SetText(strconv.Itoa(settingsValue.(int)))
+				settingsForm.Append(settingsName, settingsWidget)
+			case "bool":
+				settingsWidget := widget.NewCheck("", func(checked bool) {})
+				settingsForm.Append(settingsName, settingsWidget)
+			}
+		}
+	}
+
+	return settingsForm
 }
