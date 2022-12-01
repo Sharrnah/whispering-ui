@@ -3,6 +3,7 @@ package websocket
 import (
 	"encoding/json"
 	"log"
+	"strings"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/websocket/Messages"
 )
@@ -54,19 +55,16 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		err = json.Unmarshal(c.Data, &Messages.TranslateSettings)
 		Messages.TranslateSettings.Update()
 	case "transcript":
+		c.Text = strings.TrimSpace(c.Text)
+		c.TxtTranslation = strings.TrimSpace(c.TxtTranslation)
 		whisperResultMessage := Messages.WhisperResult{
 			Text:                 c.Text,
 			Language:             c.Language,
 			TxtTranslation:       c.TxtTranslation,
 			TxtTranslationTarget: c.TxtTranslationTarget,
 		}
-		Messages.WhisperResults = append([]Messages.WhisperResult{whisperResultMessage}, Messages.WhisperResults...)
 
-		jsonBytes, _ := json.Marshal(whisperResultMessage)
-		jsonResult := string(jsonBytes[:])
-
-		//whisperResult := strings.Join([]string{c.TxtTranslation, c.Text}, "###")
-		Fields.DataBindings.WhisperResultsDataBinding.Prepend(jsonResult)
+		whisperResultMessage.Update()
 	case "windows_list":
 		err = json.Unmarshal(c.Raw, &Messages.WindowsList)
 		Messages.WindowsList.Update()
@@ -85,7 +83,29 @@ func HandleSendMessage(sendMessage *Fields.SendMessageStruct) {
 		switch sendMessage.Name {
 		case "trg_lang":
 			langCode := Messages.InstalledLanguages.GetCodeByName(sendMessage.Value.(string))
-			if Messages.TranslateSettings.Trg_lang != langCode {
+			if langCode != "" && Messages.TranslateSettings.Trg_lang != langCode {
+				sendMessage.Value = langCode
+				txtTranslateSendMessage := Fields.SendMessageStruct{
+					Type:  "setting_change",
+					Name:  "txt_translate",
+					Value: true,
+				}
+				go txtTranslateSendMessage.SendMessage()
+			} else {
+				sendMessage.Value = nil
+			}
+			if langCode == "" {
+				txtTranslateSendMessage := Fields.SendMessageStruct{
+					Type:  "setting_change",
+					Name:  "txt_translate",
+					Value: false,
+				}
+				go txtTranslateSendMessage.SendMessage()
+			}
+
+		case "current_language":
+			langCode := Messages.TranslateSettings.GetWhisperLanguageCodeByName(sendMessage.Value.(string))
+			if Messages.TranslateSettings.Current_language != langCode {
 				sendMessage.Value = langCode
 			} else {
 				sendMessage.Value = nil

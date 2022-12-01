@@ -2,12 +2,13 @@ package RuntimeBackend
 
 import (
 	"io"
+	"os"
 	"os/exec"
 )
 
 // RunWithStreams ComposeWithStreams executes a command
 // stdin/stdout/stderr
-func RunWithStreams(name string, arguments []string, stdIn io.Reader, stdOut io.Writer, stdErr io.Writer, action ...string) error {
+func RunWithStreams(name string, arguments []string, stdIn io.Reader, stdOut io.Writer, stdErr io.Writer, action ...string) (*exec.Cmd, error) {
 	var arg []string
 
 	for _, file := range arguments {
@@ -25,21 +26,27 @@ func RunWithStreams(name string, arguments []string, stdIn io.Reader, stdOut io.
 	proc.Stdin = stdIn
 	proc.Stderr = stdErr
 
-	return proc.Run()
+	return proc, proc.Run()
 	//return stdIn, stdOut, stdErr
 }
 
 //goland:noinspection GoExportedOwnDeclaration
 var ReaderBackend, WriterBackend = io.Pipe()
 
-func init() {
+type WhisperProcessConfig struct {
+	DeviceIndex string
+	SettingsFile     string
+	Process *os.Process
+}
+
+func (c *WhisperProcessConfig) StartWhisper() {
 	go func(writer io.Writer, reader io.Reader) {
 		var tmpReader io.Reader
 		//var tmpWriterReader io.Writer
-		err := RunWithStreams("python", []string{"-u", "audioWhisper.py", "--websocket_ip", "127.0.0.1"}, tmpReader, writer, writer)
+		proc, err := RunWithStreams("python", []string{"-u", "audioWhisper.py", "--websocket_ip", "127.0.0.1", "--device_index", c.DeviceIndex, "--config", c.SettingsFile}, tmpReader, writer, writer)
 		if err != nil {
 			_, _ = writer.Write([]byte("Error: " + err.Error()))
 		}
+		c.Process = proc.Process
 	}(WriterBackend, ReaderBackend)
-
 }

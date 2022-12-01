@@ -7,7 +7,6 @@ import (
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
-	"strings"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/websocket/Messages"
 )
@@ -20,16 +19,11 @@ func CreateMainWindow() fyne.CanvasObject {
 
 	//lastDetectedLanguage := widget.NewLabel("Last detected Language: ")
 
-	LanguageRow := container.New(layout.NewHBoxLayout(), widget.NewLabel("Target Language: "), Fields.Field.TargetLanguageCombo)
+	//LanguageRow := container.New(layout.NewHBoxLayout(), widget.NewLabel("Target Language: "), Fields.Field.TargetLanguageCombo)
 
-	// transcription row
-	transcriptionInput := widget.NewMultiLineEntry()
-	transcriptionInput.Wrapping = fyne.TextWrapWord
+	LanguageRow := container.New(layout.NewFormLayout(), widget.NewLabel("Speech Task:"), container.New(layout.NewGridLayout(2), Fields.Field.TranscriptionTaskCombo, Fields.Field.TranscriptionSpeakerLanguageCombo), widget.NewLabel("Target Language:"), Fields.Field.TargetLanguageCombo)
 
-	transcriptionTranslation := widget.NewMultiLineEntry()
-	transcriptionTranslation.Wrapping = fyne.TextWrapWord
-
-	transcriptionRow := container.New(layout.NewGridLayout(2), transcriptionInput, transcriptionTranslation)
+	transcriptionRow := container.New(layout.NewGridLayout(2), Fields.Field.TranscriptionInput, Fields.Field.TranscriptionTranslation)
 
 	// quick options row
 	quickOptionsRow := container.New(
@@ -70,16 +64,16 @@ func CreateMainWindow() fyne.CanvasObject {
 			//values := strings.Split(stringValue, "###")
 
 			translateResultBind := binding.NewString()
-			translateResultBind.Set(strings.TrimSpace(jsonResult.TxtTranslation))
+			translateResultBind.Set(jsonResult.TxtTranslation)
 
 			translateResultLanguageBind := binding.NewString()
-			translateResultLanguageBind.Set(strings.TrimSpace("[" + jsonResult.TxtTranslationTarget + "]"))
+			translateResultLanguageBind.Set("[" + jsonResult.TxtTranslationTarget + "]")
 
 			originalTranscriptBind := binding.NewString()
-			originalTranscriptBind.Set(strings.TrimSpace(jsonResult.Text))
+			originalTranscriptBind.Set(jsonResult.Text)
 
 			originalTranscriptLanguageBind := binding.NewString()
-			originalTranscriptLanguageBind.Set(strings.TrimSpace("[" + jsonResult.Language + "]"))
+			originalTranscriptLanguageBind.Set("[" + jsonResult.Language + "]")
 
 			// get all template elements
 			mainContainer := o.(*fyne.Container)
@@ -101,17 +95,15 @@ func CreateMainWindow() fyne.CanvasObject {
 			originalTranscriptionLabel.Bind(originalTranscriptBind)
 			originalTranscriptionLanguageLabel.Bind(originalTranscriptLanguageBind)
 
-			// hide Text translation if empty
+			// set to top label if text translation is empty
 			if jsonResult.TxtTranslation == "" {
-				originalTranscriptionContainer.Hide()
-				originalTranscriptionContainer.Resize(fyne.NewSize(.0, .0))
 				translateResultLabel.Bind(originalTranscriptBind)
-				mainContainer.Resize(
-					fyne.NewSize(
-						mainContainer.Size().Width,
-						translateResultLabel.Size().Height,
-					),
-				)
+				translateResultLanguageLabel.Bind(originalTranscriptLanguageBind)
+
+				originalTranscriptionLabel.Unbind()
+				originalTranscriptionLabel.Bind(binding.NewString())
+				originalTranscriptionLanguageLabel.Unbind()
+				originalTranscriptionLanguageLabel.Bind(binding.NewString())
 			}
 
 			// resize
@@ -119,9 +111,19 @@ func CreateMainWindow() fyne.CanvasObject {
 			//mainContainer.Resize(fyne.NewSize(mainContainer.Size().Width, translateResultLabel.Size().Height+originalTranscriptionLabel.Size().Height+10))
 		})
 
+	resultList.OnSelected = func(id widget.ListItemID) {
+		selectedJsonData, _ := Fields.DataBindings.WhisperResultsDataBinding.GetValue(id)
+
+		var jsonResult = Messages.WhisperResult{}
+		json.Unmarshal([]byte(selectedJsonData), &jsonResult)
+
+		Fields.Field.TranscriptionInput.SetText(jsonResult.Text)
+		Fields.Field.TranscriptionTranslation.SetText(jsonResult.TxtTranslation)
+	}
+
 	// split between transcription + options row
 	splitTranscriptionOptions := container.NewVSplit(transcriptionRow, quickOptionsRow)
-	splitTranscriptionOptions.Offset = 0.2
+	//splitTranscriptionOptions.Offset = 0.5
 
 	// main layout
 	verticalLayout := container.New(layout.NewVBoxLayout(),

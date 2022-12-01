@@ -1,15 +1,52 @@
 package Fields
 
 import (
+	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/widget"
 	"log"
 )
 
 var Field = struct {
-	TargetLanguageCombo *widget.Select
-	TtsEnabled          *widget.Check
-	OscEnabled          *widget.Check
+	TranscriptionTaskCombo            *widget.Select
+	TranscriptionSpeakerLanguageCombo *widget.Select
+	TranscriptionInput                *widget.Entry
+	TranscriptionTranslation          *widget.Entry
+	TargetLanguageCombo               *widget.Select
+	TtsEnabled                        *widget.Check
+	OscEnabled                        *widget.Check
 }{
+	TranscriptionTaskCombo: widget.NewSelect([]string{"transcribe", "translate (to en)"}, func(value string) {
+		switch value {
+		case "transcribe":
+			value = "transcribe"
+		case "translate (to en)":
+			value = "translate"
+		}
+		sendMessage := SendMessageStruct{
+			Type:  "setting_change",
+			Name:  "whisper_task",
+			Value: value,
+		}
+		sendMessage.SendMessage()
+	}),
+	TranscriptionSpeakerLanguageCombo: widget.NewSelect([]string{"Auto"}, func(value string) {
+		sendMessage := SendMessageStruct{
+			Type:  "setting_change",
+			Name:  "current_language",
+			Value: value,
+		}
+		sendMessage.SendMessage()
+	}),
+	TranscriptionInput: func() *widget.Entry {
+		entry := widget.NewMultiLineEntry()
+		entry.Wrapping = fyne.TextWrapWord
+		return entry
+	}(),
+	TranscriptionTranslation: func() *widget.Entry {
+		entry := widget.NewMultiLineEntry()
+		entry.Wrapping = fyne.TextWrapWord
+		return entry
+	}(),
 	TargetLanguageCombo: widget.NewSelect([]string{"Option 1", "Option 2"}, func(value string) {
 
 		sendMessage := SendMessageStruct{

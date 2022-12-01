@@ -10,6 +10,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"whispering-tiger-ui/Pages"
+	"whispering-tiger-ui/RuntimeBackend"
 	"whispering-tiger-ui/websocket"
 )
 
@@ -62,6 +63,14 @@ func main() {
 	w := a.NewWindow("Whispering Tiger")
 
 	w.SetMaster()
+
+	var WhisperProcess = RuntimeBackend.WhisperProcessConfig{
+		DeviceIndex:  "5",
+		SettingsFile: "settings.yaml",
+		Process:      nil,
+	}
+	WhisperProcess.StartWhisper()
+
 
 	//Pages.AppTabs.SetTabLocation(container.TabLocationTop)
 

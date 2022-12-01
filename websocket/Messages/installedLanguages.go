@@ -18,6 +18,13 @@ var InstalledLanguages InstalledLanguagesListing
 func (res InstalledLanguagesListing) Update() *InstalledLanguagesListing {
 	Fields.Field.TargetLanguageCombo.Options = nil
 
+	// Add None entry
+	InstalledLanguages.Languages = append([]InstalledLanguage{
+		{
+			Code: "",
+			Name: "None",
+		},
+	}, InstalledLanguages.Languages...)
 	for _, element := range InstalledLanguages.Languages {
 		Fields.Field.TargetLanguageCombo.Options = append(Fields.Field.TargetLanguageCombo.Options, element.Name)
 	}

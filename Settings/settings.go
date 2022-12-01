@@ -165,6 +165,7 @@ func BuildSettingsForm() fyne.CanvasObject {
 				settingsForm.Append(settingsName, settingsWidget)
 			case "bool":
 				settingsWidget := widget.NewCheck("", func(checked bool) {})
+				settingsWidget.Checked = settingsValue.(bool)
 				settingsForm.Append(settingsName, settingsWidget)
 			}
 		}
