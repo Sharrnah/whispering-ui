@@ -49,8 +49,19 @@ func (res TranslateSetting) Update() *TranslateSetting {
 		Fields.Field.TranscriptionTaskCombo.SetSelected("transcribe")
 	}
 	if Fields.Field.TranscriptionSpeakerLanguageCombo.Selected != TranslateSettings.GetWhisperLanguageNameByCode(res.Current_language) {
-		Fields.Field.TranscriptionSpeakerLanguageCombo.SetSelected(TranslateSettings.GetWhisperLanguageNameByCode(res.Current_language))
+		Fields.Field.TranscriptionSpeakerLanguageCombo.SetSelected(
+			cases.Title(language.English, cases.Compact).String(TranslateSettings.GetWhisperLanguageNameByCode(res.Current_language)),
+		)
 	}
+
+	// Set SourceLanguageCombo
+	if strings.ToLower(Fields.Field.SourceLanguageCombo.Selected) != strings.ToLower(InstalledLanguages.GetNameByCode(res.Src_lang)) {
+		Fields.Field.SourceLanguageCombo.SetSelected(cases.Title(language.English, cases.Compact).String(InstalledLanguages.GetNameByCode(res.Src_lang)))
+	} else if Fields.Field.SourceLanguageCombo.Selected == "" && res.Src_lang == "auto" {
+		Fields.Field.SourceLanguageCombo.SetSelected(cases.Title(language.English, cases.Compact).String(res.Src_lang))
+	}
+
+	// Set TargetLanguageCombo
 	if strings.ToLower(Fields.Field.TargetLanguageCombo.Selected) != strings.ToLower(InstalledLanguages.GetNameByCode(res.Trg_lang)) {
 		if TranslateSettings.Txt_translate {
 			Fields.Field.TargetLanguageCombo.SetSelected(cases.Title(language.English, cases.Compact).String(InstalledLanguages.GetNameByCode(res.Trg_lang)))
@@ -59,8 +70,14 @@ func (res TranslateSetting) Update() *TranslateSetting {
 			Fields.Field.TargetLanguageCombo.SetSelected("None")
 		}
 	}
-	Fields.DataBindings.TextToSpeechEnabledDataBinding.Set(res.Tts_answer)
-	Fields.DataBindings.OSCEnabledDataBinding.Set(res.OscAutoProcessingEnabled)
+	checkValue, _ := Fields.DataBindings.TextToSpeechEnabledDataBinding.Get()
+	if checkValue != res.Tts_enabled {
+		Fields.DataBindings.TextToSpeechEnabledDataBinding.Set(res.Tts_answer)
+	}
+	checkValue, _ = Fields.DataBindings.OSCEnabledDataBinding.Get()
+	if checkValue != res.OscAutoProcessingEnabled {
+		Fields.DataBindings.OSCEnabledDataBinding.Set(res.OscAutoProcessingEnabled)
+	}
 
 	return &res
 }

@@ -10,6 +10,10 @@ import (
 
 // receiving message
 
+const (
+	SkipMessage = 85746964687
+)
+
 type MessageStruct struct {
 	Raw  []byte          // Raw data representation of this struct
 	Type string          `json:"type"`
@@ -70,6 +74,7 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		Messages.WindowsList.Update()
 	case "translate_result":
 		Messages.LastTranslationResult = c.TranslateResult
+		Fields.Field.TranscriptionTranslationInput.SetText(c.TranslateResult)
 	}
 	if err != nil {
 		log.Fatalf("Unmarshal: %v", err)
@@ -81,6 +86,16 @@ func HandleSendMessage(sendMessage *Fields.SendMessageStruct) {
 	switch sendMessage.Type {
 	case "setting_change":
 		switch sendMessage.Name {
+		case "src_lang":
+			langCode := Messages.InstalledLanguages.GetCodeByName(sendMessage.Value.(string))
+			if langCode == "" {
+				langCode = "auto"
+			}
+			if langCode != "" && Messages.TranslateSettings.Src_lang != langCode {
+				sendMessage.Value = langCode
+			} else {
+				sendMessage.Value = SkipMessage
+			}
 		case "trg_lang":
 			langCode := Messages.InstalledLanguages.GetCodeByName(sendMessage.Value.(string))
 			if langCode != "" && Messages.TranslateSettings.Trg_lang != langCode {
@@ -92,7 +107,7 @@ func HandleSendMessage(sendMessage *Fields.SendMessageStruct) {
 				}
 				go txtTranslateSendMessage.SendMessage()
 			} else {
-				sendMessage.Value = nil
+				sendMessage.Value = SkipMessage
 			}
 			if langCode == "" {
 				txtTranslateSendMessage := Fields.SendMessageStruct{
@@ -107,8 +122,12 @@ func HandleSendMessage(sendMessage *Fields.SendMessageStruct) {
 			langCode := Messages.TranslateSettings.GetWhisperLanguageCodeByName(sendMessage.Value.(string))
 			if Messages.TranslateSettings.Current_language != langCode {
 				sendMessage.Value = langCode
+				if langCode == "" {
+					sendMessage.Value = nil
+				}
+				Messages.TranslateSettings.Current_language = langCode
 			} else {
-				sendMessage.Value = nil
+				sendMessage.Value = SkipMessage
 			}
 		}
 	}

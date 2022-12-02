@@ -53,7 +53,14 @@ func Start() {
 			_, message, err := c.ReadMessage()
 			if err != nil {
 				log.Println("read:", err)
-				return
+				// retry
+				for err != nil {
+					time.Sleep(500)
+					log.Println("retrying... ")
+					c, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
+				}
+				continue
+				//return
 			}
 
 			var msg MessageStruct
@@ -69,7 +76,7 @@ func Start() {
 			return
 		case message := <-Fields.SendMessageChannel:
 			HandleSendMessage(&message)
-			if message.Value != nil {
+			if message.Value != SkipMessage {
 				sendMessage, _ := json.Marshal(message)
 				err := c.WriteMessage(websocket.TextMessage, sendMessage)
 				if err != nil {

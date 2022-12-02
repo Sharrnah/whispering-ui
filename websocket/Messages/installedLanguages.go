@@ -17,6 +17,7 @@ var InstalledLanguages InstalledLanguagesListing
 
 func (res InstalledLanguagesListing) Update() *InstalledLanguagesListing {
 	Fields.Field.TargetLanguageCombo.Options = nil
+	Fields.Field.SourceLanguageCombo.Options = nil
 
 	// Add None entry
 	InstalledLanguages.Languages = append([]InstalledLanguage{
@@ -25,9 +26,21 @@ func (res InstalledLanguagesListing) Update() *InstalledLanguagesListing {
 			Name: "None",
 		},
 	}, InstalledLanguages.Languages...)
+
+	// fill source language combo
+	for _, element := range InstalledLanguages.Languages {
+		elementName := element.Name
+		elementCode := element.Code
+		if elementCode == "" {
+			elementName = "Auto"
+		}
+		Fields.Field.SourceLanguageCombo.Options = append(Fields.Field.SourceLanguageCombo.Options, elementName)
+	}
+	// fill target language combo
 	for _, element := range InstalledLanguages.Languages {
 		Fields.Field.TargetLanguageCombo.Options = append(Fields.Field.TargetLanguageCombo.Options, element.Name)
 	}
+
 	return &res
 }
 

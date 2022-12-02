@@ -10,7 +10,8 @@ var Field = struct {
 	TranscriptionTaskCombo            *widget.Select
 	TranscriptionSpeakerLanguageCombo *widget.Select
 	TranscriptionInput                *widget.Entry
-	TranscriptionTranslation          *widget.Entry
+	TranscriptionTranslationInput     *widget.Entry
+	SourceLanguageCombo               *widget.Select
 	TargetLanguageCombo               *widget.Select
 	TtsEnabled                        *widget.Check
 	OscEnabled                        *widget.Check
@@ -42,12 +43,23 @@ var Field = struct {
 		entry.Wrapping = fyne.TextWrapWord
 		return entry
 	}(),
-	TranscriptionTranslation: func() *widget.Entry {
+	TranscriptionTranslationInput: func() *widget.Entry {
 		entry := widget.NewMultiLineEntry()
 		entry.Wrapping = fyne.TextWrapWord
 		return entry
 	}(),
-	TargetLanguageCombo: widget.NewSelect([]string{"Option 1", "Option 2"}, func(value string) {
+	SourceLanguageCombo: widget.NewSelect([]string{"Auto"}, func(value string) {
+
+		sendMessage := SendMessageStruct{
+			Type:  "setting_change",
+			Name:  "src_lang",
+			Value: value,
+		}
+		sendMessage.SendMessage()
+
+		log.Println("Select set to", value)
+	}),
+	TargetLanguageCombo: widget.NewSelect([]string{"None"}, func(value string) {
 
 		sendMessage := SendMessageStruct{
 			Type:  "setting_change",

@@ -71,13 +71,11 @@ func main() {
 	}
 	WhisperProcess.StartWhisper()
 
-
 	//Pages.AppTabs.SetTabLocation(container.TabLocationTop)
 
 	appTabs := container.NewAppTabs(
-		container.NewTabItem("Main", Pages.CreateMainWindow()),
-		container.NewTabItem("Speech 2 Text", widget.NewLabel("WIP")),
-		container.NewTabItem("Text Translate", widget.NewLabel("WIP")),
+		container.NewTabItem("Speech 2 Text", Pages.CreateSpeechToTextWindow()),
+		container.NewTabItem("Text Translate", Pages.CreateTextTranslateWindow()),
 		container.NewTabItem("Text 2 Speech", widget.NewLabel("WIP")),
 		container.NewTabItem("OCR", widget.NewLabel("WIP")),
 		container.NewTabItem("Advanced", Pages.CreateAdvancedWindow()),

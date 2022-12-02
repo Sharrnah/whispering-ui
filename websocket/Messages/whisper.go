@@ -17,7 +17,7 @@ func (res WhisperResult) String() string {
 }
 func (res WhisperResult) Update() {
 	Fields.Field.TranscriptionInput.SetText(res.Text)
-	Fields.Field.TranscriptionTranslation.SetText(res.TxtTranslation)
+	Fields.Field.TranscriptionTranslationInput.SetText(res.TxtTranslation)
 
 	WhisperResults = append([]WhisperResult{res}, WhisperResults...)
 

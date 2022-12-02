@@ -11,9 +11,7 @@ import (
 	"whispering-tiger-ui/websocket/Messages"
 )
 
-func CreateMainWindow() fyne.CanvasObject {
-	title := container.New(layout.NewCenterLayout(), widget.NewLabel("Main"))
-
+func CreateSpeechToTextWindow() fyne.CanvasObject {
 	//widget.NewSeparator()
 	//layout.NewSpacer()
 
@@ -23,7 +21,7 @@ func CreateMainWindow() fyne.CanvasObject {
 
 	LanguageRow := container.New(layout.NewFormLayout(), widget.NewLabel("Speech Task:"), container.New(layout.NewGridLayout(2), Fields.Field.TranscriptionTaskCombo, Fields.Field.TranscriptionSpeakerLanguageCombo), widget.NewLabel("Target Language:"), Fields.Field.TargetLanguageCombo)
 
-	transcriptionRow := container.New(layout.NewGridLayout(2), Fields.Field.TranscriptionInput, Fields.Field.TranscriptionTranslation)
+	transcriptionRow := container.New(layout.NewGridLayout(2), Fields.Field.TranscriptionInput, Fields.Field.TranscriptionTranslationInput)
 
 	// quick options row
 	quickOptionsRow := container.New(
@@ -118,7 +116,7 @@ func CreateMainWindow() fyne.CanvasObject {
 		json.Unmarshal([]byte(selectedJsonData), &jsonResult)
 
 		Fields.Field.TranscriptionInput.SetText(jsonResult.Text)
-		Fields.Field.TranscriptionTranslation.SetText(jsonResult.TxtTranslation)
+		Fields.Field.TranscriptionTranslationInput.SetText(jsonResult.TxtTranslation)
 	}
 
 	// split between transcription + options row
@@ -127,7 +125,6 @@ func CreateMainWindow() fyne.CanvasObject {
 
 	// main layout
 	verticalLayout := container.New(layout.NewVBoxLayout(),
-		title,
 		LanguageRow,
 		splitTranscriptionOptions,
 	)
