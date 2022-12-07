@@ -5,12 +5,12 @@ import (
 )
 
 var DataBindings = struct {
-	WhisperResultsDataBinding      binding.ExternalStringList
+	WhisperResultsDataBinding      binding.ExternalUntypedList
 	TextToSpeechEnabledDataBinding binding.Bool
 	OSCEnabledDataBinding          binding.Bool
 }{
-	WhisperResultsDataBinding: binding.BindStringList(
-		&[]string{},
+	WhisperResultsDataBinding: binding.BindUntypedList(
+		&[]interface{}{},
 	),
 	TextToSpeechEnabledDataBinding: binding.NewBool(),
 	OSCEnabledDataBinding:          binding.NewBool(),

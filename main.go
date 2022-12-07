@@ -5,7 +5,6 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/widget"
 	"os"
 	"path/filepath"
 	"runtime"
@@ -76,8 +75,8 @@ func main() {
 	appTabs := container.NewAppTabs(
 		container.NewTabItem("Speech 2 Text", Pages.CreateSpeechToTextWindow()),
 		container.NewTabItem("Text Translate", Pages.CreateTextTranslateWindow()),
-		container.NewTabItem("Text 2 Speech", widget.NewLabel("WIP")),
-		container.NewTabItem("OCR", widget.NewLabel("WIP")),
+		container.NewTabItem("Text 2 Speech", Pages.CreateTextToSpeechWindow()),
+		container.NewTabItem("OCR", Pages.CreateOcrWindow()),
 		container.NewTabItem("Advanced", Pages.CreateAdvancedWindow()),
 	)
 	appTabs.SetTabLocation(container.TabLocationTop)

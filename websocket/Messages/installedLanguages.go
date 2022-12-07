@@ -17,7 +17,18 @@ var InstalledLanguages InstalledLanguagesListing
 
 func (res InstalledLanguagesListing) Update() *InstalledLanguagesListing {
 	Fields.Field.TargetLanguageCombo.Options = nil
+	Fields.Field.TargetLanguageTxtTranslateCombo.Options = nil
 	Fields.Field.SourceLanguageCombo.Options = nil
+	Fields.Field.SourceLanguageComboTxtTranslateCombo.Options = nil
+
+	// fill language text translate combo-boxes (without None value)
+	for _, element := range InstalledLanguages.Languages {
+		Fields.Field.TargetLanguageTxtTranslateCombo.Options = append(Fields.Field.TargetLanguageTxtTranslateCombo.Options, element.Name)
+	}
+	Fields.Field.SourceLanguageComboTxtTranslateCombo.Options = append(Fields.Field.SourceLanguageComboTxtTranslateCombo.Options, "Auto")
+	for _, element := range InstalledLanguages.Languages {
+		Fields.Field.SourceLanguageComboTxtTranslateCombo.Options = append(Fields.Field.SourceLanguageComboTxtTranslateCombo.Options, element.Name)
+	}
 
 	// Add None entry
 	InstalledLanguages.Languages = append([]InstalledLanguage{

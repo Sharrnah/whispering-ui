@@ -13,13 +13,19 @@ import (
 func CreateTextTranslateWindow() fyne.CanvasObject {
 
 	sourceLanguageRow := container.New(layout.NewFormLayout(), widget.NewLabel("Source Language:"), Fields.Field.SourceLanguageCombo)
-	targetLanguageRow := container.New(layout.NewFormLayout(), widget.NewLabel("Target Language:"), Fields.Field.TargetLanguageCombo)
+	targetLanguageRow := container.New(layout.NewFormLayout(), widget.NewLabel("Target Language:"), Fields.Field.TargetLanguageTxtTranslateCombo)
 
 	switchButton := container.NewCenter(widget.NewButton("<==>", func() {
 		sourceLanguage := Fields.Field.SourceLanguageCombo.Selected
-		targetLanguage := Fields.Field.TargetLanguageCombo.Selected
+		targetLanguage := Fields.Field.TargetLanguageTxtTranslateCombo.Selected
+		if targetLanguage == "None" {
+			targetLanguage = "Auto"
+		}
+		if sourceLanguage == "Auto" {
+			sourceLanguage = "None"
+		}
 		Fields.Field.SourceLanguageCombo.SetSelected(targetLanguage)
-		Fields.Field.TargetLanguageCombo.SetSelected(sourceLanguage)
+		Fields.Field.TargetLanguageTxtTranslateCombo.SetSelected(sourceLanguage)
 
 		sourceField := Fields.Field.TranscriptionInput.Text
 		targetField := Fields.Field.TranscriptionTranslationInput.Text
@@ -36,7 +42,7 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 		if fromLang == "" {
 			fromLang = "auto"
 		}
-		toLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.TargetLanguageCombo.Selected)
+		toLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.TargetLanguageTxtTranslateCombo.Selected)
 		//goland:noinspection GoSnakeCaseUsage
 		sendMessage := Fields.SendMessageStruct{
 			Type: "translate_req",
@@ -57,12 +63,16 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 		translateButton,
 	)
 
-	mainContent := container.New(
-		layout.NewVBoxLayout(),
-		languageRow,
-		switchButton,
-		transcriptionRow,
-		translateButtonRow,
+	mainContent := container.NewBorder(
+		container.New(layout.NewVBoxLayout(),
+			languageRow,
+			switchButton,
+		),
+		nil, nil, nil,
+		container.NewVSplit(
+			transcriptionRow,
+			container.New(layout.NewVBoxLayout(), translateButtonRow),
+		),
 	)
 
 	return mainContent

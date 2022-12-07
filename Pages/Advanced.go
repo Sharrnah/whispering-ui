@@ -5,7 +5,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 	"io"
-	"whispering-tiger-ui/DataWidgets"
+	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/RuntimeBackend"
 	"whispering-tiger-ui/Settings"
 )
@@ -14,7 +14,7 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 	Settings.Form = Settings.BuildSettingsForm().(*widget.Form)
 	settingsTabContent := container.NewVScroll(Settings.Form)
 
-	logText := DataWidgets.NewLogText()
+	logText := CustomWidget.NewLogText()
 
 	logText.Widget.(*widget.Label).Wrapping = fyne.TextWrapWord
 	logText.Widget.(*widget.Label).TextStyle = fyne.TextStyle{Monospace: true}

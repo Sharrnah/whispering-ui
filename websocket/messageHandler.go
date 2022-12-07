@@ -55,6 +55,12 @@ func (c *MessageStruct) HandleReceiveMessage() {
 	case "available_tts_voices":
 		err = json.Unmarshal(c.Raw, &Messages.TtsVoices)
 		Messages.TtsVoices.Update()
+	case "available_img_languages":
+		err = json.Unmarshal(c.Raw, &Messages.OcrLanguagesList)
+		Messages.OcrLanguagesList.Update()
+	case "windows_list":
+		err = json.Unmarshal(c.Raw, &Messages.WindowsList)
+		Messages.WindowsList.Update()
 	case "translate_settings":
 		err = json.Unmarshal(c.Data, &Messages.TranslateSettings)
 		Messages.TranslateSettings.Update()
@@ -69,12 +75,27 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		}
 
 		whisperResultMessage.Update()
-	case "windows_list":
-		err = json.Unmarshal(c.Raw, &Messages.WindowsList)
-		Messages.WindowsList.Update()
 	case "translate_result":
 		Messages.LastTranslationResult = c.TranslateResult
 		Fields.Field.TranscriptionTranslationInput.SetText(c.TranslateResult)
+		if c.OriginalText != "" {
+			Fields.Field.TranscriptionInput.SetText(c.OriginalText)
+		}
+		//case "tts_save":
+		//	var audioData = Audio.TtsResultRaw{}
+		//	err = json.Unmarshal(c.Raw, &audioData)
+		//	go func() {
+		//		err := audioData.PlayWAVFromBase64()
+		//		if err != nil {
+		//			log.Println(err)
+		//		}
+		//	}()
+
+		//	byteData, _ := b64.StdEncoding.DecodeString(audioData.WavData)
+		//	audioData.WavBinary = byteData
+		//	audioData.WavData = ""
+		//	Audio.LastFile = audioData
+		//	go Audio.LastFile.Play()
 	}
 	if err != nil {
 		log.Fatalf("Unmarshal: %v", err)
@@ -126,6 +147,26 @@ func HandleSendMessage(sendMessage *Fields.SendMessageStruct) {
 					sendMessage.Value = nil
 				}
 				Messages.TranslateSettings.Current_language = langCode
+			} else {
+				sendMessage.Value = SkipMessage
+			}
+		case "tts_model":
+			selectedModel := sendMessage.Value.(string)
+			var voiceLanguage = ""
+			for _, language := range Messages.TtsLanguages.Languages {
+				for _, model := range language.Models {
+					if model == selectedModel {
+						voiceLanguage = language.Language
+						break
+					}
+				}
+			}
+			sendMessage.Value = []string{voiceLanguage, selectedModel}
+		case "ocr_lang":
+			//langCode := Messages.OcrLanguagesList.GetCodeByName(sendMessage.Value.(string))
+			langCode := sendMessage.Value.(string)
+			if langCode != "" && Messages.TranslateSettings.Ocr_lang != langCode {
+				sendMessage.Value = langCode
 			} else {
 				sendMessage.Value = SkipMessage
 			}

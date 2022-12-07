@@ -1,4 +1,4 @@
-package DataWidgets
+package CustomWidget
 
 import (
 	"fyne.io/fyne/v2"

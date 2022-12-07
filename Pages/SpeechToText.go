@@ -1,12 +1,12 @@
 package Pages
 
 import (
-	"encoding/json"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
+	"time"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/websocket/Messages"
 )
@@ -19,7 +19,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 
 	//LanguageRow := container.New(layout.NewHBoxLayout(), widget.NewLabel("Target Language: "), Fields.Field.TargetLanguageCombo)
 
-	LanguageRow := container.New(layout.NewFormLayout(), widget.NewLabel("Speech Task:"), container.New(layout.NewGridLayout(2), Fields.Field.TranscriptionTaskCombo, Fields.Field.TranscriptionSpeakerLanguageCombo), widget.NewLabel("Target Language:"), Fields.Field.TargetLanguageCombo)
+	languageRow := container.New(layout.NewFormLayout(), widget.NewLabel("Speech Task:"), container.New(layout.NewGridLayout(2), Fields.Field.TranscriptionTaskCombo, Fields.Field.TranscriptionSpeakerLanguageCombo), widget.NewLabel("Target Language:"), Fields.Field.TargetLanguageCombo)
 
 	transcriptionRow := container.New(layout.NewGridLayout(2), Fields.Field.TranscriptionInput, Fields.Field.TranscriptionTranslationInput)
 
@@ -31,7 +31,6 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 	)
 
 	// whisper results row
-	//Messages.WhisperResultsStringList = []string{}
 	resultList := widget.NewListWithData(Fields.DataBindings.WhisperResultsDataBinding,
 		func() fyne.CanvasObject {
 			return container.New(layout.NewGridLayout(1),
@@ -52,26 +51,22 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 			)
 		},
 		func(i binding.DataItem, o fyne.CanvasObject) {
-			//o.(*widget.Label).Bind(i.(binding.String))
-			value := i.(binding.String)
-			jsonStringValue, _ := value.Get()
+			value := i.(binding.Untyped)
+			whisperMessage, _ := value.Get()
 
-			var jsonResult = Messages.WhisperResult{}
-			json.Unmarshal([]byte(jsonStringValue), &jsonResult)
-
-			//values := strings.Split(stringValue, "###")
+			result := whisperMessage.(Messages.WhisperResult)
 
 			translateResultBind := binding.NewString()
-			translateResultBind.Set(jsonResult.TxtTranslation)
+			translateResultBind.Set(result.TxtTranslation)
 
 			translateResultLanguageBind := binding.NewString()
-			translateResultLanguageBind.Set("[" + jsonResult.TxtTranslationTarget + "]")
+			translateResultLanguageBind.Set("[" + result.TxtTranslationTarget + "]")
 
 			originalTranscriptBind := binding.NewString()
-			originalTranscriptBind.Set(jsonResult.Text)
+			originalTranscriptBind.Set(result.Text)
 
 			originalTranscriptLanguageBind := binding.NewString()
-			originalTranscriptLanguageBind.Set("[" + jsonResult.Language + "]")
+			originalTranscriptLanguageBind.Set("[" + result.Language + "]")
 
 			// get all template elements
 			mainContainer := o.(*fyne.Container)
@@ -86,22 +81,19 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 			originalTranscriptionLabel.Wrapping = fyne.TextWrapWord
 			originalTranscriptionLanguageLabel := originalTranscriptionContainer.Objects[1].(*widget.Label)
 
-			// bind data to elements
-			translateResultLabel.Bind(translateResultBind)
-			translateResultLanguageLabel.Bind(translateResultLanguageBind)
-
-			originalTranscriptionLabel.Bind(originalTranscriptBind)
-			originalTranscriptionLanguageLabel.Bind(originalTranscriptLanguageBind)
-
-			// set to top label if text translation is empty
-			if jsonResult.TxtTranslation == "" {
+			// bind data to elements if no translation is generated (sets transcription to top label)
+			if result.TxtTranslation == "" {
 				translateResultLabel.Bind(originalTranscriptBind)
 				translateResultLanguageLabel.Bind(originalTranscriptLanguageBind)
 
-				originalTranscriptionLabel.Unbind()
-				originalTranscriptionLabel.Bind(binding.NewString())
-				originalTranscriptionLanguageLabel.Unbind()
-				originalTranscriptionLanguageLabel.Bind(binding.NewString())
+				originalTranscriptionLabel.SetText("")
+				originalTranscriptionLanguageLabel.SetText("")
+			} else { // bind data to elements if translation was generated
+				translateResultLabel.Bind(translateResultBind)
+				translateResultLanguageLabel.Bind(translateResultLanguageBind)
+
+				originalTranscriptionLabel.Bind(originalTranscriptBind)
+				originalTranscriptionLanguageLabel.Bind(originalTranscriptLanguageBind)
 			}
 
 			// resize
@@ -110,29 +102,40 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		})
 
 	resultList.OnSelected = func(id widget.ListItemID) {
-		selectedJsonData, _ := Fields.DataBindings.WhisperResultsDataBinding.GetValue(id)
+		whisperMessage, _ := Fields.DataBindings.WhisperResultsDataBinding.GetValue(id)
 
-		var jsonResult = Messages.WhisperResult{}
-		json.Unmarshal([]byte(selectedJsonData), &jsonResult)
+		result := whisperMessage.(Messages.WhisperResult)
 
-		Fields.Field.TranscriptionInput.SetText(jsonResult.Text)
-		Fields.Field.TranscriptionTranslationInput.SetText(jsonResult.TxtTranslation)
+		Fields.Field.TranscriptionInput.SetText(result.Text)
+		if result.TxtTranslation != "" {
+			Fields.Field.TranscriptionTranslationInput.SetText(result.TxtTranslation)
+		} else {
+			Fields.Field.TranscriptionTranslationInput.SetText(result.Text)
+		}
+
+		go func() {
+			time.Sleep(200 * time.Millisecond)
+			resultList.Unselect(id)
+		}()
 	}
 
-	// split between transcription + options row
-	splitTranscriptionOptions := container.NewVSplit(transcriptionRow, quickOptionsRow)
-	//splitTranscriptionOptions.Offset = 0.5
-
 	// main layout
-	verticalLayout := container.New(layout.NewVBoxLayout(),
-		LanguageRow,
-		splitTranscriptionOptions,
+	leftVerticalLayout := container.NewBorder(
+		container.New(layout.NewVBoxLayout(),
+			languageRow,
+		),
+		nil, nil, nil,
+		container.NewVSplit(
+			transcriptionRow,
+			container.New(layout.NewVBoxLayout(), quickOptionsRow),
+		),
 	)
 
 	mainContent := container.NewHSplit(
-		verticalLayout,
+		leftVerticalLayout,
 		container.NewMax(resultList),
 	)
+	mainContent.SetOffset(0.6)
 
 	return mainContent
 }

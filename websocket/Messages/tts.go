@@ -1,5 +1,10 @@
 package Messages
 
+import (
+	"strings"
+	"whispering-tiger-ui/Fields"
+)
+
 // TTS Languages
 
 type TtsLanguage struct {
@@ -14,6 +19,16 @@ type TtsLanguagesListing struct {
 var TtsLanguages TtsLanguagesListing
 
 func (res TtsLanguagesListing) Update() *TtsLanguagesListing {
+	Fields.Field.TtsModelCombo.Options = nil
+	for _, languageItem := range res.Languages {
+		//elementName := languageItem.Language
+		for _, modelItem := range languageItem.Models {
+			if strings.Contains(modelItem, "v3") {
+				Fields.Field.TtsModelCombo.Options = append(Fields.Field.TtsModelCombo.Options, modelItem)
+			}
+
+		}
+	}
 	return &res
 }
 
@@ -26,5 +41,7 @@ type TtsVoicesListing struct {
 var TtsVoices TtsVoicesListing
 
 func (res TtsVoicesListing) Update() *TtsVoicesListing {
+	Fields.Field.TtsVoiceCombo.Options = nil
+	Fields.Field.TtsVoiceCombo.Options = append(Fields.Field.TtsVoiceCombo.Options, res.Voices...)
 	return &res
 }

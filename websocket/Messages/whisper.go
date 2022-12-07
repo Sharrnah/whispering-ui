@@ -1,7 +1,6 @@
 package Messages
 
 import (
-	"encoding/json"
 	"whispering-tiger-ui/Fields"
 )
 
@@ -16,16 +15,16 @@ func (res WhisperResult) String() string {
 	return res.Text
 }
 func (res WhisperResult) Update() {
-	Fields.Field.TranscriptionInput.SetText(res.Text)
-	Fields.Field.TranscriptionTranslationInput.SetText(res.TxtTranslation)
+	//Fields.Field.TranscriptionInput.SetText(res.Text)
+	//Fields.Field.TranscriptionTranslationInput.SetText(res.TxtTranslation)
 
 	WhisperResults = append([]WhisperResult{res}, WhisperResults...)
 
-	jsonBytes, _ := json.Marshal(res)
-	jsonResult := string(jsonBytes[:])
-
-	//whisperResult := strings.Join([]string{c.TxtTranslation, c.Text}, "###")
-	Fields.DataBindings.WhisperResultsDataBinding.Prepend(jsonResult)
+	//if Fields.DataBindings.WhisperResultsDataBinding.Length() >= 200 {
+	//	whisperResultsPart, _ := Fields.DataBindings.WhisperResultsDataBinding.Get()
+	//	Fields.DataBindings.WhisperResultsDataBinding.Set(whisperResultsPart[:199])
+	//}
+	Fields.DataBindings.WhisperResultsDataBinding.Prepend(res)
 }
 
 var WhisperResults []WhisperResult

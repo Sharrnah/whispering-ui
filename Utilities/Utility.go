@@ -6,6 +6,16 @@ import (
 	"reflect"
 )
 
+func Contains(s []string, str string) bool {
+	for _, v := range s {
+		if v == str {
+			return true
+		}
+	}
+
+	return false
+}
+
 func Merge(a, b interface{}) {
 	ra := reflect.ValueOf(a).Elem()
 	rb := reflect.ValueOf(b).Elem()

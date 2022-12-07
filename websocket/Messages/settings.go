@@ -8,6 +8,7 @@ import (
 	"strings"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Settings"
+	"whispering-tiger-ui/Utilities"
 )
 
 type WhisperLanguage struct {
@@ -24,7 +25,6 @@ type TranslateSetting struct {
 var TranslateSettings TranslateSetting
 
 func (res TranslateSetting) Update() *TranslateSetting {
-	Settings.Config = res.Conf
 
 	Settings.Form = Settings.BuildSettingsForm().(*widget.Form)
 	Settings.Form.Refresh()
@@ -60,11 +60,18 @@ func (res TranslateSetting) Update() *TranslateSetting {
 	} else if Fields.Field.SourceLanguageCombo.Selected == "" && res.Src_lang == "auto" {
 		Fields.Field.SourceLanguageCombo.SetSelected(cases.Title(language.English, cases.Compact).String(res.Src_lang))
 	}
+	if Fields.Field.SourceLanguageComboTxtTranslateCombo.Selected == "" {
+		Fields.Field.SourceLanguageComboTxtTranslateCombo.SetSelected(Fields.Field.SourceLanguageCombo.Selected)
+	}
 
 	// Set TargetLanguageCombo
 	if strings.ToLower(Fields.Field.TargetLanguageCombo.Selected) != strings.ToLower(InstalledLanguages.GetNameByCode(res.Trg_lang)) {
 		if TranslateSettings.Txt_translate {
 			Fields.Field.TargetLanguageCombo.SetSelected(cases.Title(language.English, cases.Compact).String(InstalledLanguages.GetNameByCode(res.Trg_lang)))
+			// set text translate target language combo-box
+			if Fields.Field.TargetLanguageTxtTranslateCombo.Selected == "" {
+				Fields.Field.TargetLanguageTxtTranslateCombo.SetSelected(cases.Title(language.English, cases.Compact).String(InstalledLanguages.GetNameByCode(res.Trg_lang)))
+			}
 		} else if Fields.Field.TargetLanguageCombo.Selected != "None" {
 			// special case for "None" text translation target language
 			Fields.Field.TargetLanguageCombo.SetSelected("None")
@@ -78,6 +85,31 @@ func (res TranslateSetting) Update() *TranslateSetting {
 	if checkValue != res.OscAutoProcessingEnabled {
 		Fields.DataBindings.OSCEnabledDataBinding.Set(res.OscAutoProcessingEnabled)
 	}
+
+	// Set TtsModelCombo
+	if Fields.Field.TtsModelCombo.Selected != res.Tts_model[1] {
+		Fields.Field.TtsModelCombo.SetSelected(res.Tts_model[1])
+	}
+
+	// Set TtsVoiceCombo
+	if Fields.Field.TtsVoiceCombo.Selected != res.Tts_voice {
+		Fields.Field.TtsVoiceCombo.SetSelected(res.Tts_voice)
+	}
+	// Set OcrWindowCombo
+	//if res.Ocr_window_name != Settings.Config.Ocr_window_name {
+	if Fields.Field.OcrWindowCombo.Selected != res.Ocr_window_name {
+		if !Utilities.Contains(Fields.Field.OcrWindowCombo.Options, res.Ocr_window_name) {
+			Fields.Field.OcrWindowCombo.Options = append(Fields.Field.OcrWindowCombo.Options, res.Ocr_window_name)
+		}
+		Fields.Field.OcrWindowCombo.SetSelected(res.Ocr_window_name)
+	}
+	//}
+	// Set OcrLanguageCombo
+	if Fields.Field.OcrLanguageCombo.Selected != res.Ocr_lang {
+		Fields.Field.OcrLanguageCombo.SetSelected(OcrLanguagesList.GetNameByCode(res.Ocr_lang))
+	}
+
+	Settings.Config = res.Conf
 
 	return &res
 }
