@@ -10,60 +10,73 @@ import (
 	"os"
 	"reflect"
 	"strconv"
+	"strings"
+	"whispering-tiger-ui/Utilities"
 )
 
 //goland:noinspection GoSnakeCaseUsage
 type Conf struct {
 	// Whisper Settings
-	Ai_device                  string
-	Whisper_task               string
-	Current_language           string
-	Model                      string
-	Condition_on_previous_text bool
+	Ai_device                  interface{} `yaml:"ai_device"`
+	Whisper_task               string `yaml:"whisper_task"`
+	Current_language           string `yaml:"current_language"`
+	Model                      string `yaml:"model"`
+	Condition_on_previous_text bool `yaml:"condition_on_previous_text"`
 
 	// text translate settings
-	Txt_translate       bool
-	Src_lang            string
-	Trg_lang            string
-	Txt_ascii           bool
-	Txt_translator      string
-	Txt_translator_size string
+	Txt_translate       bool `yaml:"txt_translate"`
+	Src_lang            string `yaml:"src_lang"`
+	Trg_lang            string `yaml:"trg_lang"`
+	Txt_ascii           bool `yaml:"txt_ascii"`
+	Txt_translator      string `yaml:"txt_translator"`
+	Txt_translator_size string `yaml:"txt_translator_size"`
 
 	// websocket settings
-	Websocket_ip   string
-	Websocket_port int
+	Websocket_ip   string `yaml:"websocket_ip"`
+	Websocket_port int `yaml:"websocket_port"`
 
 	// OSC settings
-	Osc_ip               string
-	Osc_port             int
-	Osc_address          string
-	Osc_typing_indicator bool
-	Osc_convert_ascii    bool
+	Osc_ip               string `yaml:"osc_ip"`
+	Osc_port             int `yaml:"osc_port"`
+	Osc_address          string `yaml:"osc_address"`
+	Osc_typing_indicator bool `yaml:"osc_typing_indicator"`
+	Osc_convert_ascii    bool `yaml:"osc_convert_ascii"`
+	Osc_auto_processing_enabled    bool `yaml:"osc_auto_processing_enabled"`
 
 	// OCR settings
-	Ocr_lang        string
-	Ocr_window_name string
+	Ocr_lang        string `yaml:"ocr_lang"`
+	Ocr_window_name string `yaml:"ocr_window_name"`
 
 	// TTS settings
-	Tts_enabled      bool
-	Tts_ai_device    string
-	Tts_answer       bool
-	Device_out_index int
-	Tts_model        []string
-	Tts_voice        string
+	Tts_enabled      bool `yaml:"tts_enabled"`
+	Tts_ai_device    string `yaml:"tts_ai_device"`
+	Tts_answer       bool `yaml:"tts_answer"`
+	Device_out_index interface{} `yaml:"device_out_index"` // can be an int between -1 and x or null which is not possible with go ints
+	Tts_model        []string `yaml:"tts_model"`
+	Tts_voice        string `yaml:"tts_voice"`
 
 	// FLAN-T5 settings
-	Flan_enabled                       bool
-	Flan_size                          string
-	Flan_bits                          int
-	Flan_device                        string
-	Flan_whisper_answer                bool
-	Flan_process_only_questions        bool
-	Flan_osc_prefix                    string
-	Flan_translate_to_speaker_language bool
-	Flan_prompt                        string
-	Flan_memory                        string
-	//Flan_conditioning_history          int
+	Flan_enabled                       bool `yaml:"flan_enabled"`
+	Flan_size                          string `yaml:"flan_size"`
+	Flan_bits                          int `yaml:"flan_bits"`
+	Flan_device                        string `yaml:"flan_device"`
+	Flan_whisper_answer                bool `yaml:"flan_whisper_answer"`
+	Flan_process_only_questions        bool `yaml:"flan_process_only_questions"`
+	Flan_osc_prefix                    string `yaml:"flan_osc_prefix"`
+	Flan_translate_to_speaker_language bool `yaml:"flan_translate_to_speaker_language"`
+	Flan_prompt                        string `yaml:"flan_prompt"`
+	Flan_memory                        string `yaml:"flan_memory"`
+	Flan_conditioning_history          int `yaml:"flan_conditioning_history"`
+}
+
+//var ConfigValues = make(map[string]interface{})
+//var ConfigValues map[string]interface{} = nil
+var ConfigValues map[string]interface{} = nil
+
+// ExcludeConfigFields excludes fields from settings window (all lowercase)
+var ExcludeConfigFields = []string{
+	"tts_model",
+	"device_out_index",
 }
 
 var Config Conf
@@ -137,24 +150,135 @@ func (c *Conf) GetConf(configFile string) *Conf {
 	return confLoader(c, configFile).(*Conf)
 }
 
+func (c *Conf) SetOption(optionName string, value interface{}) {
+	switch value.(type) {
+		case string:
+			// if string value is an integer, convert it
+			intValue, err := strconv.Atoi(value.(string))
+			if err == nil {
+				value = intValue
+			}
+	}
+
+	values := reflect.ValueOf(c)
+	indirectValues := reflect.Indirect(values) // required to indirect the pointer
+	types := indirectValues.Type()
+	for i := 0; i < indirectValues.NumField(); i++ {
+		if strings.ToLower(types.Field(i).Name) == strings.ToLower(optionName) {
+			setValue := reflect.ValueOf(value)
+			if value == nil {
+				setValue = reflect.Zero(types.Field(i).Type)
+			}
+			switch types.Field(i).Type.Kind() {
+			    // TODO: fix case where the value is a string and the field is a slice (like in tts_model)
+				case reflect.Slice:
+					switch value.(type) {
+						case string:
+							setValue = reflect.ValueOf([]string{value.(string)})
+					}
+			}
+			indirectValues.Field(i).Set(setValue)
+			return
+		}
+	}
+}
+
+func (c *Conf) WriteYamlSettings(fileName string) {
+	// marshal the struct to yaml and save as file
+	yamlFile, err := yaml.Marshal(c)
+	if err != nil {
+		log.Printf("error: %v", err)
+	}
+	err = os.WriteFile(fileName, yamlFile, 0644)
+	if err != nil {
+		log.Printf("error: %v", err)
+	}
+}
+
 var Form *widget.Form
 
-func BuildSettingsForm() fyne.CanvasObject {
+func GetSettingValues(settingField string) ([]string, error) {
+	if _, ok := ConfigValues[settingField]; ok {
+		var values []string
+		switch ConfigValues[settingField].(type) {
+			case []interface{}:
+				for i := 0; i < len(ConfigValues[settingField].([]interface{})); i++ {
+					values = append(values, ConfigValues[settingField].([]interface{})[i].(string))
+				}
+		}
+		return values, nil
+	}
+	return nil, errors.New("no values for field '" + settingField + "'")
+}
+
+func BuildSettingsForm(fieldList []string) fyne.CanvasObject {
 	settingsForm := widget.NewForm()
 
 	settingsFields := reflect.ValueOf(Config)
 
 	for i := 0; i < settingsFields.NumField(); i++ {
 		if settingsFields.Field(i).CanInterface() {
-			settingsName := settingsFields.Type().Field(i).Name
+			settingsName := strings.ToLower(settingsFields.Type().Field(i).Name)
+
+			// check if settingsName is in fieldList
+			if fieldList != nil && !Utilities.Contains(fieldList, settingsName) {
+				return settingsForm
+			}
+			if ExcludeConfigFields != nil && Utilities.Contains(ExcludeConfigFields, settingsName) {
+				continue
+			}
+
 			settingsValue := settingsFields.Field(i).Interface()
 			settingsType := settingsFields.Field(i).Type().Name()
+			settingsValues, _ := GetSettingValues(settingsName)
 
 			switch settingsType {
 			case "string":
-				settingsWidget := widget.NewEntry()
-				settingsWidget.SetText(settingsValue.(string))
-				settingsForm.Append(settingsName, settingsWidget)
+				if settingsValues != nil {
+					if len(settingsValues) > 0 {
+						settingsWidget := widget.NewSelect(settingsValues, func(s string) {
+							println(s)
+						})
+
+						selectedValue := settingsValue.(string)
+						if selectedValue == "" {
+							selectedValue = "None"
+						}
+						settingsWidget.SetSelected(selectedValue)
+						settingsForm.Append(settingsName, settingsWidget)
+					} else {
+						settingsWidget := widget.NewEntry()
+						settingsWidget.SetText(settingsValue.(string))
+						settingsWidget.Disable()
+						settingsForm.Append(settingsName, settingsWidget)
+					}
+				} else {
+					settingsWidget := widget.NewEntry()
+					settingsWidget.SetText(settingsValue.(string))
+					settingsForm.Append(settingsName, settingsWidget)
+				}
+			case "":
+				if len(settingsValues) > 0 {
+					settingsWidget := widget.NewSelect(settingsValues, func(s string) {
+						println(s)
+					})
+
+					if settingsValue != nil {
+						switch settingsValue.(type) {
+							case string:
+								selectedValue := settingsValue.(string)
+								settingsWidget.SetSelected(selectedValue)
+						}
+					} else {
+						settingsWidget.SetSelected("None")
+					}
+
+					settingsForm.Append(settingsName, settingsWidget)
+				} else {
+					settingsWidget := widget.NewEntry()
+					settingsForm.Append(settingsName, settingsWidget)
+				}
+
 			case "int":
 				//settingsWidget := widget.NewSlider(0, 100)
 				//settingsWidget.SetValue(float64(settingsValue.(int)))
@@ -167,8 +291,38 @@ func BuildSettingsForm() fyne.CanvasObject {
 				settingsWidget := widget.NewCheck("", func(checked bool) {})
 				settingsWidget.Checked = settingsValue.(bool)
 				settingsForm.Append(settingsName, settingsWidget)
+
 			}
 		}
+	}
+
+
+	settingsForm.SubmitText = "Save"
+	settingsForm.OnSubmit = func() {
+		for _, item := range settingsForm.Items {
+			var value interface{} = nil
+			switch item.Widget.(type) {
+				case *widget.Entry:
+					value = item.Widget.(*widget.Entry).Text
+					if value == "None" {
+						value = nil
+					}
+					Config.SetOption(item.Text, value)
+				case *widget.Select:
+					value = item.Widget.(*widget.Select).Selected
+					if value == "None" {
+						value = nil
+					}
+					Config.SetOption(item.Text, value)
+				case *widget.Check:
+					value = item.Widget.(*widget.Check).Checked
+					Config.SetOption(item.Text, value)
+			}
+
+		}
+		//Settings.Form.Items[0].Widget.(*widget.Entry).SetText(Settings.Form.Items[0].Widget.(*widget.Entry).Text)
+
+		Config.WriteYamlSettings("test.yaml")
 	}
 
 	return settingsForm

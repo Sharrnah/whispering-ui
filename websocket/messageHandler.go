@@ -5,6 +5,7 @@ import (
 	"log"
 	"strings"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/websocket/Messages"
 )
 
@@ -61,6 +62,15 @@ func (c *MessageStruct) HandleReceiveMessage() {
 	case "windows_list":
 		err = json.Unmarshal(c.Raw, &Messages.WindowsList)
 		Messages.WindowsList.Update()
+	case "settings_values":
+		var (
+			i    interface{}
+			ok   bool
+		)
+		err = json.Unmarshal(c.Data, &i)
+		if Settings.ConfigValues, ok = i.(map[string]interface{}); !ok {
+			log.Println("failed to type assert data")
+		}
 	case "translate_settings":
 		err = json.Unmarshal(c.Data, &Messages.TranslateSettings)
 		Messages.TranslateSettings.Update()

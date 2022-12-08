@@ -11,7 +11,8 @@ import (
 )
 
 func CreateAdvancedWindow() fyne.CanvasObject {
-	Settings.Form = Settings.BuildSettingsForm().(*widget.Form)
+	Settings.Form = Settings.BuildSettingsForm(nil).(*widget.Form)
+
 	settingsTabContent := container.NewVScroll(Settings.Form)
 
 	logText := CustomWidget.NewLogText()
@@ -42,7 +43,7 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 
 	tabs.OnSelected = func(tab *container.TabItem) {
 		if tab.Text == "Settings" {
-			Settings.BuildSettingsForm()
+			Settings.BuildSettingsForm(nil)
 			tab.Content.(*container.Scroll).Content = Settings.Form
 		}
 	}

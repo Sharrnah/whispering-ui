@@ -66,7 +66,6 @@ func main() {
 	var WhisperProcess = RuntimeBackend.WhisperProcessConfig{
 		DeviceIndex:  "5",
 		SettingsFile: "settings.yaml",
-		Process:      nil,
 	}
 	WhisperProcess.StartWhisper()
 
