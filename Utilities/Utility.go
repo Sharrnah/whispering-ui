@@ -2,8 +2,12 @@ package Utilities
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
+	"os"
 	"reflect"
+	"strconv"
+	"strings"
 )
 
 func Contains(s []string, str string) bool {
@@ -14,6 +18,30 @@ func Contains(s []string, str string) bool {
 	}
 
 	return false
+}
+
+func FileExists(fileName string) bool {
+	if _, err := os.Stat(fileName); err == nil {
+		return true
+
+	} else if errors.Is(err, os.ErrNotExist) {
+		// path/to/whatever does *not* exist
+		return false
+
+	} else {
+		// Schrodinger: file may or may not exist. See err for details.
+		// Therefore, do *NOT* use !os.IsNotExist(err) to test for file existence
+		return false
+	}
+}
+
+func ConvertHexToInt(hex string) int64 {
+	// replace 0x or 0X with empty String
+	hex = strings.Replace(hex, "0x", "", -1)
+	hex = strings.Replace(hex, "0X", "", -1)
+
+	deviceIndex, _ := strconv.ParseInt(hex, 16, 64)
+	return deviceIndex
 }
 
 func Merge(a, b interface{}) {

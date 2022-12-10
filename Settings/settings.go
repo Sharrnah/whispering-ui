@@ -16,61 +16,63 @@ import (
 
 //goland:noinspection GoSnakeCaseUsage
 type Conf struct {
+	// Internal Profile Settings
+	SettingsFilename string
+	Device_index     interface{} `yaml:"device_index,omitempty"`
+	Device_out_index interface{} `yaml:"device_out_index,omitempty"`
+
 	// Whisper Settings
 	Ai_device                  interface{} `yaml:"ai_device"`
-	Whisper_task               string `yaml:"whisper_task"`
-	Current_language           string `yaml:"current_language"`
-	Model                      string `yaml:"model"`
-	Condition_on_previous_text bool `yaml:"condition_on_previous_text"`
+	Whisper_task               string      `yaml:"whisper_task"`
+	Current_language           string      `yaml:"current_language"`
+	Model                      string      `yaml:"model"`
+	Condition_on_previous_text bool        `yaml:"condition_on_previous_text"`
 
 	// text translate settings
-	Txt_translate       bool `yaml:"txt_translate"`
+	Txt_translate       bool   `yaml:"txt_translate"`
 	Src_lang            string `yaml:"src_lang"`
 	Trg_lang            string `yaml:"trg_lang"`
-	Txt_ascii           bool `yaml:"txt_ascii"`
+	Txt_ascii           bool   `yaml:"txt_ascii"`
 	Txt_translator      string `yaml:"txt_translator"`
 	Txt_translator_size string `yaml:"txt_translator_size"`
 
 	// websocket settings
 	Websocket_ip   string `yaml:"websocket_ip"`
-	Websocket_port int `yaml:"websocket_port"`
+	Websocket_port int    `yaml:"websocket_port"`
 
 	// OSC settings
-	Osc_ip               string `yaml:"osc_ip"`
-	Osc_port             int `yaml:"osc_port"`
-	Osc_address          string `yaml:"osc_address"`
-	Osc_typing_indicator bool `yaml:"osc_typing_indicator"`
-	Osc_convert_ascii    bool `yaml:"osc_convert_ascii"`
-	Osc_auto_processing_enabled    bool `yaml:"osc_auto_processing_enabled"`
+	Osc_ip                      string `yaml:"osc_ip"`
+	Osc_port                    int    `yaml:"osc_port"`
+	Osc_address                 string `yaml:"osc_address"`
+	Osc_typing_indicator        bool   `yaml:"osc_typing_indicator"`
+	Osc_convert_ascii           bool   `yaml:"osc_convert_ascii"`
+	Osc_auto_processing_enabled bool   `yaml:"osc_auto_processing_enabled"`
 
 	// OCR settings
 	Ocr_lang        string `yaml:"ocr_lang"`
 	Ocr_window_name string `yaml:"ocr_window_name"`
 
 	// TTS settings
-	Tts_enabled      bool `yaml:"tts_enabled"`
-	Tts_ai_device    string `yaml:"tts_ai_device"`
-	Tts_answer       bool `yaml:"tts_answer"`
-	Device_out_index interface{} `yaml:"device_out_index"` // can be an int between -1 and x or null which is not possible with go ints
-	Tts_model        []string `yaml:"tts_model"`
-	Tts_voice        string `yaml:"tts_voice"`
+	Tts_enabled   bool     `yaml:"tts_enabled"`
+	Tts_ai_device string   `yaml:"tts_ai_device"`
+	Tts_answer    bool     `yaml:"tts_answer"`
+	Tts_model     []string `yaml:"tts_model"`
+	Tts_voice     string   `yaml:"tts_voice"`
 
 	// FLAN-T5 settings
-	Flan_enabled                       bool `yaml:"flan_enabled"`
+	Flan_enabled                       bool   `yaml:"flan_enabled"`
 	Flan_size                          string `yaml:"flan_size"`
-	Flan_bits                          int `yaml:"flan_bits"`
+	Flan_bits                          int    `yaml:"flan_bits"`
 	Flan_device                        string `yaml:"flan_device"`
-	Flan_whisper_answer                bool `yaml:"flan_whisper_answer"`
-	Flan_process_only_questions        bool `yaml:"flan_process_only_questions"`
+	Flan_whisper_answer                bool   `yaml:"flan_whisper_answer"`
+	Flan_process_only_questions        bool   `yaml:"flan_process_only_questions"`
 	Flan_osc_prefix                    string `yaml:"flan_osc_prefix"`
-	Flan_translate_to_speaker_language bool `yaml:"flan_translate_to_speaker_language"`
+	Flan_translate_to_speaker_language bool   `yaml:"flan_translate_to_speaker_language"`
 	Flan_prompt                        string `yaml:"flan_prompt"`
 	Flan_memory                        string `yaml:"flan_memory"`
-	Flan_conditioning_history          int `yaml:"flan_conditioning_history"`
+	Flan_conditioning_history          int    `yaml:"flan_conditioning_history"`
 }
 
-//var ConfigValues = make(map[string]interface{})
-//var ConfigValues map[string]interface{} = nil
 var ConfigValues map[string]interface{} = nil
 
 // ExcludeConfigFields excludes fields from settings window (all lowercase)
@@ -81,12 +83,13 @@ var ExcludeConfigFields = []string{
 
 var Config Conf
 
+/*
 var (
 	ErrNoValue      = errors.New("no value for field 'value'")
 	ErrInvalidValue = errors.New("invalid value for field 'value'")
 )
 
-/*func (c *conf) UnmarshalYAML(unmarshal func(interface{}) error) error {
+func (c *conf) UnmarshalYAML(unmarshal func(interface{}) error) error {
 	mstr := make(map[string]string)
 	if err := unmarshal(&mstr); err == nil {
 		if str, ok := mstr["value"]; ok {
@@ -138,7 +141,7 @@ func confLoader(c interface{}, configFile string) interface{} {
 			log.Fatalf("Unmarshal: %v", err)
 		}
 	} else {
-		log.Printf("settings.yaml not found (Press Enter to exit)")
+		log.Printf("settings yaml not found (Press Enter to exit)")
 		fmt.Scanln()
 		os.Exit(1)
 	}
@@ -152,12 +155,12 @@ func (c *Conf) GetConf(configFile string) *Conf {
 
 func (c *Conf) SetOption(optionName string, value interface{}) {
 	switch value.(type) {
-		case string:
-			// if string value is an integer, convert it
-			intValue, err := strconv.Atoi(value.(string))
-			if err == nil {
-				value = intValue
-			}
+	case string:
+		// if string value is an integer, convert it
+		intValue, err := strconv.Atoi(value.(string))
+		if err == nil {
+			value = intValue
+		}
 	}
 
 	values := reflect.ValueOf(c)
@@ -170,16 +173,27 @@ func (c *Conf) SetOption(optionName string, value interface{}) {
 				setValue = reflect.Zero(types.Field(i).Type)
 			}
 			switch types.Field(i).Type.Kind() {
-			    // TODO: fix case where the value is a string and the field is a slice (like in tts_model)
-				case reflect.Slice:
-					switch value.(type) {
-						case string:
-							setValue = reflect.ValueOf([]string{value.(string)})
-					}
+			// TODO: fix case where the value is a string and the field is a slice (like in tts_model)
+			case reflect.Slice:
+				switch value.(type) {
+				case string:
+					setValue = reflect.ValueOf([]string{value.(string)})
+				}
 			}
 			indirectValues.Field(i).Set(setValue)
 			return
 		}
+	}
+}
+
+func (c *Conf) LoadYamlSettings(fileName string) {
+	yamlFile, err := os.ReadFile(fileName)
+	if err != nil {
+		log.Printf("yamlFile.Get err   #%v ", err)
+	}
+	err = yaml.Unmarshal(yamlFile, &c)
+	if err != nil {
+		log.Fatalf("Unmarshal: %v", err)
 	}
 }
 
@@ -201,17 +215,17 @@ func GetSettingValues(settingField string) ([]string, error) {
 	if _, ok := ConfigValues[settingField]; ok {
 		var values []string
 		switch ConfigValues[settingField].(type) {
-			case []interface{}:
-				for i := 0; i < len(ConfigValues[settingField].([]interface{})); i++ {
-					values = append(values, ConfigValues[settingField].([]interface{})[i].(string))
-				}
+		case []interface{}:
+			for i := 0; i < len(ConfigValues[settingField].([]interface{})); i++ {
+				values = append(values, ConfigValues[settingField].([]interface{})[i].(string))
+			}
 		}
 		return values, nil
 	}
 	return nil, errors.New("no values for field '" + settingField + "'")
 }
 
-func BuildSettingsForm(fieldList []string) fyne.CanvasObject {
+func BuildSettingsForm(includeConfigFields []string, settingsFile string) fyne.CanvasObject {
 	settingsForm := widget.NewForm()
 
 	settingsFields := reflect.ValueOf(Config)
@@ -220,9 +234,9 @@ func BuildSettingsForm(fieldList []string) fyne.CanvasObject {
 		if settingsFields.Field(i).CanInterface() {
 			settingsName := strings.ToLower(settingsFields.Type().Field(i).Name)
 
-			// check if settingsName is in fieldList
-			if fieldList != nil && !Utilities.Contains(fieldList, settingsName) {
-				return settingsForm
+			// check if settingsName is in field List
+			if includeConfigFields != nil && !Utilities.Contains(includeConfigFields, settingsName) {
+				continue
 			}
 			if ExcludeConfigFields != nil && Utilities.Contains(ExcludeConfigFields, settingsName) {
 				continue
@@ -265,9 +279,9 @@ func BuildSettingsForm(fieldList []string) fyne.CanvasObject {
 
 					if settingsValue != nil {
 						switch settingsValue.(type) {
-							case string:
-								selectedValue := settingsValue.(string)
-								settingsWidget.SetSelected(selectedValue)
+						case string:
+							selectedValue := settingsValue.(string)
+							settingsWidget.SetSelected(selectedValue)
 						}
 					} else {
 						settingsWidget.SetSelected("None")
@@ -296,12 +310,13 @@ func BuildSettingsForm(fieldList []string) fyne.CanvasObject {
 		}
 	}
 
-
 	settingsForm.SubmitText = "Save"
-	settingsForm.OnSubmit = func() {
-		for _, item := range settingsForm.Items {
-			var value interface{} = nil
-			switch item.Widget.(type) {
+
+	if settingsFile != "" {
+		settingsForm.OnSubmit = func() {
+			for _, item := range settingsForm.Items {
+				var value interface{} = nil
+				switch item.Widget.(type) {
 				case *widget.Entry:
 					value = item.Widget.(*widget.Entry).Text
 					if value == "None" {
@@ -317,12 +332,13 @@ func BuildSettingsForm(fieldList []string) fyne.CanvasObject {
 				case *widget.Check:
 					value = item.Widget.(*widget.Check).Checked
 					Config.SetOption(item.Text, value)
+				}
+
 			}
+			//Settings.Form.Items[0].Widget.(*widget.Entry).SetText(Settings.Form.Items[0].Widget.(*widget.Entry).Text)
 
+			Config.WriteYamlSettings(settingsFile)
 		}
-		//Settings.Form.Items[0].Widget.(*widget.Entry).SetText(Settings.Form.Items[0].Widget.(*widget.Entry).Text)
-
-		Config.WriteYamlSettings("test.yaml")
 	}
 
 	return settingsForm

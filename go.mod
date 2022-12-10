@@ -7,6 +7,7 @@ require (
 	github.com/gen2brain/malgo v0.11.10
 	github.com/gorilla/websocket v1.5.0
 	github.com/hajimehoshi/oto/v2 v2.3.1
+	github.com/youpy/go-wav v0.3.2
 	golang.org/x/text v0.3.7
 	gopkg.in/yaml.v3 v3.0.1
 )
@@ -30,7 +31,9 @@ require (
 	github.com/srwiley/rasterx v0.0.0-20200120212402-85cb7272f5e9 // indirect
 	github.com/stretchr/testify v1.7.2 // indirect
 	github.com/tevino/abool v1.2.0 // indirect
+	github.com/youpy/go-riff v0.1.0 // indirect
 	github.com/yuin/goldmark v1.4.0 // indirect
+	github.com/zaf/g711 v0.0.0-20190814101024-76a4a538f52b // indirect
 	golang.org/x/image v0.0.0-20220601225756-64ec528b34cd // indirect
 	golang.org/x/mobile v0.0.0-20211207041440-4e6c2922fdee // indirect
 	golang.org/x/net v0.0.0-20210805182204-aaa1db679c0d // indirect

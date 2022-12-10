@@ -8,10 +8,14 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strconv"
 	"whispering-tiger-ui/Pages"
 	"whispering-tiger-ui/RuntimeBackend"
+	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/websocket"
 )
+
+var WebsocketClient = websocket.NewClient("127.0.0.1:5000")
 
 func overwriteFyneFont() {
 	pwd, _ := filepath.Abs("./")
@@ -59,32 +63,66 @@ func main() {
 	overwriteFyneFont()
 	a := app.NewWithID("tiger.whispering")
 	a.SetIcon(resourceAppIconPng)
+
 	w := a.NewWindow("Whispering Tiger")
-
 	w.SetMaster()
+	w.CenterOnScreen()
 
-	var WhisperProcess = RuntimeBackend.WhisperProcessConfig{
-		DeviceIndex:  "5",
-		SettingsFile: "settings.yaml",
+	// initialize whisper process
+	//var whisperProcess = RuntimeBackend.NewWhisperProcess()
+	//whisperProcess.DeviceIndex = Settings.Config.Device_index.(string)
+	//whisperProcess.DeviceOutIndex = Settings.Config.Device_out_index.(string)
+	//whisperProcess.SettingsFile = Settings.Config.SettingsFilename
+	//RuntimeBackend.BackendsList = append(RuntimeBackend.BackendsList, whisperProcess)
+
+	profileWindow := a.NewWindow("Whispering Tiger Profiles")
+
+	onProfileClose := func() {
+
+		RuntimeBackend.BackendsList = append(RuntimeBackend.BackendsList, RuntimeBackend.NewWhisperProcess())
+		RuntimeBackend.BackendsList[0].DeviceIndex = Settings.Config.Device_index.(string)
+		RuntimeBackend.BackendsList[0].DeviceOutIndex = Settings.Config.Device_out_index.(string)
+		RuntimeBackend.BackendsList[0].SettingsFile = Settings.Config.SettingsFilename
+		RuntimeBackend.BackendsList[0].Start()
+
+		// initialize main window
+		appTabs := container.NewAppTabs(
+			container.NewTabItem("Speech 2 Text", Pages.CreateSpeechToTextWindow()),
+			container.NewTabItem("Text Translate", Pages.CreateTextTranslateWindow()),
+			container.NewTabItem("Text 2 Speech", Pages.CreateTextToSpeechWindow()),
+			container.NewTabItem("OCR", Pages.CreateOcrWindow()),
+			container.NewTabItem("Advanced", Pages.CreateAdvancedWindow()),
+		)
+		appTabs.SetTabLocation(container.TabLocationTop)
+
+		w.SetContent(appTabs)
+
+		w.Resize(fyne.NewSize(1200, 600))
+
+		// set websocket client to configured ip+port
+		WebsocketClient.Addr = Settings.Config.Websocket_ip + ":" + strconv.Itoa(Settings.Config.Websocket_port)
+		go WebsocketClient.Start()
+
+		// show main window
+		w.Show()
+
+		// close profile window
+		profileWindow.Close()
 	}
-	WhisperProcess.StartWhisper()
 
-	//Pages.AppTabs.SetTabLocation(container.TabLocationTop)
+	profilePage := Pages.CreateProfileWindow(onProfileClose)
+	profileWindow.SetContent(profilePage)
+	profileWindow.Resize(fyne.NewSize(1200, 600))
 
-	appTabs := container.NewAppTabs(
-		container.NewTabItem("Speech 2 Text", Pages.CreateSpeechToTextWindow()),
-		container.NewTabItem("Text Translate", Pages.CreateTextTranslateWindow()),
-		container.NewTabItem("Text 2 Speech", Pages.CreateTextToSpeechWindow()),
-		container.NewTabItem("OCR", Pages.CreateOcrWindow()),
-		container.NewTabItem("Advanced", Pages.CreateAdvancedWindow()),
-	)
-	appTabs.SetTabLocation(container.TabLocationTop)
+	profileWindow.CenterOnScreen()
+	profileWindow.Show()
 
-	w.SetContent(appTabs)
+	a.Run()
 
-	w.Resize(fyne.NewSize(1200, 600))
-
-	go websocket.Start()
-
-	w.ShowAndRun()
+	// after run (app exit), send whisper process signal to stop
+	if len(RuntimeBackend.BackendsList) > 0 {
+		RuntimeBackend.BackendsList[0].Stop()
+		RuntimeBackend.BackendsList[0].WriterBackend.Close()
+		RuntimeBackend.BackendsList[0].ReaderBackend.Close()
+	}
 }

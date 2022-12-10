@@ -26,7 +26,7 @@ var TranslateSettings TranslateSetting
 
 func (res TranslateSetting) Update() *TranslateSetting {
 
-	Settings.Form = Settings.BuildSettingsForm(nil).(*widget.Form)
+	Settings.Form = Settings.BuildSettingsForm(nil, Settings.Config.SettingsFilename).(*widget.Form)
 	Settings.Form.Refresh()
 
 	log.Println("InstalledLanguages.GetNameByCode()")

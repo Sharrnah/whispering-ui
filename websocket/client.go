@@ -12,10 +12,6 @@ import (
 	"whispering-tiger-ui/Fields"
 )
 
-// Websocket Client
-
-var addr = flag.String("addr", "127.0.0.1:5000", "http service address")
-
 func messageLoader(c interface{}, message []byte) interface{} {
 	err := json.Unmarshal(message, c)
 	if err != nil {
@@ -24,40 +20,64 @@ func messageLoader(c interface{}, message []byte) interface{} {
 	return c
 }
 
-func Start() {
+type Client struct {
+	Addr            string
+	Conn            *websocket.Conn
+	sendMessageChan chan Fields.SendMessageStruct
+	InterruptChan   chan os.Signal
+}
+
+func NewClient(addr string) *Client {
+	return &Client{
+		Addr: addr,
+		Conn: nil,
+		//SendMessageChan: make(chan Fields.SendMessageStruct),
+		sendMessageChan: Fields.SendMessageChannel,
+		InterruptChan:   make(chan os.Signal, 1),
+	}
+}
+
+func (c *Client) Close() {
+	c.InterruptChan <- os.Interrupt
+}
+
+// Websocket Client
+
+func (c *Client) Start() {
 	flag.Parse()
 	log.SetFlags(0)
 
-	interrupt := make(chan os.Signal, 1)
-	signal.Notify(interrupt, os.Interrupt)
+	//interrupt := make(chan os.Signal, 1)
+	signal.Notify(c.InterruptChan, os.Interrupt)
 
-	u := url.URL{Scheme: "ws", Host: *addr, Path: "/"}
+	u := url.URL{Scheme: "ws", Host: c.Addr, Path: "/"}
 	log.Printf("connecting to %s", u.String())
 
-	c, _, err := websocket.DefaultDialer.Dial(u.String(), nil)
+	var err error = nil
+	c.Conn, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
 	// retry
 	for err != nil {
 		log.Println("dial:", err)
 		time.Sleep(500)
 		log.Println("retrying... ")
-		c, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
+		c.Conn, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
 	}
 
-	defer c.Close()
+	defer c.Conn.Close()
 
 	done := make(chan struct{})
 
 	go func() {
 		defer close(done)
 		for {
-			_, message, err := c.ReadMessage()
+			_, message, err := c.Conn.ReadMessage()
 			if err != nil {
 				log.Println("read:", err)
 				// retry
 				for err != nil {
 					time.Sleep(500)
 					log.Println("retrying... ")
-					c, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
+					c.Conn, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
 				}
 				continue
 				//return
@@ -74,23 +94,23 @@ func Start() {
 		select {
 		case <-done:
 			return
-		case message := <-Fields.SendMessageChannel:
+		case message := <-c.sendMessageChan:
 			HandleSendMessage(&message)
 			if message.Value != SkipMessage {
 				sendMessage, _ := json.Marshal(message)
-				err := c.WriteMessage(websocket.TextMessage, sendMessage)
+				err := c.Conn.WriteMessage(websocket.TextMessage, sendMessage)
 				if err != nil {
 					log.Println("write:", err)
 					//return
 				}
 			}
 
-		case <-interrupt:
+		case <-c.InterruptChan:
 			log.Println("interrupt")
 
 			// Cleanly close the connection by sending a close message and then
 			// waiting (with timeout) for the server to close the connection.
-			err := c.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+			err := c.Conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
 			if err != nil {
 				log.Println("write close:", err)
 				return

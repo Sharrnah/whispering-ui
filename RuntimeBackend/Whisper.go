@@ -1,14 +1,18 @@
 package RuntimeBackend
 
 import (
+	"errors"
 	"io"
-	"os"
 	"os/exec"
+	"syscall"
+	"whispering-tiger-ui/Utilities"
 )
+
+var BackendsList []WhisperProcessConfig
 
 // RunWithStreams ComposeWithStreams executes a command
 // stdin/stdout/stderr
-func RunWithStreams(name string, arguments []string, stdIn io.Reader, stdOut io.Writer, stdErr io.Writer, action ...string) (*exec.Cmd, error) {
+func (c *WhisperProcessConfig) RunWithStreams(name string, arguments []string, stdIn io.Reader, stdOut io.Writer, stdErr io.Writer, action ...string) error {
 	var arg []string
 
 	for _, file := range arguments {
@@ -18,35 +22,86 @@ func RunWithStreams(name string, arguments []string, stdIn io.Reader, stdOut io.
 	arg = append(arg, action...)
 
 	proc := exec.Command(name, arg...)
-	//stdin, _ = proc.StdoutPipe()
-	//stdout, _ = proc.StdinPipe()
-	//stderr, _ = proc.StderrPipe()
+	proc.SysProcAttr = &syscall.SysProcAttr{
+		HideWindow: true,
+	}
 
 	proc.Stdout = stdOut
 	proc.Stdin = stdIn
 	proc.Stderr = stdErr
 
-	return proc, proc.Run()
-	//return stdIn, stdOut, stdErr
-}
+	c.Program = proc
 
-//goland:noinspection GoExportedOwnDeclaration
-var ReaderBackend, WriterBackend = io.Pipe()
+	return proc.Run()
+}
 
 type WhisperProcessConfig struct {
-	DeviceIndex string
-	SettingsFile     string
-	Process *os.Process
+	DeviceIndex    string
+	DeviceOutIndex string
+	SettingsFile   string
+	Program        *exec.Cmd
+	ReaderBackend  *io.PipeReader
+	WriterBackend  *io.PipeWriter
 }
 
-func (c *WhisperProcessConfig) StartWhisper() {
+func NewWhisperProcess() WhisperProcessConfig {
+	var ReaderBackend, WriterBackend = io.Pipe()
+
+	return WhisperProcessConfig{
+		DeviceIndex:    "-1",
+		DeviceOutIndex: "-1",
+		SettingsFile:   "settings.yaml",
+		ReaderBackend:  ReaderBackend,
+		WriterBackend:  WriterBackend,
+	}
+}
+
+func (c *WhisperProcessConfig) IsRunning() bool {
+	if c.Program.Process == nil {
+		return false
+	}
+
+	return true
+}
+
+func (c *WhisperProcessConfig) Stop() {
+	if c.Program != nil && c.Program.Process != nil {
+		println("Terminating process")
+		_ = c.Program.Process.Signal(syscall.SIGINT)
+		_ = c.Program.Process.Signal(syscall.SIGKILL)
+		_ = c.Program.Process.Signal(syscall.SIGTERM)
+		//_ = c.Program.Process.Kill()
+
+		c.Program.Stdout = nil
+		c.Program.Stdin = nil
+		c.Program.Stderr = nil
+	}
+}
+
+func (c *WhisperProcessConfig) Start() {
 	go func(writer io.Writer, reader io.Reader) {
 		var tmpReader io.Reader
-		//var tmpWriterReader io.Writer
-		proc, err := RunWithStreams("python", []string{"-u", "audioWhisper.py", "--websocket_ip", "127.0.0.1", "--device_index", c.DeviceIndex, "--config", c.SettingsFile}, tmpReader, writer, writer)
+		var err error
+
+		if Utilities.FileExists("audioWhisper.py") {
+			err = c.RunWithStreams("python", []string{"-u", "audioWhisper.py",
+				"--device_index", c.DeviceIndex,
+				"--device_out_index", c.DeviceOutIndex,
+				"--config", c.SettingsFile,
+			}, tmpReader, writer, writer)
+		} else if Utilities.FileExists("audioWhisper/audioWhisper.exe") {
+			err = c.RunWithStreams("audioWhisper/audioWhisper.exe", []string{
+				"--device_index", c.DeviceIndex,
+				"--device_out_index", c.DeviceOutIndex,
+				"--config", c.SettingsFile,
+			}, tmpReader, writer, writer)
+		} else {
+			err = errors.New("could not start audioWhisper")
+		}
+
 		if err != nil {
 			_, _ = writer.Write([]byte("Error: " + err.Error()))
+			return
 		}
-		c.Process = proc.Process
-	}(WriterBackend, ReaderBackend)
+	}(c.WriterBackend, c.ReaderBackend)
 }

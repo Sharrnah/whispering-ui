@@ -11,7 +11,7 @@ import (
 )
 
 func CreateAdvancedWindow() fyne.CanvasObject {
-	Settings.Form = Settings.BuildSettingsForm(nil).(*widget.Form)
+	Settings.Form = Settings.BuildSettingsForm(nil, Settings.Config.SettingsFilename).(*widget.Form)
 
 	settingsTabContent := container.NewVScroll(Settings.Form)
 
@@ -24,16 +24,19 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 
 	// Log logText updater thread
 	go func(writer io.Writer, reader io.Reader) {
-		buffer := make([]byte, 1024)
-		for {
-			n, err := reader.Read(buffer) // Read from the pipe
-			if err != nil {
-				panic(err)
+		if reader != nil {
+			buffer := make([]byte, 1024)
+			for {
+				n, err := reader.Read(buffer) // Read from the pipe
+				if err != nil {
+					//panic(err)
+					logText.AppendText(err.Error())
+				}
+				logText.AppendText(string(buffer[0:n]))
+				logTabContent.ScrollToBottom()
 			}
-			logText.AppendText(string(buffer[0:n]))
-			logTabContent.ScrollToBottom()
 		}
-	}(RuntimeBackend.WriterBackend, RuntimeBackend.ReaderBackend)
+	}(RuntimeBackend.BackendsList[0].WriterBackend, RuntimeBackend.BackendsList[0].ReaderBackend)
 
 	tabs := container.NewAppTabs(
 		container.NewTabItem("Log", logTabContent),
@@ -43,7 +46,7 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 
 	tabs.OnSelected = func(tab *container.TabItem) {
 		if tab.Text == "Settings" {
-			Settings.BuildSettingsForm(nil)
+			Settings.BuildSettingsForm(nil, Settings.Config.SettingsFilename)
 			tab.Content.(*container.Scroll).Content = Settings.Form
 		}
 	}
