@@ -366,15 +366,15 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		profileForm.Append("", layout.NewSpacer())
 
+		profileForm.Append("A.I. Device for Text Translation", CustomWidget.NewTextValueSelect("txt_translator_device", []CustomWidget.TextValueOption{
+			{Text: "CUDA", Value: "cuda"},
+			{Text: "CPU", Value: "cpu"},
+		}, func(s CustomWidget.TextValueOption) {}, 0))
+
 		profileForm.Append("Text Translation Size", CustomWidget.NewTextValueSelect("ai_device", []CustomWidget.TextValueOption{
 			{Text: "Small", Value: "small"},
 			{Text: "Medium", Value: "medium"},
 			{Text: "Large", Value: "large"},
-		}, func(s CustomWidget.TextValueOption) {}, 0))
-
-		profileForm.Append("A.I. Device for Text Translation", CustomWidget.NewTextValueSelect("txt_translator_device", []CustomWidget.TextValueOption{
-			{Text: "CUDA", Value: "cuda"},
-			{Text: "CPU", Value: "cpu"},
 		}, func(s CustomWidget.TextValueOption) {}, 0))
 
 		profileForm.Append("Text to Speech Enable", widget.NewCheck("", func(b bool) {}))
@@ -501,8 +501,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 		profileForm.Items[12].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Model)
 		// spacer
-		profileForm.Items[14].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_size)
-		profileForm.Items[15].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_device)
+		profileForm.Items[14].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_device)
+		profileForm.Items[15].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_size)
 		profileForm.Items[16].Widget.(*widget.Check).SetChecked(profileSettings.Tts_enabled)
 		profileForm.Items[17].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Tts_ai_device)
 
@@ -521,8 +521,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			profileSettings.Ai_device = profileForm.Items[11].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
 			profileSettings.Model = profileForm.Items[12].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
 
-			profileSettings.Txt_translator_size = profileForm.Items[14].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Txt_translator_device = profileForm.Items[15].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Txt_translator_device = profileForm.Items[14].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Txt_translator_size = profileForm.Items[15].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
 			profileSettings.Tts_enabled = profileForm.Items[16].Widget.(*widget.Check).Checked
 			profileSettings.Tts_ai_device = profileForm.Items[17].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
 
