@@ -17,7 +17,7 @@ type AudioDeviceList struct {
 	Devices    []AudioDevice
 }
 
-func GetAudioDevices(deviceType malgo.DeviceType) ([]AudioDevice, error) {
+func GetAudioDevices(deviceType malgo.DeviceType, deviceIndexStartPoint int) ([]AudioDevice, error) {
 	//a.DeviceType = deviceType
 
 	// initialize malgo
@@ -50,7 +50,7 @@ func GetAudioDevices(deviceType malgo.DeviceType) ([]AudioDevice, error) {
 		}
 		deviceList = append(deviceList, AudioDevice{
 			Name:      deviceInfo.Name(),
-			Index:     index,
+			Index:     index + deviceIndexStartPoint,
 			ID:        deviceInfo.ID.String(),
 			IsDefault: fullInfo.IsDefault != 0,
 		})

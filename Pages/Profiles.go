@@ -101,7 +101,7 @@ func (c *CurrentPlaybackDevice) InitDevices() {
 	for index, deviceInfo := range playbackDevices {
 		if deviceInfo.Name() == c.OutputDeviceName {
 			selectedPlaybackDeviceIndex = index
-			fmt.Println("Found input device: ", deviceInfo.Name(), " at index: ", index)
+			fmt.Println("Found output device: ", deviceInfo.Name(), " at index: ", index)
 			break
 		}
 	}
@@ -247,9 +247,9 @@ func (c *CurrentPlaybackDevice) Init() {
 
 }
 
-func GetAudioDevices(deviceType malgo.DeviceType) ([]CustomWidget.TextValueOption, error) {
+func GetAudioDevices(deviceType malgo.DeviceType, deviceIndexStartPoint int) ([]CustomWidget.TextValueOption, error) {
 
-	deviceList, _ := Utilities.GetAudioDevices(deviceType)
+	deviceList, _ := Utilities.GetAudioDevices(deviceType, deviceIndexStartPoint)
 
 	if deviceList == nil {
 		return nil, fmt.Errorf("no devices found")
@@ -277,8 +277,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 	go playBackDevice.Init()
 
-	audioInputDevices, _ := GetAudioDevices(malgo.Capture)
-	audioOutputDevices, _ := GetAudioDevices(malgo.Playback)
+	audioInputDevices, _ := GetAudioDevices(malgo.Capture, 0)
+	audioOutputDevices, _ := GetAudioDevices(malgo.Playback, len(audioInputDevices))
 
 	BuildProfileForm := func() fyne.CanvasObject {
 		profileForm := widget.NewForm()
