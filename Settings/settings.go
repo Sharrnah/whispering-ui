@@ -22,6 +22,10 @@ type Conf struct {
 	Device_index     interface{} `yaml:"device_index,omitempty"`
 	Device_out_index interface{} `yaml:"device_out_index,omitempty"`
 
+	Phrase_time_limit float64 `yaml:"phrase_time_limit,omitempty"`
+	Pause             float64 `yaml:"pause,omitempty"`
+	Energy            int     `yaml:"energy,omitempty"`
+
 	// Whisper Settings
 	Ai_device                  interface{} `yaml:"ai_device"`
 	Whisper_task               string      `yaml:"whisper_task"`
@@ -185,14 +189,14 @@ func (c *Conf) SetOption(optionName string, value interface{}) {
 				}
 			case reflect.String:
 				switch value.(type) {
-					case int:
-						setValue = reflect.ValueOf(strconv.Itoa(value.(int)))
+				case int:
+					setValue = reflect.ValueOf(strconv.Itoa(value.(int)))
 				}
 			case reflect.Int:
 				switch value.(type) {
-					case string:
-						tmpValue, _ := strconv.Atoi(value.(string))
-						setValue = reflect.ValueOf(tmpValue)
+				case string:
+					tmpValue, _ := strconv.Atoi(value.(string))
+					setValue = reflect.ValueOf(tmpValue)
 				}
 
 			}
@@ -360,7 +364,7 @@ func BuildSettingsForm(includeConfigFields []string, settingsFile string) fyne.C
 
 			Config.WriteYamlSettings(settingsFile)
 
-			dialog.ShowInformation("Settings Saved", "Settings have been saved to "+settingsFile + "\n This requires a restart of the application currently.", fyne.CurrentApp().Driver().AllWindows()[0])
+			dialog.ShowInformation("Settings Saved", "Settings have been saved to "+settingsFile+"\n This requires a restart of the application currently.", fyne.CurrentApp().Driver().AllWindows()[0])
 		}
 	}
 

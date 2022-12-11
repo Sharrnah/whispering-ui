@@ -11,6 +11,11 @@ type Profile struct {
 	SettingsFilename string
 	Device_index     interface{} `yaml:"device_index"`
 	Device_out_index interface{} `yaml:"device_out_index"`
+
+	Phrase_time_limit float64 `yaml:"phrase_time_limit,omitempty"`
+	Pause             float64 `yaml:"pause,omitempty"`
+	Energy            int     `yaml:"energy,omitempty"`
+
 	// Whisper Settings
 	Ai_device           interface{} `yaml:"ai_device"`
 	Model               string      `yaml:"model"`

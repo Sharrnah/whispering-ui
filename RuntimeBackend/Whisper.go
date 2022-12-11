@@ -3,7 +3,9 @@ package RuntimeBackend
 import (
 	"errors"
 	"io"
+	"os"
 	"os/exec"
+	"strings"
 	"syscall"
 	"whispering-tiger-ui/Utilities"
 )
@@ -25,6 +27,10 @@ func (c *WhisperProcessConfig) RunWithStreams(name string, arguments []string, s
 	proc.SysProcAttr = &syscall.SysProcAttr{
 		HideWindow: true,
 	}
+	// attach environment variables
+	if c.environmentVars != nil {
+		proc.Env = c.environmentVars
+	}
 
 	proc.Stdout = stdOut
 	proc.Stdin = stdIn
@@ -36,12 +42,13 @@ func (c *WhisperProcessConfig) RunWithStreams(name string, arguments []string, s
 }
 
 type WhisperProcessConfig struct {
-	DeviceIndex    string
-	DeviceOutIndex string
-	SettingsFile   string
-	Program        *exec.Cmd
-	ReaderBackend  *io.PipeReader
-	WriterBackend  *io.PipeWriter
+	DeviceIndex       string
+	DeviceOutIndex    string
+	SettingsFile      string
+	Program           *exec.Cmd
+	ReaderBackend     *io.PipeReader
+	WriterBackend     *io.PipeWriter
+	environmentVars []string
 }
 
 func NewWhisperProcess() WhisperProcessConfig {
@@ -75,6 +82,27 @@ func (c *WhisperProcessConfig) Stop() {
 		c.Program.Stdout = nil
 		c.Program.Stdin = nil
 		c.Program.Stderr = nil
+	}
+}
+
+func (c *WhisperProcessConfig) AttachEnvironment(envName, envValue string) {
+	c.environmentVars = os.Environ()
+
+	envIndex := -1
+	for index, element := range c.environmentVars {
+		if strings.HasPrefix(element, envName + "=") {
+			envIndex = index
+		}
+	}
+
+	if value, ok := os.LookupEnv(envName); !ok {
+		c.environmentVars = append(c.environmentVars, envName + "=" + envValue)
+	} else {
+		if envIndex > -1 {
+			c.environmentVars[envIndex] = envName + "=" + envValue + ";" + value
+		} else {
+			c.environmentVars = append(c.environmentVars, envName + "=" + envValue + ";" + value)
+		}
 	}
 }
 

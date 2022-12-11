@@ -12,6 +12,7 @@ import (
 	"whispering-tiger-ui/Pages"
 	"whispering-tiger-ui/RuntimeBackend"
 	"whispering-tiger-ui/Settings"
+	"whispering-tiger-ui/Utilities"
 	"whispering-tiger-ui/websocket"
 )
 
@@ -83,6 +84,12 @@ func main() {
 		RuntimeBackend.BackendsList[0].DeviceIndex = strconv.Itoa(Settings.Config.Device_index.(int))
 		RuntimeBackend.BackendsList[0].DeviceOutIndex = strconv.Itoa(Settings.Config.Device_out_index.(int))
 		RuntimeBackend.BackendsList[0].SettingsFile = Settings.Config.SettingsFilename
+		if Utilities.FileExists("ffmpeg/bin/ffmpeg.exe") {
+			appExec, _ := os.Executable()
+			appPath := filepath.Dir(appExec)
+
+			RuntimeBackend.BackendsList[0].AttachEnvironment("Path", filepath.Join(appPath, "ffmpeg/bin"))
+		}
 		RuntimeBackend.BackendsList[0].Start()
 
 		// initialize main window
@@ -112,7 +119,7 @@ func main() {
 
 	profilePage := Pages.CreateProfileWindow(onProfileClose)
 	profileWindow.SetContent(profilePage)
-	profileWindow.Resize(fyne.NewSize(1200, 600))
+	profileWindow.Resize(fyne.NewSize(1400, 700))
 
 	profileWindow.CenterOnScreen()
 	profileWindow.Show()
