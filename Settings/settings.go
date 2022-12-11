@@ -34,12 +34,13 @@ type Conf struct {
 	Condition_on_previous_text bool        `yaml:"condition_on_previous_text"`
 
 	// text translate settings
-	Txt_translate       bool   `yaml:"txt_translate"`
-	Src_lang            string `yaml:"src_lang"`
-	Trg_lang            string `yaml:"trg_lang"`
-	Txt_ascii           bool   `yaml:"txt_ascii"`
-	Txt_translator      string `yaml:"txt_translator"`
-	Txt_translator_size string `yaml:"txt_translator_size"`
+	Txt_translate         bool   `yaml:"txt_translate"`
+	Txt_translator_device string `yaml:"txt_translator_device"`
+	Src_lang              string `yaml:"src_lang"`
+	Trg_lang              string `yaml:"trg_lang"`
+	Txt_ascii             bool   `yaml:"txt_ascii"`
+	Txt_translator        string `yaml:"txt_translator"`
+	Txt_translator_size   string `yaml:"txt_translator_size"`
 
 	// websocket settings
 	Websocket_ip   string `yaml:"websocket_ip"`

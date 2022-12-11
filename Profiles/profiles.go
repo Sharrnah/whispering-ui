@@ -17,15 +17,16 @@ type Profile struct {
 	Energy            int     `yaml:"energy,omitempty"`
 
 	// Whisper Settings
-	Ai_device           interface{} `yaml:"ai_device"`
-	Model               string      `yaml:"model"`
-	Txt_translator_size string      `yaml:"txt_translator_size"`
-	Websocket_ip        string      `yaml:"websocket_ip"`
-	Websocket_port      int         `yaml:"websocket_port"`
-	Osc_ip              string      `yaml:"osc_ip"`
-	Osc_port            int         `yaml:"osc_port"`
-	Tts_enabled         bool        `yaml:"tts_enabled"`
-	Tts_ai_device       string      `yaml:"tts_ai_device"`
+	Ai_device             interface{} `yaml:"ai_device"`
+	Model                 string      `yaml:"model"`
+	Txt_translator_size   string      `yaml:"txt_translator_size"`
+	Txt_translator_device string      `yaml:"txt_translator_device"`
+	Websocket_ip          string      `yaml:"websocket_ip"`
+	Websocket_port        int         `yaml:"websocket_port"`
+	Osc_ip                string      `yaml:"osc_ip"`
+	Osc_port              int         `yaml:"osc_port"`
+	Tts_enabled           bool        `yaml:"tts_enabled"`
+	Tts_ai_device         string      `yaml:"tts_ai_device"`
 }
 
 func (p *Profile) Load(fileName string) {

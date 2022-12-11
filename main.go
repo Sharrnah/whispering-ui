@@ -119,7 +119,7 @@ func main() {
 
 	profilePage := Pages.CreateProfileWindow(onProfileClose)
 	profileWindow.SetContent(profilePage)
-	profileWindow.Resize(fyne.NewSize(1400, 700))
+	profileWindow.Resize(fyne.NewSize(1400, 760))
 
 	profileWindow.CenterOnScreen()
 	profileWindow.Show()
