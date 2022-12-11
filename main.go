@@ -80,8 +80,8 @@ func main() {
 	onProfileClose := func() {
 
 		RuntimeBackend.BackendsList = append(RuntimeBackend.BackendsList, RuntimeBackend.NewWhisperProcess())
-		RuntimeBackend.BackendsList[0].DeviceIndex = Settings.Config.Device_index.(string)
-		RuntimeBackend.BackendsList[0].DeviceOutIndex = Settings.Config.Device_out_index.(string)
+		RuntimeBackend.BackendsList[0].DeviceIndex = strconv.Itoa(Settings.Config.Device_index.(int))
+		RuntimeBackend.BackendsList[0].DeviceOutIndex = strconv.Itoa(Settings.Config.Device_out_index.(int))
 		RuntimeBackend.BackendsList[0].SettingsFile = Settings.Config.SettingsFilename
 		RuntimeBackend.BackendsList[0].Start()
 

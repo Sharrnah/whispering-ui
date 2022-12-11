@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 	"gopkg.in/yaml.v3"
 	"log"
@@ -77,8 +78,11 @@ var ConfigValues map[string]interface{} = nil
 
 // ExcludeConfigFields excludes fields from settings window (all lowercase)
 var ExcludeConfigFields = []string{
+	"settingsfilename",
 	"tts_model",
+	"device_index",
 	"device_out_index",
+	"current_language",
 }
 
 var Config Conf
@@ -179,6 +183,18 @@ func (c *Conf) SetOption(optionName string, value interface{}) {
 				case string:
 					setValue = reflect.ValueOf([]string{value.(string)})
 				}
+			case reflect.String:
+				switch value.(type) {
+					case int:
+						setValue = reflect.ValueOf(strconv.Itoa(value.(int)))
+				}
+			case reflect.Int:
+				switch value.(type) {
+					case string:
+						tmpValue, _ := strconv.Atoi(value.(string))
+						setValue = reflect.ValueOf(tmpValue)
+				}
+
 			}
 			indirectValues.Field(i).Set(setValue)
 			return
@@ -186,15 +202,18 @@ func (c *Conf) SetOption(optionName string, value interface{}) {
 	}
 }
 
-func (c *Conf) LoadYamlSettings(fileName string) {
+func (c *Conf) LoadYamlSettings(fileName string) error {
 	yamlFile, err := os.ReadFile(fileName)
 	if err != nil {
 		log.Printf("yamlFile.Get err   #%v ", err)
+		return err
 	}
 	err = yaml.Unmarshal(yamlFile, &c)
 	if err != nil {
-		log.Fatalf("Unmarshal: %v", err)
+		//log.Fatalf("Unmarshal: %v", err)
+		return err
 	}
+	return nil
 }
 
 func (c *Conf) WriteYamlSettings(fileName string) {
@@ -227,6 +246,8 @@ func GetSettingValues(settingField string) ([]string, error) {
 
 func BuildSettingsForm(includeConfigFields []string, settingsFile string) fyne.CanvasObject {
 	settingsForm := widget.NewForm()
+
+	settingsForm.Append("Profile", widget.NewLabel(Config.SettingsFilename))
 
 	settingsFields := reflect.ValueOf(Config)
 
@@ -338,6 +359,8 @@ func BuildSettingsForm(includeConfigFields []string, settingsFile string) fyne.C
 			//Settings.Form.Items[0].Widget.(*widget.Entry).SetText(Settings.Form.Items[0].Widget.(*widget.Entry).Text)
 
 			Config.WriteYamlSettings(settingsFile)
+
+			dialog.ShowInformation("Settings Saved", "Settings have been saved to "+settingsFile + "\n This requires a restart of the application currently.", fyne.CurrentApp().Driver().AllWindows()[0])
 		}
 	}
 

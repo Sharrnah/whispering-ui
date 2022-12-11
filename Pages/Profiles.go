@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 	"github.com/gen2brain/malgo"
@@ -26,10 +27,13 @@ type CurrentPlaybackDevice struct {
 	OutputDeviceName string
 	InputWaveWidget  *widget.ProgressBar
 	OutputWaveWidget *widget.ProgressBar
-	Context          *malgo.Context
+	Context          *malgo.AllocatedContext
 
+	device *malgo.Device
 	stopChannel   chan bool
 	playTestAudio bool
+	testAudioChannels uint32
+	testAudioSampleRate uint32
 }
 
 func (c *CurrentPlaybackDevice) Stop() {
@@ -51,22 +55,7 @@ func int32Map(x int32, in_min int32, in_max int32, out_min int32, out_max int32)
 	return int32(r)
 }
 
-func (c *CurrentPlaybackDevice) Init() {
-	if c.OutputWaveWidget == nil {
-		c.OutputWaveWidget = widget.NewProgressBar()
-		c.OutputWaveWidget.Max = 100.0
-		c.OutputWaveWidget.TextFormatter = func() string {
-			return ""
-		}
-	}
-	if c.InputWaveWidget == nil {
-		c.InputWaveWidget = widget.NewProgressBar()
-		c.InputWaveWidget.Max = 100.0
-		c.InputWaveWidget.TextFormatter = func() string {
-			return ""
-		}
-	}
-
+func (c *CurrentPlaybackDevice) InitTestAudio() (*bytes.Reader, *wav.Reader) {
 	byteReader := bytes.NewReader(resourceTestWav.Content())
 
 	testAudioReader := wav.NewReader(byteReader)
@@ -77,24 +66,20 @@ func (c *CurrentPlaybackDevice) Init() {
 		os.Exit(1)
 	}
 
-	testAudioChannels := uint32(testAudioFormat.NumChannels)
-	testAudioSampleRate := testAudioFormat.SampleRate
+	c.testAudioChannels = uint32(testAudioFormat.NumChannels)
+	c.testAudioSampleRate = testAudioFormat.SampleRate
 
-	//######################
+	return byteReader, testAudioReader
+}
 
-	ctx, err := malgo.InitContext([]malgo.Backend{malgo.BackendWinmm}, malgo.ContextConfig{}, func(message string) {
-		fmt.Printf("LOG <%v>\n", message)
-	})
-	if err != nil {
-		fmt.Println(err)
-		os.Exit(1)
+func (c *CurrentPlaybackDevice) InitDevices() {
+	byteReader, testAudioReader := c.InitTestAudio()
+
+	if c.device != nil && c.device.IsStarted() {
+		c.device.Uninit()
 	}
-	defer func() {
-		_ = ctx.Uninit()
-		ctx.Free()
-	}()
 
-	captureDevices, err := ctx.Devices(malgo.Capture)
+	captureDevices, err := c.Context.Devices(malgo.Capture)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -108,7 +93,7 @@ func (c *CurrentPlaybackDevice) Init() {
 		}
 	}
 
-	playbackDevices, err := ctx.Devices(malgo.Playback)
+	playbackDevices, err := c.Context.Devices(malgo.Playback)
 	if err != nil {
 		fmt.Println(err)
 	}
@@ -131,9 +116,9 @@ func (c *CurrentPlaybackDevice) Init() {
 	if selectedPlaybackDeviceIndex > -1 {
 		deviceConfig.Playback.DeviceID = playbackDevices[selectedPlaybackDeviceIndex].ID.Pointer()
 	}
-	deviceConfig.Playback.Channels = testAudioChannels
+	deviceConfig.Playback.Channels = c.testAudioChannels
 	//deviceConfig.SampleRate = 44100
-	deviceConfig.SampleRate = testAudioSampleRate
+	deviceConfig.SampleRate = c.testAudioSampleRate
 	deviceConfig.Alsa.NoMMap = 1
 
 	sizeInBytesCapture := uint32(malgo.SampleSizeInBytes(deviceConfig.Capture.Format))
@@ -204,17 +189,50 @@ func (c *CurrentPlaybackDevice) Init() {
 	captureCallbacks := malgo.DeviceCallbacks{
 		Data: onRecvFrames,
 	}
-	device, err := malgo.InitDevice(ctx.Context, deviceConfig, captureCallbacks)
+	c.device, err = malgo.InitDevice(c.Context.Context, deviceConfig, captureCallbacks)
 	if err != nil {
 		fmt.Println(err)
 		//os.Exit(1)
 	}
 
-	err = device.Start()
+	err = c.device.Start()
 	if err != nil {
 		fmt.Println(err)
 		//os.Exit(1)
 	}
+}
+
+func (c *CurrentPlaybackDevice) Init() {
+	if c.OutputWaveWidget == nil {
+		c.OutputWaveWidget = widget.NewProgressBar()
+		c.OutputWaveWidget.Max = 100.0
+		c.OutputWaveWidget.TextFormatter = func() string {
+			return ""
+		}
+	}
+	if c.InputWaveWidget == nil {
+		c.InputWaveWidget = widget.NewProgressBar()
+		c.InputWaveWidget.Max = 100.0
+		c.InputWaveWidget.TextFormatter = func() string {
+			return ""
+		}
+	}
+
+
+	//######################
+	var err error
+	c.Context, err = malgo.InitContext([]malgo.Backend{malgo.BackendWinmm}, malgo.ContextConfig{}, func(message string) {
+		fmt.Printf("LOG <%v>\n", message)
+	})
+	if err != nil {
+		fmt.Println(err)
+		os.Exit(1)
+	}
+	defer func() {
+		_ = c.Context.Uninit()
+		c.Context.Free()
+	}()
+
 
 	// run as long as no stop signal is received
 	c.stopChannel = make(chan bool)
@@ -222,7 +240,9 @@ func (c *CurrentPlaybackDevice) Init() {
 		select {
 		case <-c.stopChannel:
 			fmt.Println("stopping...")
-			device.Uninit()
+			if c.device != nil {
+				c.device.Uninit()
+			}
 			return
 		}
 	}
@@ -255,6 +275,8 @@ func GetAudioDevices(deviceType malgo.DeviceType) ([]CustomWidget.TextValueOptio
 
 func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	playBackDevice := CurrentPlaybackDevice{}
+	//playBackDevice.Stop()
+
 	go playBackDevice.Init()
 
 	audioInputDevices, _ := GetAudioDevices(malgo.Capture)
@@ -279,9 +301,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileForm.Append("Audio Input (mic)", CustomWidget.NewTextValueSelect("device_index", audioInputDevices,
 			func(s CustomWidget.TextValueOption) {
 				println(s.Value)
-				playBackDevice.Stop()
+				//playBackDevice.Stop()
 				playBackDevice.InputDeviceName = s.Text
-				go playBackDevice.Init()
+				playBackDevice.InitDevices()
+				//go playBackDevice.Init()
 			},
 			0),
 		)
@@ -290,9 +313,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileForm.Append("Audio Output (speaker)", CustomWidget.NewTextValueSelect("device_out_index", audioOutputDevices,
 			func(s CustomWidget.TextValueOption) {
 				println(s.Value)
-				playBackDevice.Stop()
+				//playBackDevice.Stop()
 				playBackDevice.OutputDeviceName = s.Text
-				go playBackDevice.Init()
+				playBackDevice.InitDevices()
+				//go playBackDevice.Init()
 			},
 			0),
 		)
@@ -338,7 +362,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 	//profileOptions := []string{"device_index", "device_out_index", "ai_device", "model", "txt_translator_size", "websocket_ip", "websocket_port", "tts_enabled", "tts_ai_device"}
 	//profileWindow := Settings.BuildSettingsForm(profileOptions, "").(*widget.Form)
+
 	profileListContent := container.NewVScroll(BuildProfileForm())
+	profileListContent.Hide()
+
+	profileHelpTextContent := container.NewVScroll(widget.NewLabel("Select an existing Profile or create a new one.\n\nClick Save and Load Profile."))
 
 	// build profile list
 	var settingsFiles []string
@@ -365,6 +393,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	)
 
 	profileList.OnSelected = func(id widget.ListItemID) {
+		profileHelpTextContent.Hide()
+		profileListContent.Show()
+
 		//profileSettings := Settings.Conf{
 		//	Websocket_ip:        "127.0.0.1",
 		//	Websocket_port:      5000,
@@ -391,39 +422,43 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Osc_ip:              "127.0.0.1",
 			Osc_port:            9000,
 		}
-		profileSettings.LoadYamlSettings(settingsFiles[id])
+		err = profileSettings.LoadYamlSettings(settingsFiles[id])
+		if err != nil {
+			dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
+		}
 		profileForm := profileListContent.Content.(*widget.Form)
 		profileForm.SubmitText = "Save and Load Profile"
 		profileForm.Items[0].Widget.(*widget.Entry).SetText(profileSettings.Websocket_ip)
 		profileForm.Items[1].Widget.(*widget.Entry).SetText(strconv.Itoa(profileSettings.Websocket_port))
 		// spacer
+		deviceInValue := "-1"
+		deviceInWidget := profileForm.Items[3].Widget.(*CustomWidget.TextValueSelect)
 		if profileSettings.Device_index != nil {
-			deviceInValue := "-1"
 			switch profileSettings.Device_index.(type) {
 			case int:
 				deviceInValue = strconv.Itoa(profileSettings.Device_index.(int))
 			case string:
 				deviceInValue = profileSettings.Device_index.(string)
 			}
-			deviceInWidget := profileForm.Items[3].Widget.(*CustomWidget.TextValueSelect)
-			if profileSettings.Device_index != nil && deviceInWidget.GetSelected().Value != deviceInValue {
-				deviceInWidget.SetSelected(deviceInValue)
-			}
+		}
+		if deviceInWidget.GetSelected().Value != deviceInValue {
+			deviceInWidget.SetSelected(deviceInValue)
 		}
 		// audio progressbar
+		deviceOutValue := "-1"
+		deviceOutWidget := profileForm.Items[5].Widget.(*CustomWidget.TextValueSelect)
 		if profileSettings.Device_out_index != nil {
-			deviceOutValue := "-1"
 			switch profileSettings.Device_out_index.(type) {
 			case int:
 				deviceOutValue = strconv.Itoa(profileSettings.Device_out_index.(int))
 			case string:
 				deviceOutValue = profileSettings.Device_out_index.(string)
 			}
-			deviceOutWidget := profileForm.Items[5].Widget.(*CustomWidget.TextValueSelect)
-			if deviceOutWidget.GetSelected().Value != deviceOutValue {
-				profileForm.Items[5].Widget.(*CustomWidget.TextValueSelect).SetSelected(deviceOutValue)
-			}
 		}
+		if deviceOutWidget.GetSelected().Value != deviceOutValue {
+			deviceOutWidget.SetSelected(deviceOutValue)
+		}
+
 		// audio progressbar
 		// spacer
 		if profileSettings.Ai_device != nil {
@@ -439,9 +474,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			profileSettings.Websocket_ip = profileForm.Items[0].Widget.(*widget.Entry).Text
 			profileSettings.Websocket_port, _ = strconv.Atoi(profileForm.Items[1].Widget.(*widget.Entry).Text)
 
-			profileSettings.Device_index = profileForm.Items[3].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Device_index, _ = strconv.Atoi(profileForm.Items[3].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value)
 
-			profileSettings.Device_out_index = profileForm.Items[5].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Device_out_index, _ = strconv.Atoi(profileForm.Items[5].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value)
 
 			profileSettings.Ai_device = profileForm.Items[8].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
 			profileSettings.Model = profileForm.Items[9].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
@@ -463,6 +498,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					Txt_translator_size: profileSettings.Txt_translator_size,
 					Websocket_ip:        profileSettings.Websocket_ip,
 					Websocket_port:      profileSettings.Websocket_port,
+					Osc_ip:         profileSettings.Osc_ip,
+					Osc_port:       profileSettings.Osc_port,
 					Tts_enabled:         profileSettings.Tts_enabled,
 					Tts_ai_device:       profileSettings.Tts_ai_device,
 				}
@@ -477,6 +514,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 
 		profileForm.Refresh()
+
+		playBackDevice.InitDevices()
 
 		//profileListContent.Content = profileForm
 
@@ -508,8 +547,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileList.Refresh()
 	}), newProfileEntry)
 
+
 	mainContent := container.NewHSplit(
-		profileListContent,
+		container.NewMax(profileHelpTextContent, profileListContent),
 		container.NewBorder(newProfileRow, nil, nil, nil, profileList),
 		//container.NewMax(profileList),
 	)

@@ -17,6 +17,8 @@ type Profile struct {
 	Txt_translator_size string      `yaml:"txt_translator_size"`
 	Websocket_ip        string      `yaml:"websocket_ip"`
 	Websocket_port      int         `yaml:"websocket_port"`
+	Osc_ip              string      `yaml:"osc_ip"`
+	Osc_port            int         `yaml:"osc_port"`
 	Tts_enabled         bool        `yaml:"tts_enabled"`
 	Tts_ai_device       string      `yaml:"tts_ai_device"`
 }
