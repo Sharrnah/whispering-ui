@@ -9,7 +9,7 @@ import (
 	"log"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Utilities"
-	"whispering-tiger-ui/websocket/Messages"
+	"whispering-tiger-ui/Websocket/Messages"
 )
 
 func CreateOcrWindow() fyne.CanvasObject {

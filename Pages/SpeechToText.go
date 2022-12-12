@@ -8,7 +8,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 	"time"
 	"whispering-tiger-ui/Fields"
-	"whispering-tiger-ui/websocket/Messages"
+	"whispering-tiger-ui/Websocket/Messages"
 )
 
 func CreateSpeechToTextWindow() fyne.CanvasObject {
@@ -131,10 +131,17 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		),
 	)
 
+	Fields.Field.ProcessingStatus = widget.NewProgressBarInfinite()
+
 	mainContent := container.NewHSplit(
 		leftVerticalLayout,
-		container.NewMax(resultList),
+		container.NewMax(
+			container.NewBorder(nil, Fields.Field.ProcessingStatus, nil, nil, resultList),
+		),
 	)
+
+	Fields.Field.ProcessingStatus.Stop()
+
 	mainContent.SetOffset(0.6)
 
 	return mainContent

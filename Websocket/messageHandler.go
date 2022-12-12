@@ -1,12 +1,13 @@
-package websocket
+package Websocket
 
 import (
 	"encoding/json"
 	"log"
 	"strings"
+	"time"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Settings"
-	"whispering-tiger-ui/websocket/Messages"
+	"whispering-tiger-ui/Websocket/Messages"
 )
 
 // receiving message
@@ -64,8 +65,8 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		Messages.WindowsList.Update()
 	case "settings_values":
 		var (
-			i    interface{}
-			ok   bool
+			i  interface{}
+			ok bool
 		)
 		err = json.Unmarshal(c.Data, &i)
 		if Settings.ConfigValues, ok = i.(map[string]interface{}); !ok {
@@ -85,6 +86,9 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		}
 
 		whisperResultMessage.Update()
+
+		// stop processing status
+		Fields.Field.ProcessingStatus.Stop()
 	case "translate_result":
 		Messages.LastTranslationResult = c.TranslateResult
 		Fields.Field.TranscriptionTranslationInput.SetText(c.TranslateResult)
@@ -106,9 +110,17 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		//	audioData.WavData = ""
 		//	Audio.LastFile = audioData
 		//	go Audio.LastFile.Play()
+	case "processing_start":
+		var processingStarted = false
+		err = json.Unmarshal(c.Data, &processingStarted)
+		Fields.Field.ProcessingStatus.Start()
+		go func() {
+			time.Sleep(5 * time.Second)
+			Fields.Field.ProcessingStatus.Stop()
+		}()
 	}
 	if err != nil {
-		log.Fatalf("Unmarshal: %v", err)
+		log.Printf("Unmarshal: %v", err)
 	}
 
 }

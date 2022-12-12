@@ -13,10 +13,10 @@ import (
 	"whispering-tiger-ui/RuntimeBackend"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
-	"whispering-tiger-ui/websocket"
+	"whispering-tiger-ui/Websocket"
 )
 
-var WebsocketClient = websocket.NewClient("127.0.0.1:5000")
+var WebsocketClient = Websocket.NewClient("127.0.0.1:5000")
 
 func overwriteFyneFont() {
 	pwd, _ := filepath.Abs("./")

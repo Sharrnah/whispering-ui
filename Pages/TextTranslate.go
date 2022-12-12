@@ -7,7 +7,7 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"whispering-tiger-ui/Fields"
-	"whispering-tiger-ui/websocket/Messages"
+	"whispering-tiger-ui/Websocket/Messages"
 )
 
 func CreateTextTranslateWindow() fyne.CanvasObject {
