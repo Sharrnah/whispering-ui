@@ -18,6 +18,7 @@ import (
 	"strings"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Profiles"
+	"whispering-tiger-ui/Resources"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
 )
@@ -56,7 +57,7 @@ func int32Map(x int32, in_min int32, in_max int32, out_min int32, out_max int32)
 }
 
 func (c *CurrentPlaybackDevice) InitTestAudio() (*bytes.Reader, *wav.Reader) {
-	byteReader := bytes.NewReader(resourceTestWav.Content())
+	byteReader := bytes.NewReader(Resources.ResourceTestWav.Content())
 
 	testAudioReader := wav.NewReader(byteReader)
 

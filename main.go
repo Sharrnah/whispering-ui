@@ -10,6 +10,7 @@ import (
 	"runtime"
 	"strconv"
 	"whispering-tiger-ui/Pages"
+	"whispering-tiger-ui/Resources"
 	"whispering-tiger-ui/RuntimeBackend"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
@@ -63,7 +64,7 @@ func determineWindowsFont(fontsDir string) string {
 func main() {
 	overwriteFyneFont()
 	a := app.NewWithID("tiger.whispering")
-	a.SetIcon(resourceAppIconPng)
+	a.SetIcon(Resources.ResourceAppIconPng)
 
 	w := a.NewWindow("Whispering Tiger")
 	w.SetMaster()
