@@ -249,12 +249,39 @@ func GetSettingValues(settingField string) ([]string, error) {
 	return nil, errors.New("no values for field '" + settingField + "'")
 }
 
+func MergeSettings(firstConf Conf, secondConf Conf) Conf {
+	yamlFileFirst, err := yaml.Marshal(firstConf)
+	if err != nil {
+		log.Printf("error: %v", err)
+	}
+	yamlFileSecond, err := yaml.Marshal(secondConf)
+	if err != nil {
+		log.Printf("error: %v", err)
+	}
+
+	var mergedConf Conf
+	err = yaml.Unmarshal(yamlFileFirst, &mergedConf)
+	if err != nil {
+		log.Printf("error: %v", err)
+	}
+	err = yaml.Unmarshal(yamlFileSecond, &mergedConf)
+	if err != nil {
+		log.Printf("error: %v", err)
+	}
+	return mergedConf
+}
+
 func BuildSettingsForm(includeConfigFields []string, settingsFile string) fyne.CanvasObject {
 	settingsForm := widget.NewForm()
 
 	settingsForm.Append("Profile", widget.NewLabel(Config.SettingsFilename))
 
-	settingsFields := reflect.ValueOf(Config)
+	// merge local settings with settings file
+	var settingsFileConf = Conf{}
+	settingsFileConf.GetConf(settingsFile)
+	MergedConfig := MergeSettings(Config, settingsFileConf)
+
+	settingsFields := reflect.ValueOf(MergedConfig)
 
 	for i := 0; i < settingsFields.NumField(); i++ {
 		if settingsFields.Field(i).CanInterface() {
@@ -349,21 +376,24 @@ func BuildSettingsForm(includeConfigFields []string, settingsFile string) fyne.C
 						value = nil
 					}
 					Config.SetOption(item.Text, value)
+					MergedConfig.SetOption(item.Text, value)
 				case *widget.Select:
 					value = item.Widget.(*widget.Select).Selected
 					if value == "None" {
 						value = nil
 					}
 					Config.SetOption(item.Text, value)
+					MergedConfig.SetOption(item.Text, value)
 				case *widget.Check:
 					value = item.Widget.(*widget.Check).Checked
 					Config.SetOption(item.Text, value)
+					MergedConfig.SetOption(item.Text, value)
 				}
 
 			}
 			//Settings.Form.Items[0].Widget.(*widget.Entry).SetText(Settings.Form.Items[0].Widget.(*widget.Entry).Text)
 
-			Config.WriteYamlSettings(settingsFile)
+			MergedConfig.WriteYamlSettings(settingsFile)
 
 			dialog.ShowInformation("Settings Saved", "Settings have been saved to "+settingsFile+"\n This requires a restart of the application currently.", fyne.CurrentApp().Driver().AllWindows()[0])
 		}
