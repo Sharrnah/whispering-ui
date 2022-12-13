@@ -16,7 +16,7 @@ func NewLogText() *LogText {
 	return &LogText{
 		Widget:    widget.NewLabel(""),
 		TextLines: []string{},
-		MaxLines:  300,
+		MaxLines:  100,
 	}
 }
 
