@@ -402,7 +402,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		println(err)
 	}
 	for _, file := range files {
-		if !file.IsDir() && (strings.HasSuffix(file.Name(), ".yaml") || strings.HasSuffix(file.Name(), ".yml")) {
+		if !file.IsDir() && !strings.HasPrefix(file.Name(), ".") && (strings.HasSuffix(file.Name(), ".yaml") || strings.HasSuffix(file.Name(), ".yml")) {
 			settingsFiles = append(settingsFiles, file.Name())
 		}
 	}
@@ -454,9 +454,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Pause:             0.8,
 			Energy:            300,
 		}
-		err = profileSettings.LoadYamlSettings(settingsFiles[id])
-		if err != nil {
-			dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
+		if Utilities.FileExists(settingsFiles[id]) {
+			err = profileSettings.LoadYamlSettings(settingsFiles[id])
+			if err != nil {
+				dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
+			}
 		}
 		profileForm := profileListContent.Content.(*widget.Form)
 		profileForm.SubmitText = "Save and Load Profile"

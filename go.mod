@@ -4,6 +4,7 @@ go 1.18
 
 require (
 	fyne.io/fyne/v2 v2.2.4
+	github.com/dustin/go-humanize v1.0.0
 	github.com/gen2brain/malgo v0.11.10
 	github.com/gorilla/websocket v1.5.0
 	github.com/hajimehoshi/oto/v2 v2.3.1

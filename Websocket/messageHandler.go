@@ -113,11 +113,15 @@ func (c *MessageStruct) HandleReceiveMessage() {
 	case "processing_start":
 		var processingStarted = false
 		err = json.Unmarshal(c.Data, &processingStarted)
-		Fields.Field.ProcessingStatus.Start()
-		go func() {
-			time.Sleep(5 * time.Second)
+		if processingStarted {
+			Fields.Field.ProcessingStatus.Start()
+			go func() {
+				time.Sleep(10 * time.Second)
+				Fields.Field.ProcessingStatus.Stop()
+			}()
+		} else {
 			Fields.Field.ProcessingStatus.Stop()
-		}()
+		}
 	}
 	if err != nil {
 		log.Printf("Unmarshal: %v", err)
