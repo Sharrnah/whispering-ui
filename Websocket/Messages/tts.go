@@ -3,6 +3,7 @@ package Messages
 import (
 	"strings"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/Settings"
 )
 
 // TTS Languages
@@ -43,5 +44,18 @@ var TtsVoices TtsVoicesListing
 func (res TtsVoicesListing) Update() *TtsVoicesListing {
 	Fields.Field.TtsVoiceCombo.Options = nil
 	Fields.Field.TtsVoiceCombo.Options = append(Fields.Field.TtsVoiceCombo.Options, res.Voices...)
+
+	// set first voice if selection is not in list
+	voicesListContainsSelectedVoice := false
+	for _, voice := range res.Voices {
+		if voice == Settings.Config.Tts_voice {
+			voicesListContainsSelectedVoice = true
+			break
+		}
+	}
+	if !voicesListContainsSelectedVoice {
+		Fields.Field.TtsVoiceCombo.SetSelectedIndex(0)
+	}
+
 	return &res
 }
