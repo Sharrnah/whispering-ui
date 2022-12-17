@@ -19,9 +19,9 @@ Whispering Tiger UI is intended to make it easier to control and configure the *
 [**Download Latest Version**](https://github.com/Sharrnah/whispering-ui/releases/latest)
 
 ## Screenshots
-<img src=doc/images/profile-selection.png width=800 alt="profile selection">
-<img src=doc/images/speech2text.png width=800 alt="Speech 2 Text Tab">
-<img src=doc/images/text-translate.png width=800 alt="Text Translate Tab">
-<img src=doc/images/text2speech.png width=800 alt="Text 2 Speech Tab">
-<img src=doc/images/ocr.png width=800 alt="Optical Character Recognition Tab">
-<img src=doc/images/about.png width=800 alt="About Info Tab">
+<img src=doc/images/profile-selection.png width=845 alt="profile selection">
+<img src=doc/images/speech2text.png width=845 alt="Speech 2 Text Tab">
+<img src=doc/images/text-translate.png width=845 alt="Text Translate Tab">
+<img src=doc/images/text2speech.png width=845 alt="Text 2 Speech Tab">
+<img src=doc/images/ocr.png width=845 alt="Optical Character Recognition Tab">
+<img src=doc/images/about.png width=845 alt="About Info Tab">
