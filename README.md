@@ -18,6 +18,13 @@ Whispering Tiger UI is intended to make it easier to control and configure the *
 ## Download
 [**Download Latest Version**](https://github.com/Sharrnah/whispering-ui/releases/latest)
 
+## Installation
+1. After the download the latest version from the [**Releases**], extract it to a folder of your choice on a drive with enough free space.
+2. Run the **Whispering Tiger.exe** file.
+3. Let it download the latest version of **Whispering Tiger**. (It will ask to download an Update.)
+4. After the download is finished, you can create a Profile and start using the **Whispering Tiger** application.
+   - On the first start, it will start downloading the A.I. Models which can take a while depending on your selected Model size. (currently it does not show the status of the model downloads)
+
 ## Screenshots
 <img src=doc/images/profile-selection.png width=845 alt="profile selection">
 <img src=doc/images/speech2text.png width=845 alt="Speech 2 Text Tab">
