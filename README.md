@@ -20,9 +20,10 @@ Whispering Tiger UI is intended to make it easier to control and configure the *
 
 ## Installation
 1. After the download the latest version from the [**Releases**], extract it to a folder of your choice on a drive with enough free space.
-2. Run the **Whispering Tiger.exe** file.
-3. Let it download the latest version of **Whispering Tiger**. (It will ask to download an Update.)
-4. After the download is finished, you can create a Profile and start using the **Whispering Tiger** application.
+2. [Install CUDA for GPU Acceleration](https://developer.nvidia.com/cuda-downloads) (Optional but recommended for NVIDIA GPUs).
+3. Run the **Whispering Tiger.exe** file.
+4. Let it download the latest version of **Whispering Tiger**. (It will ask to download an Update.)
+5. After the download is finished, you can create a Profile and start using the **Whispering Tiger** application.
    - On the first start, it will start downloading the A.I. Models which can take a while depending on your selected Model size. (currently it does not show the status of the model downloads)
 
 ## Screenshots
