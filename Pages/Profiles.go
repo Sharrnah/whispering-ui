@@ -460,6 +460,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 		}
+		profileSettings.SettingsFilename = settingsFiles[id]
 		profileForm := profileListContent.Content.(*widget.Form)
 		profileForm.SubmitText = "Save and Load Profile"
 		profileForm.Items[0].Widget.(*widget.Entry).SetText(profileSettings.Websocket_ip)
