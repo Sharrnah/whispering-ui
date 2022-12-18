@@ -6,12 +6,15 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
 	"gopkg.in/yaml.v3"
 	"log"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
+	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Utilities"
 )
 
@@ -85,6 +88,7 @@ var ConfigValues map[string]interface{} = nil
 var ExcludeConfigFields = []string{
 	"settingsfilename",
 	"tts_model",
+	"tts_answer",
 	"device_index",
 	"device_out_index",
 	"current_language",
@@ -160,6 +164,15 @@ func confLoader(c interface{}, configFile string) interface{} {
 
 func (c *Conf) GetConf(configFile string) *Conf {
 	return confLoader(c, configFile).(*Conf)
+}
+
+func (c *Conf) GetOption(option string) (interface{}, error) {
+	option = cases.Title(language.English, cases.Compact).String(option)
+	fieldByName := reflect.ValueOf(c).Elem().FieldByName(option)
+	if fieldByName.IsValid() {
+		return fieldByName.Interface(), nil
+	}
+	return nil, fmt.Errorf("option %s not found", option)
 }
 
 func (c *Conf) SetOption(optionName string, value interface{}) {
@@ -351,9 +364,22 @@ func BuildSettingsForm(includeConfigFields []string, settingsFile string) fyne.C
 				//settingsWidget.SetValue(float64(settingsValue.(int)))
 				//settingsForm.Append(settingsName, settingsWidget)
 
-				settingsWidget := widget.NewEntry()
-				settingsWidget.SetText(strconv.Itoa(settingsValue.(int)))
-				settingsForm.Append(settingsName, settingsWidget)
+				if settingsValues != nil {
+					if len(settingsValues) > 0 {
+						settingsWidget := widget.NewSelect(settingsValues, func(s string) {
+							println(s)
+						})
+
+						selectedValue := strconv.Itoa(settingsValue.(int))
+						settingsWidget.SetSelected(selectedValue)
+						settingsForm.Append(settingsName, settingsWidget)
+					}
+				} else {
+					settingsWidget := widget.NewEntry()
+					settingsWidget.SetText(strconv.Itoa(settingsValue.(int)))
+					settingsForm.Append(settingsName, settingsWidget)
+				}
+
 			case "bool":
 				settingsWidget := widget.NewCheck("", func(checked bool) {})
 				settingsWidget.Checked = settingsValue.(bool)
@@ -367,6 +393,7 @@ func BuildSettingsForm(includeConfigFields []string, settingsFile string) fyne.C
 
 	if settingsFile != "" {
 		settingsForm.OnSubmit = func() {
+			needsSettingUpdate := false
 			for _, item := range settingsForm.Items {
 				var value interface{} = nil
 				switch item.Widget.(type) {
@@ -375,27 +402,49 @@ func BuildSettingsForm(includeConfigFields []string, settingsFile string) fyne.C
 					if value == "None" {
 						value = nil
 					}
-					Config.SetOption(item.Text, value)
-					MergedConfig.SetOption(item.Text, value)
 				case *widget.Select:
 					value = item.Widget.(*widget.Select).Selected
 					if value == "None" {
 						value = nil
 					}
-					Config.SetOption(item.Text, value)
-					MergedConfig.SetOption(item.Text, value)
 				case *widget.Check:
 					value = item.Widget.(*widget.Check).Checked
-					Config.SetOption(item.Text, value)
-					MergedConfig.SetOption(item.Text, value)
 				}
 
+				preChangeOption, err := MergedConfig.GetOption(item.Text)
+				sendValue := value
+				if err == nil {
+					switch preChangeOption.(type) {
+					case int:
+						switch value.(type) {
+						case string:
+							sendValue, _ = strconv.Atoi(value.(string))
+						}
+					}
+					if preChangeOption != sendValue {
+						needsSettingUpdate = true
+						sendMessage := Fields.SendMessageStruct{
+							Type:  "setting_change",
+							Name:  item.Text,
+							Value: sendValue,
+						}
+						sendMessage.SendMessage()
+
+						Config.SetOption(item.Text, value)
+						MergedConfig.SetOption(item.Text, value)
+					}
+				}
 			}
-			//Settings.Form.Items[0].Widget.(*widget.Entry).SetText(Settings.Form.Items[0].Widget.(*widget.Entry).Text)
+			if needsSettingUpdate {
+				sendMessage := Fields.SendMessageStruct{
+					Type: "setting_update_req",
+				}
+				sendMessage.SendMessage()
+			}
 
 			MergedConfig.WriteYamlSettings(settingsFile)
 
-			dialog.ShowInformation("Settings Saved", "Settings have been saved to "+settingsFile+"\n This requires a restart of the application currently.", fyne.CurrentApp().Driver().AllWindows()[0])
+			dialog.ShowInformation("Settings Saved", "Settings have been saved to "+settingsFile+"\n This might require a restart of the application for some changes to take effect.", fyne.CurrentApp().Driver().AllWindows()[0])
 		}
 	}
 
