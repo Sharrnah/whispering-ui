@@ -272,9 +272,13 @@ func GetAudioDevices(deviceType malgo.DeviceType, deviceIndexStartPoint int) ([]
 	return devices, nil
 }
 
+func appendWidgetToForm(form *widget.Form, text string, itemWidget fyne.CanvasObject, hintText string) {
+	item := &widget.FormItem{Text: text, Widget: itemWidget, HintText: hintText}
+	form.AppendItem(item)
+}
+
 func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	playBackDevice := CurrentPlaybackDevice{}
-	//playBackDevice.Stop()
 
 	go playBackDevice.Init()
 
@@ -293,42 +297,36 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			playBackDevice.PlayStopTestAudio()
 		}), playBackDevice.OutputWaveWidget)
 
-		profileForm.Append("Websocket IP", websocketIp)
-		profileForm.Append("Websocket Port", websocketPort)
+		appendWidgetToForm(profileForm, "Websocket IP + Port", container.NewGridWithColumns(2, websocketIp, websocketPort), "IP + Port of the websocket server the backend will start and the UI will connect to.")
 		profileForm.Append("", layout.NewSpacer())
 
-		profileForm.Append("Audio Input (mic)", CustomWidget.NewTextValueSelect("device_index", audioInputDevices,
+		appendWidgetToForm(profileForm, "Audio Input (mic)", CustomWidget.NewTextValueSelect("device_index", audioInputDevices,
 			func(s CustomWidget.TextValueOption) {
 				println(s.Value)
-				//playBackDevice.Stop()
 				playBackDevice.InputDeviceName = s.Text
 				playBackDevice.InitDevices()
-				//go playBackDevice.Init()
 			},
 			0),
-		)
+			"")
+
 		profileForm.Append("", audioInputProgress)
 
-		profileForm.Append("Audio Output (speaker)", CustomWidget.NewTextValueSelect("device_out_index", audioOutputDevices,
+		appendWidgetToForm(profileForm, "Audio Output (speaker)", CustomWidget.NewTextValueSelect("device_out_index", audioOutputDevices,
 			func(s CustomWidget.TextValueOption) {
 				println(s.Value)
-				//playBackDevice.Stop()
 				playBackDevice.OutputDeviceName = s.Text
 				playBackDevice.InitDevices()
-				//go playBackDevice.Init()
 			},
 			0),
-		)
+			"")
 		profileForm.Append("", audioOutputProgress)
-
-		profileForm.Append("", layout.NewSpacer())
 
 		energySliderState := widget.NewLabel("0.0")
 		energySliderWidget := widget.NewSlider(0, 1000)
 		energySliderWidget.OnChanged = func(value float64) {
 			energySliderState.SetText(fmt.Sprintf("%.0f", value))
 		}
-		profileForm.Append("Speech detection Level", container.NewBorder(nil, nil, nil, energySliderState, energySliderWidget))
+		appendWidgetToForm(profileForm, "Speech detection Level", container.NewBorder(nil, nil, nil, energySliderState, energySliderWidget), "The volume level at which the speech detection will trigger.")
 
 		pauseSliderState := widget.NewLabel("0.0")
 		pauseSliderWidget := widget.NewSlider(0, 5)
@@ -336,7 +334,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		pauseSliderWidget.OnChanged = func(value float64) {
 			pauseSliderState.SetText(fmt.Sprintf("%.1f", value))
 		}
-		profileForm.Append("Speech pause detection", container.NewBorder(nil, nil, nil, pauseSliderState, pauseSliderWidget))
+		appendWidgetToForm(profileForm, "Speech pause detection", container.NewBorder(nil, nil, nil, pauseSliderState, pauseSliderWidget), "The pause time in seconds after which the speech detection will stop and A.I. processing starts.")
 
 		phraseLimitSliderState := widget.NewLabel("0.0")
 		phraseLimitSliderWidget := widget.NewSlider(0, 50)
@@ -344,7 +342,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		phraseLimitSliderWidget.OnChanged = func(value float64) {
 			phraseLimitSliderState.SetText(fmt.Sprintf("%.1f", value))
 		}
-		profileForm.Append("Phrase time limit", container.NewBorder(nil, nil, nil, phraseLimitSliderState, phraseLimitSliderWidget))
+		appendWidgetToForm(profileForm, "Phrase time limit", container.NewBorder(nil, nil, nil, phraseLimitSliderState, phraseLimitSliderWidget), "The max. time limit in seconds after which the audio processing starts.")
 
 		profileForm.Append("A.I. Device for Speech to Text", CustomWidget.NewTextValueSelect("ai_device", []CustomWidget.TextValueOption{
 			{Text: "CUDA", Value: "cuda"},
@@ -378,6 +376,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Large", Value: "large"},
 		}, func(s CustomWidget.TextValueOption) {}, 0))
 
+		profileForm.Append("", layout.NewSpacer())
+
 		profileForm.Append("Text to Speech Enable", widget.NewCheck("", func(b bool) {}))
 
 		profileForm.Append("A.I. Device for Text to Speech", CustomWidget.NewTextValueSelect("tts_ai_device", []CustomWidget.TextValueOption{
@@ -386,9 +386,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}, func(s CustomWidget.TextValueOption) {}, 0))
 		return profileForm
 	}
-
-	//profileOptions := []string{"device_index", "device_out_index", "ai_device", "model", "txt_translator_size", "websocket_ip", "websocket_port", "tts_enabled", "tts_ai_device"}
-	//profileWindow := Settings.BuildSettingsForm(profileOptions, "").(*widget.Form)
 
 	profileListContent := container.NewVScroll(BuildProfileForm())
 	profileListContent.Hide()
@@ -423,17 +420,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileHelpTextContent.Hide()
 		profileListContent.Show()
 
-		//profileSettings := Settings.Conf{
-		//	Websocket_ip:        "127.0.0.1",
-		//	Websocket_port:      5000,
-		//	Device_index:        -1,
-		//	Device_out_index:    -1,
-		//	Ai_device:           "cuda",
-		//	Model:               "tiny",
-		//	Txt_translator_size: "small",
-		//	Tts_enabled:         true,
-		//	Tts_ai_device:       "cuda",
-		//}
 		profileSettings := Settings.Conf{
 			SettingsFilename:      settingsFiles[id],
 			Websocket_ip:          "127.0.0.1",
@@ -463,11 +449,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileSettings.SettingsFilename = settingsFiles[id]
 		profileForm := profileListContent.Content.(*widget.Form)
 		profileForm.SubmitText = "Save and Load Profile"
-		profileForm.Items[0].Widget.(*widget.Entry).SetText(profileSettings.Websocket_ip)
-		profileForm.Items[1].Widget.(*widget.Entry).SetText(strconv.Itoa(profileSettings.Websocket_port))
+		profileForm.Items[0].Widget.(*fyne.Container).Objects[0].(*widget.Entry).SetText(profileSettings.Websocket_ip)
+		profileForm.Items[0].Widget.(*fyne.Container).Objects[1].(*widget.Entry).SetText(strconv.Itoa(profileSettings.Websocket_port))
 		// spacer
 		deviceInValue := "-1"
-		deviceInWidget := profileForm.Items[3].Widget.(*CustomWidget.TextValueSelect)
+		deviceInWidget := profileForm.Items[2].Widget.(*CustomWidget.TextValueSelect)
 		if profileSettings.Device_index != nil {
 			switch profileSettings.Device_index.(type) {
 			case int:
@@ -481,7 +467,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 		// audio progressbar
 		deviceOutValue := "-1"
-		deviceOutWidget := profileForm.Items[5].Widget.(*CustomWidget.TextValueSelect)
+		deviceOutWidget := profileForm.Items[4].Widget.(*CustomWidget.TextValueSelect)
 		if profileSettings.Device_out_index != nil {
 			switch profileSettings.Device_out_index.(type) {
 			case int:
@@ -496,39 +482,39 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		// audio progressbar
 		// spacer
-		profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Energy))
-		profileForm.Items[9].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Pause))
-		profileForm.Items[10].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Phrase_time_limit))
+		profileForm.Items[6].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Energy))
+		profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Pause))
+		profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Phrase_time_limit))
 
 		if profileSettings.Ai_device != nil {
-			profileForm.Items[11].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Ai_device.(string))
+			profileForm.Items[9].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Ai_device.(string))
 		}
-		profileForm.Items[12].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Model)
+		profileForm.Items[10].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Model)
 		// spacer
-		profileForm.Items[14].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_device)
-		profileForm.Items[15].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_size)
-		profileForm.Items[16].Widget.(*widget.Check).SetChecked(profileSettings.Tts_enabled)
-		profileForm.Items[17].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Tts_ai_device)
+		profileForm.Items[12].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_device)
+		profileForm.Items[13].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_size)
+		profileForm.Items[15].Widget.(*widget.Check).SetChecked(profileSettings.Tts_enabled)
+		profileForm.Items[16].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Tts_ai_device)
 
 		profileForm.OnSubmit = func() {
-			profileSettings.Websocket_ip = profileForm.Items[0].Widget.(*widget.Entry).Text
-			profileSettings.Websocket_port, _ = strconv.Atoi(profileForm.Items[1].Widget.(*widget.Entry).Text)
+			profileSettings.Websocket_ip = profileForm.Items[0].Widget.(*fyne.Container).Objects[0].(*widget.Entry).Text
+			profileSettings.Websocket_port, _ = strconv.Atoi(profileForm.Items[0].Widget.(*fyne.Container).Objects[1].(*widget.Entry).Text)
 
-			profileSettings.Device_index, _ = strconv.Atoi(profileForm.Items[3].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value)
+			profileSettings.Device_index, _ = strconv.Atoi(profileForm.Items[2].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value)
 
-			profileSettings.Device_out_index, _ = strconv.Atoi(profileForm.Items[5].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value)
+			profileSettings.Device_out_index, _ = strconv.Atoi(profileForm.Items[4].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value)
 
-			profileSettings.Energy = int(profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value)
-			profileSettings.Pause = profileForm.Items[9].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value
-			profileSettings.Phrase_time_limit = profileForm.Items[10].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value
+			profileSettings.Energy = int(profileForm.Items[6].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value)
+			profileSettings.Pause = profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value
+			profileSettings.Phrase_time_limit = profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value
 
-			profileSettings.Ai_device = profileForm.Items[11].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Model = profileForm.Items[12].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Ai_device = profileForm.Items[9].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Model = profileForm.Items[10].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
 
-			profileSettings.Txt_translator_device = profileForm.Items[14].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Txt_translator_size = profileForm.Items[15].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Tts_enabled = profileForm.Items[16].Widget.(*widget.Check).Checked
-			profileSettings.Tts_ai_device = profileForm.Items[17].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Txt_translator_device = profileForm.Items[12].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Txt_translator_size = profileForm.Items[13].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Tts_enabled = profileForm.Items[15].Widget.(*widget.Check).Checked
+			profileSettings.Tts_ai_device = profileForm.Items[16].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
 
 			// update existing settings or create new one if it does not exist yet
 			if Utilities.FileExists(settingsFiles[id]) {
@@ -556,7 +542,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				newProfileEntry.Save(settingsFiles[id])
 			}
 			Settings.Config = profileSettings
-			//Settings.ConfigLoaded = true
 
 			// closes profile window, stop audio device and call onClose
 			playBackDevice.Stop()
@@ -566,9 +551,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileForm.Refresh()
 
 		playBackDevice.InitDevices()
-
-		//profileListContent.Content = profileForm
-
 	}
 
 	newProfileEntry := widget.NewEntry()
@@ -600,7 +582,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	mainContent := container.NewHSplit(
 		container.NewMax(profileHelpTextContent, profileListContent),
 		container.NewBorder(newProfileRow, nil, nil, nil, profileList),
-		//container.NewMax(profileList),
 	)
 	mainContent.SetOffset(0.6)
 

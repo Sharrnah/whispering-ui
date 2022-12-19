@@ -35,6 +35,7 @@ type Conf struct {
 	Current_language           string      `yaml:"current_language"`
 	Model                      string      `yaml:"model"`
 	Condition_on_previous_text bool        `yaml:"condition_on_previous_text"`
+	Initial_prompt             string      `yaml:"initial_prompt"`
 
 	// text translate settings
 	Txt_translate         bool   `yaml:"txt_translate"`
