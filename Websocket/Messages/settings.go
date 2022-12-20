@@ -60,9 +60,6 @@ func (res TranslateSetting) Update() *TranslateSetting {
 	} else if Fields.Field.SourceLanguageCombo.Selected == "" && res.Src_lang == "auto" {
 		Fields.Field.SourceLanguageCombo.SetSelected(cases.Title(language.English, cases.Compact).String(res.Src_lang))
 	}
-	if Fields.Field.SourceLanguageComboTxtTranslateCombo.Selected == "" {
-		Fields.Field.SourceLanguageComboTxtTranslateCombo.SetSelected(Fields.Field.SourceLanguageCombo.Selected)
-	}
 
 	// Set TargetLanguageCombo
 	if strings.ToLower(Fields.Field.TargetLanguageCombo.Selected) != strings.ToLower(InstalledLanguages.GetNameByCode(res.Trg_lang)) {
@@ -96,7 +93,6 @@ func (res TranslateSetting) Update() *TranslateSetting {
 		Fields.Field.TtsVoiceCombo.SetSelected(res.Tts_voice)
 	}
 	// Set OcrWindowCombo
-	//if res.Ocr_window_name != Settings.Config.Ocr_window_name {
 	if Fields.Field.OcrWindowCombo.Selected != res.Ocr_window_name {
 		if !Utilities.Contains(Fields.Field.OcrWindowCombo.Options, res.Ocr_window_name) {
 			Fields.Field.OcrWindowCombo.Options = append(Fields.Field.OcrWindowCombo.Options, res.Ocr_window_name)

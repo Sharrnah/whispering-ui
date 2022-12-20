@@ -13,17 +13,15 @@ var Field = struct {
 	TranscriptionSpeakerLanguageCombo *widget.Select
 	TranscriptionInput                *CustomWidget.EntryWithPopupMenu
 	TranscriptionTranslationInput     *CustomWidget.EntryWithPopupMenu
-	//SourceLanguageCombo                  *widget.Select
-	SourceLanguageCombo                  *CustomWidget.TextValueSelect
-	SourceLanguageComboTxtTranslateCombo *widget.Select
-	TargetLanguageCombo                  *widget.Select
-	TargetLanguageTxtTranslateCombo      *widget.Select
-	TtsModelCombo                        *widget.Select
-	TtsVoiceCombo                        *widget.Select
-	TtsEnabled                           *widget.Check
-	OscEnabled                           *widget.Check
-	OcrLanguageCombo                     *widget.Select
-	OcrWindowCombo                       *CustomWidget.TappableSelect
+	SourceLanguageCombo               *CustomWidget.TextValueSelect
+	TargetLanguageCombo               *widget.Select
+	TargetLanguageTxtTranslateCombo   *widget.Select
+	TtsModelCombo                     *widget.Select
+	TtsVoiceCombo                     *widget.Select
+	TtsEnabled                        *widget.Check
+	OscEnabled                        *widget.Check
+	OcrLanguageCombo                  *widget.Select
+	OcrWindowCombo                    *CustomWidget.TappableSelect
 }{
 	ProcessingStatus: nil,
 	TranscriptionTaskCombo: widget.NewSelect([]string{"transcribe", "translate (to en)"}, func(value string) {
@@ -106,17 +104,6 @@ var Field = struct {
 		}))
 		return entry
 	}(),
-	/*SourceLanguageCombo: widget.NewSelect([]string{"Auto"}, func(value string) {
-
-		sendMessage := SendMessageStruct{
-			Type:  "setting_change",
-			Name:  "src_lang",
-			Value: value,
-		}
-		sendMessage.SendMessage()
-
-		log.Println("Select set to", value)
-	}),*/
 	SourceLanguageCombo: CustomWidget.NewTextValueSelect("src_lang", []CustomWidget.TextValueOption{
 		{
 			Text:  "Auto",
@@ -133,16 +120,6 @@ var Field = struct {
 
 		log.Println("Select set to", valueObj.Value)
 	}, 0),
-	SourceLanguageComboTxtTranslateCombo: widget.NewSelect([]string{"Auto"}, func(value string) {
-		if value == "Auto" {
-			sendMessage := SendMessageStruct{
-				Type:  "setting_change",
-				Name:  "src_lang",
-				Value: value,
-			}
-			sendMessage.SendMessage()
-		}
-	}),
 	TargetLanguageCombo: widget.NewSelect([]string{"None"}, func(value string) {
 
 		sendMessage := SendMessageStruct{
