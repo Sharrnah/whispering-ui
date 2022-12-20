@@ -7,6 +7,7 @@ import (
 	"time"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Settings"
+	"whispering-tiger-ui/Utilities"
 	"whispering-tiger-ui/Websocket/Messages"
 )
 
@@ -94,6 +95,14 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		Fields.Field.TranscriptionTranslationInput.SetText(c.TranslateResult)
 		if c.OriginalText != "" {
 			Fields.Field.TranscriptionInput.SetText(c.OriginalText)
+		}
+		if Fields.Field.SourceLanguageCombo.GetSelected().Value == "Auto" {
+			langName := Utilities.LanguageMapList.GetName(c.TxtFromLang)
+			if langName == "" {
+				langName = c.TxtFromLang
+			}
+			Fields.Field.SourceLanguageCombo.Options[0].Text = "Auto [detected: " + langName + "]"
+			Fields.Field.SourceLanguageCombo.SetSelected(Fields.Field.SourceLanguageCombo.Options[0].Value)
 		}
 		//case "tts_save":
 		//	var audioData = Audio.TtsResultRaw{}

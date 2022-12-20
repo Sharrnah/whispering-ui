@@ -8,12 +8,13 @@ import (
 )
 
 var Field = struct {
-	ProcessingStatus                     *widget.ProgressBarInfinite
-	TranscriptionTaskCombo               *widget.Select
-	TranscriptionSpeakerLanguageCombo    *widget.Select
-	TranscriptionInput                   *CustomWidget.EntryWithPopupMenu
-	TranscriptionTranslationInput        *CustomWidget.EntryWithPopupMenu
-	SourceLanguageCombo                  *widget.Select
+	ProcessingStatus                  *widget.ProgressBarInfinite
+	TranscriptionTaskCombo            *widget.Select
+	TranscriptionSpeakerLanguageCombo *widget.Select
+	TranscriptionInput                *CustomWidget.EntryWithPopupMenu
+	TranscriptionTranslationInput     *CustomWidget.EntryWithPopupMenu
+	//SourceLanguageCombo                  *widget.Select
+	SourceLanguageCombo                  *CustomWidget.TextValueSelect
 	SourceLanguageComboTxtTranslateCombo *widget.Select
 	TargetLanguageCombo                  *widget.Select
 	TargetLanguageTxtTranslateCombo      *widget.Select
@@ -105,7 +106,7 @@ var Field = struct {
 		}))
 		return entry
 	}(),
-	SourceLanguageCombo: widget.NewSelect([]string{"Auto"}, func(value string) {
+	/*SourceLanguageCombo: widget.NewSelect([]string{"Auto"}, func(value string) {
 
 		sendMessage := SendMessageStruct{
 			Type:  "setting_change",
@@ -115,7 +116,23 @@ var Field = struct {
 		sendMessage.SendMessage()
 
 		log.Println("Select set to", value)
-	}),
+	}),*/
+	SourceLanguageCombo: CustomWidget.NewTextValueSelect("src_lang", []CustomWidget.TextValueOption{
+		{
+			Text:  "Auto",
+			Value: "auto",
+		},
+	}, func(valueObj CustomWidget.TextValueOption) {
+
+		sendMessage := SendMessageStruct{
+			Type:  "setting_change",
+			Name:  "src_lang",
+			Value: valueObj.Value,
+		}
+		sendMessage.SendMessage()
+
+		log.Println("Select set to", valueObj.Value)
+	}, 0),
 	SourceLanguageComboTxtTranslateCombo: widget.NewSelect([]string{"Auto"}, func(value string) {
 		if value == "Auto" {
 			sendMessage := SendMessageStruct{

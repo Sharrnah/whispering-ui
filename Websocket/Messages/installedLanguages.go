@@ -1,6 +1,7 @@
 package Messages
 
 import (
+	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
 )
 
@@ -45,7 +46,10 @@ func (res InstalledLanguagesListing) Update() *InstalledLanguagesListing {
 		if elementCode == "" {
 			elementName = "Auto"
 		}
-		Fields.Field.SourceLanguageCombo.Options = append(Fields.Field.SourceLanguageCombo.Options, elementName)
+		Fields.Field.SourceLanguageCombo.Options = append(Fields.Field.SourceLanguageCombo.Options, CustomWidget.TextValueOption{
+			Text:  elementName,
+			Value: elementName,
+		})
 	}
 	// fill target language combo
 	for _, element := range InstalledLanguages.Languages {
