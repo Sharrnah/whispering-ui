@@ -435,6 +435,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Current_language:      "",
 			Osc_ip:                "127.0.0.1",
 			Osc_port:              9000,
+			Logprob_threshold:     "",
+			No_speech_threshold:   "0.275",
 
 			Phrase_time_limit: 0.0,
 			Pause:             0.8,

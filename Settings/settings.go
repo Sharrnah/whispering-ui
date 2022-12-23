@@ -36,6 +36,8 @@ type Conf struct {
 	Model                      string      `yaml:"model"`
 	Condition_on_previous_text bool        `yaml:"condition_on_previous_text"`
 	Initial_prompt             string      `yaml:"initial_prompt"`
+	Logprob_threshold          string      `yaml:"logprob_threshold"`   // string formatted float or "none" / ""
+	No_speech_threshold        string      `yaml:"no_speech_threshold"` // string formatted float or "none" / ""
 
 	// text translate settings
 	Txt_translate         bool   `yaml:"txt_translate"`
@@ -63,11 +65,13 @@ type Conf struct {
 	Ocr_window_name string `yaml:"ocr_window_name"`
 
 	// TTS settings
-	Tts_enabled   bool     `yaml:"tts_enabled"`
-	Tts_ai_device string   `yaml:"tts_ai_device"`
-	Tts_answer    bool     `yaml:"tts_answer"`
-	Tts_model     []string `yaml:"tts_model"`
-	Tts_voice     string   `yaml:"tts_voice"`
+	Tts_enabled       bool     `yaml:"tts_enabled"`
+	Tts_ai_device     string   `yaml:"tts_ai_device"`
+	Tts_answer        bool     `yaml:"tts_answer"`
+	Tts_model         []string `yaml:"tts_model"`
+	Tts_voice         string   `yaml:"tts_voice"`
+	Tts_prosody_rate  string   `yaml:"tts_prosody_rate"`
+	Tts_prosody_pitch string   `yaml:"tts_prosody_pitch"`
 
 	// FLAN-T5 settings
 	Flan_enabled                       bool   `yaml:"flan_enabled"`
