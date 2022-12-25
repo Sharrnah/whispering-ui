@@ -34,7 +34,6 @@ func (m AppTheme) Icon(name fyne.ThemeIconName) fyne.Resource {
 
 func (m AppTheme) Font(style fyne.TextStyle) fyne.Resource {
 	return Resources.ResourceGoNotoTtf
-	//return theme.DefaultTheme().Font(style)
 }
 
 func (m AppTheme) Size(name fyne.ThemeSizeName) float32 {
