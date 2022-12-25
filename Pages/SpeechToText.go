@@ -30,8 +30,22 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		Fields.Field.OscEnabled,
 	)
 
-	// whisper results row
-	resultList := widget.NewListWithData(Fields.DataBindings.WhisperResultsDataBinding,
+	// main layout
+	leftVerticalLayout := container.NewBorder(
+		container.New(layout.NewVBoxLayout(),
+			languageRow,
+		),
+		nil, nil, nil,
+		container.NewVSplit(
+			transcriptionRow,
+			container.New(layout.NewVBoxLayout(), quickOptionsRow),
+		),
+	)
+
+	Fields.Field.ProcessingStatus = widget.NewProgressBarInfinite()
+
+	// whisper Result list
+	Fields.Field.WhisperResultList = widget.NewListWithData(Fields.DataBindings.WhisperResultsDataBinding,
 		func() fyne.CanvasObject {
 			return container.New(layout.NewGridLayout(1),
 				container.NewBorder(
@@ -97,11 +111,10 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 			}
 
 			// resize
-			//fyne.MeasureText(jsonResult.TxtTranslation, 12, fyne.TextStyle{Bold: true})
 			//mainContainer.Resize(fyne.NewSize(mainContainer.Size().Width, translateResultLabel.Size().Height+originalTranscriptionLabel.Size().Height+10))
 		})
 
-	resultList.OnSelected = func(id widget.ListItemID) {
+	Fields.Field.WhisperResultList.OnSelected = func(id widget.ListItemID) {
 		whisperMessage, _ := Fields.DataBindings.WhisperResultsDataBinding.GetValue(id)
 
 		result := whisperMessage.(Messages.WhisperResult)
@@ -115,28 +128,14 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 
 		go func() {
 			time.Sleep(200 * time.Millisecond)
-			resultList.Unselect(id)
+			Fields.Field.WhisperResultList.Unselect(id)
 		}()
 	}
-
-	// main layout
-	leftVerticalLayout := container.NewBorder(
-		container.New(layout.NewVBoxLayout(),
-			languageRow,
-		),
-		nil, nil, nil,
-		container.NewVSplit(
-			transcriptionRow,
-			container.New(layout.NewVBoxLayout(), quickOptionsRow),
-		),
-	)
-
-	Fields.Field.ProcessingStatus = widget.NewProgressBarInfinite()
 
 	mainContent := container.NewHSplit(
 		leftVerticalLayout,
 		container.NewMax(
-			container.NewBorder(nil, Fields.Field.ProcessingStatus, nil, nil, resultList),
+			container.NewBorder(nil, Fields.Field.ProcessingStatus, nil, nil, Fields.Field.WhisperResultList),
 		),
 	)
 

@@ -25,6 +25,11 @@ func (res WhisperResult) Update() {
 	//	Fields.DataBindings.WhisperResultsDataBinding.Set(whisperResultsPart[:199])
 	//}
 	Fields.DataBindings.WhisperResultsDataBinding.Prepend(res)
+
+	// resize new entry
+	//txtTranslationSize := fyne.MeasureText(res.TxtTranslation, 12, fyne.TextStyle{Bold: true})
+	//textSize := fyne.MeasureText(res.Text, 12, fyne.TextStyle{Bold: true})
+	//Fields.Field.WhisperResultList.SetItemHeight(Fields.Field.WhisperResultList.Length()-1, txtTranslationSize.Height+textSize.Height)
 }
 
 var WhisperResults []WhisperResult

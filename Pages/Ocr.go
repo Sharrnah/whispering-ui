@@ -62,6 +62,8 @@ func CreateOcrWindow() fyne.CanvasObject {
 		}
 		sendMessage.SendMessage()
 	})
+	ocrButton.Importance = widget.HighImportance
+
 	buttonRow := container.NewHBox(layout.NewSpacer(),
 		ocrButton,
 	)

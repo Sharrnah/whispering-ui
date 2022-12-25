@@ -4,6 +4,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"whispering-tiger-ui/Fields"
 )
@@ -11,7 +12,7 @@ import (
 func CreateTextToSpeechWindow() fyne.CanvasObject {
 	ttsModels := container.New(layout.NewFormLayout(), widget.NewLabel("Model:"), Fields.Field.TtsModelCombo)
 
-	saveRandomVoiceButton := widget.NewButton("Save Random Voice", func() {
+	saveRandomVoiceButton := widget.NewButtonWithIcon("Save Random Voice", theme.DocumentSaveIcon(), func() {
 		sendMessage := Fields.SendMessageStruct{
 			Type: "tts_voice_save_req",
 		}
@@ -26,7 +27,7 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 
 	transcriptionRow := container.New(layout.NewGridLayout(1), Fields.Field.TranscriptionTranslationInput)
 
-	sendButton := widget.NewButton("Send to Text 2 Speech", func() {
+	sendButton := widget.NewButtonWithIcon("Send to Text 2 Speech", theme.MediaPlayIcon(), func() {
 		valueData := struct {
 			Text     string `json:"text"`
 			ToDevice bool   `json:"to_device"`
@@ -42,6 +43,7 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 		}
 		sendMessage.SendMessage()
 	})
+	sendButton.Importance = widget.HighImportance
 
 	testButton := widget.NewButton("Test the Voice", func() {
 		valueData := struct {

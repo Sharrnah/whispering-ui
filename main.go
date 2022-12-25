@@ -198,9 +198,10 @@ func determineWindowsFont(fontsDir string) string {
 }
 
 func main() {
-	overwriteFyneFont()
 	a := app.NewWithID("tiger.whispering")
 	a.SetIcon(Resources.ResourceAppIconPng)
+
+	a.Settings().SetTheme(&AppTheme{})
 
 	w := a.NewWindow("Whispering Tiger")
 	w.SetMaster()

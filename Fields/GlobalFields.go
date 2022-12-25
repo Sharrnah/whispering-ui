@@ -9,6 +9,7 @@ import (
 
 var Field = struct {
 	ProcessingStatus                  *widget.ProgressBarInfinite
+	WhisperResultList                 *widget.List
 	TranscriptionTaskCombo            *widget.Select
 	TranscriptionSpeakerLanguageCombo *widget.Select
 	TranscriptionInput                *CustomWidget.EntryWithPopupMenu
@@ -23,7 +24,8 @@ var Field = struct {
 	OcrLanguageCombo                  *widget.Select
 	OcrWindowCombo                    *CustomWidget.TappableSelect
 }{
-	ProcessingStatus: nil,
+	ProcessingStatus:  nil,
+	WhisperResultList: nil,
 	TranscriptionTaskCombo: widget.NewSelect([]string{"transcribe", "translate (to en)"}, func(value string) {
 		switch value {
 		case "transcribe":

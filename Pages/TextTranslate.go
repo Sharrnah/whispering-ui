@@ -58,6 +58,7 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 		}
 		sendMessage.SendMessage()
 	})
+	translateButton.Importance = widget.HighImportance
 
 	translateButtonRow := container.NewHBox(layout.NewSpacer(),
 		translateButton,

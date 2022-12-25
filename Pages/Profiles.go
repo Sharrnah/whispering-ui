@@ -8,6 +8,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/gen2brain/malgo"
 	"github.com/youpy/go-wav"
@@ -293,7 +294,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		websocketPort.SetText("5000")
 
 		audioInputProgress := playBackDevice.InputWaveWidget
-		audioOutputProgress := container.NewBorder(nil, nil, nil, widget.NewButton("Test", func() {
+		audioOutputProgress := container.NewBorder(nil, nil, nil, widget.NewButtonWithIcon("Test", theme.MediaPlayIcon(), func() {
 			playBackDevice.PlayStopTestAudio()
 		}), playBackDevice.OutputWaveWidget)
 
@@ -568,7 +569,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		return nil
 	}
 
-	newProfileRow := container.NewBorder(nil, nil, nil, widget.NewButton("New", func() {
+	newProfileRow := container.NewBorder(nil, nil, nil, widget.NewButtonWithIcon("New", theme.DocumentCreateIcon(), func() {
 		validationError := newProfileEntry.Validate()
 		if validationError != nil {
 			return
