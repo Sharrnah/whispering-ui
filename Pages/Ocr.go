@@ -89,7 +89,7 @@ func CreateOcrWindow() fyne.CanvasObject {
 		nil, nil, nil,
 		container.NewVSplit(
 			transcriptionRow,
-			layout.NewSpacer(),
+			Fields.Field.OcrImageContainer,
 		),
 	)
 

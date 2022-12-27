@@ -2,6 +2,7 @@ package Fields
 
 import (
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 	"log"
 	"whispering-tiger-ui/CustomWidget"
@@ -23,6 +24,7 @@ var Field = struct {
 	OscEnabled                        *widget.Check
 	OcrLanguageCombo                  *widget.Select
 	OcrWindowCombo                    *CustomWidget.TappableSelect
+	OcrImageContainer                 *fyne.Container
 }{
 	ProcessingStatus:  nil,
 	WhisperResultList: nil,
@@ -174,6 +176,7 @@ var Field = struct {
 		}
 		sendMessage.SendMessage()
 	}),
+	OcrImageContainer: container.NewMax(),
 }
 
 func init() {

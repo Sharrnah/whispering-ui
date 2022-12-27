@@ -4,6 +4,9 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"image"
+	"image/color"
+	"image/draw"
 	"os"
 	"reflect"
 	"strconv"
@@ -33,6 +36,32 @@ func FileExists(fileName string) bool {
 		// Therefore, do *NOT* use !os.IsNotExist(err) to test for file existence
 		return false
 	}
+}
+
+func DrawRect(imgOrig image.Image, boundingBoxes [][]int, thickness int, color color.Color) draw.Image {
+	// convert as usable image
+	b := imgOrig.Bounds()
+	img := image.NewRGBA(image.Rect(0, 0, b.Dx(), b.Dy()))
+	draw.Draw(img, img.Bounds(), imgOrig, b.Min, draw.Src)
+
+	for _, singleBoundingBox := range boundingBoxes {
+		x1, y1, x2, y2 := singleBoundingBox[0], singleBoundingBox[1], singleBoundingBox[2], singleBoundingBox[3]
+
+		for t := 0; t < thickness; t++ {
+			// draw horizontal lines
+			for x := x1; x <= x2; x++ {
+				img.Set(x, y1+t, color)
+				img.Set(x, y2-t, color)
+			}
+			// draw vertical lines
+			for y := y1; y <= y2; y++ {
+				img.Set(x1+t, y, color)
+				img.Set(x2-t, y, color)
+			}
+		}
+	}
+
+	return img
 }
 
 func ConvertHexToInt(hex string) int64 {

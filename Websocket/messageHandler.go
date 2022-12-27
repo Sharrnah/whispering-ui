@@ -119,6 +119,9 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		//	audioData.WavData = ""
 		//	Audio.LastFile = audioData
 		//	go Audio.LastFile.Play()
+	case "ocr_result":
+		err = json.Unmarshal(c.Data, &Messages.OcrResult)
+		Messages.OcrResult.Update()
 	case "processing_start":
 		var processingStarted = false
 		err = json.Unmarshal(c.Data, &processingStarted)

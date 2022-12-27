@@ -1,6 +1,12 @@
 package Messages
 
 import (
+	"bytes"
+	"encoding/base64"
+	"fyne.io/fyne/v2/canvas"
+	"image"
+	"image/color"
+	"log"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
@@ -33,6 +39,36 @@ func (res WindowsStruct) Update() *WindowsStruct {
 
 	if Fields.Field.OcrWindowCombo.LastTappedPointEvent != nil {
 		Fields.Field.OcrWindowCombo.ShopPopup()
+	}
+
+	return &res
+}
+
+// ############################
+
+type OcrResultData struct {
+	BoundingBoxes [][]int `json:"bounding_boxes"`
+	ImageData     string  `json:"image_data"` // base64 encoded image
+}
+
+var OcrResult OcrResultData
+
+func (res OcrResultData) Update() *OcrResultData {
+	decodedBytes, err := base64.StdEncoding.DecodeString(res.ImageData)
+	if err == nil {
+		img, _, err := image.Decode(bytes.NewReader(decodedBytes))
+		if err != nil {
+			log.Println(err)
+			return &res
+		}
+
+		drawnImage := Utilities.DrawRect(img, res.BoundingBoxes, 2, color.RGBA{R: 255, G: 0, B: 0, A: 255})
+
+		ocrResultImage := canvas.NewImageFromImage(drawnImage)
+		ocrResultImage.ScaleMode = canvas.ImageScaleFastest
+		ocrResultImage.FillMode = canvas.ImageFillContain
+		Fields.Field.OcrImageContainer.RemoveAll()
+		Fields.Field.OcrImageContainer.Add(ocrResultImage)
 	}
 
 	return &res
