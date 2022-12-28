@@ -3,6 +3,10 @@ package Websocket
 import (
 	"encoding/json"
 	"flag"
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/widget"
 	"github.com/gorilla/websocket"
 	"log"
 	"net/url"
@@ -44,6 +48,15 @@ func (c *Client) Close() {
 // Websocket Client
 
 func (c *Client) Start() {
+	statusBar := widget.NewProgressBarInfinite()
+	connectingStateContainer := container.NewVBox()
+	connectingStateDialog := dialog.NewCustom(
+		"",
+		"Close",
+		container.NewBorder(statusBar, nil, nil, nil, connectingStateContainer),
+		fyne.CurrentApp().Driver().AllWindows()[0],
+	)
+
 	flag.Parse()
 	log.SetFlags(0)
 
@@ -52,6 +65,8 @@ func (c *Client) Start() {
 
 	u := url.URL{Scheme: "ws", Host: c.Addr, Path: "/"}
 	log.Printf("connecting to %s", u.String())
+	connectingStateContainer.Add(widget.NewLabel("Connecting to " + u.String()))
+	connectingStateDialog.Show()
 
 	var err error = nil
 	c.Conn, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
@@ -62,6 +77,8 @@ func (c *Client) Start() {
 		log.Println("retrying... ")
 		c.Conn, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
 	}
+
+	connectingStateDialog.Hide()
 
 	defer c.Conn.Close()
 
@@ -77,7 +94,9 @@ func (c *Client) Start() {
 				for err != nil {
 					time.Sleep(500)
 					log.Println("retrying... ")
+					connectingStateDialog.Show()
 					c.Conn, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
+					connectingStateDialog.Hide()
 				}
 				continue
 				//return

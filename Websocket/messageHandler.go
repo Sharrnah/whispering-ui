@@ -134,6 +134,9 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		} else {
 			Fields.Field.ProcessingStatus.Stop()
 		}
+	case "loading_state":
+		err = json.Unmarshal(c.Raw, &Messages.CurrentLoadingState)
+		Messages.CurrentLoadingState.Update()
 	}
 	if err != nil {
 		log.Printf("Unmarshal: %v", err)

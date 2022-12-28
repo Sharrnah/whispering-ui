@@ -84,7 +84,7 @@ func (res TranslateSetting) Update() *TranslateSetting {
 	}
 
 	// Set TtsModelCombo
-	if Fields.Field.TtsModelCombo.Selected != res.Tts_model[1] {
+	if len(res.Tts_model) > 0 && Fields.Field.TtsModelCombo.Selected != res.Tts_model[1] {
 		Fields.Field.TtsModelCombo.SetSelected(res.Tts_model[1])
 	}
 
