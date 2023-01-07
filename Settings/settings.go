@@ -29,6 +29,11 @@ type Conf struct {
 	Pause             float64 `yaml:"pause,omitempty"`
 	Energy            int     `yaml:"energy,omitempty"`
 
+	// VAD Settings
+	VAD_enabled              bool   `yaml:"vad_enabled"`
+	VAD_confidence_threshold string `yaml:"vad_confidence_threshold"`
+	VAD_num_samples          int    `yaml:"vad_num_samples"`
+
 	// Whisper Settings
 	Ai_device                  interface{} `yaml:"ai_device"`
 	Whisper_task               string      `yaml:"whisper_task"`

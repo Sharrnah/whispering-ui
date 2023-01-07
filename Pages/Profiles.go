@@ -329,6 +329,16 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			"")
 		profileForm.Append("", audioOutputProgress)
 
+		profileForm.Append("VAD Enable", widget.NewCheck("", func(b bool) {}))
+
+		vadConfidenceSliderState := widget.NewLabel("0.0")
+		vadConfidenceSliderWidget := widget.NewSlider(0, 1)
+		vadConfidenceSliderWidget.Step = 0.1
+		vadConfidenceSliderWidget.OnChanged = func(value float64) {
+			vadConfidenceSliderState.SetText(fmt.Sprintf("%.1f", value))
+		}
+		appendWidgetToForm(profileForm, "VAD Speech confidence", container.NewBorder(nil, nil, nil, vadConfidenceSliderState, vadConfidenceSliderWidget), "The confidence level required to detect speech.")
+
 		energySliderState := widget.NewLabel("0.0")
 		energySliderWidget := widget.NewSlider(0, 1000)
 		energySliderWidget.OnChanged = func(value float64) {
@@ -446,6 +456,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Logprob_threshold:     "-1.0",
 			No_speech_threshold:   "0.6",
 
+			VAD_enabled:              true,
+			VAD_confidence_threshold: "0.4",
+			VAD_num_samples:          3000,
+
 			Phrase_time_limit: 0.0,
 			Pause:             0.8,
 			Energy:            300,
@@ -492,19 +506,22 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		// audio progressbar
 		// spacer
-		profileForm.Items[6].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Energy))
-		profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Pause))
-		profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Phrase_time_limit))
+		profileForm.Items[6].Widget.(*widget.Check).SetChecked(profileSettings.VAD_enabled)
+		VadConfidenceThreshold, _ := strconv.ParseFloat(profileSettings.VAD_confidence_threshold, 64)
+		profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(VadConfidenceThreshold)
+		profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Energy))
+		profileForm.Items[9].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Pause))
+		profileForm.Items[10].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Phrase_time_limit))
 
 		if profileSettings.Ai_device != nil {
-			profileForm.Items[9].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Ai_device.(string))
+			profileForm.Items[11].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Ai_device.(string))
 		}
-		profileForm.Items[10].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Model)
+		profileForm.Items[12].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Model)
 		// spacer
-		profileForm.Items[12].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_device)
-		profileForm.Items[13].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_size)
-		profileForm.Items[15].Widget.(*widget.Check).SetChecked(profileSettings.Tts_enabled)
-		profileForm.Items[16].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Tts_ai_device)
+		profileForm.Items[14].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_device)
+		profileForm.Items[15].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_size)
+		profileForm.Items[17].Widget.(*widget.Check).SetChecked(profileSettings.Tts_enabled)
+		profileForm.Items[18].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Tts_ai_device)
 
 		profileForm.OnSubmit = func() {
 			profileSettings.Websocket_ip = profileForm.Items[0].Widget.(*fyne.Container).Objects[0].(*widget.Entry).Text
@@ -514,17 +531,20 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 			profileSettings.Device_out_index, _ = strconv.Atoi(profileForm.Items[4].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value)
 
-			profileSettings.Energy = int(profileForm.Items[6].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value)
-			profileSettings.Pause = profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value
-			profileSettings.Phrase_time_limit = profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value
+			profileSettings.VAD_enabled = profileForm.Items[6].Widget.(*widget.Check).Checked
+			profileSettings.VAD_confidence_threshold = fmt.Sprintf("%f", profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value)
 
-			profileSettings.Ai_device = profileForm.Items[9].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Model = profileForm.Items[10].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Energy = int(profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value)
+			profileSettings.Pause = profileForm.Items[9].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value
+			profileSettings.Phrase_time_limit = profileForm.Items[10].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value
 
-			profileSettings.Txt_translator_device = profileForm.Items[12].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Txt_translator_size = profileForm.Items[13].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Tts_enabled = profileForm.Items[15].Widget.(*widget.Check).Checked
-			profileSettings.Tts_ai_device = profileForm.Items[16].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Ai_device = profileForm.Items[11].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Model = profileForm.Items[12].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+
+			profileSettings.Txt_translator_device = profileForm.Items[14].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Txt_translator_size = profileForm.Items[15].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Tts_enabled = profileForm.Items[17].Widget.(*widget.Check).Checked
+			profileSettings.Tts_ai_device = profileForm.Items[18].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
 
 			// update existing settings or create new one if it does not exist yet
 			if Utilities.FileExists(settingsFiles[id]) {
