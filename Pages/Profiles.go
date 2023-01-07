@@ -126,6 +126,9 @@ func (c *CurrentPlaybackDevice) InitDevices() {
 	sizeInBytesCapture := uint32(malgo.SampleSizeInBytes(deviceConfig.Capture.Format))
 	sizeInBytesPlayback := uint32(malgo.SampleSizeInBytes(deviceConfig.Playback.Format))
 
+	c.InputWaveWidget.Max = 0.1
+	c.InputWaveWidget.Refresh()
+
 	onRecvFrames := func(pOutputSample, pInputSamples []byte, framecount uint32) {
 		sampleCountCapture := framecount * deviceConfig.Capture.Channels * sizeInBytesCapture
 		sampleCountPlayback := framecount * deviceConfig.Playback.Channels * sizeInBytesCapture
@@ -157,6 +160,10 @@ func (c *CurrentPlaybackDevice) InitDevices() {
 
 			currentVolume := sampleVolume / float64(framecount)
 			if currentVolume >= 0 {
+				if c.InputWaveWidget.Max < currentVolume {
+					c.InputWaveWidget.Max = currentVolume * 2
+					c.InputWaveWidget.Refresh()
+				}
 				c.InputWaveWidget.SetValue(currentVolume)
 			}
 		}
@@ -436,8 +443,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Current_language:      "",
 			Osc_ip:                "127.0.0.1",
 			Osc_port:              9000,
-			Logprob_threshold:     "",
-			No_speech_threshold:   "0.275",
+			Logprob_threshold:     "-1.0",
+			No_speech_threshold:   "0.6",
 
 			Phrase_time_limit: 0.0,
 			Pause:             0.8,
