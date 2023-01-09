@@ -515,7 +515,13 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		// spacer
 		profileForm.Items[6].Widget.(*widget.Check).SetChecked(profileSettings.VAD_enabled)
 		VadConfidenceThreshold, _ := strconv.ParseFloat(profileSettings.VAD_confidence_threshold, 64)
+
 		profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(VadConfidenceThreshold)
+		if profileSettings.VAD_enabled {
+			profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Show()
+		} else {
+			profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Hide()
+		}
 		profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Energy))
 		profileForm.Items[9].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Pause))
 		profileForm.Items[10].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Phrase_time_limit))
