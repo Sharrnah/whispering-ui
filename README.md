@@ -11,6 +11,10 @@ Whispering Tiger UI is intended to make it easier to control and configure the *
 ## Features
 - **Native-UI** for Windows (and possibly Linux in the future)
 - **Easy to use** for both **beginners** and **advanced users**
+- **Access to all Whispering Tiger features**, which includes:
+   - Transcription / Translation of audio streams
+   - Recognition and Translation of in-game images
+   - Displaying the results in a web browser or VRChat, using Websockets or OSC
 - **Save** and **load** configurations
 - **Preview** if your selected Audio devices are working
 - **Auto-Update** to the latest version of **Whispering Tiger**.
