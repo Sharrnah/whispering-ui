@@ -463,9 +463,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Logprob_threshold:     "-1.0",
 			No_speech_threshold:   "0.6",
 
-			VAD_enabled:              true,
-			VAD_confidence_threshold: "0.6",
-			VAD_num_samples:          3000,
+			Vad_enabled:              true,
+			Vad_confidence_threshold: "0.6",
+			Vad_num_samples:          3000,
 
 			Phrase_time_limit: 0.0,
 			Pause:             0.8,
@@ -513,11 +513,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		// audio progressbar
 		// spacer
-		profileForm.Items[6].Widget.(*widget.Check).SetChecked(profileSettings.VAD_enabled)
-		VadConfidenceThreshold, _ := strconv.ParseFloat(profileSettings.VAD_confidence_threshold, 64)
+		profileForm.Items[6].Widget.(*widget.Check).SetChecked(profileSettings.Vad_enabled)
+		VadConfidenceThreshold, _ := strconv.ParseFloat(profileSettings.Vad_confidence_threshold, 64)
 
 		profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(VadConfidenceThreshold)
-		if profileSettings.VAD_enabled {
+		if profileSettings.Vad_enabled {
 			profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Show()
 		} else {
 			profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Hide()
@@ -544,8 +544,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 			profileSettings.Device_out_index, _ = strconv.Atoi(profileForm.Items[4].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value)
 
-			profileSettings.VAD_enabled = profileForm.Items[6].Widget.(*widget.Check).Checked
-			profileSettings.VAD_confidence_threshold = fmt.Sprintf("%f", profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value)
+			profileSettings.Vad_enabled = profileForm.Items[6].Widget.(*widget.Check).Checked
+			profileSettings.Vad_confidence_threshold = fmt.Sprintf("%f", profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value)
 
 			profileSettings.Energy = int(profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value)
 			profileSettings.Pause = profileForm.Items[9].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value

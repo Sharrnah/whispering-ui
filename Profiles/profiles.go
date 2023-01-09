@@ -16,6 +16,9 @@ type Profile struct {
 	Pause             float64 `yaml:"pause,omitempty"`
 	Energy            int     `yaml:"energy,omitempty"`
 
+	Vad_enabled              bool   `yaml:"vad_enabled,omitempty,omitempty"`
+	Vad_confidence_threshold string `yaml:"vad_confidence_threshold,omitempty"`
+
 	// Whisper Settings
 	Ai_device             interface{} `yaml:"ai_device"`
 	Model                 string      `yaml:"model"`
