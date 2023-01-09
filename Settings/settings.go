@@ -33,6 +33,7 @@ type Conf struct {
 	Vad_enabled              bool   `yaml:"vad_enabled"`
 	Vad_confidence_threshold string `yaml:"vad_confidence_threshold"`
 	Vad_num_samples          int    `yaml:"vad_num_samples"`
+	Vad_thread_num           int    `yaml:"vad_thread_num,omitempty"`
 
 	// Whisper Settings
 	Ai_device                  interface{} `yaml:"ai_device"`
