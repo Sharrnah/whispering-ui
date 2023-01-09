@@ -4,5 +4,5 @@ Website = "https://github.com/Sharrnah/whispering"
   Icon = "app-icon.png"
   Name = "Whispering Tiger"
   ID = "tiger.whispering"
-  Version = "1.0.0"
-  Build = 23
+  Version = "1.1.0"
+  Build = 1

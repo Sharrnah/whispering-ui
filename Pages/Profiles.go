@@ -329,14 +329,21 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			"")
 		profileForm.Append("", audioOutputProgress)
 
-		profileForm.Append("VAD Enable", widget.NewCheck("", func(b bool) {}))
-
 		vadConfidenceSliderState := widget.NewLabel("0.0")
 		vadConfidenceSliderWidget := widget.NewSlider(0, 1)
 		vadConfidenceSliderWidget.Step = 0.1
 		vadConfidenceSliderWidget.OnChanged = func(value float64) {
 			vadConfidenceSliderState.SetText(fmt.Sprintf("%.1f", value))
 		}
+
+		vadEnableCheckbox := widget.NewCheck("", func(b bool) {
+			if b {
+				vadConfidenceSliderWidget.Show()
+			} else {
+				vadConfidenceSliderWidget.Hide()
+			}
+		})
+		profileForm.Append("VAD Enable", vadEnableCheckbox)
 		appendWidgetToForm(profileForm, "VAD Speech confidence", container.NewBorder(nil, nil, nil, vadConfidenceSliderState, vadConfidenceSliderWidget), "The confidence level required to detect speech.")
 
 		energySliderState := widget.NewLabel("0.0")
@@ -457,7 +464,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			No_speech_threshold:   "0.6",
 
 			VAD_enabled:              true,
-			VAD_confidence_threshold: "0.4",
+			VAD_confidence_threshold: "0.6",
 			VAD_num_samples:          3000,
 
 			Phrase_time_limit: 0.0,
