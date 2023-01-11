@@ -12,12 +12,12 @@ type Profile struct {
 	Device_index     interface{} `yaml:"device_index"`
 	Device_out_index interface{} `yaml:"device_out_index"`
 
-	Phrase_time_limit float64 `yaml:"phrase_time_limit,omitempty"`
-	Pause             float64 `yaml:"pause,omitempty"`
-	Energy            int     `yaml:"energy,omitempty"`
+	Phrase_time_limit float64 `yaml:"phrase_time_limit"`
+	Pause             float64 `yaml:"pause"`
+	Energy            int     `yaml:"energy"`
 
-	Vad_enabled              bool   `yaml:"vad_enabled,omitempty,omitempty"`
-	Vad_confidence_threshold string `yaml:"vad_confidence_threshold,omitempty"`
+	Vad_enabled              bool   `yaml:"vad_enabled"`
+	Vad_confidence_threshold string `yaml:"vad_confidence_threshold"`
 
 	// Whisper Settings
 	Ai_device             interface{} `yaml:"ai_device"`

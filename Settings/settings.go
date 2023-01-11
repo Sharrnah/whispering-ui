@@ -25,9 +25,9 @@ type Conf struct {
 	Device_index     interface{} `yaml:"device_index,omitempty"`
 	Device_out_index interface{} `yaml:"device_out_index,omitempty"`
 
-	Phrase_time_limit float64 `yaml:"phrase_time_limit,omitempty"`
-	Pause             float64 `yaml:"pause,omitempty"`
-	Energy            int     `yaml:"energy,omitempty"`
+	Phrase_time_limit float64 `yaml:"phrase_time_limit"`
+	Pause             float64 `yaml:"pause"`
+	Energy            int     `yaml:"energy"`
 
 	// VAD Settings
 	Vad_enabled              bool   `yaml:"vad_enabled"`
