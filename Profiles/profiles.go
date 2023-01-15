@@ -30,6 +30,7 @@ type Profile struct {
 	Osc_port              int         `yaml:"osc_port"`
 	Tts_enabled           bool        `yaml:"tts_enabled"`
 	Tts_ai_device         string      `yaml:"tts_ai_device"`
+	Fp16                  bool        `yaml:"fp16"`
 }
 
 func (p *Profile) Load(fileName string) {

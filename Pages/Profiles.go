@@ -388,6 +388,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Large Version 2", Value: "large-v2"},
 		}, func(s CustomWidget.TextValueOption) {}, 0))
 
+		profileForm.Append("Speech to Text use FP16", widget.NewCheck("", func(b bool) {}))
+
 		profileForm.Append("", layout.NewSpacer())
 
 		profileForm.Append("A.I. Device for Text Translation", CustomWidget.NewTextValueSelect("txt_translator_device", []CustomWidget.TextValueOption{
@@ -467,6 +469,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Vad_confidence_threshold: "0.6",
 			Vad_num_samples:          3000,
 
+			Fp16:              false,
 			Phrase_time_limit: 0.0,
 			Pause:             0.8,
 			Energy:            300,
@@ -530,11 +533,12 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			profileForm.Items[11].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Ai_device.(string))
 		}
 		profileForm.Items[12].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Model)
+		profileForm.Items[13].Widget.(*widget.Check).SetChecked(profileSettings.Fp16)
 		// spacer
-		profileForm.Items[14].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_device)
-		profileForm.Items[15].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_size)
-		profileForm.Items[17].Widget.(*widget.Check).SetChecked(profileSettings.Tts_enabled)
-		profileForm.Items[18].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Tts_ai_device)
+		profileForm.Items[15].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_device)
+		profileForm.Items[16].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_size)
+		profileForm.Items[18].Widget.(*widget.Check).SetChecked(profileSettings.Tts_enabled)
+		profileForm.Items[19].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Tts_ai_device)
 
 		profileForm.OnSubmit = func() {
 			profileSettings.Websocket_ip = profileForm.Items[0].Widget.(*fyne.Container).Objects[0].(*widget.Entry).Text
@@ -553,11 +557,12 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 			profileSettings.Ai_device = profileForm.Items[11].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
 			profileSettings.Model = profileForm.Items[12].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Fp16 = profileForm.Items[13].Widget.(*widget.Check).Checked
 
-			profileSettings.Txt_translator_device = profileForm.Items[14].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Txt_translator_size = profileForm.Items[15].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Tts_enabled = profileForm.Items[17].Widget.(*widget.Check).Checked
-			profileSettings.Tts_ai_device = profileForm.Items[18].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Txt_translator_device = profileForm.Items[15].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Txt_translator_size = profileForm.Items[16].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Tts_enabled = profileForm.Items[18].Widget.(*widget.Check).Checked
+			profileSettings.Tts_ai_device = profileForm.Items[19].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
 
 			// update existing settings or create new one if it does not exist yet
 			if Utilities.FileExists(settingsFiles[id]) {
@@ -577,6 +582,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					Osc_port:              profileSettings.Osc_port,
 					Tts_enabled:           profileSettings.Tts_enabled,
 					Tts_ai_device:         profileSettings.Tts_ai_device,
+					Fp16:                  profileSettings.Fp16,
 
 					Phrase_time_limit: profileSettings.Phrase_time_limit,
 					Pause:             profileSettings.Pause,

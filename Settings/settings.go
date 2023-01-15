@@ -44,6 +44,7 @@ type Conf struct {
 	Initial_prompt             string      `yaml:"initial_prompt"`
 	Logprob_threshold          string      `yaml:"logprob_threshold"`   // string formatted float or "none" / ""
 	No_speech_threshold        string      `yaml:"no_speech_threshold"` // string formatted float or "none" / ""
+	Fp16                       bool        `yaml:"fp16"`
 
 	// text translate settings
 	Txt_translate         bool   `yaml:"txt_translate"`
