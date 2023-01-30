@@ -9,8 +9,8 @@ import (
 	"fyne.io/fyne/v2/widget"
 	"github.com/dustin/go-humanize"
 	"math/rand"
+	"net/url"
 	"os"
-	"os/exec"
 	"path/filepath"
 	"runtime"
 	"strconv"
@@ -58,12 +58,6 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 		return err
 	}
 	appExec, _ := os.Executable()
-	if inPlaceUpdate {
-		err = os.Rename(appExec, appExec+".old")
-		if err != nil {
-			dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
-		}
-	}
 
 	statusBarContainer.Add(widget.NewLabel("Extracting..."))
 	statusBarContainer.Refresh()
@@ -78,15 +72,6 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 
 	if err == nil {
 		statusBarContainer.Add(widget.NewLabel("Finished."))
-
-		if inPlaceUpdate {
-			dialog.ShowConfirm("Update finished", "Restart the Application now?", func(b bool) {
-				cmd := exec.Command(appExec)
-				cmd.Start()
-
-				os.Exit(0)
-			}, fyne.CurrentApp().Driver().AllWindows()[1])
-		}
 	}
 
 	statusBarContainer.Refresh()
@@ -140,15 +125,10 @@ func versionCheck() {
 	// check app version
 	currentAppVersion := fyne.CurrentApp().Metadata().Version + "." + strconv.Itoa(fyne.CurrentApp().Metadata().Build)
 	if updater.Packages["app"].Version != currentAppVersion {
-		dialog.ShowConfirm("App Update available", "There is a new Update of the App available. Update to "+updater.Packages["app"].Version+" now?", func(b bool) {
+		dialog.ShowConfirm("App Update available", "There is a new Update of the App available. Open GitHub Release page now?", func(b bool) {
 			if b {
-				go func() {
-					err = versionDownload(updater, "app", "whispering-tiger-ui.zip", true)
-					if err == nil {
-						packageInfo := updater.Packages["app"]
-						packageInfo.WriteYaml(".current_app.yaml")
-					}
-				}()
+				uiReleaseUrl, _ := url.Parse("https://github.com/Sharrnah/whispering-ui/releases/latest")
+				fyne.CurrentApp().OpenURL(uiReleaseUrl)
 			}
 		}, fyne.CurrentApp().Driver().AllWindows()[1])
 	}
