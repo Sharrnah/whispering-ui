@@ -27,7 +27,7 @@ var WebsocketClient = Websocket.NewClient("127.0.0.1:5000")
 
 var updateInfoUrl = "https://s3.libs.space:9000/projects/whispering/latest.yaml"
 
-func versionDownload(updater Updater.UpdatePackages, packageName, filename string, inPlaceUpdate bool) error {
+func versionDownload(updater Updater.UpdatePackages, packageName, filename string) error {
 	statusBar := widget.NewProgressBar()
 	statusBarContainer := container.NewVBox(statusBar)
 	dialog.ShowCustom("Update in progress...", "Close", statusBarContainer, fyne.CurrentApp().Driver().AllWindows()[1])
@@ -107,7 +107,7 @@ func versionCheck() {
 		dialog.ShowConfirm("Platform Update available", "There is a new Update of the Platform available. Update to "+updater.Packages["ai_platform"].Version+" now?", func(b bool) {
 			if b {
 				go func() {
-					err = versionDownload(updater, "ai_platform", "audioWhisper_platform.zip", false)
+					err = versionDownload(updater, "ai_platform", "audioWhisper_platform.zip")
 					if err == nil {
 						packageInfo := updater.Packages["ai_platform"]
 						packageInfo.WriteYaml(".current_platform.yaml")
