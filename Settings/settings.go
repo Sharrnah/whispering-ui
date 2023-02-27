@@ -31,6 +31,7 @@ type Conf struct {
 
 	// VAD Settings
 	Vad_enabled              bool   `yaml:"vad_enabled"`
+	Vad_on_full_clip         bool   `yaml:"vad_on_full_clip"`
 	Vad_confidence_threshold string `yaml:"vad_confidence_threshold"`
 	Vad_num_samples          int    `yaml:"vad_num_samples"`
 	Vad_thread_num           int    `yaml:"vad_thread_num,omitempty"`
@@ -92,6 +93,10 @@ type Conf struct {
 	Flan_prompt                        string `yaml:"flan_prompt"`
 	Flan_memory                        string `yaml:"flan_memory"`
 	Flan_conditioning_history          int    `yaml:"flan_conditioning_history"`
+
+	// Plugin Settings
+	Plugins         interface{} `yaml:"plugins,omitempty"`
+	Plugin_settings interface{} `yaml:"plugin_settings,omitempty"`
 }
 
 var ConfigValues map[string]interface{} = nil

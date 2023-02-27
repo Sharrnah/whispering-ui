@@ -17,6 +17,7 @@ type Profile struct {
 	Energy            int     `yaml:"energy"`
 
 	Vad_enabled              bool   `yaml:"vad_enabled"`
+	Vad_on_full_clip         bool   `yaml:"vad_on_full_clip"`
 	Vad_confidence_threshold string `yaml:"vad_confidence_threshold"`
 
 	// Whisper Settings

@@ -74,7 +74,7 @@ func (c *CurrentPlaybackDevice) InitTestAudio() (*bytes.Reader, *wav.Reader) {
 	return byteReader, testAudioReader
 }
 
-func (c *CurrentPlaybackDevice) InitDevices() {
+func (c *CurrentPlaybackDevice) InitDevices() error {
 	byteReader, testAudioReader := c.InitTestAudio()
 
 	if c.device != nil && c.device.IsStarted() {
@@ -201,14 +201,16 @@ func (c *CurrentPlaybackDevice) InitDevices() {
 	c.device, err = malgo.InitDevice(c.Context.Context, deviceConfig, captureCallbacks)
 	if err != nil {
 		fmt.Println(err)
-		//os.Exit(1)
+		return err
 	}
 
 	err = c.device.Start()
 	if err != nil {
 		fmt.Println(err)
-		//os.Exit(1)
+		return err
 	}
+
+	return nil
 }
 
 func (c *CurrentPlaybackDevice) Init() {
@@ -312,7 +314,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			func(s CustomWidget.TextValueOption) {
 				println(s.Value)
 				playBackDevice.InputDeviceName = s.Text
-				playBackDevice.InitDevices()
+				err := playBackDevice.InitDevices()
+				if err != nil {
+					var newError = fmt.Errorf("audio Input (mic): %v", err)
+					dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
+				}
 			},
 			0),
 			"")
@@ -323,10 +329,15 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			func(s CustomWidget.TextValueOption) {
 				println(s.Value)
 				playBackDevice.OutputDeviceName = s.Text
-				playBackDevice.InitDevices()
+				err := playBackDevice.InitDevices()
+				if err != nil {
+					var newError = fmt.Errorf("audio Output (speaker): %v", err)
+					dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
+				}
 			},
 			0),
 			"")
+
 		profileForm.Append("", audioOutputProgress)
 
 		vadConfidenceSliderState := widget.NewLabel("0.0")
@@ -336,14 +347,17 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			vadConfidenceSliderState.SetText(fmt.Sprintf("%.1f", value))
 		}
 
-		vadEnableCheckbox := widget.NewCheck("", func(b bool) {
+		vadOnFullClipCheckbox := widget.NewCheck("Additional Check on Full Clip", func(b bool) {})
+		vadEnableCheckbox := widget.NewCheck("Enable", func(b bool) {
 			if b {
 				vadConfidenceSliderWidget.Show()
+				vadOnFullClipCheckbox.Show()
 			} else {
 				vadConfidenceSliderWidget.Hide()
+				vadOnFullClipCheckbox.Hide()
 			}
 		})
-		profileForm.Append("VAD Enable", vadEnableCheckbox)
+		profileForm.Append("VAD (Voice activity detection)", container.NewGridWithColumns(2, vadEnableCheckbox, vadOnFullClipCheckbox))
 		appendWidgetToForm(profileForm, "VAD Speech confidence", container.NewBorder(nil, nil, nil, vadConfidenceSliderState, vadConfidenceSliderWidget), "The confidence level required to detect speech.")
 
 		energySliderState := widget.NewLabel("0.0")
@@ -466,7 +480,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			No_speech_threshold:   "0.6",
 
 			Vad_enabled:              true,
-			Vad_confidence_threshold: "0.6",
+			Vad_on_full_clip:         false,
+			Vad_confidence_threshold: "0.4",
 			Vad_num_samples:          3000,
 
 			Fp16:              false,
@@ -516,7 +531,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		// audio progressbar
 		// spacer
-		profileForm.Items[6].Widget.(*widget.Check).SetChecked(profileSettings.Vad_enabled)
+		profileForm.Items[6].Widget.(*fyne.Container).Objects[0].(*widget.Check).SetChecked(profileSettings.Vad_enabled)
+		profileForm.Items[6].Widget.(*fyne.Container).Objects[1].(*widget.Check).SetChecked(profileSettings.Vad_on_full_clip)
+
 		VadConfidenceThreshold, _ := strconv.ParseFloat(profileSettings.Vad_confidence_threshold, 64)
 
 		profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(VadConfidenceThreshold)
@@ -548,7 +565,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 			profileSettings.Device_out_index, _ = strconv.Atoi(profileForm.Items[4].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value)
 
-			profileSettings.Vad_enabled = profileForm.Items[6].Widget.(*widget.Check).Checked
+			profileSettings.Vad_enabled = profileForm.Items[6].Widget.(*fyne.Container).Objects[0].(*widget.Check).Checked
+			profileSettings.Vad_on_full_clip = profileForm.Items[6].Widget.(*fyne.Container).Objects[1].(*widget.Check).Checked
 			profileSettings.Vad_confidence_threshold = fmt.Sprintf("%f", profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value)
 
 			profileSettings.Energy = int(profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value)
@@ -599,7 +617,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		profileForm.Refresh()
 
-		playBackDevice.InitDevices()
+		err = playBackDevice.InitDevices()
+		if err != nil {
+			dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
+		}
 	}
 
 	newProfileEntry := widget.NewEntry()

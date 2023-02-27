@@ -42,12 +42,12 @@ func (c *WhisperProcessConfig) RunWithStreams(name string, arguments []string, s
 }
 
 type WhisperProcessConfig struct {
-	DeviceIndex       string
-	DeviceOutIndex    string
-	SettingsFile      string
-	Program           *exec.Cmd
-	ReaderBackend     *io.PipeReader
-	WriterBackend     *io.PipeWriter
+	DeviceIndex     string
+	DeviceOutIndex  string
+	SettingsFile    string
+	Program         *exec.Cmd
+	ReaderBackend   *io.PipeReader
+	WriterBackend   *io.PipeWriter
 	environmentVars []string
 }
 
@@ -90,18 +90,18 @@ func (c *WhisperProcessConfig) AttachEnvironment(envName, envValue string) {
 
 	envIndex := -1
 	for index, element := range c.environmentVars {
-		if strings.HasPrefix(element, envName + "=") {
+		if strings.HasPrefix(element, envName+"=") {
 			envIndex = index
 		}
 	}
 
 	if value, ok := os.LookupEnv(envName); !ok {
-		c.environmentVars = append(c.environmentVars, envName + "=" + envValue)
+		c.environmentVars = append(c.environmentVars, envName+"="+envValue)
 	} else {
 		if envIndex > -1 {
 			c.environmentVars[envIndex] = envName + "=" + envValue + ";" + value
 		} else {
-			c.environmentVars = append(c.environmentVars, envName + "=" + envValue + ";" + value)
+			c.environmentVars = append(c.environmentVars, envName+"="+envValue+";"+value)
 		}
 	}
 }
