@@ -5,6 +5,7 @@ import (
 	"io"
 	"net/http"
 	"os"
+	"time"
 )
 
 type OnProgress func(bytesWritten, contentLength uint64)
@@ -16,9 +17,10 @@ type WriteCounter struct {
 }
 
 type Download struct {
-	Url          string
-	Filepath     string
-	WriteCounter WriteCounter
+	Url           string
+	Filepath      string
+	WriteCounter  WriteCounter
+	ResumeSupport bool
 }
 
 func (wc *WriteCounter) Write(p []byte) (int, error) {
@@ -28,32 +30,83 @@ func (wc *WriteCounter) Write(p []byte) (int, error) {
 	return n, nil
 }
 
-// DownloadFile will download a url to a local file. It's efficient because it will
-// write as it downloads and not load the whole file into memory. We pass an io.TeeReader
-// into Copy() to report progress on the download.
 func (d *Download) DownloadFile() error {
+	return d.DownloadFileWithRetry(0)
+}
+func (d *Download) DownloadFileWithRetry(retries int) error {
+	var out *os.File
+	var err error
+
+	// Check if the file already exists and get its size
+	var startBytes int64 = 0
+	if _, err := os.Stat(d.Filepath + ".tmp"); err == nil {
+		startBytes = d.getFileSize(d.Filepath + ".tmp")
+	}
 
 	// Create the file, but give it a tmp file extension, this means we won't overwrite a
 	// file until it's downloaded, but we'll remove the tmp extension once downloaded.
-	out, err := os.Create(d.Filepath + ".tmp")
+	out, err = os.OpenFile(d.Filepath+".tmp", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		return err
 	}
 
 	// Get the data
-	resp, err := http.Get(d.Url)
-	if err != nil {
-		out.Close()
-		return err
+	var resp *http.Response
+	if startBytes > 0 {
+		req, err := http.NewRequest("GET", d.Url, nil)
+		if err != nil {
+			out.Close()
+			return err
+		}
+		req.Header.Set("Range", fmt.Sprintf("bytes=%d-", startBytes))
+		resp, err = http.DefaultClient.Do(req)
+		if err != nil {
+			out.Close()
+			return err
+		}
+		if resp.StatusCode != http.StatusPartialContent {
+			startBytes = 0
+			resp.Body.Close()
+			resp = nil
+		} else {
+			d.ResumeSupport = true
+		}
 	}
-	defer resp.Body.Close()
+	if resp == nil {
+		req, err := http.NewRequest("GET", d.Url, nil)
+		if err != nil {
+			out.Close()
+			return err
+		}
+		resp, err = http.DefaultClient.Do(req)
+		if err != nil {
+			out.Close()
+			return err
+		}
+	}
 
-	d.WriteCounter.ContentLength = uint64(resp.ContentLength)
+	d.WriteCounter.ContentLength = uint64(resp.ContentLength) + uint64(startBytes)
+
+	// Seek to the right position
+	if startBytes > 0 {
+		_, err = out.Seek(startBytes, 0)
+		if err != nil {
+			out.Close()
+			return err
+		}
+	}
 
 	// Create our progress reporter and pass it to be used alongside our writer
 	if _, err = io.Copy(out, io.TeeReader(resp.Body, &d.WriteCounter)); err != nil {
 		out.Close()
-		return err
+		resp.Body.Close()
+		if retries > 0 {
+			fmt.Printf("Error downloading %s: %s. Retrying in 5 seconds...\n", d.Url, err.Error())
+			time.Sleep(5 * time.Second)
+			return d.DownloadFileWithRetry(retries - 1)
+		} else {
+			return err
+		}
 	}
 
 	// The progress use the same line so print a new line once it's finished downloading
@@ -61,9 +114,24 @@ func (d *Download) DownloadFile() error {
 
 	// Close the file without defer so it can happen before Rename()
 	out.Close()
+	resp.Body.Close()
 
 	if err = os.Rename(d.Filepath+".tmp", d.Filepath); err != nil {
 		return err
 	}
 	return nil
+}
+
+func (d *Download) getFileSize(filepath string) int64 {
+	file, err := os.Open(filepath)
+	if err != nil {
+		return 0
+	}
+	defer file.Close()
+
+	info, err := file.Stat()
+	if err != nil {
+		return 0
+	}
+	return info.Size()
 }

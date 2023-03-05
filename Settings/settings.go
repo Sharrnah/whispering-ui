@@ -84,6 +84,7 @@ type Conf struct {
 	// FLAN-T5 settings
 	Flan_enabled                       bool   `yaml:"flan_enabled"`
 	Flan_size                          string `yaml:"flan_size"`
+	Llm_model                          string `yaml:"Llm_model"`
 	Flan_bits                          int    `yaml:"flan_bits"`
 	Flan_device                        string `yaml:"flan_device"`
 	Flan_whisper_answer                bool   `yaml:"flan_whisper_answer"`
@@ -95,8 +96,10 @@ type Conf struct {
 	Flan_conditioning_history          int    `yaml:"flan_conditioning_history"`
 
 	// Plugin Settings
-	Plugins         interface{} `yaml:"plugins,omitempty"`
-	Plugin_settings interface{} `yaml:"plugin_settings,omitempty"`
+	Plugins              interface{} `yaml:"plugins,omitempty"`
+	Plugin_settings      interface{} `yaml:"plugin_settings,omitempty"`
+	Plugin_timer_timeout interface{} `yaml:"plugin_timer_timeout,omitempty"`
+	Plugin_timer         interface{} `yaml:"plugin_timer,omitempty"`
 }
 
 var ConfigValues map[string]interface{} = nil

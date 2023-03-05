@@ -46,13 +46,18 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 			statusBar.Max = float64(total)
 			statusBar.SetValue(float64(progress))
 
-			downloadingLabel.SetText("Downloading... " + humanize.Bytes(total))
+			resumeStatusText := ""
+			if downloader.ResumeSupport {
+				resumeStatusText = " (Resume)"
+			}
+
+			downloadingLabel.SetText("Downloading... " + humanize.Bytes(total) + resumeStatusText)
 		}
 	}
 
 	statusBarContainer.Add(downloadingLabel)
 	statusBarContainer.Refresh()
-	err := downloader.DownloadFile()
+	err := downloader.DownloadFileWithRetry(3)
 	if err != nil {
 		dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
 		return err
