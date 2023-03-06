@@ -112,6 +112,10 @@ var ExcludeConfigFields = []string{
 	"device_index",
 	"device_out_index",
 	"current_language",
+	"plugins",
+	"plugin_settings",
+	"plugin_timer_timeout",
+	"plugin_timer",
 }
 
 var Config Conf
