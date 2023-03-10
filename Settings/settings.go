@@ -46,6 +46,8 @@ type Conf struct {
 	Logprob_threshold          string      `yaml:"logprob_threshold"`   // string formatted float or "none" / ""
 	No_speech_threshold        string      `yaml:"no_speech_threshold"` // string formatted float or "none" / ""
 	Fp16                       bool        `yaml:"fp16"`
+	Faster_whisper             bool        `yaml:"faster_whisper"`       // use faster whisper model
+	Temperature_fallback       bool        `yaml:"temperature_fallback"` // enables/disables temperature fallback (to prevent multiple whisper loops in a row)
 
 	// text translate settings
 	Txt_translate         bool   `yaml:"txt_translate"`

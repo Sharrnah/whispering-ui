@@ -32,6 +32,7 @@ type Profile struct {
 	Tts_enabled           bool        `yaml:"tts_enabled"`
 	Tts_ai_device         string      `yaml:"tts_ai_device"`
 	Fp16                  bool        `yaml:"fp16"`
+	Faster_whisper        bool        `yaml:"faster_whisper"`
 }
 
 func (p *Profile) Load(fileName string) {
