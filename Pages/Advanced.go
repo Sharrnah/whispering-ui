@@ -5,6 +5,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 	"gopkg.in/yaml.v3"
 	"io"
@@ -102,13 +103,16 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 
 			// plugin settings
 			pluginSettingsForm := widget.NewMultiLineEntry()
-			if settings, ok := Settings.Config.Plugin_settings.(map[string]interface{})[pluginClassName]; ok {
-				if settingsMap, ok := settings.(map[string]interface{}); ok {
-					settingsStr, err := yaml.Marshal(settingsMap)
-					if err != nil {
-						println(err)
+
+			if Settings.Config.Plugin_settings != nil {
+				if settings, ok := Settings.Config.Plugin_settings.(map[string]interface{})[pluginClassName]; ok {
+					if settingsMap, ok := settings.(map[string]interface{}); ok {
+						settingsStr, err := yaml.Marshal(settingsMap)
+						if err != nil {
+							println(err)
+						}
+						pluginSettingsForm.SetText(string(settingsStr))
 					}
-					pluginSettingsForm.SetText(string(settingsStr))
 				}
 			}
 			pluginSettingsForm.OnChanged = func(text string) {
@@ -116,14 +120,16 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 				err := yaml.Unmarshal([]byte(text), &settingsMap)
 				if err != nil {
 					println(err)
+					dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[0])
+				} else {
+					Settings.Config.Plugin_settings.(map[string]interface{})[pluginClassName] = settingsMap
+					sendMessage := Fields.SendMessageStruct{
+						Type:  "setting_change",
+						Name:  "plugin_settings",
+						Value: Settings.Config.Plugin_settings,
+					}
+					sendMessage.SendMessage()
 				}
-				Settings.Config.Plugin_settings.(map[string]interface{})[pluginClassName] = settingsMap
-				sendMessage := Fields.SendMessageStruct{
-					Type:  "setting_change",
-					Name:  "plugin_settings",
-					Value: Settings.Config.Plugin_settings,
-				}
-				sendMessage.SendMessage()
 			}
 
 			pluginSettingsForm.SetMinRowsVisible(6)
