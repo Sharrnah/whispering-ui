@@ -486,12 +486,14 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Vad_on_full_clip:         false,
 			Vad_confidence_threshold: "0.4",
 			Vad_num_samples:          3000,
+			Vad_thread_num:           1,
 
-			Fp16:              false,
-			Faster_whisper:    false,
-			Phrase_time_limit: 0.0,
-			Pause:             0.8,
-			Energy:            300,
+			Fp16:                 false,
+			Faster_whisper:       false,
+			Temperature_fallback: true,
+			Phrase_time_limit:    0.0,
+			Pause:                0.8,
+			Energy:               300,
 		}
 		if Utilities.FileExists(settingsFiles[id]) {
 			err = profileSettings.LoadYamlSettings(settingsFiles[id])
