@@ -98,10 +98,10 @@ type Conf struct {
 	Flan_conditioning_history          int    `yaml:"flan_conditioning_history"`
 
 	// Plugin Settings
-	Plugins              interface{} `yaml:"plugins,omitempty"`
-	Plugin_settings      interface{} `yaml:"plugin_settings,omitempty"`
-	Plugin_timer_timeout interface{} `yaml:"plugin_timer_timeout,omitempty"`
-	Plugin_timer         interface{} `yaml:"plugin_timer,omitempty"`
+	Plugins              map[string]bool `yaml:"plugins,omitempty"`
+	Plugin_settings      interface{}     `yaml:"plugin_settings,omitempty"`
+	Plugin_timer_timeout interface{}     `yaml:"plugin_timer_timeout,omitempty"`
+	Plugin_timer         interface{}     `yaml:"plugin_timer,omitempty"`
 }
 
 var ConfigValues map[string]interface{} = nil
