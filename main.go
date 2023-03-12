@@ -69,10 +69,12 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 	err = Updater.Unzip(filename, filepath.Dir(appExec))
 	if err != nil {
 		dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
+		return err
 	}
 	err = os.Remove(filename)
 	if err != nil {
 		dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
+		return err
 	}
 
 	if err == nil {
