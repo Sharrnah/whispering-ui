@@ -160,7 +160,7 @@ func HandleSendMessage(sendMessage *Fields.SendMessageStruct) {
 			}
 		case "trg_lang":
 			langCode := Messages.InstalledLanguages.GetCodeByName(sendMessage.Value.(string))
-			if langCode != "" && Messages.TranslateSettings.Trg_lang != langCode {
+			if langCode != "" {
 				sendMessage.Value = langCode
 				txtTranslateSendMessage := Fields.SendMessageStruct{
 					Type:  "setting_change",
@@ -169,15 +169,13 @@ func HandleSendMessage(sendMessage *Fields.SendMessageStruct) {
 				}
 				go txtTranslateSendMessage.SendMessage()
 			} else {
-				sendMessage.Value = SkipMessage
-			}
-			if langCode == "" {
 				txtTranslateSendMessage := Fields.SendMessageStruct{
 					Type:  "setting_change",
 					Name:  "txt_translate",
 					Value: false,
 				}
 				go txtTranslateSendMessage.SendMessage()
+				sendMessage.Value = SkipMessage
 			}
 
 		case "current_language":
