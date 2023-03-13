@@ -241,6 +241,12 @@ func (c *Conf) SetOption(optionName string, value interface{}) {
 					tmpValue, _ := strconv.Atoi(value.(string))
 					setValue = reflect.ValueOf(tmpValue)
 				}
+			case reflect.Float64:
+				switch value.(type) {
+				case string:
+					tmpValue, _ := strconv.ParseFloat(value.(string), 64)
+					setValue = reflect.ValueOf(tmpValue)
+				}
 
 			}
 			indirectValues.Field(i).Set(setValue)
@@ -409,6 +415,23 @@ func BuildSettingsForm(includeConfigFields []string, settingsFile string) fyne.C
 					settingsForm.Append(settingsName, settingsWidget)
 				}
 
+			case "float64":
+				if settingsValues != nil {
+					if len(settingsValues) > 0 {
+						settingsWidget := widget.NewSelect(settingsValues, func(s string) {
+							println(s)
+						})
+
+						selectedValue := strconv.FormatFloat(settingsValue.(float64), 'f', 1, 64)
+						settingsWidget.SetSelected(selectedValue)
+						settingsForm.Append(settingsName, settingsWidget)
+					}
+				} else {
+					settingsWidget := widget.NewEntry()
+					settingsWidget.SetText(strconv.FormatFloat(settingsValue.(float64), 'f', 1, 64))
+					settingsForm.Append(settingsName, settingsWidget)
+				}
+
 			case "bool":
 				settingsWidget := widget.NewCheck("", func(checked bool) {})
 				settingsWidget.Checked = settingsValue.(bool)
@@ -448,6 +471,11 @@ func BuildSettingsForm(includeConfigFields []string, settingsFile string) fyne.C
 						switch value.(type) {
 						case string:
 							sendValue, _ = strconv.Atoi(value.(string))
+						}
+					case float64:
+						switch value.(type) {
+						case string:
+							sendValue, _ = strconv.ParseFloat(value.(string), 64)
 						}
 					}
 					if preChangeOption != sendValue {
