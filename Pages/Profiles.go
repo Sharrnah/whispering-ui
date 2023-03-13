@@ -402,10 +402,31 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Large Version 2", Value: "large-v2"},
 		}, func(s CustomWidget.TextValueOption) {}, 0))
 
-		sttFp16Checkbox := widget.NewCheck("use FP16", func(b bool) {})
-		sttFasterWhisperCheckbox := widget.NewCheck("Faster Whisper", func(b bool) {})
-		//profileForm.Append("Speech to Text use FP16", widget.NewCheck("", func(b bool) {}))
-		profileForm.Append("Speech to Text Options", container.NewGridWithColumns(2, sttFp16Checkbox, sttFasterWhisperCheckbox))
+		sttFp16Select := CustomWidget.NewTextValueSelect("Precision", []CustomWidget.TextValueOption{
+			{Text: "float32 precision", Value: "float32"},
+			{Text: "float16 precision", Value: "float16"},
+			{Text: "int8_float16 precision", Value: "int8_float16"},
+		}, func(s CustomWidget.TextValueOption) {}, 0)
+
+		sttFasterWhisperCheckbox := widget.NewCheck("Faster Whisper", func(b bool) {
+			selectedPrecision := sttFp16Select.GetSelected().Value
+			if b {
+				sttFp16Select.Options = []CustomWidget.TextValueOption{
+					{Text: "float32 precision", Value: "float32"},
+					{Text: "float16 precision", Value: "float16"},
+					{Text: "int8_float16 precision", Value: "int8_float16"},
+				}
+			} else {
+				sttFp16Select.Options = []CustomWidget.TextValueOption{
+					{Text: "float32 precision", Value: "float32"},
+					{Text: "float16 precision", Value: "float16"},
+				}
+				if selectedPrecision == "int8_float16" {
+					sttFp16Select.SetSelected("float16")
+				}
+			}
+		})
+		profileForm.Append("Speech to Text Options", container.NewGridWithColumns(2, sttFp16Select, sttFasterWhisperCheckbox))
 
 		profileForm.Append("", layout.NewSpacer())
 
@@ -488,12 +509,15 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Vad_num_samples:          3000,
 			Vad_thread_num:           1,
 
-			Fp16:                 false,
+			Whisper_precision:    "float32",
 			Faster_whisper:       false,
 			Temperature_fallback: true,
 			Phrase_time_limit:    0.0,
 			Pause:                0.8,
 			Energy:               300,
+			Beam_size:            5,
+			Whisper_cpu_threads:  0,
+			Whisper_num_workers:  1,
 		}
 		if Utilities.FileExists(settingsFiles[id]) {
 			err = profileSettings.LoadYamlSettings(settingsFiles[id])
@@ -556,8 +580,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			profileForm.Items[11].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Ai_device.(string))
 		}
 		profileForm.Items[12].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Model)
-		//profileForm.Items[13].Widget.(*widget.Check).SetChecked(profileSettings.Fp16)
-		profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*widget.Check).SetChecked(profileSettings.Fp16)
+		profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Whisper_precision)
 		profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*widget.Check).SetChecked(profileSettings.Faster_whisper)
 
 		// spacer
@@ -584,8 +607,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 			profileSettings.Ai_device = profileForm.Items[11].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
 			profileSettings.Model = profileForm.Items[12].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
-			//profileSettings.Fp16 = profileForm.Items[13].Widget.(*widget.Check).Checked
-			profileSettings.Fp16 = profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*widget.Check).Checked
+			profileSettings.Whisper_precision = profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
 			profileSettings.Faster_whisper = profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*widget.Check).Checked
 
 			profileSettings.Txt_translator_device = profileForm.Items[15].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
@@ -611,7 +633,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					Osc_port:              profileSettings.Osc_port,
 					Tts_enabled:           profileSettings.Tts_enabled,
 					Tts_ai_device:         profileSettings.Tts_ai_device,
-					Fp16:                  profileSettings.Fp16,
+					Whisper_precision:     profileSettings.Whisper_precision,
 					Faster_whisper:        profileSettings.Faster_whisper,
 
 					Phrase_time_limit: profileSettings.Phrase_time_limit,

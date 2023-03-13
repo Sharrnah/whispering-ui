@@ -45,9 +45,12 @@ type Conf struct {
 	Initial_prompt             string      `yaml:"initial_prompt"`
 	Logprob_threshold          string      `yaml:"logprob_threshold"`   // string formatted float or "none" / ""
 	No_speech_threshold        string      `yaml:"no_speech_threshold"` // string formatted float or "none" / ""
-	Fp16                       bool        `yaml:"fp16"`
+	Whisper_precision          string      `yaml:"whisper_precision"`
 	Faster_whisper             bool        `yaml:"faster_whisper"`       // use faster whisper model
 	Temperature_fallback       bool        `yaml:"temperature_fallback"` // enables/disables temperature fallback (to prevent multiple whisper loops in a row)
+	Beam_size                  int         `yaml:"beam_size"`
+	Whisper_cpu_threads        int         `yaml:"whisper_cpu_threads"`
+	Whisper_num_workers        int         `yaml:"whisper_num_workers"`
 
 	// text translate settings
 	Txt_translate         bool   `yaml:"txt_translate"`
