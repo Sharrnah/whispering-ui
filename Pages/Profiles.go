@@ -582,6 +582,23 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileForm.Items[12].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Model)
 		profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Whisper_precision)
 		profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*widget.Check).SetChecked(profileSettings.Faster_whisper)
+		// show only available precision options depending on whisper project
+		selectedPrecision := profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
+		if profileSettings.Faster_whisper {
+			profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
+				{Text: "float32 precision", Value: "float32"},
+				{Text: "float16 precision", Value: "float16"},
+				{Text: "int8_float16 precision", Value: "int8_float16"},
+			}
+		} else {
+			profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
+				{Text: "float32 precision", Value: "float32"},
+				{Text: "float16 precision", Value: "float16"},
+			}
+			if selectedPrecision == "int8_float16" {
+				profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected("float16")
+			}
+		}
 
 		// spacer
 		profileForm.Items[15].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_device)
