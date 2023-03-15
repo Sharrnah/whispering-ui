@@ -134,6 +134,16 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		} else {
 			Fields.Field.ProcessingStatus.Stop()
 		}
+	case "processing_data":
+		var processingData = ""
+		err = json.Unmarshal(c.Data, &processingData)
+		if processingData != "" {
+			Fields.Field.ProcessingStatus.Start()
+			go func() {
+				time.Sleep(10 * time.Second)
+				Fields.Field.ProcessingStatus.Stop()
+			}()
+		}
 	case "loading_state":
 		err = json.Unmarshal(c.Raw, &Messages.CurrentLoadingState)
 		Messages.CurrentLoadingState.Update()

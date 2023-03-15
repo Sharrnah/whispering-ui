@@ -347,17 +347,20 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			vadConfidenceSliderState.SetText(fmt.Sprintf("%.1f", value))
 		}
 
-		vadOnFullClipCheckbox := widget.NewCheck("Additional Check on Full Clip", func(b bool) {})
+		vadOnFullClipCheckbox := widget.NewCheck("+ Check on Full Clip", func(b bool) {})
+		vadRealtimeCheckbox := widget.NewCheck("Realtime", func(b bool) {})
 		vadEnableCheckbox := widget.NewCheck("Enable", func(b bool) {
 			if b {
 				vadConfidenceSliderWidget.Show()
 				vadOnFullClipCheckbox.Show()
+				vadRealtimeCheckbox.Show()
 			} else {
 				vadConfidenceSliderWidget.Hide()
 				vadOnFullClipCheckbox.Hide()
+				vadRealtimeCheckbox.Hide()
 			}
 		})
-		profileForm.Append("VAD (Voice activity detection)", container.NewGridWithColumns(2, vadEnableCheckbox, vadOnFullClipCheckbox))
+		profileForm.Append("VAD (Voice activity detection)", container.NewGridWithColumns(3, vadEnableCheckbox, vadOnFullClipCheckbox, vadRealtimeCheckbox))
 		appendWidgetToForm(profileForm, "VAD Speech confidence", container.NewBorder(nil, nil, nil, vadConfidenceSliderState, vadConfidenceSliderWidget), "The confidence level required to detect speech.")
 
 		energySliderState := widget.NewLabel("0.0")
@@ -509,15 +512,21 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Vad_num_samples:          3000,
 			Vad_thread_num:           1,
 
-			Whisper_precision:    "float32",
-			Faster_whisper:       false,
-			Temperature_fallback: true,
-			Phrase_time_limit:    0.0,
-			Pause:                0.8,
-			Energy:               300,
-			Beam_size:            5,
-			Whisper_cpu_threads:  0,
-			Whisper_num_workers:  1,
+			Whisper_precision:          "float32",
+			Faster_whisper:             false,
+			Temperature_fallback:       true,
+			Phrase_time_limit:          0.0,
+			Pause:                      0.8,
+			Energy:                     300,
+			Beam_size:                  5,
+			Whisper_cpu_threads:        0,
+			Whisper_num_workers:        1,
+			Realtime:                   false,
+			Realtime_frame_multiply:    10,
+			Realtime_whisper_model:     "",
+			Realtime_whisper_precision: "float16",
+			Realtime_whisper_beam_size: 1,
+			Txt_translate_realtime:     true,
 		}
 		if Utilities.FileExists(settingsFiles[id]) {
 			err = profileSettings.LoadYamlSettings(settingsFiles[id])
@@ -563,6 +572,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		// spacer
 		profileForm.Items[6].Widget.(*fyne.Container).Objects[0].(*widget.Check).SetChecked(profileSettings.Vad_enabled)
 		profileForm.Items[6].Widget.(*fyne.Container).Objects[1].(*widget.Check).SetChecked(profileSettings.Vad_on_full_clip)
+		profileForm.Items[6].Widget.(*fyne.Container).Objects[2].(*widget.Check).SetChecked(profileSettings.Realtime)
 
 		VadConfidenceThreshold, _ := strconv.ParseFloat(profileSettings.Vad_confidence_threshold, 64)
 
@@ -616,6 +626,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 			profileSettings.Vad_enabled = profileForm.Items[6].Widget.(*fyne.Container).Objects[0].(*widget.Check).Checked
 			profileSettings.Vad_on_full_clip = profileForm.Items[6].Widget.(*fyne.Container).Objects[1].(*widget.Check).Checked
+			profileSettings.Realtime = profileForm.Items[6].Widget.(*fyne.Container).Objects[2].(*widget.Check).Checked
 			profileSettings.Vad_confidence_threshold = fmt.Sprintf("%f", profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value)
 
 			profileSettings.Energy = int(profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value)
@@ -652,6 +663,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					Tts_ai_device:         profileSettings.Tts_ai_device,
 					Whisper_precision:     profileSettings.Whisper_precision,
 					Faster_whisper:        profileSettings.Faster_whisper,
+					Realtime:              profileSettings.Realtime,
 
 					Phrase_time_limit: profileSettings.Phrase_time_limit,
 					Pause:             profileSettings.Pause,

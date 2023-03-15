@@ -51,15 +51,21 @@ type Conf struct {
 	Beam_size                  int         `yaml:"beam_size"`
 	Whisper_cpu_threads        int         `yaml:"whisper_cpu_threads"`
 	Whisper_num_workers        int         `yaml:"whisper_num_workers"`
+	Realtime                   bool        `yaml:"realtime"`
+	Realtime_frame_multiply    int         `yaml:"realtime_frame_multiply"`
+	Realtime_whisper_model     string      `yaml:"realtime_whisper_model"`
+	Realtime_whisper_precision string      `yaml:"realtime_whisper_precision"`
+	Realtime_whisper_beam_size int         `yaml:"realtime_whisper_beam_size"`
 
 	// text translate settings
-	Txt_translate         bool   `yaml:"txt_translate"`
-	Txt_translator_device string `yaml:"txt_translator_device"`
-	Src_lang              string `yaml:"src_lang"`
-	Trg_lang              string `yaml:"trg_lang"`
-	Txt_ascii             bool   `yaml:"txt_ascii"`
-	Txt_translator        string `yaml:"txt_translator"`
-	Txt_translator_size   string `yaml:"txt_translator_size"`
+	Txt_translate          bool   `yaml:"txt_translate"`
+	Txt_translator_device  string `yaml:"txt_translator_device"`
+	Src_lang               string `yaml:"src_lang"`
+	Trg_lang               string `yaml:"trg_lang"`
+	Txt_ascii              bool   `yaml:"txt_ascii"`
+	Txt_translator         string `yaml:"txt_translator"`
+	Txt_translator_size    string `yaml:"txt_translator_size"`
+	Txt_translate_realtime bool   `yaml:"txt_translate_realtime"`
 
 	// websocket settings
 	Websocket_ip   string `yaml:"websocket_ip"`
