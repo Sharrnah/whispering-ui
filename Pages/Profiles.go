@@ -368,7 +368,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		energySliderWidget.OnChanged = func(value float64) {
 			energySliderState.SetText(fmt.Sprintf("%.0f", value))
 		}
-		appendWidgetToForm(profileForm, "Speech detection Level", container.NewBorder(nil, nil, nil, energySliderState, energySliderWidget), "The volume level at which the speech detection will trigger.")
+		appendWidgetToForm(profileForm, "Speech volume Level", container.NewBorder(nil, nil, nil, energySliderState, energySliderWidget), "The volume level at which the speech detection will trigger.")
 
 		pauseSliderState := widget.NewLabel("0.0")
 		pauseSliderWidget := widget.NewSlider(0, 5)
