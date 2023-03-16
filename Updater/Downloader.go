@@ -13,6 +13,7 @@ type OnProgress func(bytesWritten, contentLength uint64)
 type WriteCounter struct {
 	Total         uint64
 	ContentLength uint64
+	InitialBytes  uint64
 	OnProgress    OnProgress
 }
 
@@ -26,7 +27,7 @@ type Download struct {
 func (wc *WriteCounter) Write(p []byte) (int, error) {
 	n := len(p)
 	wc.Total += uint64(n)
-	wc.OnProgress(wc.Total, wc.ContentLength)
+	wc.OnProgress(wc.Total+wc.InitialBytes, wc.ContentLength)
 	return n, nil
 }
 
@@ -86,6 +87,7 @@ func (d *Download) DownloadFileWithRetry(retries int) error {
 	}
 
 	d.WriteCounter.ContentLength = uint64(resp.ContentLength) + uint64(startBytes)
+	d.WriteCounter.InitialBytes = uint64(startBytes)
 
 	// Seek to the right position
 	if startBytes > 0 {
