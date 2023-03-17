@@ -34,8 +34,8 @@ type MessageStruct struct {
 	OriginalText    string `json:"original_text,omitempty"`
 	TxtFromLang     string `json:"txt_from_lang,omitempty"`
 
-	// only in case of FLAN message
-	FlanAnswer string `json:"flan_answer,omitempty"`
+	// only in case of LLM message
+	LlmAnswer string `json:"llm_answer,omitempty"`
 }
 
 func (c *MessageStruct) GetMessage(messageData []byte) *MessageStruct {

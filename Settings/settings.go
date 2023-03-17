@@ -92,20 +92,6 @@ type Conf struct {
 	Tts_prosody_rate  string   `yaml:"tts_prosody_rate"`
 	Tts_prosody_pitch string   `yaml:"tts_prosody_pitch"`
 
-	// FLAN-T5 settings
-	Flan_enabled                       bool   `yaml:"flan_enabled"`
-	Flan_size                          string `yaml:"flan_size"`
-	Llm_model                          string `yaml:"Llm_model"`
-	Flan_bits                          int    `yaml:"flan_bits"`
-	Flan_device                        string `yaml:"flan_device"`
-	Flan_whisper_answer                bool   `yaml:"flan_whisper_answer"`
-	Flan_process_only_questions        bool   `yaml:"flan_process_only_questions"`
-	Flan_osc_prefix                    string `yaml:"flan_osc_prefix"`
-	Flan_translate_to_speaker_language bool   `yaml:"flan_translate_to_speaker_language"`
-	Flan_prompt                        string `yaml:"flan_prompt"`
-	Flan_memory                        string `yaml:"flan_memory"`
-	Flan_conditioning_history          int    `yaml:"flan_conditioning_history"`
-
 	// Plugin Settings
 	Plugins              map[string]bool `yaml:"plugins,omitempty"`
 	Plugin_settings      interface{}     `yaml:"plugin_settings,omitempty"`
