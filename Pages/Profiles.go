@@ -517,7 +517,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Vad_thread_num:           1,
 
 			Whisper_precision:          "float32",
-			Faster_whisper:             false,
+			Faster_whisper:             true,
 			Temperature_fallback:       true,
 			Phrase_time_limit:          0.0,
 			Pause:                      0.8,
