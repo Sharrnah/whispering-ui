@@ -17,6 +17,8 @@ Whispering Tiger UI is intended to make it easier to control and configure the *
    - Displaying the results in a web browser or VRChat, using Websockets or OSC
 - **Save** and **load** configurations
 - **Preview** if your selected Audio devices are working
+- **Plugin** support for **additional features** (e.g. **Large Language Models** or **Currently Playing Song** Plugins)
+  - [Find a list of Plugins here.](https://github.com/Sharrnah/whispering/blob/main/documentation/plugins.md) 
 - **Auto-Update** to the latest version of **Whispering Tiger**.
 
 ## Download
