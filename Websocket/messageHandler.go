@@ -122,6 +122,23 @@ func (c *MessageStruct) HandleReceiveMessage() {
 	case "ocr_result":
 		err = json.Unmarshal(c.Data, &Messages.OcrResult)
 		Messages.OcrResult.Update()
+
+	// special case for LLM plugin
+	case "llm_answer":
+		c.Text = strings.TrimSpace(c.Text)
+		c.TxtTranslation = strings.TrimSpace(c.LlmAnswer)
+		whisperResultMessage := Messages.WhisperResult{
+			Text:                 c.Text,
+			Language:             c.Language,
+			TxtTranslation:       c.TxtTranslation,
+			TxtTranslationTarget: c.TxtTranslationTarget,
+		}
+
+		whisperResultMessage.Update()
+
+		// stop processing status
+		Fields.Field.ProcessingStatus.Stop()
+
 	case "processing_start":
 		var processingStarted = false
 		err = json.Unmarshal(c.Data, &processingStarted)

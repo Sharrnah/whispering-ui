@@ -65,13 +65,13 @@ func (res TranslateSetting) Update() *TranslateSetting {
 	if strings.ToLower(Fields.Field.TargetLanguageCombo.Selected) != strings.ToLower(InstalledLanguages.GetNameByCode(res.Trg_lang)) {
 		if TranslateSettings.Txt_translate {
 			Fields.Field.TargetLanguageCombo.SetSelected(cases.Title(language.English, cases.Compact).String(InstalledLanguages.GetNameByCode(res.Trg_lang)))
-			// set text translate target language combo-box
-			if Fields.Field.TargetLanguageTxtTranslateCombo.Selected == "" {
-				Fields.Field.TargetLanguageTxtTranslateCombo.SetSelected(cases.Title(language.English, cases.Compact).String(InstalledLanguages.GetNameByCode(res.Trg_lang)))
-			}
 		} else if Fields.Field.TargetLanguageCombo.Selected != "None" {
 			// special case for "None" text translation target language
 			Fields.Field.TargetLanguageCombo.SetSelected("None")
+		}
+		// set text translate target language combo-box
+		if Fields.Field.TargetLanguageTxtTranslateCombo.Selected == "" {
+			Fields.Field.TargetLanguageTxtTranslateCombo.SetSelected(cases.Title(language.English, cases.Compact).String(InstalledLanguages.GetNameByCode(res.Trg_lang)))
 		}
 	}
 	checkValue, _ := Fields.DataBindings.TextToSpeechEnabledDataBinding.Get()
