@@ -408,7 +408,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		sttFp16Select := CustomWidget.NewTextValueSelect("Precision", []CustomWidget.TextValueOption{
 			{Text: "float32 precision", Value: "float32"},
 			{Text: "float16 precision", Value: "float16"},
+			{Text: "int16 precision", Value: "int16"},
 			{Text: "int8_float16 precision", Value: "int8_float16"},
+			{Text: "int8 precision", Value: "int8"},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
 		sttFasterWhisperCheckbox := widget.NewCheck("Faster Whisper", func(b bool) {
@@ -417,14 +419,16 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				sttFp16Select.Options = []CustomWidget.TextValueOption{
 					{Text: "float32 precision", Value: "float32"},
 					{Text: "float16 precision", Value: "float16"},
+					{Text: "int16 precision", Value: "int16"},
 					{Text: "int8_float16 precision", Value: "int8_float16"},
+					{Text: "int8 precision", Value: "int8"},
 				}
 			} else {
 				sttFp16Select.Options = []CustomWidget.TextValueOption{
 					{Text: "float32 precision", Value: "float32"},
 					{Text: "float16 precision", Value: "float16"},
 				}
-				if selectedPrecision == "int8_float16" {
+				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" {
 					sttFp16Select.SetSelected("float16")
 				}
 			}
@@ -598,14 +602,16 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
 				{Text: "float32 precision", Value: "float32"},
 				{Text: "float16 precision", Value: "float16"},
+				{Text: "int16 precision", Value: "int16"},
 				{Text: "int8_float16 precision", Value: "int8_float16"},
+				{Text: "int8 precision", Value: "int8"},
 			}
 		} else {
 			profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
 				{Text: "float32 precision", Value: "float32"},
 				{Text: "float16 precision", Value: "float16"},
 			}
-			if selectedPrecision == "int8_float16" {
+			if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" {
 				profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected("float16")
 			}
 		}
