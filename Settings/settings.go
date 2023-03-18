@@ -70,6 +70,7 @@ type Conf struct {
 	// websocket settings
 	Websocket_ip   string `yaml:"websocket_ip"`
 	Websocket_port int    `yaml:"websocket_port"`
+	Run_backend    bool   `yaml:"run_backend"`
 
 	// OSC settings
 	Osc_ip                      string `yaml:"osc_ip"`

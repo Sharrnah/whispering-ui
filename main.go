@@ -215,7 +215,9 @@ func main() {
 
 			RuntimeBackend.BackendsList[0].AttachEnvironment("Path", filepath.Join(appPath, "ffmpeg/bin"))
 		}
-		RuntimeBackend.BackendsList[0].Start()
+		if Settings.Config.Run_backend {
+			RuntimeBackend.BackendsList[0].Start()
+		}
 
 		// initialize main window
 		appTabs := container.NewAppTabs(

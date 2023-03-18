@@ -307,7 +307,13 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			playBackDevice.PlayStopTestAudio()
 		}), playBackDevice.OutputWaveWidget)
 
-		appendWidgetToForm(profileForm, "Websocket IP + Port", container.NewGridWithColumns(2, websocketIp, websocketPort), "IP + Port of the websocket server the backend will start and the UI will connect to.")
+		runBackendCheckbox := widget.NewCheck("Run Backend", func(b bool) {
+			if !b {
+				dialog.ShowInformation("Info", "The backend will not be started. You will have to start it manually. Without it, the UI will have no function.", fyne.CurrentApp().Driver().AllWindows()[1])
+			}
+		})
+
+		appendWidgetToForm(profileForm, "Websocket IP + Port", container.NewGridWithColumns(3, websocketIp, websocketPort, runBackendCheckbox), "IP + Port of the websocket server the backend will start and the UI will connect to.")
 		profileForm.Append("", layout.NewSpacer())
 
 		appendWidgetToForm(profileForm, "Audio Input (mic)", CustomWidget.NewTextValueSelect("device_index", audioInputDevices,
@@ -348,11 +354,12 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 
 		vadOnFullClipCheckbox := widget.NewCheck("+ Check on Full Clip", func(b bool) {})
+		vadOnFullClipCheckbox.Hide() // hide for now as it does not seem very useful
 		vadRealtimeCheckbox := widget.NewCheck("Realtime", func(b bool) {})
 		vadEnableCheckbox := widget.NewCheck("Enable", func(b bool) {
 			if b {
 				vadConfidenceSliderWidget.Show()
-				vadOnFullClipCheckbox.Show()
+				// vadOnFullClipCheckbox.Show()
 				vadRealtimeCheckbox.Show()
 			} else {
 				vadConfidenceSliderWidget.Hide()
@@ -496,6 +503,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			SettingsFilename:      settingsFiles[id],
 			Websocket_ip:          "127.0.0.1",
 			Websocket_port:        5000,
+			Run_backend:           true,
 			Device_index:          -1,
 			Device_out_index:      -1,
 			Ai_device:             "cuda",
@@ -543,6 +551,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileForm.SubmitText = "Save and Load Profile"
 		profileForm.Items[0].Widget.(*fyne.Container).Objects[0].(*widget.Entry).SetText(profileSettings.Websocket_ip)
 		profileForm.Items[0].Widget.(*fyne.Container).Objects[1].(*widget.Entry).SetText(strconv.Itoa(profileSettings.Websocket_port))
+		profileForm.Items[0].Widget.(*fyne.Container).Objects[2].(*widget.Check).SetChecked(profileSettings.Run_backend)
 		// spacer
 		deviceInValue := "-1"
 		deviceInWidget := profileForm.Items[2].Widget.(*CustomWidget.TextValueSelect)
@@ -625,6 +634,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileForm.OnSubmit = func() {
 			profileSettings.Websocket_ip = profileForm.Items[0].Widget.(*fyne.Container).Objects[0].(*widget.Entry).Text
 			profileSettings.Websocket_port, _ = strconv.Atoi(profileForm.Items[0].Widget.(*fyne.Container).Objects[1].(*widget.Entry).Text)
+			profileSettings.Run_backend = profileForm.Items[0].Widget.(*fyne.Container).Objects[2].(*widget.Check).Checked
 
 			profileSettings.Device_index, _ = strconv.Atoi(profileForm.Items[2].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value)
 
@@ -663,6 +673,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					Txt_translator_device: profileSettings.Txt_translator_device,
 					Websocket_ip:          profileSettings.Websocket_ip,
 					Websocket_port:        profileSettings.Websocket_port,
+					Run_Backend:           profileSettings.Run_backend,
 					Osc_ip:                profileSettings.Osc_ip,
 					Osc_port:              profileSettings.Osc_port,
 					Tts_enabled:           profileSettings.Tts_enabled,
