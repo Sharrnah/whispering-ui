@@ -14,6 +14,7 @@ import (
 	"os/signal"
 	"time"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/Settings"
 )
 
 func messageLoader(c interface{}, message []byte) interface{} {
@@ -85,6 +86,14 @@ func (c *Client) Start() {
 	done := make(chan struct{})
 
 	go func() {
+		// send remote settings request if running remote backend
+		if !Settings.Config.Run_backend {
+			sendMessage := Fields.SendMessageStruct{
+				Type: "setting_update_req",
+			}
+			sendMessage.SendMessage()
+		}
+
 		defer close(done)
 		for {
 			_, message, err := c.Conn.ReadMessage()
@@ -105,6 +114,7 @@ func (c *Client) Start() {
 			var msg MessageStruct
 			msg.GetMessage(message)
 			msg.HandleReceiveMessage()
+
 			//log.Printf("recv: %s", msg)
 		}
 	}()

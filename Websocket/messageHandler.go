@@ -74,7 +74,24 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			log.Println("failed to type assert data")
 		}
 	case "translate_settings":
+		// skip received run_backend value from receiving
+		var runBackend = true
+		var websocketIp string
+		var websocketPort int
+		if !Messages.TranslateSettings.Run_backend {
+			runBackend = false
+			websocketIp = Messages.TranslateSettings.Websocket_ip
+			websocketPort = Messages.TranslateSettings.Websocket_port
+		}
+
 		err = json.Unmarshal(c.Data, &Messages.TranslateSettings)
+
+		if !runBackend {
+			Messages.TranslateSettings.Run_backend = runBackend
+			Messages.TranslateSettings.Websocket_ip = websocketIp
+			Messages.TranslateSettings.Websocket_port = websocketPort
+		}
+
 		Messages.TranslateSettings.Update()
 	case "transcript":
 		c.Text = strings.TrimSpace(c.Text)

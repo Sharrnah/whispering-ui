@@ -22,82 +22,82 @@ import (
 type Conf struct {
 	// Internal Profile Settings
 	SettingsFilename string
-	Device_index     interface{} `yaml:"device_index,omitempty"`
-	Device_out_index interface{} `yaml:"device_out_index,omitempty"`
+	Device_index     interface{} `yaml:"device_index,omitempty" json:"device_index,omitempty"`
+	Device_out_index interface{} `yaml:"device_out_index,omitempty" json:"device_out_index,omitempty"`
 
-	Phrase_time_limit float64 `yaml:"phrase_time_limit"`
-	Pause             float64 `yaml:"pause"`
-	Energy            int     `yaml:"energy"`
+	Phrase_time_limit float64 `yaml:"phrase_time_limit" json:"phrase_time_limit"`
+	Pause             float64 `yaml:"pause" json:"pause"`
+	Energy            int     `yaml:"energy" json:"energy"`
 
 	// VAD Settings
-	Vad_enabled              bool   `yaml:"vad_enabled"`
-	Vad_on_full_clip         bool   `yaml:"vad_on_full_clip"`
-	Vad_confidence_threshold string `yaml:"vad_confidence_threshold"`
-	Vad_num_samples          int    `yaml:"vad_num_samples"`
-	Vad_thread_num           int    `yaml:"vad_thread_num,omitempty"`
+	Vad_enabled              bool   `yaml:"vad_enabled" json:"vad_enabled"`
+	Vad_on_full_clip         bool   `yaml:"vad_on_full_clip" json:"vad_on_full_clip"`
+	Vad_confidence_threshold string `yaml:"vad_confidence_threshold" json:"vad_confidence_threshold"`
+	Vad_num_samples          int    `yaml:"vad_num_samples" json:"vad_num_samples"`
+	Vad_thread_num           int    `yaml:"vad_thread_num,omitempty" json:"vad_thread_num,omitempty"`
 
 	// Whisper Settings
-	Ai_device                  interface{} `yaml:"ai_device"`
-	Whisper_task               string      `yaml:"whisper_task"`
-	Current_language           string      `yaml:"current_language"`
-	Model                      string      `yaml:"model"`
-	Condition_on_previous_text bool        `yaml:"condition_on_previous_text"`
-	Initial_prompt             string      `yaml:"initial_prompt"`
-	Logprob_threshold          string      `yaml:"logprob_threshold"`   // string formatted float or "none" / ""
-	No_speech_threshold        string      `yaml:"no_speech_threshold"` // string formatted float or "none" / ""
-	Whisper_precision          string      `yaml:"whisper_precision"`
-	Faster_whisper             bool        `yaml:"faster_whisper"`       // use faster whisper model
-	Temperature_fallback       bool        `yaml:"temperature_fallback"` // enables/disables temperature fallback (to prevent multiple whisper loops in a row)
-	Beam_size                  int         `yaml:"beam_size"`
-	Whisper_cpu_threads        int         `yaml:"whisper_cpu_threads"`
-	Whisper_num_workers        int         `yaml:"whisper_num_workers"`
-	Realtime                   bool        `yaml:"realtime"`
-	Realtime_frame_multiply    int         `yaml:"realtime_frame_multiply"`
-	Realtime_whisper_model     string      `yaml:"realtime_whisper_model"`
-	Realtime_whisper_precision string      `yaml:"realtime_whisper_precision"`
-	Realtime_whisper_beam_size int         `yaml:"realtime_whisper_beam_size"`
+	Ai_device                  interface{} `yaml:"ai_device" json:"ai_device"`
+	Whisper_task               string      `yaml:"whisper_task" json:"whisper_task"`
+	Current_language           string      `yaml:"current_language" json:"current_language"`
+	Model                      string      `yaml:"model" json:"model"`
+	Condition_on_previous_text bool        `yaml:"condition_on_previous_text" json:"condition_on_previous_text"`
+	Initial_prompt             string      `yaml:"initial_prompt" json:"initial_prompt"`
+	Logprob_threshold          string      `yaml:"logprob_threshold" json:"logprob_threshold"`     // string formatted float or "none" / ""
+	No_speech_threshold        string      `yaml:"no_speech_threshold" json:"no_speech_threshold"` // string formatted float or "none" / ""
+	Whisper_precision          string      `yaml:"whisper_precision" json:"whisper_precision"`
+	Faster_whisper             bool        `yaml:"faster_whisper" json:"faster_whisper"`             // use faster whisper model
+	Temperature_fallback       bool        `yaml:"temperature_fallback" json:"temperature_fallback"` // enables/disables temperature fallback (to prevent multiple whisper loops in a row)
+	Beam_size                  int         `yaml:"beam_size" json:"beam_size"`
+	Whisper_cpu_threads        int         `yaml:"whisper_cpu_threads" json:"whisper_cpu_threads"`
+	Whisper_num_workers        int         `yaml:"whisper_num_workers" json:"whisper_num_workers"`
+	Realtime                   bool        `yaml:"realtime" json:"realtime"`
+	Realtime_frame_multiply    int         `yaml:"realtime_frame_multiply" json:"realtime_frame_multiply"`
+	Realtime_whisper_model     string      `yaml:"realtime_whisper_model" json:"realtime_whisper_model"`
+	Realtime_whisper_precision string      `yaml:"realtime_whisper_precision" json:"realtime_whisper_precision"`
+	Realtime_whisper_beam_size int         `yaml:"realtime_whisper_beam_size" json:"realtime_whisper_beam_size"`
 
 	// text translate settings
-	Txt_translate          bool   `yaml:"txt_translate"`
-	Txt_translator_device  string `yaml:"txt_translator_device"`
-	Src_lang               string `yaml:"src_lang"`
-	Trg_lang               string `yaml:"trg_lang"`
-	Txt_ascii              bool   `yaml:"txt_ascii"`
-	Txt_translator         string `yaml:"txt_translator"`
-	Txt_translator_size    string `yaml:"txt_translator_size"`
-	Txt_translate_realtime bool   `yaml:"txt_translate_realtime"`
+	Txt_translate          bool   `yaml:"txt_translate" json:"txt_translate"`
+	Txt_translator_device  string `yaml:"txt_translator_device" json:"txt_translator_device"`
+	Src_lang               string `yaml:"src_lang" json:"src_lang"`
+	Trg_lang               string `yaml:"trg_lang" json:"trg_lang"`
+	Txt_ascii              bool   `yaml:"txt_ascii" json:"txt_ascii"`
+	Txt_translator         string `yaml:"txt_translator" json:"txt_translator"`
+	Txt_translator_size    string `yaml:"txt_translator_size" json:"txt_translator_size"`
+	Txt_translate_realtime bool   `yaml:"txt_translate_realtime" json:"txt_translate_realtime"`
 
 	// websocket settings
-	Websocket_ip   string `yaml:"websocket_ip"`
-	Websocket_port int    `yaml:"websocket_port"`
-	Run_backend    bool   `yaml:"run_backend"`
+	Websocket_ip   string `yaml:"websocket_ip" json:"websocket_ip"`
+	Websocket_port int    `yaml:"websocket_port" json:"websocket_port"`
+	Run_backend    bool   `yaml:"run_backend" json:"run_backend"`
 
 	// OSC settings
-	Osc_ip                      string `yaml:"osc_ip"`
-	Osc_port                    int    `yaml:"osc_port"`
-	Osc_address                 string `yaml:"osc_address"`
-	Osc_typing_indicator        bool   `yaml:"osc_typing_indicator"`
-	Osc_convert_ascii           bool   `yaml:"osc_convert_ascii"`
-	Osc_auto_processing_enabled bool   `yaml:"osc_auto_processing_enabled"`
+	Osc_ip                      string `yaml:"osc_ip" json:"osc_ip"`
+	Osc_port                    int    `yaml:"osc_port" json:"osc_port"`
+	Osc_address                 string `yaml:"osc_address" json:"osc_address"`
+	Osc_typing_indicator        bool   `yaml:"osc_typing_indicator" json:"osc_typing_indicator"`
+	Osc_convert_ascii           bool   `yaml:"osc_convert_ascii" json:"osc_convert_ascii"`
+	Osc_auto_processing_enabled bool   `yaml:"osc_auto_processing_enabled" json:"osc_auto_processing_enabled"`
 
 	// OCR settings
-	Ocr_lang        string `yaml:"ocr_lang"`
-	Ocr_window_name string `yaml:"ocr_window_name"`
+	Ocr_lang        string `yaml:"ocr_lang" json:"ocr_lang"`
+	Ocr_window_name string `yaml:"ocr_window_name" json:"ocr_window_name"`
 
 	// TTS settings
-	Tts_enabled       bool     `yaml:"tts_enabled"`
-	Tts_ai_device     string   `yaml:"tts_ai_device"`
-	Tts_answer        bool     `yaml:"tts_answer"`
-	Tts_model         []string `yaml:"tts_model"`
-	Tts_voice         string   `yaml:"tts_voice"`
-	Tts_prosody_rate  string   `yaml:"tts_prosody_rate"`
-	Tts_prosody_pitch string   `yaml:"tts_prosody_pitch"`
+	Tts_enabled       bool     `yaml:"tts_enabled" json:"tts_enabled"`
+	Tts_ai_device     string   `yaml:"tts_ai_device" json:"tts_ai_device"`
+	Tts_answer        bool     `yaml:"tts_answer" json:"tts_answer"`
+	Tts_model         []string `yaml:"tts_model" json:"tts_model"`
+	Tts_voice         string   `yaml:"tts_voice" json:"tts_voice"`
+	Tts_prosody_rate  string   `yaml:"tts_prosody_rate" json:"tts_prosody_rate"`
+	Tts_prosody_pitch string   `yaml:"tts_prosody_pitch" json:"tts_prosody_pitch"`
 
 	// Plugin Settings
-	Plugins              map[string]bool `yaml:"plugins,omitempty"`
-	Plugin_settings      interface{}     `yaml:"plugin_settings,omitempty"`
-	Plugin_timer_timeout interface{}     `yaml:"plugin_timer_timeout,omitempty"`
-	Plugin_timer         interface{}     `yaml:"plugin_timer,omitempty"`
+	Plugins              map[string]bool `yaml:"plugins,omitempty" json:"plugins,omitempty"`
+	Plugin_settings      interface{}     `yaml:"plugin_settings,omitempty" json:"plugin_settings,omitempty"`
+	Plugin_timer_timeout interface{}     `yaml:"plugin_timer_timeout,omitempty" json:"plugin_timer_timeout,omitempty"`
+	Plugin_timer         interface{}     `yaml:"plugin_timer,omitempty" json:"plugin_timer,omitempty"`
 }
 
 var ConfigValues map[string]interface{} = nil
@@ -176,8 +176,9 @@ func confLoader(c interface{}, configFile string) interface{} {
 			log.Fatalf("Unmarshal: %v", err)
 		}
 	} else {
-		log.Printf("settings yaml not found (Press Enter to exit)")
-		fmt.Scanln()
+		err := fmt.Errorf("Config file %s not found", configFile)
+		log.Printf("Error: %v", err)
+		dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[0])
 		os.Exit(1)
 	}
 
@@ -185,7 +186,11 @@ func confLoader(c interface{}, configFile string) interface{} {
 }
 
 func (c *Conf) GetConf(configFile string) *Conf {
-	return confLoader(c, configFile).(*Conf)
+	if c.Run_backend {
+		return confLoader(c, configFile).(*Conf)
+	} else {
+		return c
+	}
 }
 
 func (c *Conf) GetOption(option string) (interface{}, error) {
@@ -317,10 +322,15 @@ func BuildSettingsForm(includeConfigFields []string, settingsFile string) fyne.C
 
 	settingsForm.Append("Profile", widget.NewLabel(Config.SettingsFilename))
 
-	// merge local settings with settings file
+	// merge local settings with settings file if running local backend
 	var settingsFileConf = Conf{}
-	settingsFileConf.GetConf(settingsFile)
-	MergedConfig := MergeSettings(Config, settingsFileConf)
+	MergedConfig := settingsFileConf
+	if Config.Run_backend {
+		settingsFileConf.GetConf(settingsFile)
+		MergedConfig = MergeSettings(Config, settingsFileConf)
+	} else {
+		MergedConfig = Config
+	}
 
 	settingsFields := reflect.ValueOf(MergedConfig)
 
@@ -492,7 +502,9 @@ func BuildSettingsForm(includeConfigFields []string, settingsFile string) fyne.C
 				sendMessage.SendMessage()
 			}
 
-			MergedConfig.WriteYamlSettings(settingsFile)
+			if Config.Run_backend {
+				MergedConfig.WriteYamlSettings(settingsFile)
+			}
 
 			dialog.ShowInformation("Settings Saved", "Settings have been saved to "+settingsFile+"\n This might require a restart of the application for some changes to take effect.", fyne.CurrentApp().Driver().AllWindows()[0])
 		}
