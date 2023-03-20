@@ -32,7 +32,7 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 	statusBarContainer := container.NewVBox(statusBar)
 	dialog.ShowCustom("Update in progress...", "Close", statusBarContainer, fyne.CurrentApp().Driver().AllWindows()[1])
 	downloadingLabel := widget.NewLabel("Downloading... ")
-	randomUrlIndex := rand.Int() % len(updater.Packages["app"].Urls)
+	randomUrlIndex := rand.Int() % len(updater.Packages[packageName].Urls)
 	downloader := Updater.Download{
 		Url:      updater.Packages[packageName].Urls[randomUrlIndex],
 		Filepath: filename,

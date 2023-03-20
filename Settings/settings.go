@@ -179,18 +179,13 @@ func confLoader(c interface{}, configFile string) interface{} {
 		err := fmt.Errorf("Config file %s not found", configFile)
 		log.Printf("Error: %v", err)
 		dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[0])
-		os.Exit(1)
 	}
 
 	return c
 }
 
 func (c *Conf) GetConf(configFile string) *Conf {
-	if c.Run_backend {
-		return confLoader(c, configFile).(*Conf)
-	} else {
-		return c
-	}
+	return confLoader(c, configFile).(*Conf)
 }
 
 func (c *Conf) GetOption(option string) (interface{}, error) {
