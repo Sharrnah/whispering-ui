@@ -30,11 +30,47 @@ var updateInfoUrl = "https://s3.libs.space:9000/projects/whispering/latest.yaml"
 func versionDownload(updater Updater.UpdatePackages, packageName, filename string) error {
 	statusBar := widget.NewProgressBar()
 	statusBarContainer := container.NewVBox(statusBar)
-	dialog.ShowCustom("Update in progress...", "Close", statusBarContainer, fyne.CurrentApp().Driver().AllWindows()[1])
+	dialog.ShowCustom("Update in progress...", "Hide (Download will continue)", statusBarContainer, fyne.CurrentApp().Driver().AllWindows()[1])
 	downloadingLabel := widget.NewLabel("Downloading... ")
-	randomUrlIndex := rand.Int() % len(updater.Packages[packageName].Urls)
+
+	hasEUServer := false
+	hasUSServer := false
+	var mergedUrls []string
+
+	// go through all url locations in the yaml slice and check if it exists
+	for langKey, locations := range updater.Packages[packageName].LocationUrls {
+		if langKey == "EU" && len(locations) > 0 {
+			hasEUServer = true
+		}
+		if langKey == "US" && len(locations) > 0 {
+			hasUSServer = true
+		}
+		if len(locations) > 0 {
+			mergedUrls = append(mergedUrls, locations...)
+		}
+	}
+
+	randomUrlIndex := rand.Int() % len(mergedUrls)
+	downloadUrl := mergedUrls[randomUrlIndex]
+
+	locationString := "DEFAULT"
+	// try to download from the closest server by checking the user's location
+	lang := Updater.GetLanguage()
+	print("lang: " + lang + "\n")
+	if hasUSServer && Updater.IsUSLocale(lang) {
+		locationString = "US"
+		// Download from US server
+		randomUrlIndex = rand.Int() % len(updater.Packages[packageName].LocationUrls["US"])
+		downloadUrl = updater.Packages[packageName].LocationUrls["US"][randomUrlIndex]
+	} else if hasEUServer && Updater.IsEULocale(lang) {
+		locationString = "EU"
+		// Download from EU server
+		randomUrlIndex = rand.Int() % len(updater.Packages[packageName].LocationUrls["EU"])
+		downloadUrl = updater.Packages[packageName].LocationUrls["EU"][randomUrlIndex]
+	}
+
 	downloader := Updater.Download{
-		Url:      updater.Packages[packageName].Urls[randomUrlIndex],
+		Url:      downloadUrl,
 		Filepath: filename,
 	}
 	downloader.WriteCounter.OnProgress = func(progress, total uint64) {
@@ -51,7 +87,7 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 				resumeStatusText = " (Resume)"
 			}
 
-			downloadingLabel.SetText("Downloading... " + humanize.Bytes(total) + resumeStatusText)
+			downloadingLabel.SetText("Downloading from " + locationString + "... " + humanize.Bytes(total) + resumeStatusText)
 		}
 	}
 

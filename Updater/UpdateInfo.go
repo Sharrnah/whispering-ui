@@ -13,19 +13,22 @@ import (
 packages:
   app:
     version: 1.0.0.16
-    urls:
-      - https://eu2.someurl.com/app1.0.0.16_win.zip
+    locationUrls:
+      DEFAULT:
+        - https://eu2.someurl.com/app1.0.0.16_win.zip
 
   data:
     version: 1.0.0.3
-    urls:
-      - https://eu2.someurl.com/data1.0.0.3_win.zip
-      - https://usc1.someurl.com/data1.0.0.3_win.zip
+    locationUrls:
+      EU:
+        - https://eu2.someurl.com/data1.0.0.3_win.zip
+      US:
+        - https://usc1.someurl.com/data1.0.0.3_win.zip
 */
 
 type UpdateInfo struct {
-	Version string   `yaml:"version"`
-	Urls    []string `yaml:"urls"`
+	Version      string              `yaml:"version"`
+	LocationUrls map[string][]string `yaml:"locationUrls"`
 }
 
 func (i *UpdateInfo) WriteYaml(fileName string) {
