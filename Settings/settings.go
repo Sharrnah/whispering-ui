@@ -25,6 +25,9 @@ type Conf struct {
 	Device_index     interface{} `yaml:"device_index,omitempty" json:"device_index,omitempty"`
 	Device_out_index interface{} `yaml:"device_out_index,omitempty" json:"device_out_index,omitempty"`
 
+	Audio_input_device  string `yaml:"audio_input_device" json:"audio_input_device"`
+	Audio_output_device string `yaml:"audio_output_device" json:"audio_output_device"`
+
 	Phrase_time_limit float64 `yaml:"phrase_time_limit" json:"phrase_time_limit"`
 	Pause             float64 `yaml:"pause" json:"pause"`
 	Energy            int     `yaml:"energy" json:"energy"`
@@ -116,6 +119,8 @@ var ExcludeConfigFields = []string{
 	"plugin_settings",
 	"plugin_timer_timeout",
 	"plugin_timer",
+	"audio_input_device",
+	"audio_output_device",
 }
 
 var Config Conf

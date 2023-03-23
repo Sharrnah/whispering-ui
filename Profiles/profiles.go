@@ -12,6 +12,9 @@ type Profile struct {
 	Device_index     interface{} `yaml:"device_index"`
 	Device_out_index interface{} `yaml:"device_out_index"`
 
+	Audio_input_device  string `yaml:"audio_input_device"`
+	Audio_output_device string `yaml:"audio_output_device"`
+
 	Phrase_time_limit float64 `yaml:"phrase_time_limit"`
 	Pause             float64 `yaml:"pause"`
 	Energy            int     `yaml:"energy"`
