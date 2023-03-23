@@ -21,20 +21,21 @@ type Profile struct {
 	Vad_confidence_threshold string `yaml:"vad_confidence_threshold"`
 
 	// Whisper Settings
-	Ai_device             interface{} `yaml:"ai_device"`
-	Model                 string      `yaml:"model"`
-	Txt_translator_size   string      `yaml:"txt_translator_size"`
-	Txt_translator_device string      `yaml:"txt_translator_device"`
-	Websocket_ip          string      `yaml:"websocket_ip"`
-	Websocket_port        int         `yaml:"websocket_port"`
-	Run_Backend           bool        `yaml:"run_backend"`
-	Osc_ip                string      `yaml:"osc_ip"`
-	Osc_port              int         `yaml:"osc_port"`
-	Tts_enabled           bool        `yaml:"tts_enabled"`
-	Tts_ai_device         string      `yaml:"tts_ai_device"`
-	Whisper_precision     string      `yaml:"whisper_precision"`
-	Faster_whisper        bool        `yaml:"faster_whisper"`
-	Realtime              bool        `yaml:"realtime"`
+	Ai_device                interface{} `yaml:"ai_device"`
+	Model                    string      `yaml:"model"`
+	Txt_translator_size      string      `yaml:"txt_translator_size"`
+	Txt_translator_device    string      `yaml:"txt_translator_device"`
+	Txt_translator_precision string      `yaml:"txt_translator_precision"`
+	Websocket_ip             string      `yaml:"websocket_ip"`
+	Websocket_port           int         `yaml:"websocket_port"`
+	Run_Backend              bool        `yaml:"run_backend"`
+	Osc_ip                   string      `yaml:"osc_ip"`
+	Osc_port                 int         `yaml:"osc_port"`
+	Tts_enabled              bool        `yaml:"tts_enabled"`
+	Tts_ai_device            string      `yaml:"tts_ai_device"`
+	Whisper_precision        string      `yaml:"whisper_precision"`
+	Faster_whisper           bool        `yaml:"faster_whisper"`
+	Realtime                 bool        `yaml:"realtime"`
 }
 
 func (p *Profile) Load(fileName string) {

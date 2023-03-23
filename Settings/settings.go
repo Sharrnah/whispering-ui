@@ -58,14 +58,15 @@ type Conf struct {
 	Realtime_whisper_beam_size int         `yaml:"realtime_whisper_beam_size" json:"realtime_whisper_beam_size"`
 
 	// text translate settings
-	Txt_translate          bool   `yaml:"txt_translate" json:"txt_translate"`
-	Txt_translator_device  string `yaml:"txt_translator_device" json:"txt_translator_device"`
-	Src_lang               string `yaml:"src_lang" json:"src_lang"`
-	Trg_lang               string `yaml:"trg_lang" json:"trg_lang"`
-	Txt_ascii              bool   `yaml:"txt_ascii" json:"txt_ascii"`
-	Txt_translator         string `yaml:"txt_translator" json:"txt_translator"`
-	Txt_translator_size    string `yaml:"txt_translator_size" json:"txt_translator_size"`
-	Txt_translate_realtime bool   `yaml:"txt_translate_realtime" json:"txt_translate_realtime"`
+	Txt_translate            bool   `yaml:"txt_translate" json:"txt_translate"`
+	Txt_translator_device    string `yaml:"txt_translator_device" json:"txt_translator_device"`
+	Src_lang                 string `yaml:"src_lang" json:"src_lang"`
+	Trg_lang                 string `yaml:"trg_lang" json:"trg_lang"`
+	Txt_ascii                bool   `yaml:"txt_ascii" json:"txt_ascii"`
+	Txt_translator           string `yaml:"txt_translator" json:"txt_translator"`
+	Txt_translator_size      string `yaml:"txt_translator_size" json:"txt_translator_size"`
+	Txt_translator_precision string `yaml:"txt_translator_precision" json:"txt_translator_precision"`
+	Txt_translate_realtime   bool   `yaml:"txt_translate_realtime" json:"txt_translate_realtime"`
 
 	// websocket settings
 	Websocket_ip   string `yaml:"websocket_ip" json:"websocket_ip"`
@@ -79,6 +80,7 @@ type Conf struct {
 	Osc_typing_indicator        bool   `yaml:"osc_typing_indicator" json:"osc_typing_indicator"`
 	Osc_convert_ascii           bool   `yaml:"osc_convert_ascii" json:"osc_convert_ascii"`
 	Osc_auto_processing_enabled bool   `yaml:"osc_auto_processing_enabled" json:"osc_auto_processing_enabled"`
+	Osc_chat_prefix             string `yaml:"osc_chat_prefix" json:"osc_chat_prefix"`
 
 	// OCR settings
 	Ocr_lang        string `yaml:"ocr_lang" json:"ocr_lang"`

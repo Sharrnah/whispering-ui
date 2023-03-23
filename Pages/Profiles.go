@@ -398,7 +398,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "CPU", Value: "cpu"},
 		}, func(s CustomWidget.TextValueOption) {}, 0))
 
-		profileForm.Append("Speech to Text Size", CustomWidget.NewTextValueSelect("model", []CustomWidget.TextValueOption{
+		sttModelSize := CustomWidget.NewTextValueSelect("model", []CustomWidget.TextValueOption{
 			{Text: "Tiny", Value: "tiny"},
 			{Text: "Tiny (English only)", Value: "tiny.en"},
 			{Text: "Base", Value: "base"},
@@ -410,9 +410,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Large (Defaults to Version 2)", Value: "large"},
 			{Text: "Large Version 1", Value: "large-v1"},
 			{Text: "Large Version 2", Value: "large-v2"},
-		}, func(s CustomWidget.TextValueOption) {}, 0))
+		}, func(s CustomWidget.TextValueOption) {}, 0)
 
-		sttFp16Select := CustomWidget.NewTextValueSelect("Precision", []CustomWidget.TextValueOption{
+		sttPrecisionSelect := CustomWidget.NewTextValueSelect("Precision", []CustomWidget.TextValueOption{
 			{Text: "float32 precision", Value: "float32"},
 			{Text: "float16 precision", Value: "float16"},
 			{Text: "int16 precision", Value: "int16"},
@@ -420,10 +420,12 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "int8 precision", Value: "int8"},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
+		profileForm.Append("Speech to Text Size", container.NewGridWithColumns(2, sttModelSize, sttPrecisionSelect))
+
 		sttFasterWhisperCheckbox := widget.NewCheck("Faster Whisper", func(b bool) {
-			selectedPrecision := sttFp16Select.GetSelected().Value
+			selectedPrecision := sttPrecisionSelect.GetSelected().Value
 			if b {
-				sttFp16Select.Options = []CustomWidget.TextValueOption{
+				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
 					{Text: "float32 precision", Value: "float32"},
 					{Text: "float16 precision", Value: "float16"},
 					{Text: "int16 precision", Value: "int16"},
@@ -431,16 +433,16 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					{Text: "int8 precision", Value: "int8"},
 				}
 			} else {
-				sttFp16Select.Options = []CustomWidget.TextValueOption{
+				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
 					{Text: "float32 precision", Value: "float32"},
 					{Text: "float16 precision", Value: "float16"},
 				}
 				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" {
-					sttFp16Select.SetSelected("float16")
+					sttPrecisionSelect.SetSelected("float16")
 				}
 			}
 		})
-		profileForm.Append("Speech to Text Options", container.NewGridWithColumns(2, sttFp16Select, sttFasterWhisperCheckbox))
+		profileForm.Append("Speech to Text Options", container.NewGridWithColumns(1, sttFasterWhisperCheckbox))
 
 		profileForm.Append("", layout.NewSpacer())
 
@@ -449,11 +451,21 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "CPU", Value: "cpu"},
 		}, func(s CustomWidget.TextValueOption) {}, 0))
 
-		profileForm.Append("Text Translation Size", CustomWidget.NewTextValueSelect("ai_device", []CustomWidget.TextValueOption{
+		txtTranslatorDeviceSelect := CustomWidget.NewTextValueSelect("txt_translator_device", []CustomWidget.TextValueOption{
 			{Text: "Small", Value: "small"},
 			{Text: "Medium", Value: "medium"},
 			{Text: "Large", Value: "large"},
-		}, func(s CustomWidget.TextValueOption) {}, 0))
+		}, func(s CustomWidget.TextValueOption) {}, 0)
+
+		txtTranslatorPrecisionSelect := CustomWidget.NewTextValueSelect("txt_translator_precision", []CustomWidget.TextValueOption{
+			{Text: "float32 precision", Value: "float32"},
+			{Text: "float16 precision", Value: "float16"},
+			{Text: "int16 precision", Value: "int16"},
+			{Text: "int8_float16 precision", Value: "int8_float16"},
+			{Text: "int8 precision", Value: "int8"},
+		}, func(s CustomWidget.TextValueOption) {}, 0)
+
+		profileForm.Append("Text Translation Size", container.NewGridWithColumns(2, txtTranslatorDeviceSelect, txtTranslatorPrecisionSelect))
 
 		profileForm.Append("", layout.NewSpacer())
 
@@ -500,23 +512,24 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileListContent.Show()
 
 		profileSettings := Settings.Conf{
-			SettingsFilename:      settingsFiles[id],
-			Websocket_ip:          "127.0.0.1",
-			Websocket_port:        5000,
-			Run_backend:           true,
-			Device_index:          -1,
-			Device_out_index:      -1,
-			Ai_device:             "cuda",
-			Model:                 "tiny",
-			Txt_translator_size:   "small",
-			Txt_translator_device: "cuda",
-			Tts_enabled:           true,
-			Tts_ai_device:         "cuda",
-			Current_language:      "",
-			Osc_ip:                "127.0.0.1",
-			Osc_port:              9000,
-			Logprob_threshold:     "-1.0",
-			No_speech_threshold:   "0.6",
+			SettingsFilename:         settingsFiles[id],
+			Websocket_ip:             "127.0.0.1",
+			Websocket_port:           5000,
+			Run_backend:              true,
+			Device_index:             -1,
+			Device_out_index:         -1,
+			Ai_device:                "cuda",
+			Model:                    "tiny",
+			Txt_translator_size:      "small",
+			Txt_translator_device:    "cuda",
+			Txt_translator_precision: "float32",
+			Tts_enabled:              true,
+			Tts_ai_device:            "cuda",
+			Current_language:         "",
+			Osc_ip:                   "127.0.0.1",
+			Osc_port:                 9000,
+			Logprob_threshold:        "-1.0",
+			No_speech_threshold:      "0.6",
 
 			Vad_enabled:              true,
 			Vad_on_full_clip:         false,
@@ -602,13 +615,13 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		if profileSettings.Ai_device != nil {
 			profileForm.Items[11].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Ai_device.(string))
 		}
-		profileForm.Items[12].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Model)
-		profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Whisper_precision)
-		profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*widget.Check).SetChecked(profileSettings.Faster_whisper)
+		//profileForm.Items[12].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Model)
+		profileForm.Items[12].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Model)
+		profileForm.Items[12].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Whisper_precision)
 		// show only available precision options depending on whisper project
-		selectedPrecision := profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
+		selectedPrecision := profileForm.Items[12].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected().Value
 		if profileSettings.Faster_whisper {
-			profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
+			profileForm.Items[12].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
 				{Text: "float32 precision", Value: "float32"},
 				{Text: "float16 precision", Value: "float16"},
 				{Text: "int16 precision", Value: "int16"},
@@ -616,18 +629,23 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				{Text: "int8 precision", Value: "int8"},
 			}
 		} else {
-			profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
+			profileForm.Items[12].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
 				{Text: "float32 precision", Value: "float32"},
 				{Text: "float16 precision", Value: "float16"},
 			}
 			if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" {
-				profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected("float16")
+				profileForm.Items[12].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected("float16")
 			}
 		}
+		//profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Whisper_precision)
+		profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*widget.Check).SetChecked(profileSettings.Faster_whisper)
 
 		// spacer
 		profileForm.Items[15].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_device)
-		profileForm.Items[16].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_size)
+		//profileForm.Items[16].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_size)
+		profileForm.Items[16].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_size)
+		profileForm.Items[16].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_precision)
+
 		profileForm.Items[18].Widget.(*widget.Check).SetChecked(profileSettings.Tts_enabled)
 		profileForm.Items[19].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Tts_ai_device)
 
@@ -650,12 +668,16 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			profileSettings.Phrase_time_limit = profileForm.Items[10].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value
 
 			profileSettings.Ai_device = profileForm.Items[11].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Model = profileForm.Items[12].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Whisper_precision = profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Faster_whisper = profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*widget.Check).Checked
+			//profileSettings.Model = profileForm.Items[12].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Model = profileForm.Items[12].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Whisper_precision = profileForm.Items[12].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Faster_whisper = profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*widget.Check).Checked
 
 			profileSettings.Txt_translator_device = profileForm.Items[15].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Txt_translator_size = profileForm.Items[16].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			//profileSettings.Txt_translator_size = profileForm.Items[16].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Txt_translator_size = profileForm.Items[16].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Txt_translator_precision = profileForm.Items[16].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected().Value
+
 			profileSettings.Tts_enabled = profileForm.Items[18].Widget.(*widget.Check).Checked
 			profileSettings.Tts_ai_device = profileForm.Items[19].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
 
@@ -664,23 +686,24 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				profileSettings.WriteYamlSettings(settingsFiles[id])
 			} else {
 				newProfileEntry := Profiles.Profile{
-					SettingsFilename:      settingsFiles[id],
-					Device_index:          profileSettings.Device_index,
-					Device_out_index:      profileSettings.Device_out_index,
-					Ai_device:             profileSettings.Ai_device,
-					Model:                 profileSettings.Model,
-					Txt_translator_size:   profileSettings.Txt_translator_size,
-					Txt_translator_device: profileSettings.Txt_translator_device,
-					Websocket_ip:          profileSettings.Websocket_ip,
-					Websocket_port:        profileSettings.Websocket_port,
-					Run_Backend:           profileSettings.Run_backend,
-					Osc_ip:                profileSettings.Osc_ip,
-					Osc_port:              profileSettings.Osc_port,
-					Tts_enabled:           profileSettings.Tts_enabled,
-					Tts_ai_device:         profileSettings.Tts_ai_device,
-					Whisper_precision:     profileSettings.Whisper_precision,
-					Faster_whisper:        profileSettings.Faster_whisper,
-					Realtime:              profileSettings.Realtime,
+					SettingsFilename:         settingsFiles[id],
+					Device_index:             profileSettings.Device_index,
+					Device_out_index:         profileSettings.Device_out_index,
+					Ai_device:                profileSettings.Ai_device,
+					Model:                    profileSettings.Model,
+					Txt_translator_size:      profileSettings.Txt_translator_size,
+					Txt_translator_precision: profileSettings.Txt_translator_precision,
+					Txt_translator_device:    profileSettings.Txt_translator_device,
+					Websocket_ip:             profileSettings.Websocket_ip,
+					Websocket_port:           profileSettings.Websocket_port,
+					Run_Backend:              profileSettings.Run_backend,
+					Osc_ip:                   profileSettings.Osc_ip,
+					Osc_port:                 profileSettings.Osc_port,
+					Tts_enabled:              profileSettings.Tts_enabled,
+					Tts_ai_device:            profileSettings.Tts_ai_device,
+					Whisper_precision:        profileSettings.Whisper_precision,
+					Faster_whisper:           profileSettings.Faster_whisper,
+					Realtime:                 profileSettings.Realtime,
 
 					Phrase_time_limit: profileSettings.Phrase_time_limit,
 					Pause:             profileSettings.Pause,
