@@ -70,8 +70,9 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 	}
 
 	downloader := Updater.Download{
-		Url:      downloadUrl,
-		Filepath: filename,
+		Url:          downloadUrl,
+		FallbackUrls: mergedUrls,
+		Filepath:     filename,
 	}
 	downloader.WriteCounter.OnProgress = func(progress, total uint64) {
 		if int64(total) == -1 {
@@ -93,7 +94,7 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 
 	statusBarContainer.Add(downloadingLabel)
 	statusBarContainer.Refresh()
-	err := downloader.DownloadFileWithRetry(3)
+	err := downloader.DownloadFile(3)
 	if err != nil {
 		dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
 		return err
@@ -101,8 +102,11 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 	appExec, _ := os.Executable()
 
 	// check if the file has the correct hash
+	statusBarContainer.Add(widget.NewLabel("Checking checksum..."))
 	if err := Updater.CheckFileHash(filename, updater.Packages[packageName].SHA256); err != nil {
+		fmt.Printf("Error: %s\n", err.Error())
 		dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
+		statusBarContainer.Add(widget.NewLabel("Checksum check failed. Please delete temporary file and download again. If it still fails, please contact support."))
 		return err
 	}
 

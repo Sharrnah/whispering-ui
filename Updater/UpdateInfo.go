@@ -31,7 +31,7 @@ packages:
 type UpdateInfo struct {
 	Version      string              `yaml:"version"`
 	LocationUrls map[string][]string `yaml:"locationUrls"`
-	SHA256       string              `yaml:"sha256"`
+	SHA256       string              `yaml:"SHA256"`
 }
 
 func (i *UpdateInfo) WriteYaml(fileName string) {

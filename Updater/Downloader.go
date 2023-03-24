@@ -19,9 +19,12 @@ type WriteCounter struct {
 
 type Download struct {
 	Url           string
+	FallbackUrls  []string
 	Filepath      string
 	WriteCounter  WriteCounter
 	ResumeSupport bool
+	maxRetries    int
+	urlIndex      int
 }
 
 func (wc *WriteCounter) Write(p []byte) (int, error) {
@@ -31,12 +34,18 @@ func (wc *WriteCounter) Write(p []byte) (int, error) {
 	return n, nil
 }
 
-func (d *Download) DownloadFile() error {
-	return d.DownloadFileWithRetry(0)
+func (d *Download) DownloadFile(retries int) error {
+	d.maxRetries = retries
+	return d.downloadFileWithRetry(retries)
 }
-func (d *Download) DownloadFileWithRetry(retries int) error {
+func (d *Download) downloadFileWithRetry(retries int) error {
 	var out *os.File
 	var err error
+
+	currentUrl := d.Url
+	if d.urlIndex > 0 && d.urlIndex <= len(d.FallbackUrls) {
+		currentUrl = d.FallbackUrls[d.urlIndex-1]
+	}
 
 	// Check if the file already exists and get its size
 	var startBytes int64 = 0
@@ -69,6 +78,21 @@ func (d *Download) DownloadFileWithRetry(retries int) error {
 			startBytes = 0
 			resp.Body.Close()
 			resp = nil
+
+			// Close the file before truncating
+			out.Close()
+
+			// Truncate the file
+			err = os.Truncate(d.Filepath+".tmp", 0)
+			if err != nil {
+				return err
+			}
+
+			// Reopen the file
+			out, err = os.OpenFile(d.Filepath+".tmp", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+			if err != nil {
+				return err
+			}
 		} else {
 			d.ResumeSupport = true
 		}
@@ -103,11 +127,18 @@ func (d *Download) DownloadFileWithRetry(retries int) error {
 		out.Close()
 		resp.Body.Close()
 		if retries > 0 {
-			fmt.Printf("Error downloading %s: %s. Retrying in 5 seconds...\n", d.Url, err.Error())
-			time.Sleep(5 * time.Second)
-			return d.DownloadFileWithRetry(retries - 1)
+			fmt.Printf("Error downloading %s: %s. Retrying in 1 seconds...\n", d.Url, err.Error())
+			time.Sleep(1 * time.Second)
+			return d.downloadFileWithRetry(retries - 1)
 		} else {
-			return err
+			if d.urlIndex < len(d.FallbackUrls) {
+				fmt.Printf("All retries for URL %s have failed. Trying the next fallback URL...\n", currentUrl)
+				d.urlIndex++
+				return d.downloadFileWithRetry(d.maxRetries)
+			} else {
+				fmt.Printf("All retries for URL %s and all fallback URLs have failed.\n", currentUrl)
+				return err
+			}
 		}
 	}
 

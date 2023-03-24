@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"strings"
 )
 
 func CheckFileHash(filepath string, expectedHash string) error {
@@ -23,8 +24,8 @@ func CheckFileHash(filepath string, expectedHash string) error {
 	calculatedHash := hasher.Sum(nil)
 	calculatedHashStr := hex.EncodeToString(calculatedHash)
 
-	if calculatedHashStr != expectedHash {
-		return fmt.Errorf("file hash does not match expected hash")
+	if strings.ToLower(calculatedHashStr) != strings.ToLower(expectedHash) {
+		return fmt.Errorf("file hash does not match expected hash (calculated: %s, expected: %s)", calculatedHashStr, expectedHash)
 	}
 
 	return nil
