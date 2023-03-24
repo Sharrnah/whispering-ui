@@ -57,7 +57,7 @@ func (res *LoadingState) InitStateWindow() {
 
 	LoadingStateDialog = dialog.NewCustom(
 		"Loading...",
-		"Close",
+		"Hide",
 		container.NewBorder(statusBar, nil, nil, nil, LoadingStateContainer),
 		fyne.CurrentApp().Driver().AllWindows()[0],
 	)

@@ -16,6 +16,7 @@ packages:
     locationUrls:
       DEFAULT:
         - https://eu2.someurl.com/app1.0.0.16_win.zip
+    SHA256: 0
 
   data:
     version: 1.0.0.3
@@ -24,11 +25,13 @@ packages:
         - https://eu2.someurl.com/data1.0.0.3_win.zip
       US:
         - https://usc1.someurl.com/data1.0.0.3_win.zip
+    SHA256: 0
 */
 
 type UpdateInfo struct {
 	Version      string              `yaml:"version"`
 	LocationUrls map[string][]string `yaml:"locationUrls"`
+	SHA256       string              `yaml:"sha256"`
 }
 
 func (i *UpdateInfo) WriteYaml(fileName string) {

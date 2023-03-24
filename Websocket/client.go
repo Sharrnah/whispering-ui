@@ -53,7 +53,7 @@ func (c *Client) Start() {
 	connectingStateContainer := container.NewVBox()
 	connectingStateDialog := dialog.NewCustom(
 		"",
-		"Close",
+		"Hide",
 		container.NewBorder(statusBar, nil, nil, nil, connectingStateContainer),
 		fyne.CurrentApp().Driver().AllWindows()[0],
 	)

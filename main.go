@@ -100,6 +100,12 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 	}
 	appExec, _ := os.Executable()
 
+	// check if the file has the correct hash
+	if err := Updater.CheckFileHash(filename, updater.Packages[packageName].SHA256); err != nil {
+		dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
+		return err
+	}
+
 	statusBarContainer.Add(widget.NewLabel("Extracting..."))
 	statusBarContainer.Refresh()
 	err = Updater.Unzip(filename, filepath.Dir(appExec))
