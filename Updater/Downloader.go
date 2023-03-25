@@ -38,14 +38,39 @@ func (d *Download) DownloadFile(retries int) error {
 	d.maxRetries = retries
 	return d.downloadFileWithRetry(retries)
 }
-func (d *Download) downloadFileWithRetry(retries int) error {
-	var out *os.File
-	var err error
 
+func (d *Download) getCurrentUrl() string {
 	currentUrl := d.Url
 	if d.urlIndex > 0 && d.urlIndex <= len(d.FallbackUrls) {
 		currentUrl = d.FallbackUrls[d.urlIndex-1]
 	}
+	return currentUrl
+}
+
+func (d *Download) retryAction(retries int, err error) error {
+	currentUrl := d.getCurrentUrl()
+
+	if retries > 0 {
+		fmt.Printf("Error downloading %s: %s. Retrying in 1 seconds...\n", d.Url, err.Error())
+		time.Sleep(2 * time.Second)
+		return d.downloadFileWithRetry(retries - 1)
+	} else {
+		if d.urlIndex < len(d.FallbackUrls) {
+			fmt.Printf("All retries for URL %s have failed. Trying the next fallback URL...\n", currentUrl)
+			d.urlIndex++
+			return d.downloadFileWithRetry(d.maxRetries)
+		} else {
+			fmt.Printf("All retries for URL %s and all fallback URLs have failed.\n", currentUrl)
+			return err
+		}
+	}
+}
+
+func (d *Download) downloadFileWithRetry(retries int) error {
+	var out *os.File
+	var err error
+
+	currentUrl := d.getCurrentUrl()
 
 	// Check if the file already exists and get its size
 	var startBytes int64 = 0
@@ -63,16 +88,16 @@ func (d *Download) downloadFileWithRetry(retries int) error {
 	// Get the data
 	var resp *http.Response
 	if startBytes > 0 {
-		req, err := http.NewRequest("GET", d.Url, nil)
+		req, err := http.NewRequest("GET", currentUrl, nil)
 		if err != nil {
 			out.Close()
-			return err
+			return d.retryAction(retries, err)
 		}
 		req.Header.Set("Range", fmt.Sprintf("bytes=%d-", startBytes))
 		resp, err = http.DefaultClient.Do(req)
 		if err != nil {
 			out.Close()
-			return err
+			return d.retryAction(retries, err)
 		}
 		if resp.StatusCode != http.StatusPartialContent {
 			startBytes = 0
@@ -98,15 +123,15 @@ func (d *Download) downloadFileWithRetry(retries int) error {
 		}
 	}
 	if resp == nil {
-		req, err := http.NewRequest("GET", d.Url, nil)
+		req, err := http.NewRequest("GET", currentUrl, nil)
 		if err != nil {
 			out.Close()
-			return err
+			return d.retryAction(retries, err)
 		}
 		resp, err = http.DefaultClient.Do(req)
 		if err != nil {
 			out.Close()
-			return err
+			return d.retryAction(retries, err)
 		}
 	}
 
@@ -126,20 +151,7 @@ func (d *Download) downloadFileWithRetry(retries int) error {
 	if _, err = io.Copy(out, io.TeeReader(resp.Body, &d.WriteCounter)); err != nil {
 		out.Close()
 		resp.Body.Close()
-		if retries > 0 {
-			fmt.Printf("Error downloading %s: %s. Retrying in 1 seconds...\n", d.Url, err.Error())
-			time.Sleep(1 * time.Second)
-			return d.downloadFileWithRetry(retries - 1)
-		} else {
-			if d.urlIndex < len(d.FallbackUrls) {
-				fmt.Printf("All retries for URL %s have failed. Trying the next fallback URL...\n", currentUrl)
-				d.urlIndex++
-				return d.downloadFileWithRetry(d.maxRetries)
-			} else {
-				fmt.Printf("All retries for URL %s and all fallback URLs have failed.\n", currentUrl)
-				return err
-			}
-		}
+		return d.retryAction(retries, err)
 	}
 
 	// The progress use the same line so print a new line once it's finished downloading
