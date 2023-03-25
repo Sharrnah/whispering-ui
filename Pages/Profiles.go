@@ -17,6 +17,7 @@ import (
 	"os"
 	"strconv"
 	"strings"
+	"time"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Profiles"
 	"whispering-tiger-ui/Resources"
@@ -730,9 +731,41 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			}
 			Settings.Config = profileSettings
 
-			// closes profile window, stop audio device and call onClose
-			playBackDevice.Stop()
-			onClose()
+			statusBar := widget.NewProgressBarInfinite()
+			backendCheckStateContainer := container.NewVBox()
+			backendCheckStateDialog := dialog.NewCustom(
+				"",
+				"Hide",
+				container.NewBorder(statusBar, nil, nil, nil, backendCheckStateContainer),
+				fyne.CurrentApp().Driver().AllWindows()[1],
+			)
+			backendCheckStateContainer.Add(widget.NewLabel("Checking backend state..."))
+			backendCheckStateDialog.Show()
+			// check if websocket port is in use
+			if Utilities.CheckPortInUse(profileSettings.Websocket_ip+":"+strconv.Itoa(profileSettings.Websocket_port)) && profileSettings.Run_backend {
+				backendCheckStateDialog.Hide()
+				dialog.ShowConfirm("Websocket Port in use", "The Websocket Port is already in use. Do you want to quit the running backend?", func(b bool) {
+					if b {
+						err := Utilities.SendQuitMessage(profileSettings.Websocket_ip + ":" + strconv.Itoa(profileSettings.Websocket_port))
+						if err != nil {
+							fmt.Printf("Failed to send quit message: %v\n", err)
+							dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
+						} else {
+							// pause a bit until the server is closed
+							time.Sleep(1 * time.Second)
+							// closes profile window, stop audio device and call onClose
+							playBackDevice.Stop()
+							onClose()
+						}
+					}
+				}, fyne.CurrentApp().Driver().AllWindows()[1])
+			} else {
+				backendCheckStateDialog.Hide()
+				// closes profile window, stop audio device and call onClose
+				playBackDevice.Stop()
+				onClose()
+			}
+
 		}
 
 		profileForm.Refresh()
