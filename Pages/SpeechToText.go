@@ -8,20 +8,27 @@ import (
 	"fyne.io/fyne/v2/widget"
 	"time"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Websocket/Messages"
 )
 
 func CreateSpeechToTextWindow() fyne.CanvasObject {
-	//widget.NewSeparator()
-	//layout.NewSpacer()
+	languageRow := container.New(
+		layout.NewFormLayout(), widget.NewLabel("Speech Task:"),
+		container.New(
+			layout.NewGridLayout(2),
+			Fields.Field.TranscriptionTaskCombo,
+			Fields.Field.TranscriptionSpeakerLanguageCombo,
+		),
+		widget.NewLabel("Target Language:"),
+		Fields.Field.TargetLanguageCombo,
+	)
 
-	//lastDetectedLanguage := widget.NewLabel("Last detected Language: ")
-
-	//LanguageRow := container.New(layout.NewHBoxLayout(), widget.NewLabel("Target Language: "), Fields.Field.TargetLanguageCombo)
-
-	languageRow := container.New(layout.NewFormLayout(), widget.NewLabel("Speech Task:"), container.New(layout.NewGridLayout(2), Fields.Field.TranscriptionTaskCombo, Fields.Field.TranscriptionSpeakerLanguageCombo), widget.NewLabel("Target Language:"), Fields.Field.TargetLanguageCombo)
-
-	transcriptionRow := container.New(layout.NewGridLayout(2), Fields.Field.TranscriptionInput, Fields.Field.TranscriptionTranslationInput)
+	transcriptionRow := container.New(
+		layout.NewGridLayout(2),
+		Fields.Field.TranscriptionInput,
+		Fields.Field.TranscriptionTranslationInput,
+	)
 
 	// quick options row
 	quickOptionsRow := container.New(
@@ -132,10 +139,24 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		}()
 	}
 
+	if !Settings.Config.Realtime {
+		Fields.Field.RealtimeResultLabel.Hide()
+	}
+	realtimeWhisperResultBlock := container.NewBorder(
+		nil, container.NewVBox(widget.NewSeparator(), widget.NewSeparator()), nil, nil,
+		Fields.Field.RealtimeResultLabel,
+	)
+	whisperResultContainer := container.NewMax(
+		container.NewBorder(
+			realtimeWhisperResultBlock, Fields.Field.ProcessingStatus, nil, nil,
+			Fields.Field.WhisperResultList,
+		),
+	)
+
 	mainContent := container.NewHSplit(
 		leftVerticalLayout,
 		container.NewMax(
-			container.NewBorder(nil, Fields.Field.ProcessingStatus, nil, nil, Fields.Field.WhisperResultList),
+			whisperResultContainer,
 		),
 	)
 

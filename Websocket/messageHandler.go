@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"log"
 	"strings"
+	"sync"
 	"time"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Settings"
@@ -36,6 +37,51 @@ type MessageStruct struct {
 
 	// only in case of LLM message
 	LlmAnswer string `json:"llm_answer,omitempty"`
+}
+
+var (
+	resetRealtimeLabelHideTimer = make(chan bool)
+	realtimeLabelTimer          *time.Timer
+	realtimeLabelTimerMutex     sync.Mutex
+)
+
+func realtimeLabelHideTimer() {
+	for {
+		select {
+		case <-resetRealtimeLabelHideTimer:
+			realtimeLabelTimerMutex.Lock()
+			if realtimeLabelTimer != nil {
+				realtimeLabelTimer.Stop()
+			}
+			realtimeLabelTimer = time.AfterFunc(5*time.Second, func() {
+				//Fields.Field.RealtimeResultLabel.Hide()
+				Fields.Field.RealtimeResultLabel.SetText("")
+			})
+			realtimeLabelTimerMutex.Unlock()
+		}
+	}
+}
+
+var (
+	resetProcessingStopTimer = make(chan bool)
+	processingTimer          *time.Timer
+	processingStopTimerMutex sync.Mutex
+)
+
+func processingStopTimer() {
+	for {
+		select {
+		case <-resetProcessingStopTimer:
+			processingStopTimerMutex.Lock()
+			if processingTimer != nil {
+				processingTimer.Stop()
+			}
+			processingTimer = time.AfterFunc(10*time.Second, func() {
+				Fields.Field.ProcessingStatus.Stop()
+			})
+			processingStopTimerMutex.Unlock()
+		}
+	}
 }
 
 func (c *MessageStruct) GetMessage(messageData []byte) *MessageStruct {
@@ -107,6 +153,14 @@ func (c *MessageStruct) HandleReceiveMessage() {
 
 		// stop processing status
 		Fields.Field.ProcessingStatus.Stop()
+
+		Fields.Field.RealtimeResultLabel.SetText(c.Text)
+
+		select {
+		// reset processing status timer
+		case resetRealtimeLabelHideTimer <- true:
+		default:
+		}
 	case "translate_result":
 		Messages.LastTranslationResult = c.TranslateResult
 		Fields.Field.TranscriptionTranslationInput.SetText(c.TranslateResult)
@@ -161,10 +215,11 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		err = json.Unmarshal(c.Data, &processingStarted)
 		if processingStarted {
 			Fields.Field.ProcessingStatus.Start()
-			go func() {
-				time.Sleep(10 * time.Second)
-				Fields.Field.ProcessingStatus.Stop()
-			}()
+			select {
+			// reset processing status timer
+			case resetProcessingStopTimer <- true:
+			default:
+			}
 		} else {
 			Fields.Field.ProcessingStatus.Stop()
 		}
@@ -173,10 +228,15 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		err = json.Unmarshal(c.Data, &processingData)
 		if processingData != "" {
 			Fields.Field.ProcessingStatus.Start()
-			go func() {
-				time.Sleep(10 * time.Second)
-				Fields.Field.ProcessingStatus.Stop()
-			}()
+			Fields.Field.RealtimeResultLabel.Show()
+			Fields.Field.RealtimeResultLabel.SetText(processingData)
+			select {
+			// reset hide realtime label timer
+			case resetRealtimeLabelHideTimer <- true:
+			// reset processing status timer
+			case resetProcessingStopTimer <- true:
+			default:
+			}
 		}
 	case "loading_state":
 		err = json.Unmarshal(c.Raw, &Messages.CurrentLoadingState)

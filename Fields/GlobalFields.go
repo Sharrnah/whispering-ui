@@ -9,6 +9,7 @@ import (
 )
 
 var Field = struct {
+	RealtimeResultLabel               *widget.Label // only displayed if realtime is enabled
 	ProcessingStatus                  *widget.ProgressBarInfinite
 	WhisperResultList                 *widget.List
 	TranscriptionTaskCombo            *widget.Select
@@ -26,8 +27,9 @@ var Field = struct {
 	OcrWindowCombo                    *CustomWidget.TappableSelect
 	OcrImageContainer                 *fyne.Container
 }{
-	ProcessingStatus:  nil,
-	WhisperResultList: nil,
+	RealtimeResultLabel: widget.NewLabel(""),
+	ProcessingStatus:    nil,
+	WhisperResultList:   nil,
 	TranscriptionTaskCombo: widget.NewSelect([]string{"transcribe", "translate (to en)"}, func(value string) {
 		switch value {
 		case "transcribe":
@@ -180,6 +182,9 @@ var Field = struct {
 }
 
 func init() {
+	Field.RealtimeResultLabel.Wrapping = fyne.TextWrapWord
+	Field.RealtimeResultLabel.TextStyle = fyne.TextStyle{Italic: true}
+
 	// Set onchange events
 	Field.TtsEnabled.OnChanged = func(value bool) {
 		sendMessage := SendMessageStruct{

@@ -58,6 +58,9 @@ func (c *Client) Start() {
 		fyne.CurrentApp().Driver().AllWindows()[0],
 	)
 
+	go processingStopTimer()
+	go realtimeLabelHideTimer()
+
 	flag.Parse()
 	log.SetFlags(0)
 

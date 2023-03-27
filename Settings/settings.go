@@ -65,7 +65,7 @@ type Conf struct {
 	Txt_translator_device    string `yaml:"txt_translator_device" json:"txt_translator_device"`
 	Src_lang                 string `yaml:"src_lang" json:"src_lang"`
 	Trg_lang                 string `yaml:"trg_lang" json:"trg_lang"`
-	Txt_ascii                bool   `yaml:"txt_ascii" json:"txt_ascii"`
+	Txt_romaji               bool   `yaml:"txt_romaji" json:"txt_romaji"`
 	Txt_translator           string `yaml:"txt_translator" json:"txt_translator"`
 	Txt_translator_size      string `yaml:"txt_translator_size" json:"txt_translator_size"`
 	Txt_translator_precision string `yaml:"txt_translator_precision" json:"txt_translator_precision"`
