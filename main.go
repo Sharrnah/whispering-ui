@@ -298,16 +298,16 @@ func main() {
 	profileWindow.Show()
 
 	// delete old app version
-	appExec, _ := os.Executable()
-	if _, err := os.Stat(appExec + ".old"); err == nil {
-		err = os.Remove(appExec + ".old")
-		if err != nil {
-			dialog.NewError(err, fyne.CurrentApp().Driver().AllWindows()[1])
-		}
-	}
+	//appExec, _ := os.Executable()
+	//if _, err := os.Stat(appExec + ".old"); err == nil {
+	//	err = os.Remove(appExec + ".old")
+	//	if err != nil {
+	//		dialog.NewError(err, fyne.CurrentApp().Driver().AllWindows()[1])
+	//	}
+	//}
 
 	// check for updates
-	versionCheck()
+	go versionCheck()
 
 	a.Run()
 

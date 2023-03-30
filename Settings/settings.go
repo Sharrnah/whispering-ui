@@ -40,25 +40,26 @@ type Conf struct {
 	Vad_thread_num           int    `yaml:"vad_thread_num,omitempty" json:"vad_thread_num,omitempty"`
 
 	// Whisper Settings
-	Ai_device                  interface{} `yaml:"ai_device" json:"ai_device"`
-	Whisper_task               string      `yaml:"whisper_task" json:"whisper_task"`
-	Current_language           string      `yaml:"current_language" json:"current_language"`
-	Model                      string      `yaml:"model" json:"model"`
-	Condition_on_previous_text bool        `yaml:"condition_on_previous_text" json:"condition_on_previous_text"`
-	Initial_prompt             string      `yaml:"initial_prompt" json:"initial_prompt"`
-	Logprob_threshold          string      `yaml:"logprob_threshold" json:"logprob_threshold"`     // string formatted float or "none" / ""
-	No_speech_threshold        string      `yaml:"no_speech_threshold" json:"no_speech_threshold"` // string formatted float or "none" / ""
-	Whisper_precision          string      `yaml:"whisper_precision" json:"whisper_precision"`
-	Faster_whisper             bool        `yaml:"faster_whisper" json:"faster_whisper"`             // use faster whisper model
-	Temperature_fallback       bool        `yaml:"temperature_fallback" json:"temperature_fallback"` // enables/disables temperature fallback (to prevent multiple whisper loops in a row)
-	Beam_size                  int         `yaml:"beam_size" json:"beam_size"`
-	Whisper_cpu_threads        int         `yaml:"whisper_cpu_threads" json:"whisper_cpu_threads"`
-	Whisper_num_workers        int         `yaml:"whisper_num_workers" json:"whisper_num_workers"`
-	Realtime                   bool        `yaml:"realtime" json:"realtime"`
-	Realtime_frame_multiply    int         `yaml:"realtime_frame_multiply" json:"realtime_frame_multiply"`
-	Realtime_whisper_model     string      `yaml:"realtime_whisper_model" json:"realtime_whisper_model"`
-	Realtime_whisper_precision string      `yaml:"realtime_whisper_precision" json:"realtime_whisper_precision"`
-	Realtime_whisper_beam_size int         `yaml:"realtime_whisper_beam_size" json:"realtime_whisper_beam_size"`
+	Ai_device                     interface{} `yaml:"ai_device" json:"ai_device"`
+	Whisper_task                  string      `yaml:"whisper_task" json:"whisper_task"`
+	Current_language              string      `yaml:"current_language" json:"current_language"`
+	Model                         string      `yaml:"model" json:"model"`
+	Condition_on_previous_text    bool        `yaml:"condition_on_previous_text" json:"condition_on_previous_text"`
+	Initial_prompt                string      `yaml:"initial_prompt" json:"initial_prompt"`
+	Logprob_threshold             string      `yaml:"logprob_threshold" json:"logprob_threshold"`     // string formatted float or "none" / ""
+	No_speech_threshold           string      `yaml:"no_speech_threshold" json:"no_speech_threshold"` // string formatted float or "none" / ""
+	Whisper_precision             string      `yaml:"whisper_precision" json:"whisper_precision"`
+	Faster_whisper                bool        `yaml:"faster_whisper" json:"faster_whisper"`             // use faster whisper model
+	Temperature_fallback          bool        `yaml:"temperature_fallback" json:"temperature_fallback"` // enables/disables temperature fallback (to prevent multiple whisper loops in a row)
+	Beam_size                     int         `yaml:"beam_size" json:"beam_size"`
+	Whisper_cpu_threads           int         `yaml:"whisper_cpu_threads" json:"whisper_cpu_threads"`
+	Whisper_num_workers           int         `yaml:"whisper_num_workers" json:"whisper_num_workers"`
+	Realtime                      bool        `yaml:"realtime" json:"realtime"`
+	Realtime_frame_multiply       int         `yaml:"realtime_frame_multiply" json:"realtime_frame_multiply"`
+	Realtime_whisper_model        string      `yaml:"realtime_whisper_model" json:"realtime_whisper_model"`
+	Realtime_whisper_precision    string      `yaml:"realtime_whisper_precision" json:"realtime_whisper_precision"`
+	Realtime_whisper_beam_size    int         `yaml:"realtime_whisper_beam_size" json:"realtime_whisper_beam_size"`
+	Realtime_temperature_fallback bool        `yaml:"realtime_temperature_fallback" json:"realtime_temperature_fallback"`
 
 	// text translate settings
 	Txt_translate            bool   `yaml:"txt_translate" json:"txt_translate"`
@@ -109,6 +110,9 @@ var ConfigValues map[string]interface{} = nil
 
 // ExcludeConfigFields excludes fields from settings window (all lowercase)
 var ExcludeConfigFields = []string{
+	"websocket_ip",
+	"websocket_port",
+	"run_backend",
 	"settingsfilename",
 	"tts_model",
 	"tts_answer",

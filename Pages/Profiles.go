@@ -387,7 +387,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		appendWidgetToForm(profileForm, "Speech pause detection", container.NewBorder(nil, nil, nil, pauseSliderState, pauseSliderWidget), "The pause time in seconds after which the speech detection will stop and A.I. processing starts.")
 
 		phraseLimitSliderState := widget.NewLabel("0.0")
-		phraseLimitSliderWidget := widget.NewSlider(0, 50)
+		phraseLimitSliderWidget := widget.NewSlider(0, 30)
 		phraseLimitSliderWidget.Step = 0.1
 		phraseLimitSliderWidget.OnChanged = func(value float64) {
 			phraseLimitSliderState.SetText(fmt.Sprintf("%.1f", value))
@@ -540,21 +540,22 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Vad_num_samples:          3000,
 			Vad_thread_num:           1,
 
-			Whisper_precision:          "float32",
-			Faster_whisper:             true,
-			Temperature_fallback:       true,
-			Phrase_time_limit:          0.0,
-			Pause:                      0.8,
-			Energy:                     300,
-			Beam_size:                  5,
-			Whisper_cpu_threads:        0,
-			Whisper_num_workers:        1,
-			Realtime:                   false,
-			Realtime_frame_multiply:    10,
-			Realtime_whisper_model:     "",
-			Realtime_whisper_precision: "float16",
-			Realtime_whisper_beam_size: 1,
-			Txt_translate_realtime:     true,
+			Whisper_precision:             "float32",
+			Faster_whisper:                true,
+			Temperature_fallback:          true,
+			Phrase_time_limit:             0.0,
+			Pause:                         0.8,
+			Energy:                        300,
+			Beam_size:                     5,
+			Whisper_cpu_threads:           0,
+			Whisper_num_workers:           1,
+			Realtime:                      false,
+			Realtime_frame_multiply:       15,
+			Realtime_whisper_model:        "",
+			Realtime_whisper_precision:    "float16",
+			Realtime_whisper_beam_size:    1,
+			Realtime_temperature_fallback: false,
+			Txt_translate_realtime:        true,
 		}
 		if Utilities.FileExists(settingsFiles[id]) {
 			err = profileSettings.LoadYamlSettings(settingsFiles[id])
