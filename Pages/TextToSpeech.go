@@ -27,6 +27,22 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 
 	transcriptionRow := container.New(layout.NewGridLayout(1), Fields.Field.TranscriptionTranslationInput)
 
+	exportSpeechButton := widget.NewButtonWithIcon("Export .wav", theme.DocumentSaveIcon(), func() {
+		sendMessage := Fields.SendMessageStruct{
+			Type: "tts_req",
+			Value: struct {
+				Text     string `json:"text"`
+				ToDevice bool   `json:"to_device"`
+				Download bool   `json:"download"`
+			}{
+				Text:     Fields.Field.TranscriptionTranslationInput.Text,
+				ToDevice: false,
+				Download: true,
+			},
+		}
+		sendMessage.SendMessage()
+	})
+
 	sendButton := widget.NewButtonWithIcon("Send to Text 2 Speech", theme.MediaPlayIcon(), func() {
 		valueData := struct {
 			Text     string `json:"text"`
@@ -64,7 +80,9 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 		sendMessage.SendMessage()
 	})
 
-	buttonRow := container.NewHBox(layout.NewSpacer(),
+	buttonRow := container.NewHBox(
+		exportSpeechButton,
+		layout.NewSpacer(),
 		testButton,
 		sendButton,
 	)

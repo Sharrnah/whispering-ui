@@ -2,6 +2,8 @@ package Websocket
 
 import (
 	"encoding/json"
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/dialog"
 	"log"
 	"strings"
 	"sync"
@@ -241,6 +243,15 @@ func (c *MessageStruct) HandleReceiveMessage() {
 	case "loading_state":
 		err = json.Unmarshal(c.Raw, &Messages.CurrentLoadingState)
 		Messages.CurrentLoadingState.Update()
+	case "tts_save":
+		ttsSpeechAudio := Messages.TtsSpeechAudio{}
+		err = json.Unmarshal(c.Raw, &ttsSpeechAudio)
+		if err != nil {
+			dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[0])
+		}
+		if err == nil && len(ttsSpeechAudio.WavData) > 0 {
+			ttsSpeechAudio.SaveWav()
+		}
 	}
 	if err != nil {
 		log.Printf("Unmarshal: %v", err)

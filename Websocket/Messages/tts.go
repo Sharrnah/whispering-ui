@@ -1,7 +1,11 @@
 package Messages
 
 import (
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/dialog"
+	"log"
 	"strings"
+	"time"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Settings"
 )
@@ -58,4 +62,29 @@ func (res TtsVoicesListing) Update() *TtsVoicesListing {
 	}
 
 	return &res
+}
+
+// TTS Speech Audio
+
+type TtsSpeechAudio struct {
+	Type    string `json:"type"`
+	WavData []byte `json:"wav_data"`
+}
+
+func (res TtsSpeechAudio) SaveWav() {
+	fileSaveDialog := dialog.NewFileSave(func(writer fyne.URIWriteCloser, err error) {
+		if writer == nil {
+			return
+		}
+		if err != nil {
+			log.Println("Error saving file:", err)
+			return
+		}
+		defer writer.Close()
+		writer.Write(res.WavData) // write wav data to file
+	}, fyne.CurrentApp().Driver().AllWindows()[0])
+
+	fileSaveDialog.SetFileName("tts_" + time.Now().Format("2006-01-02_15-04-05") + ".wav")
+
+	fileSaveDialog.Show()
 }
