@@ -7,6 +7,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
+	"github.com/fyne-io/terminal"
 	"gopkg.in/yaml.v3"
 	"io"
 	"net/url"
@@ -14,7 +15,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Resources"
 	"whispering-tiger-ui/RuntimeBackend"
@@ -172,27 +172,13 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 
 	settingsTabContent := container.NewVScroll(Settings.Form)
 
-	logText := CustomWidget.NewLogText()
+	logText := terminal.New()
 
-	logText.Widget.(*widget.Label).Wrapping = fyne.TextWrapWord
-	logText.Widget.(*widget.Label).TextStyle = fyne.TextStyle{Monospace: true}
-
-	logTabContent := container.NewVScroll(logText.Widget)
+	logTabContent := container.NewVScroll(logText)
 
 	// Log logText updater thread
-	go func(writer io.Writer, reader io.Reader) {
-		if reader != nil {
-			buffer := make([]byte, 1024)
-			for {
-				n, err := reader.Read(buffer) // Read from the pipe
-				if err != nil {
-					//panic(err)
-					logText.AppendText(err.Error())
-				}
-				logText.AppendText(string(buffer[0:n]))
-				logTabContent.ScrollToBottom()
-			}
-		}
+	go func(writer io.WriteCloser, reader io.Reader) {
+		_ = logText.RunWithConnection(writer, reader)
 	}(RuntimeBackend.BackendsList[0].WriterBackend, RuntimeBackend.BackendsList[0].ReaderBackend)
 
 	tabs := container.NewAppTabs(
