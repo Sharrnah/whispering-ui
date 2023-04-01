@@ -19,6 +19,7 @@ import (
 	"whispering-tiger-ui/Resources"
 	"whispering-tiger-ui/RuntimeBackend"
 	"whispering-tiger-ui/Settings"
+	"whispering-tiger-ui/Utilities"
 )
 
 func parseURL(urlStr string) *url.URL {
@@ -45,7 +46,29 @@ func buildAboutInfo() *fyne.Container {
 	)
 	aboutCard.SetImage(aboutImage)
 
-	return container.NewCenter(aboutCard)
+	checkForUpdatesButton := widget.NewButton("Check for updates", func() {
+		Utilities.VersionCheck(fyne.CurrentApp().Driver().AllWindows()[0])
+	})
+
+	updateCheckAtStartupCheckbox := widget.NewCheck("Check for updates at startup", nil)
+	updateCheckAtStartupCheckbox.OnChanged = func(b bool) {
+		if b {
+			fyne.CurrentApp().Preferences().SetBool("CheckForUpdateAtStartup", true)
+		} else {
+			dialog.ShowConfirm("Disable update check", "Are you sure you want to disable update checks at startup?", func(b bool) {
+				if b {
+					fyne.CurrentApp().Preferences().SetBool("CheckForUpdateAtStartup", false)
+				} else {
+					updateCheckAtStartupCheckbox.SetChecked(true)
+				}
+			}, fyne.CurrentApp().Driver().AllWindows()[0])
+		}
+	}
+	updateCheckAtStartupCheckbox.Checked = fyne.CurrentApp().Preferences().BoolWithFallback("CheckForUpdateAtStartup", true)
+
+	verticalLayout := container.NewVBox(aboutCard, checkForUpdatesButton, updateCheckAtStartupCheckbox)
+
+	return container.NewCenter(verticalLayout)
 }
 
 func GetClassNameOfPlugin(path string) string {
