@@ -7,7 +7,6 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
-	"github.com/fyne-io/terminal"
 	"gopkg.in/yaml.v3"
 	"io"
 	"net/url"
@@ -19,7 +18,7 @@ import (
 	"whispering-tiger-ui/Resources"
 	"whispering-tiger-ui/RuntimeBackend"
 	"whispering-tiger-ui/Settings"
-	"whispering-tiger-ui/Utilities"
+	"whispering-tiger-ui/UpdateUtilitiy"
 )
 
 func parseURL(urlStr string) *url.URL {
@@ -47,7 +46,7 @@ func buildAboutInfo() *fyne.Container {
 	aboutCard.SetImage(aboutImage)
 
 	checkForUpdatesButton := widget.NewButton("Check for updates", func() {
-		Utilities.VersionCheck(fyne.CurrentApp().Driver().AllWindows()[0])
+		UpdateUtilitiy.VersionCheck(fyne.CurrentApp().Driver().AllWindows()[0], true)
 	})
 
 	updateCheckAtStartupCheckbox := widget.NewCheck("Check for updates at startup", nil)
@@ -172,14 +171,7 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 
 	settingsTabContent := container.NewVScroll(Settings.Form)
 
-	logText := terminal.New()
-
-	logTabContent := container.NewVScroll(logText)
-
-	// Log logText updater thread
-	go func(writer io.WriteCloser, reader io.Reader) {
-		_ = logText.RunWithConnection(writer, reader)
-	}(RuntimeBackend.BackendsList[0].WriterBackend, RuntimeBackend.BackendsList[0].ReaderBackend)
+	logTabContent := container.NewVScroll(Fields.Field.LogText)
 
 	tabs := container.NewAppTabs(
 		container.NewTabItem("Log", logTabContent),
@@ -200,6 +192,12 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 			tab.Content.(*container.Scroll).Refresh()
 		}
 	}
+
+	// Log logText updater thread
+	Fields.Field.LogText.Resize(fyne.NewSize(1200, 800))
+	go func(writer io.WriteCloser, reader io.Reader) {
+		_ = Fields.Field.LogText.RunWithConnection(writer, reader)
+	}(RuntimeBackend.BackendsList[0].WriterBackend, RuntimeBackend.BackendsList[0].ReaderBackend)
 
 	return tabs
 }

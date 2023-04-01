@@ -13,6 +13,7 @@ import (
 	"whispering-tiger-ui/Resources"
 	"whispering-tiger-ui/RuntimeBackend"
 	"whispering-tiger-ui/Settings"
+	"whispering-tiger-ui/UpdateUtilitiy"
 	"whispering-tiger-ui/Utilities"
 	"whispering-tiger-ui/Websocket"
 )
@@ -130,7 +131,11 @@ func main() {
 
 	// check for updates
 	if fyne.CurrentApp().Preferences().BoolWithFallback("CheckForUpdateAtStartup", true) {
-		go Utilities.VersionCheck(fyne.CurrentApp().Driver().AllWindows()[1])
+		go func() {
+			if len(fyne.CurrentApp().Driver().AllWindows()) == 2 {
+				UpdateUtilitiy.VersionCheck(fyne.CurrentApp().Driver().AllWindows()[1], false)
+			}
+		}()
 	}
 
 	a.Run()

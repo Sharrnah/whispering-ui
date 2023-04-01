@@ -4,6 +4,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+	"github.com/fyne-io/terminal"
 	"log"
 	"whispering-tiger-ui/CustomWidget"
 )
@@ -26,6 +27,7 @@ var Field = struct {
 	OcrLanguageCombo                  *widget.Select
 	OcrWindowCombo                    *CustomWidget.TappableSelect
 	OcrImageContainer                 *fyne.Container
+	LogText                           *terminal.Terminal
 }{
 	RealtimeResultLabel: widget.NewLabel(""),
 	ProcessingStatus:    nil,
@@ -179,6 +181,7 @@ var Field = struct {
 		sendMessage.SendMessage()
 	}),
 	OcrImageContainer: container.NewMax(),
+	LogText:           terminal.New(),
 }
 
 func init() {
@@ -209,4 +212,5 @@ func init() {
 		}
 		sendMessage.SendMessage()
 	}
+
 }

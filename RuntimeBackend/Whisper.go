@@ -82,6 +82,8 @@ func (c *WhisperProcessConfig) Stop() {
 		c.Program.Stdout = nil
 		c.Program.Stdin = nil
 		c.Program.Stderr = nil
+
+		c.Program.Process = nil
 	}
 }
 
