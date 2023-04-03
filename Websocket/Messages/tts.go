@@ -86,5 +86,11 @@ func (res TtsSpeechAudio) SaveWav() {
 
 	fileSaveDialog.SetFileName("tts_" + time.Now().Format("2006-01-02_15-04-05") + ".wav")
 
+
+	dialogSize := fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size()
+	dialogSize.Height = dialogSize.Height - 50
+	dialogSize.Width = dialogSize.Width - 50
+	fileSaveDialog.Resize(dialogSize)
+
 	fileSaveDialog.Show()
 }
