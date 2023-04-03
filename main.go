@@ -72,6 +72,11 @@ func main() {
 	w.SetMaster()
 	w.CenterOnScreen()
 
+	w.SetOnClosed(func() {
+		fyne.CurrentApp().Preferences().SetFloat("MainWindowWidth", float64(w.Canvas().Size().Width))
+		fyne.CurrentApp().Preferences().SetFloat("MainWindowHeight", float64(w.Canvas().Size().Height))
+	})
+
 	// initialize whisper process
 	//var whisperProcess = RuntimeBackend.NewWhisperProcess()
 	//whisperProcess.DeviceIndex = Settings.Config.Device_index.(string)
@@ -109,7 +114,11 @@ func main() {
 
 		w.SetContent(appTabs)
 
-		w.Resize(fyne.NewSize(1200, 600))
+		// set main window size
+		mainWindowWidth := fyne.CurrentApp().Preferences().FloatWithFallback("MainWindowWidth", 1200)
+		mainWindowHeight := fyne.CurrentApp().Preferences().FloatWithFallback("MainWindowHeight", 600)
+
+		w.Resize(fyne.NewSize(float32(mainWindowWidth), float32(mainWindowHeight)))
 
 		// set websocket client to configured ip+port
 		WebsocketClient.Addr = Settings.Config.Websocket_ip + ":" + strconv.Itoa(Settings.Config.Websocket_port)
@@ -118,13 +127,20 @@ func main() {
 		// show main window
 		w.Show()
 
+		fyne.CurrentApp().Preferences().SetFloat("ProfileWindowWidth", float64(profileWindow.Canvas().Size().Width))
+		fyne.CurrentApp().Preferences().SetFloat("ProfileWindowHeight", float64(profileWindow.Canvas().Size().Height))
+
 		// close profile window
 		profileWindow.Close()
 	}
 
 	profilePage := Pages.CreateProfileWindow(onProfileClose)
 	profileWindow.SetContent(profilePage)
-	profileWindow.Resize(fyne.NewSize(1400, 600))
+
+	// set profile window size
+	profileWindowWidth := fyne.CurrentApp().Preferences().FloatWithFallback("ProfileWindowWidth", 1400)
+	profileWindowHeight := fyne.CurrentApp().Preferences().FloatWithFallback("ProfileWindowHeight", 600)
+	profileWindow.Resize(fyne.NewSize(float32(profileWindowWidth), float32(profileWindowHeight)))
 
 	profileWindow.CenterOnScreen()
 	profileWindow.Show()

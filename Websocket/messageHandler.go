@@ -97,6 +97,10 @@ func (c *MessageStruct) HandleReceiveMessage() {
 	var err error = nil
 
 	switch c.Type {
+	case "error":
+		errorMessage := Messages.ExceptionMessage{}
+		err = json.Unmarshal(c.Raw, &errorMessage)
+		errorMessage.ShowError(fyne.CurrentApp().Driver().AllWindows()[0])
 	case "installed_languages":
 		err = json.Unmarshal(c.Raw, &Messages.InstalledLanguages)
 		Messages.InstalledLanguages.Update()

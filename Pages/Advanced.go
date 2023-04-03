@@ -14,6 +14,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"time"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Resources"
 	"whispering-tiger-ui/RuntimeBackend"
@@ -171,7 +172,19 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 
 	settingsTabContent := container.NewVScroll(Settings.Form)
 
-	logTabContent := container.NewVScroll(Fields.Field.LogText)
+	RestartBackendButton := widget.NewButton("Restart backend", func() {
+		// close running backend process
+		if len(RuntimeBackend.BackendsList) > 0 && RuntimeBackend.BackendsList[0].IsRunning() {
+			infinityProcessDialog := dialog.NewCustom("Restarting Backend", "OK", container.NewVBox(widget.NewLabel("Restarting backend..."), widget.NewProgressBarInfinite()), fyne.CurrentApp().Driver().AllWindows()[0])
+			infinityProcessDialog.Show()
+			RuntimeBackend.BackendsList[0].Stop()
+			time.Sleep(2 * time.Second)
+			RuntimeBackend.BackendsList[0].Start()
+			infinityProcessDialog.Hide()
+		}
+	})
+
+	logTabContent := container.NewBorder(nil, container.NewHBox(RestartBackendButton), nil, nil, Fields.Field.LogText)
 
 	tabs := container.NewAppTabs(
 		container.NewTabItem("Log", logTabContent),

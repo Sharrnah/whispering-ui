@@ -1,8 +1,14 @@
 package RuntimeBackend
 
 import (
+	"bufio"
+	"encoding/json"
 	"errors"
+	"fmt"
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/dialog"
 	"io"
+	"log"
 	"os"
 	"os/exec"
 	"strings"
@@ -16,27 +22,32 @@ var BackendsList []WhisperProcessConfig
 // stdin/stdout/stderr
 func (c *WhisperProcessConfig) RunWithStreams(name string, arguments []string, stdIn io.Reader, stdOut io.Writer, stdErr io.Writer, action ...string) error {
 	var arg []string
-
 	for _, file := range arguments {
 		arg = append(arg, file)
 	}
-
 	arg = append(arg, action...)
 
 	proc := exec.Command(name, arg...)
 	proc.SysProcAttr = &syscall.SysProcAttr{
 		HideWindow: true,
 	}
+
 	// attach environment variables
 	if c.environmentVars != nil {
 		proc.Env = c.environmentVars
 	}
 
+	// Create a new pipe for the Stdout field
+	stdErrPipeReader, stdErrPipeWriter := io.Pipe()
+
 	proc.Stdout = stdOut
 	proc.Stdin = stdIn
-	proc.Stderr = stdErr
+	proc.Stderr = io.MultiWriter(stdErr, stdErrPipeWriter)
 
 	c.Program = proc
+
+	// parse for errors coming from the backend process and printed to stderr
+	go c.SetErrorOutputHandling(stdErrPipeReader)
 
 	return proc.Run()
 }
@@ -108,8 +119,45 @@ func (c *WhisperProcessConfig) AttachEnvironment(envName, envValue string) {
 	}
 }
 
+func (c *WhisperProcessConfig) SetErrorOutputHandling(stdout io.Reader) {
+	scanner := bufio.NewScanner(stdout)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// Try to decode the line as a JSON message
+		var exceptionMessage struct {
+			Type      string   `json:"type"`
+			Error     string   `json:"message"`
+			Traceback []string `json:"traceback"`
+		}
+		if err := json.Unmarshal([]byte(line), &exceptionMessage); err == nil {
+			lastTraceback := exceptionMessage.Traceback[len(exceptionMessage.Traceback)-1]
+			// Handle error message
+			if len(fyne.CurrentApp().Driver().AllWindows()) == 1 && fyne.CurrentApp().Driver().AllWindows()[0] != nil {
+				dialog.ShowError(errors.New(exceptionMessage.Error+"\n\n"+lastTraceback), fyne.CurrentApp().Driver().AllWindows()[0])
+			} else if len(fyne.CurrentApp().Driver().AllWindows()) == 2 && fyne.CurrentApp().Driver().AllWindows()[1] != nil {
+				dialog.ShowError(errors.New(exceptionMessage.Error+"\n\n"+lastTraceback), fyne.CurrentApp().Driver().AllWindows()[1])
+			} else {
+				fmt.Printf("%s\n", exceptionMessage.Error)
+			}
+		}
+	}
+	if err := scanner.Err(); err != nil {
+		log.Print(err)
+	}
+}
+
 func (c *WhisperProcessConfig) Start() {
-	go func(writer io.Writer, reader io.Reader) {
+	// Create a pipe to capture the output from the process
+	_, pw := io.Pipe()
+
+	// Create a multi-writer to write to both c.WriterBackend and &stdOutBuf
+	multiWriter := io.MultiWriter(c.WriterBackend, pw)
+
+	// Create a tee reader to duplicate the output from the process
+	stdoutTee := io.TeeReader(c.ReaderBackend, multiWriter)
+
+	go func(stdOut io.Reader) {
 		var tmpReader io.Reader
 		var err error
 
@@ -118,20 +166,20 @@ func (c *WhisperProcessConfig) Start() {
 				"--device_index", c.DeviceIndex,
 				"--device_out_index", c.DeviceOutIndex,
 				"--config", c.SettingsFile,
-			}, tmpReader, writer, writer)
+			}, tmpReader, c.WriterBackend, c.WriterBackend)
 		} else if Utilities.FileExists("audioWhisper/audioWhisper.exe") {
 			err = c.RunWithStreams("audioWhisper/audioWhisper.exe", []string{
 				"--device_index", c.DeviceIndex,
 				"--device_out_index", c.DeviceOutIndex,
 				"--config", c.SettingsFile,
-			}, tmpReader, writer, writer)
+			}, tmpReader, c.WriterBackend, c.WriterBackend)
 		} else {
 			err = errors.New("could not start audioWhisper")
 		}
 
 		if err != nil {
-			_, _ = writer.Write([]byte("Error: " + err.Error()))
+			_, _ = c.WriterBackend.Write([]byte("Error: " + err.Error()))
 			return
 		}
-	}(c.WriterBackend, c.ReaderBackend)
+	}(stdoutTee)
 }
