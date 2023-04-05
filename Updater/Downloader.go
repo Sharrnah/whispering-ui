@@ -3,9 +3,11 @@ package Updater
 import (
 	"fmt"
 	"io/ioutil"
+	"math"
 	"net/http"
 	"os"
 	"sync"
+	"sync/atomic"
 	"time"
 )
 
@@ -97,10 +99,18 @@ func (d *Download) downloadFileWithRetry(retries int) error {
 	// Define totalSize variable
 	totalSize := int64(d.WriteCounter.ContentLength)
 
-	out, err := os.Create(d.Filepath + ".tmp")
+	// Check if the file already exists and get its size
+	var startBytes int64 = 0
+	if _, err := os.Stat(d.Filepath + ".tmp"); err == nil {
+		startBytes = d.getFileSize(d.Filepath + ".tmp")
+	}
+
+	// Create the file without overwriting it
+	out, err := os.OpenFile(d.Filepath+".tmp", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
 		return err
 	}
+
 	defer out.Close()
 
 	//chunksCount := (contentLength + chunkSize - 1) / chunkSize
@@ -111,7 +121,16 @@ func (d *Download) downloadFileWithRetry(retries int) error {
 
 	var wg sync.WaitGroup
 
-	nextOffset := int64(0)
+	totalChunks := int(math.Ceil(float64(contentLength) / float64(chunkSize)))
+	startingChunk := startBytes / chunkSize
+	remainingChunks := int64(totalChunks - int(startBytes/chunkSize))
+
+	// Initialize the WriteCounter values
+	d.WriteCounter.Total = uint64(startBytes)
+	d.WriteCounter.ContentLength = uint64(totalSize)
+
+	// Initialize d.nextWrite
+	d.nextWrite = startBytes
 
 	// Concurrent download loop
 	for i := 0; i < concurrentDownloads; i++ {
@@ -120,21 +139,23 @@ func (d *Download) downloadFileWithRetry(retries int) error {
 			defer wg.Done()
 
 			for {
-				d.mu.Lock()
-				offset := nextOffset
-				nextOffset += chunkSize
-				d.mu.Unlock()
-
-				if offset >= totalSize {
+				chunkIndex := atomic.AddInt64(&startingChunk, 1) - 1
+				if chunkIndex >= int64(totalChunks) {
 					break
 				}
 
-				end := offset + chunkSize - 1
+				remaining := atomic.AddInt64(&remainingChunks, -1)
+				if remaining < 0 {
+					break
+				}
+
+				start := chunkIndex * chunkSize // Updated start calculation
+				end := start + chunkSize - 1
 				if end >= totalSize {
 					end = totalSize - 1
 				}
 
-				chunk, downloaded, err := d.downloadChunk(currentUrl, offset, end)
+				chunk, downloaded, err := d.downloadChunk(currentUrl, start, end)
 				if err != nil {
 					errorsChannel <- err
 					return
@@ -198,18 +219,43 @@ func (d *Download) downloadChunk(url string, start, end int64) (*Chunk, bool, er
 	if err != nil {
 		return nil, false, err
 	}
-
 	req.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", start, end))
+
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
 		return nil, false, err
 	}
 	defer resp.Body.Close()
 
+	if resp.StatusCode != http.StatusPartialContent && resp.StatusCode != http.StatusOK {
+		return nil, false, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
 	data, err := ioutil.ReadAll(resp.Body)
 	if err != nil {
 		return nil, false, err
 	}
 
-	return &Chunk{data: data, offset: start}, true, nil
+	// Update the progress after downloading each chunk
+	//d.WriteCounter.Total += uint64(len(data))
+	//d.WriteCounter.OnProgress(d.WriteCounter.Total, d.WriteCounter.ContentLength)
+
+	return &Chunk{
+		offset: start,
+		data:   data,
+	}, true, nil
+}
+
+func (d *Download) getFileSize(filepath string) int64 {
+	file, err := os.Open(filepath)
+	if err != nil {
+		return 0
+	}
+	defer file.Close()
+
+	info, err := file.Stat()
+	if err != nil {
+		return 0
+	}
+	return info.Size()
 }
