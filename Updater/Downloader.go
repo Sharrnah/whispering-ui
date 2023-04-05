@@ -2,18 +2,21 @@ package Updater
 
 import (
 	"fmt"
-	"io"
+	"io/ioutil"
 	"net/http"
 	"os"
+	"sync"
 	"time"
 )
+
+const chunkSize int64 = 10 * 1024 * 1024 // 10 MB
+const concurrentDownloads = 3
 
 type OnProgress func(bytesWritten, contentLength uint64)
 
 type WriteCounter struct {
 	Total         uint64
 	ContentLength uint64
-	InitialBytes  uint64
 	OnProgress    OnProgress
 }
 
@@ -25,16 +28,19 @@ type Download struct {
 	ResumeSupport bool
 	maxRetries    int
 	urlIndex      int
+	mu            sync.Mutex
+	cond          *sync.Cond
+	downloaded    map[int64][]byte
+	nextWrite     int64
 }
 
-func (wc *WriteCounter) Write(p []byte) (int, error) {
-	n := len(p)
-	wc.Total += uint64(n)
-	wc.OnProgress(wc.Total+wc.InitialBytes, wc.ContentLength)
-	return n, nil
+func (wc *WriteCounter) addBytes(n uint64) {
+	wc.Total += n
+	wc.OnProgress(wc.Total, wc.ContentLength)
 }
 
 func (d *Download) DownloadFile(retries int) error {
+	d.downloaded = make(map[int64][]byte)
 	d.maxRetries = retries
 	return d.downloadFileWithRetry(retries)
 }
@@ -66,100 +72,120 @@ func (d *Download) retryAction(retries int, err error) error {
 	}
 }
 
+type Chunk struct {
+	data   []byte
+	offset int64
+}
+
 func (d *Download) downloadFileWithRetry(retries int) error {
-	var out *os.File
-	var err error
-
 	currentUrl := d.getCurrentUrl()
+	//d.downloaded = make([]int64, 0)
 
-	// Check if the file already exists and get its size
-	var startBytes int64 = 0
-	if _, err := os.Stat(d.Filepath + ".tmp"); err == nil {
-		startBytes = d.getFileSize(d.Filepath + ".tmp")
+	req, err := http.NewRequest("HEAD", currentUrl, nil)
+	if err != nil {
+		return d.retryAction(retries, err)
 	}
+	resp, err := http.DefaultClient.Do(req)
+	if err != nil {
+		return d.retryAction(retries, err)
+	}
+	defer resp.Body.Close()
 
-	// Create the file, but give it a tmp file extension, this means we won't overwrite a
-	// file until it's downloaded, but we'll remove the tmp extension once downloaded.
-	out, err = os.OpenFile(d.Filepath+".tmp", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	contentLength := resp.ContentLength
+	d.WriteCounter.ContentLength = uint64(contentLength)
+
+	// Define totalSize variable
+	totalSize := int64(d.WriteCounter.ContentLength)
+
+	out, err := os.Create(d.Filepath + ".tmp")
 	if err != nil {
 		return err
 	}
+	defer out.Close()
 
-	// Get the data
-	var resp *http.Response
-	if startBytes > 0 {
-		req, err := http.NewRequest("GET", currentUrl, nil)
-		if err != nil {
-			out.Close()
+	//chunksCount := (contentLength + chunkSize - 1) / chunkSize
+
+	// Create channels for communication
+	chunksChannel := make(chan Chunk, concurrentDownloads)
+	errorsChannel := make(chan error, concurrentDownloads)
+
+	var wg sync.WaitGroup
+
+	nextOffset := int64(0)
+
+	// Concurrent download loop
+	for i := 0; i < concurrentDownloads; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			for {
+				d.mu.Lock()
+				offset := nextOffset
+				nextOffset += chunkSize
+				d.mu.Unlock()
+
+				if offset >= totalSize {
+					break
+				}
+
+				end := offset + chunkSize - 1
+				if end >= totalSize {
+					end = totalSize - 1
+				}
+
+				chunk, downloaded, err := d.downloadChunk(currentUrl, offset, end)
+				if err != nil {
+					errorsChannel <- err
+					return
+				}
+
+				if downloaded {
+					chunksChannel <- *chunk
+				}
+			}
+		}()
+	}
+
+loop:
+	for {
+		select {
+		case err := <-errorsChannel:
 			return d.retryAction(retries, err)
-		}
-		req.Header.Set("Range", fmt.Sprintf("bytes=%d-", startBytes))
-		resp, err = http.DefaultClient.Do(req)
-		if err != nil {
-			out.Close()
-			return d.retryAction(retries, err)
-		}
-		if resp.StatusCode != http.StatusPartialContent {
-			startBytes = 0
-			resp.Body.Close()
-			resp = nil
+		case chunk := <-chunksChannel:
+			d.mu.Lock()
+			d.downloaded[chunk.offset] = chunk.data
 
-			// Close the file before truncating
-			out.Close()
+			for {
+				data, ok := d.downloaded[d.nextWrite]
+				if !ok {
+					break
+				}
 
-			// Truncate the file
-			err = os.Truncate(d.Filepath+".tmp", 0)
-			if err != nil {
-				return err
+				_, err := out.Write(data)
+				if err != nil {
+					d.mu.Unlock()
+					return err
+				}
+
+				d.WriteCounter.addBytes(uint64(len(data)))
+				delete(d.downloaded, d.nextWrite)
+				d.nextWrite += int64(len(data))
 			}
 
-			// Reopen the file
-			out, err = os.OpenFile(d.Filepath+".tmp", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
-			if err != nil {
-				return err
+			if d.nextWrite == totalSize {
+				d.mu.Unlock()
+				break loop
 			}
-		} else {
-			d.ResumeSupport = true
-		}
-	}
-	if resp == nil {
-		req, err := http.NewRequest("GET", currentUrl, nil)
-		if err != nil {
-			out.Close()
-			return d.retryAction(retries, err)
-		}
-		resp, err = http.DefaultClient.Do(req)
-		if err != nil {
-			out.Close()
-			return d.retryAction(retries, err)
+
+			d.mu.Unlock()
 		}
 	}
 
-	d.WriteCounter.ContentLength = uint64(resp.ContentLength) + uint64(startBytes)
-	d.WriteCounter.InitialBytes = uint64(startBytes)
-
-	// Seek to the right position
-	if startBytes > 0 {
-		_, err = out.Seek(startBytes, 0)
-		if err != nil {
-			out.Close()
-			return err
-		}
-	}
-
-	// Create our progress reporter and pass it to be used alongside our writer
-	if _, err = io.Copy(out, io.TeeReader(resp.Body, &d.WriteCounter)); err != nil {
-		out.Close()
-		resp.Body.Close()
-		return d.retryAction(retries, err)
-	}
-
-	// The progress use the same line so print a new line once it's finished downloading
-	fmt.Print("\n")
+	wg.Wait()
 
 	// Close the file without defer so it can happen before Rename()
 	out.Close()
-	resp.Body.Close()
 
 	if err = os.Rename(d.Filepath+".tmp", d.Filepath); err != nil {
 		return err
@@ -167,16 +193,23 @@ func (d *Download) downloadFileWithRetry(retries int) error {
 	return nil
 }
 
-func (d *Download) getFileSize(filepath string) int64 {
-	file, err := os.Open(filepath)
+func (d *Download) downloadChunk(url string, start, end int64) (*Chunk, bool, error) {
+	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
-		return 0
+		return nil, false, err
 	}
-	defer file.Close()
 
-	info, err := file.Stat()
+	req.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", start, end))
+	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return 0
+		return nil, false, err
 	}
-	return info.Size()
+	defer resp.Body.Close()
+
+	data, err := ioutil.ReadAll(resp.Body)
+	if err != nil {
+		return nil, false, err
+	}
+
+	return &Chunk{data: data, offset: start}, true, nil
 }
