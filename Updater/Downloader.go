@@ -11,8 +11,8 @@ import (
 	"time"
 )
 
-const chunkSize int64 = 10 * 1024 * 1024 // 10 MB
-const concurrentDownloads = 3
+const defaultChunkSize int64 = 10 * 1024 * 1024 // 10 MB
+const defaultConcurrentDownloads = 1
 
 type OnProgress func(bytesWritten, contentLength uint64)
 
@@ -23,17 +23,20 @@ type WriteCounter struct {
 }
 
 type Download struct {
-	Url           string
-	FallbackUrls  []string
-	Filepath      string
-	WriteCounter  WriteCounter
-	ResumeSupport bool
-	maxRetries    int
-	urlIndex      int
-	mu            sync.Mutex
-	cond          *sync.Cond
-	downloaded    map[int64][]byte
-	nextWrite     int64
+	Url                 string
+	FallbackUrls        []string
+	Filepath            string
+	ConcurrentDownloads int
+	ChunkSize           int64 // in bytes
+	WriteCounter        WriteCounter
+	isResumed           bool
+	serverResumeSupport bool
+	maxRetries          int
+	urlIndex            int
+	mu                  sync.Mutex
+	cond                *sync.Cond
+	downloaded          map[int64][]byte
+	nextWrite           int64
 }
 
 func (wc *WriteCounter) addBytes(n uint64) {
@@ -44,6 +47,12 @@ func (wc *WriteCounter) addBytes(n uint64) {
 func (d *Download) DownloadFile(retries int) error {
 	d.downloaded = make(map[int64][]byte)
 	d.maxRetries = retries
+	if d.ConcurrentDownloads == 0 {
+		d.ConcurrentDownloads = defaultConcurrentDownloads
+	}
+	if d.ChunkSize == 0 {
+		d.ChunkSize = defaultChunkSize
+	}
 	return d.downloadFileWithRetry(retries)
 }
 
@@ -79,6 +88,10 @@ type Chunk struct {
 	offset int64
 }
 
+func (d *Download) IsResuming() bool {
+	return d.isResumed
+}
+
 func (d *Download) downloadFileWithRetry(retries int) error {
 	currentUrl := d.getCurrentUrl()
 	//d.downloaded = make([]int64, 0)
@@ -105,6 +118,9 @@ func (d *Download) downloadFileWithRetry(retries int) error {
 		startBytes = d.getFileSize(d.Filepath + ".tmp")
 	}
 
+	// Set ResumeSupport to true if the file download is resumed and the server supports resuming
+	d.isResumed = startBytes > 0 && d.serverResumeSupport
+
 	// Create the file without overwriting it
 	out, err := os.OpenFile(d.Filepath+".tmp", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 	if err != nil {
@@ -116,14 +132,14 @@ func (d *Download) downloadFileWithRetry(retries int) error {
 	//chunksCount := (contentLength + chunkSize - 1) / chunkSize
 
 	// Create channels for communication
-	chunksChannel := make(chan Chunk, concurrentDownloads)
-	errorsChannel := make(chan error, concurrentDownloads)
+	chunksChannel := make(chan Chunk, d.ConcurrentDownloads)
+	errorsChannel := make(chan error, d.ConcurrentDownloads)
 
 	var wg sync.WaitGroup
 
-	totalChunks := int(math.Ceil(float64(contentLength) / float64(chunkSize)))
-	startingChunk := startBytes / chunkSize
-	remainingChunks := int64(totalChunks - int(startBytes/chunkSize))
+	totalChunks := int(math.Ceil(float64(contentLength) / float64(d.ChunkSize)))
+	startingChunk := startBytes / d.ChunkSize
+	remainingChunks := int64(totalChunks - int(startBytes/d.ChunkSize))
 
 	// Initialize the WriteCounter values
 	d.WriteCounter.Total = uint64(startBytes)
@@ -133,7 +149,7 @@ func (d *Download) downloadFileWithRetry(retries int) error {
 	d.nextWrite = startBytes
 
 	// Concurrent download loop
-	for i := 0; i < concurrentDownloads; i++ {
+	for i := 0; i < d.ConcurrentDownloads; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
@@ -149,8 +165,8 @@ func (d *Download) downloadFileWithRetry(retries int) error {
 					break
 				}
 
-				start := chunkIndex * chunkSize // Updated start calculation
-				end := start + chunkSize - 1
+				start := chunkIndex * d.ChunkSize // Updated start calculation
+				end := start + d.ChunkSize - 1
 				if end >= totalSize {
 					end = totalSize - 1
 				}
@@ -227,7 +243,9 @@ func (d *Download) downloadChunk(url string, start, end int64) (*Chunk, bool, er
 	}
 	defer resp.Body.Close()
 
-	if resp.StatusCode != http.StatusPartialContent && resp.StatusCode != http.StatusOK {
+	if resp.StatusCode == http.StatusPartialContent {
+		d.serverResumeSupport = true
+	} else if resp.StatusCode != http.StatusOK {
 		return nil, false, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
 	}
 

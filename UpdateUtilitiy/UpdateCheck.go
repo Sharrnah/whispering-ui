@@ -63,9 +63,11 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 	}
 
 	downloader := Updater.Download{
-		Url:          downloadUrl,
-		FallbackUrls: mergedUrls,
-		Filepath:     filename,
+		Url:                 downloadUrl,
+		FallbackUrls:        mergedUrls,
+		Filepath:            filename,
+		ConcurrentDownloads: 4,
+		ChunkSize:           15 * 1024 * 1024, // 15 MB
 	}
 	downloader.WriteCounter.OnProgress = func(progress, total uint64) {
 		if int64(total) == -1 {
@@ -77,7 +79,7 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 			statusBar.SetValue(float64(progress))
 
 			resumeStatusText := ""
-			if downloader.ResumeSupport {
+			if downloader.IsResuming() {
 				resumeStatusText = " (Resume)"
 			}
 
