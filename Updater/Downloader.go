@@ -236,10 +236,6 @@ func (d *Download) downloadChunk(url string, start, end int64) (*Chunk, bool, er
 		return nil, false, err
 	}
 
-	// Update the progress after downloading each chunk
-	//d.WriteCounter.Total += uint64(len(data))
-	//d.WriteCounter.OnProgress(d.WriteCounter.Total, d.WriteCounter.ContentLength)
-
 	return &Chunk{
 		offset: start,
 		data:   data,
