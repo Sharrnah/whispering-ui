@@ -63,9 +63,11 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 	}
 
 	downloader := Updater.Download{
-		Url:          downloadUrl,
-		FallbackUrls: mergedUrls,
-		Filepath:     filename,
+		Url:                 downloadUrl,
+		FallbackUrls:        mergedUrls,
+		Filepath:            filename,
+		ConcurrentDownloads: 4,
+		ChunkSize:           15 * 1024 * 1024, // 15 MB
 	}
 	downloader.WriteCounter.OnProgress = func(progress, total uint64) {
 		if int64(total) == -1 {
@@ -77,7 +79,7 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 			statusBar.SetValue(float64(progress))
 
 			resumeStatusText := ""
-			if downloader.ResumeSupport {
+			if downloader.IsResuming() {
 				resumeStatusText = " (Resume)"
 			}
 
@@ -138,11 +140,13 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 	return nil
 }
 
-func VersionCheck(window fyne.Window, startBackend bool) {
+func VersionCheck(window fyne.Window, startBackend bool) bool {
+	updateAvailable := false
+
 	updater := Updater.UpdatePackages{}
 	err := updater.GetUpdateInfo(updateInfoUrl)
 	if err != nil {
-		return
+		return false
 	}
 
 	// check platform version
@@ -158,12 +162,19 @@ func VersionCheck(window fyne.Window, startBackend bool) {
 			}
 		}
 	}
+
+	platformUpdateTitle := "Platform Update available"
+	platformUpdateText := "There is a new Update of the Platform available. Update to " + updater.Packages["ai_platform"].Version + " now?"
+
 	if !Utilities.FileExists("audioWhisper/audioWhisper.exe") && !Utilities.FileExists("audioWhisper.py") {
 		platformRequiresUpdate = true
+		platformUpdateTitle = "Platform not found"
+		platformUpdateText = "No Platform file found. download version " + updater.Packages["ai_platform"].Version + " now?"
 	}
 
 	if platformRequiresUpdate || platformFileWithoutVersion {
-		dialog.ShowConfirm("Platform Update available", "There is a new Update of the Platform available. Update to "+updater.Packages["ai_platform"].Version+" now?", func(b bool) {
+		updateAvailable = true
+		dialog.ShowConfirm(platformUpdateTitle, platformUpdateText, func(b bool) {
 			if b {
 				go func() {
 					err = versionDownload(updater, "ai_platform", "audioWhisper_platform.zip", window, startBackend)
@@ -184,6 +195,7 @@ func VersionCheck(window fyne.Window, startBackend bool) {
 	// check app version
 	currentAppVersion := fyne.CurrentApp().Metadata().Version + "." + strconv.Itoa(fyne.CurrentApp().Metadata().Build)
 	if updater.Packages["app"].Version != currentAppVersion {
+		updateAvailable = true
 		dialog.ShowConfirm("App Update available", "There is a new Update of the App available. Open GitHub Release page now?", func(b bool) {
 			if b {
 				uiReleaseUrl, _ := url.Parse("https://github.com/Sharrnah/whispering-ui/releases/latest")
@@ -192,4 +204,5 @@ func VersionCheck(window fyne.Window, startBackend bool) {
 		}, window)
 	}
 
+	return updateAvailable
 }

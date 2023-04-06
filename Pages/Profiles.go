@@ -543,7 +543,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Whisper_precision:             "float32",
 			Faster_whisper:                true,
 			Temperature_fallback:          true,
-			Phrase_time_limit:             0.0,
+			Phrase_time_limit:             10.0,
 			Pause:                         0.8,
 			Energy:                        300,
 			Beam_size:                     5,
@@ -705,28 +705,38 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				profileSettings.WriteYamlSettings(settingsFiles[id])
 			} else {
 				newProfileEntry := Profiles.Profile{
-					SettingsFilename:         settingsFiles[id],
-					Device_index:             profileSettings.Device_index,
-					Device_out_index:         profileSettings.Device_out_index,
-					Ai_device:                profileSettings.Ai_device,
-					Model:                    profileSettings.Model,
+					SettingsFilename: settingsFiles[id],
+					Websocket_ip:     profileSettings.Websocket_ip,
+					Websocket_port:   profileSettings.Websocket_port,
+					Run_Backend:      profileSettings.Run_backend,
+
+					Device_index:        profileSettings.Device_index,
+					Audio_input_device:  profileSettings.Audio_input_device,
+					Device_out_index:    profileSettings.Device_out_index,
+					Audio_output_device: profileSettings.Audio_output_device,
+
+					Vad_enabled:              profileSettings.Vad_enabled,
+					Realtime:                 profileSettings.Realtime,
+					Vad_confidence_threshold: profileSettings.Vad_confidence_threshold,
+
+					Energy:            profileSettings.Energy,
+					Pause:             profileSettings.Pause,
+					Phrase_time_limit: profileSettings.Phrase_time_limit,
+
+					Ai_device:         profileSettings.Ai_device,
+					Model:             profileSettings.Model,
+					Whisper_precision: profileSettings.Whisper_precision,
+					Faster_whisper:    profileSettings.Faster_whisper,
+
+					Txt_translator_device:    profileSettings.Txt_translator_device,
 					Txt_translator_size:      profileSettings.Txt_translator_size,
 					Txt_translator_precision: profileSettings.Txt_translator_precision,
-					Txt_translator_device:    profileSettings.Txt_translator_device,
-					Websocket_ip:             profileSettings.Websocket_ip,
-					Websocket_port:           profileSettings.Websocket_port,
-					Run_Backend:              profileSettings.Run_backend,
-					Osc_ip:                   profileSettings.Osc_ip,
-					Osc_port:                 profileSettings.Osc_port,
-					Tts_enabled:              profileSettings.Tts_enabled,
-					Tts_ai_device:            profileSettings.Tts_ai_device,
-					Whisper_precision:        profileSettings.Whisper_precision,
-					Faster_whisper:           profileSettings.Faster_whisper,
-					Realtime:                 profileSettings.Realtime,
 
-					Phrase_time_limit: profileSettings.Phrase_time_limit,
-					Pause:             profileSettings.Pause,
-					Energy:            profileSettings.Energy,
+					Tts_enabled:   profileSettings.Tts_enabled,
+					Tts_ai_device: profileSettings.Tts_ai_device,
+
+					Osc_ip:   profileSettings.Osc_ip,
+					Osc_port: profileSettings.Osc_port,
 				}
 				newProfileEntry.Save(settingsFiles[id])
 			}

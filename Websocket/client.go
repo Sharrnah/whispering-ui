@@ -49,6 +49,8 @@ func (c *Client) Close() {
 // Websocket Client
 
 func (c *Client) Start() {
+	previouslyConnected := false
+
 	statusBar := widget.NewProgressBarInfinite()
 	connectingStateContainer := container.NewVBox()
 	connectingStateDialog := dialog.NewCustom(
@@ -83,6 +85,7 @@ func (c *Client) Start() {
 	}
 
 	connectingStateDialog.Hide()
+	previouslyConnected = true
 
 	defer c.Conn.Close()
 
@@ -106,13 +109,18 @@ func (c *Client) Start() {
 				for err != nil {
 					time.Sleep(500)
 					log.Println("retrying... ")
-					connectingStateDialog.Show()
+					if previouslyConnected {
+						connectingStateDialog.Show()
+						previouslyConnected = false
+					}
 					c.Conn, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
 					connectingStateDialog.Hide()
 				}
 				continue
 				//return
 			}
+
+			previouslyConnected = true
 
 			var msg MessageStruct
 			msg.GetMessage(message)

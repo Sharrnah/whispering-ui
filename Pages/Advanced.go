@@ -47,7 +47,9 @@ func buildAboutInfo() *fyne.Container {
 	aboutCard.SetImage(aboutImage)
 
 	checkForUpdatesButton := widget.NewButton("Check for updates", func() {
-		UpdateUtilitiy.VersionCheck(fyne.CurrentApp().Driver().AllWindows()[0], true)
+		if !UpdateUtilitiy.VersionCheck(fyne.CurrentApp().Driver().AllWindows()[0], true) {
+			dialog.ShowInformation("No update available", "You are running the latest version of Whispering Tiger.", fyne.CurrentApp().Driver().AllWindows()[0])
+		}
 	})
 
 	updateCheckAtStartupCheckbox := widget.NewCheck("Check for updates at startup", nil)

@@ -63,6 +63,11 @@ func determineWindowsFont(fontsDir string) string {
 }
 
 func main() {
+	val, ok := os.LookupEnv("WT_SCALE")
+	if ok {
+		_ = os.Setenv("FYNE_SCALE", val)
+	}
+
 	a := app.NewWithID("tiger.whispering")
 	a.SetIcon(Resources.ResourceAppIconPng)
 
