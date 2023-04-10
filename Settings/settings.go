@@ -39,6 +39,12 @@ type Conf struct {
 	Vad_num_samples          int    `yaml:"vad_num_samples" json:"vad_num_samples"`
 	Vad_thread_num           int    `yaml:"vad_thread_num,omitempty" json:"vad_thread_num,omitempty"`
 
+	// speaker diarization
+	Speaker_change_check            bool    `yaml:"speaker_change_check" json:"speaker_change_check"`
+	Speaker_similarity_threshold    float64 `yaml:"speaker_similarity_threshold" json:"speaker_similarity_threshold"`
+	Speaker_diarization_window_size int     `yaml:"speaker_diarization_window_size" json:"speaker_diarization_window_size"`
+	Speaker_min_duration            float64 `yaml:"speaker_min_duration" json:"speaker_min_duration"`
+
 	// Whisper Settings
 	Ai_device                     interface{} `yaml:"ai_device" json:"ai_device"`
 	Whisper_task                  string      `yaml:"whisper_task" json:"whisper_task"`

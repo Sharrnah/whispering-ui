@@ -540,6 +540,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Vad_num_samples:          3000,
 			Vad_thread_num:           1,
 
+			Speaker_change_check:            false,
+			Speaker_similarity_threshold:    0.7,
+			Speaker_diarization_window_size: 15,
+			Speaker_min_duration:            0.5,
+
 			Whisper_precision:             "float32",
 			Faster_whisper:                true,
 			Temperature_fallback:          true,

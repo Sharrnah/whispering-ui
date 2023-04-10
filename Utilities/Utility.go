@@ -11,6 +11,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"time"
 )
 
 func Contains(s []string, str string) bool {
@@ -165,4 +166,17 @@ func UnmarshalJSONTuple(text []byte, obj interface{}) (err error) {
 		}
 	}
 	return
+}
+
+func WriteLog(logFile string, logData string) {
+	f, err := os.OpenFile(logFile, os.O_APPEND|os.O_CREATE|os.O_WRONLY, 0644)
+	if err != nil {
+		fmt.Println(err)
+	}
+	defer f.Close()
+
+	// write new log line to file with time at the start
+	if _, err := f.WriteString(time.Now().Format("2006-01-02 15:04:05") + " - " + logData + "\n"); err != nil {
+		fmt.Println(err)
+	}
 }

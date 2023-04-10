@@ -123,6 +123,10 @@ func (c *WhisperProcessConfig) SetErrorOutputHandling(stdout io.Reader) {
 	scanner := bufio.NewScanner(stdout)
 	for scanner.Scan() {
 		line := scanner.Text()
+		// write to log.txt file if WriteLogFile is enabled
+		if fyne.CurrentApp().Preferences().BoolWithFallback("WriteLogfile", false) {
+			Utilities.WriteLog("log.txt", line)
+		}
 
 		// Try to decode the line as a JSON message
 		var exceptionMessage struct {

@@ -186,7 +186,12 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 		}
 	})
 
-	logTabContent := container.NewBorder(nil, container.NewHBox(RestartBackendButton), nil, nil, Fields.Field.LogText)
+	writeLogFileCheckbox := widget.NewCheck("Write log file", func(writeLogFile bool) {
+		fyne.CurrentApp().Preferences().SetBool("WriteLogfile", writeLogFile)
+	})
+	writeLogFileCheckbox.Checked = fyne.CurrentApp().Preferences().BoolWithFallback("WriteLogfile", false)
+
+	logTabContent := container.NewBorder(nil, container.NewHBox(RestartBackendButton, writeLogFileCheckbox), nil, nil, Fields.Field.LogText)
 
 	tabs := container.NewAppTabs(
 		container.NewTabItem("Log", logTabContent),
