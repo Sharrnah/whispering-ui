@@ -288,6 +288,15 @@ func appendWidgetToForm(form *widget.Form, text string, itemWidget fyne.CanvasOb
 	form.AppendItem(item)
 }
 
+func stopAndClose(playBackDevice CurrentPlaybackDevice, onClose func()) {
+	// Pause a bit until the server is closed
+	time.Sleep(1 * time.Second)
+
+	// Closes profile window, stop audio device, and call onClose
+	playBackDevice.Stop()
+	onClose()
+}
+
 func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	playBackDevice := CurrentPlaybackDevice{}
 
@@ -524,10 +533,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Ai_device:                "cuda",
 			Model:                    "tiny",
 			Txt_translator_size:      "small",
-			Txt_translator_device:    "cuda",
+			Txt_translator_device:    "cpu",
 			Txt_translator_precision: "float32",
+			Txt_translate_realtime:   false,
 			Tts_enabled:              true,
-			Tts_ai_device:            "cuda",
+			Tts_ai_device:            "cpu",
 			Current_language:         "",
 			Osc_ip:                   "127.0.0.1",
 			Osc_port:                 9000,
@@ -560,7 +570,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Realtime_whisper_precision:    "float16",
 			Realtime_whisper_beam_size:    1,
 			Realtime_temperature_fallback: false,
-			Txt_translate_realtime:        true,
 		}
 		if Utilities.FileExists(settingsFiles[id]) {
 			err = profileSettings.LoadYamlSettings(settingsFiles[id])
@@ -757,31 +766,29 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			)
 			backendCheckStateContainer.Add(widget.NewLabel("Checking backend state..."))
 			backendCheckStateDialog.Show()
+
 			// check if websocket port is in use
-			if Utilities.CheckPortInUse(profileSettings.Websocket_ip+":"+strconv.Itoa(profileSettings.Websocket_port)) && profileSettings.Run_backend {
+			websocketAddr := profileSettings.Websocket_ip + ":" + strconv.Itoa(profileSettings.Websocket_port)
+			if Utilities.CheckPortInUse(websocketAddr) && profileSettings.Run_backend {
 				backendCheckStateDialog.Hide()
 				dialog.ShowConfirm("Websocket Port in use", "The Websocket Port is already in use. Do you want to quit the running backend?", func(b bool) {
 					if b {
-						err := Utilities.SendQuitMessage(profileSettings.Websocket_ip + ":" + strconv.Itoa(profileSettings.Websocket_port))
+						err := Utilities.KillProcessById(Settings.Config.ProcessId)
+						if err != nil {
+							err = Utilities.SendQuitMessage(websocketAddr)
+						}
 						if err != nil {
 							fmt.Printf("Failed to send quit message: %v\n", err)
 							dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
 						} else {
-							// pause a bit until the server is closed
-							time.Sleep(1 * time.Second)
-							// closes profile window, stop audio device and call onClose
-							playBackDevice.Stop()
-							onClose()
+							stopAndClose(playBackDevice, onClose)
 						}
 					}
 				}, fyne.CurrentApp().Driver().AllWindows()[1])
 			} else {
 				backendCheckStateDialog.Hide()
-				// closes profile window, stop audio device and call onClose
-				playBackDevice.Stop()
-				onClose()
+				stopAndClose(playBackDevice, onClose)
 			}
-
 		}
 
 		profileForm.Refresh()

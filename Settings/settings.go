@@ -22,6 +22,7 @@ import (
 type Conf struct {
 	// Internal Profile Settings
 	SettingsFilename string
+	ProcessId        int         `yaml:"process_id" json:"process_id"`
 	Device_index     interface{} `yaml:"device_index,omitempty" json:"device_index,omitempty"`
 	Device_out_index interface{} `yaml:"device_out_index,omitempty" json:"device_out_index,omitempty"`
 
@@ -116,6 +117,7 @@ var ConfigValues map[string]interface{} = nil
 
 // ExcludeConfigFields excludes fields from settings window (all lowercase)
 var ExcludeConfigFields = []string{
+	"process_id",
 	"websocket_ip",
 	"websocket_port",
 	"run_backend",

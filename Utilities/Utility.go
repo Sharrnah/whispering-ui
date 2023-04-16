@@ -180,3 +180,14 @@ func WriteLog(logFile string, logData string) {
 		fmt.Println(err)
 	}
 }
+
+func KillProcessById(pid int) error {
+	if pid <= 0 {
+		return errors.New("pid must be greater than 0")
+	}
+	process, err := os.FindProcess(pid)
+	if err != nil {
+		return err
+	}
+	return process.Kill()
+}
