@@ -773,7 +773,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				backendCheckStateDialog.Hide()
 				dialog.ShowConfirm("Websocket Port in use", "The Websocket Port is already in use. Do you want to quit the running backend?", func(b bool) {
 					if b {
-						err := Utilities.KillProcessById(Settings.Config.ProcessId)
+						err := Utilities.KillProcessById(Settings.Config.Process_id)
 						if err != nil {
 							err = Utilities.SendQuitMessage(websocketAddr)
 						}

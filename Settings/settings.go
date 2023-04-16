@@ -22,7 +22,7 @@ import (
 type Conf struct {
 	// Internal Profile Settings
 	SettingsFilename string
-	ProcessId        int         `yaml:"process_id" json:"process_id"`
+	Process_id       int         `yaml:"process_id" json:"process_id"`
 	Device_index     interface{} `yaml:"device_index,omitempty" json:"device_index,omitempty"`
 	Device_out_index interface{} `yaml:"device_out_index,omitempty" json:"device_out_index,omitempty"`
 
