@@ -98,20 +98,34 @@ func GetClassNameOfPlugin(path string) string {
 	return ""
 }
 
+func getPluginStatusString(pluginClassName string) string {
+	pluginStatusString := " (✖)"
+	if Settings.Config.Plugins[pluginClassName] {
+		pluginStatusString = " (✔)"
+	}
+	return pluginStatusString
+}
+
 func CreatePluginSettingsPage() fyne.CanvasObject {
 
 	// build plugins list
 	var pluginFiles []string
-	var pluginFilesAccordionItems []*widget.AccordionItem
 	files, err := os.ReadDir("./Plugins")
 	if err != nil {
 		println(err)
 	}
+	pluginAccordion := widget.NewAccordion()
+
 	for _, file := range files {
 		if !file.IsDir() && !strings.HasPrefix(file.Name(), ".") && !strings.HasPrefix(file.Name(), "__init__") && (strings.HasSuffix(file.Name(), ".py")) {
 			pluginFiles = append(pluginFiles, file.Name())
 			pluginSettings := container.NewVBox()
 			pluginClassName := GetClassNameOfPlugin("./Plugins/" + file.Name())
+
+			pluginAccordionItem := widget.NewAccordionItem(
+				pluginClassName+getPluginStatusString(pluginClassName),
+				pluginSettings,
+			)
 
 			// plugin enabled checkbox
 			pluginEnabledCheckbox := widget.NewCheck(pluginClassName+" enabled", func(enabled bool) {
@@ -122,6 +136,9 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 					Value: Settings.Config.Plugins,
 				}
 				sendMessage.SendMessage()
+
+				pluginAccordionItem.Title = pluginClassName + getPluginStatusString(pluginClassName)
+				pluginAccordion.Refresh()
 			})
 			pluginEnabledCheckbox.Checked = Settings.Config.Plugins[pluginClassName]
 			pluginSettings.Add(pluginEnabledCheckbox)
@@ -160,12 +177,10 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 			pluginSettingsForm.SetMinRowsVisible(6)
 			pluginSettings.Add(pluginSettingsForm)
 
-			pluginFilesAccordionItems = append(pluginFilesAccordionItems, widget.NewAccordionItem(pluginClassName, pluginSettings))
+			pluginAccordion.Append(pluginAccordionItem)
 		}
 	}
-
-	pluginAccordion := widget.NewAccordion(pluginFilesAccordionItems...)
-
+	
 	return container.NewVScroll(pluginAccordion)
 }
 
