@@ -32,6 +32,9 @@ Whispering Tiger UI is intended to make it easier to control and configure the *
 5. After the download is finished, you can create a Profile and start using the **Whispering Tiger** application.
    - On the first start, it will start downloading the A.I. Models which can take a while depending on your selected Model size. (currently it does not show the status of the model downloads)
 
+## Specific Usage Setup
+- [**Audio configuration (TTS to Mic, Game Audio translation, etc.)**](doc/audio-config.md)
+
 ## Advanced Features
 - [**Larger UI Scaling (VR-Mode)**](doc/advanced.md#larger-ui-scaling--vr-mode-)
 
