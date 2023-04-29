@@ -20,10 +20,10 @@ import (
 
 var updateInfoUrl = "https://s3.libs.space:9000/projects/whispering/latest.yaml"
 
-func versionDownload(updater Updater.UpdatePackages, packageName, filename string, window fyne.Window, startBackend bool) error {
+func versionDownload(updater Updater.UpdatePackages, packageName, filename string, window fyne.Window, startBackend bool, progressTitle string) error {
 	statusBar := widget.NewProgressBar()
 	statusBarContainer := container.NewVBox(statusBar)
-	dialog.ShowCustom("Update in progress...", "Hide (Download will continue)", statusBarContainer, window)
+	dialog.ShowCustom(progressTitle, "Hide (Download will continue)", statusBarContainer, window)
 	downloadingLabel := widget.NewLabel("Downloading... ")
 
 	hasEUServer := false
@@ -164,12 +164,14 @@ func VersionCheck(window fyne.Window, startBackend bool) bool {
 	}
 
 	platformUpdateTitle := "Platform Update available"
-	platformUpdateText := "There is a new Update of the Platform available. Update to " + updater.Packages["ai_platform"].Version + " now?"
+	platformUpdateText := "There is a new Update of the Platform available.\nUpdate to " + updater.Packages["ai_platform"].Version + " now?"
+	progressTitle := "Downloading Platform Update. (Please wait until this is finished!)"
 
 	if !Utilities.FileExists("audioWhisper/audioWhisper.exe") && !Utilities.FileExists("audioWhisper.py") {
 		platformRequiresUpdate = true
 		platformUpdateTitle = "Platform not found"
-		platformUpdateText = "No Platform file found. download version " + updater.Packages["ai_platform"].Version + " now?"
+		platformUpdateText = "No required Platform file found.\ndownload version " + updater.Packages["ai_platform"].Version + " now?" + "\n\n" + "(This is required for the App to function)"
+		progressTitle = "first-time Setup - Downloading Platform.\n(Please wait until this is finished!)"
 	}
 
 	if platformRequiresUpdate || platformFileWithoutVersion {
@@ -177,7 +179,7 @@ func VersionCheck(window fyne.Window, startBackend bool) bool {
 		dialog.ShowConfirm(platformUpdateTitle, platformUpdateText, func(b bool) {
 			if b {
 				go func() {
-					err = versionDownload(updater, "ai_platform", "audioWhisper_platform.zip", window, startBackend)
+					err = versionDownload(updater, "ai_platform", "audioWhisper_platform.zip", window, startBackend, progressTitle)
 					if err == nil {
 						packageInfo := updater.Packages["ai_platform"]
 						packageInfo.WriteYaml(".current_platform.yaml")
