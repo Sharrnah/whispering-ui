@@ -5,13 +5,15 @@ import (
 )
 
 var DataBindings = struct {
-	WhisperResultsDataBinding      binding.ExternalUntypedList
-	TextToSpeechEnabledDataBinding binding.Bool
-	OSCEnabledDataBinding          binding.Bool
+	WhisperResultsDataBinding       binding.ExternalUntypedList
+	TextTranslateEnabledDataBinding binding.Bool
+	TextToSpeechEnabledDataBinding  binding.Bool
+	OSCEnabledDataBinding           binding.Bool
 }{
 	WhisperResultsDataBinding: binding.BindUntypedList(
 		&[]interface{}{},
 	),
-	TextToSpeechEnabledDataBinding: binding.NewBool(),
-	OSCEnabledDataBinding:          binding.NewBool(),
+	TextTranslateEnabledDataBinding: binding.NewBool(),
+	TextToSpeechEnabledDataBinding:  binding.NewBool(),
+	OSCEnabledDataBinding:           binding.NewBool(),
 }

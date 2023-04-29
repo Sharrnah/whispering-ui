@@ -281,19 +281,7 @@ func HandleSendMessage(sendMessage *Fields.SendMessageStruct) {
 			langCode := Messages.InstalledLanguages.GetCodeByName(sendMessage.Value.(string))
 			if langCode != "" {
 				sendMessage.Value = langCode
-				txtTranslateSendMessage := Fields.SendMessageStruct{
-					Type:  "setting_change",
-					Name:  "txt_translate",
-					Value: true,
-				}
-				go txtTranslateSendMessage.SendMessage()
 			} else {
-				txtTranslateSendMessage := Fields.SendMessageStruct{
-					Type:  "setting_change",
-					Name:  "txt_translate",
-					Value: false,
-				}
-				go txtTranslateSendMessage.SendMessage()
 				sendMessage.Value = SkipMessage
 			}
 

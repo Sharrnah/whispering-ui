@@ -78,7 +78,7 @@ func CreateOcrWindow() fyne.CanvasObject {
 		ocrSettingsRow,
 		container.New(layout.NewPaddedLayout(), buttonRow),
 		widget.NewSeparator(),
-		widget.NewLabel("Translation of OCR Result:"),
+		widget.NewLabel("Text Translation of OCR Result:"),
 		languageRow,
 	)
 

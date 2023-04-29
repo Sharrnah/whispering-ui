@@ -21,9 +21,10 @@ func (res InstalledLanguagesListing) Update() *InstalledLanguagesListing {
 	Fields.Field.TargetLanguageTxtTranslateCombo.Options = nil
 	Fields.Field.SourceLanguageCombo.Options = nil
 
-	// fill language text translate combo-boxes (without None value)
+	// fill language text translate target combo-boxes (without None value)
 	for _, element := range InstalledLanguages.Languages {
 		Fields.Field.TargetLanguageTxtTranslateCombo.Options = append(Fields.Field.TargetLanguageTxtTranslateCombo.Options, element.Name)
+		Fields.Field.TargetLanguageCombo.Options = append(Fields.Field.TargetLanguageCombo.Options, element.Name)
 	}
 
 	// Add None entry
@@ -45,10 +46,6 @@ func (res InstalledLanguagesListing) Update() *InstalledLanguagesListing {
 			Text:  elementName,
 			Value: elementName,
 		})
-	}
-	// fill target language combo
-	for _, element := range InstalledLanguages.Languages {
-		Fields.Field.TargetLanguageCombo.Options = append(Fields.Field.TargetLanguageCombo.Options, element.Name)
 	}
 
 	return &res

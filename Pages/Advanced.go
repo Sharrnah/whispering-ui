@@ -180,7 +180,7 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 			pluginAccordion.Append(pluginAccordionItem)
 		}
 	}
-	
+
 	return container.NewVScroll(pluginAccordion)
 }
 
@@ -206,29 +206,30 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 	})
 	writeLogFileCheckbox.Checked = fyne.CurrentApp().Preferences().BoolWithFallback("WriteLogfile", false)
 
-	logTabContent := container.NewBorder(nil, container.NewHBox(RestartBackendButton, writeLogFileCheckbox), nil, nil, Fields.Field.LogText)
+	logTabContent := container.NewBorder(nil, container.NewHBox(RestartBackendButton, writeLogFileCheckbox), nil, nil, container.NewScroll(Fields.Field.LogText))
 
 	tabs := container.NewAppTabs(
-		container.NewTabItem("Log", logTabContent),
-		container.NewTabItem("Settings", settingsTabContent),
 		container.NewTabItem("Plugins", CreatePluginSettingsPage()),
+		container.NewTabItem("Settings", settingsTabContent),
+		container.NewTabItem("Log", logTabContent),
 		container.NewTabItem("About", buildAboutInfo()),
 	)
 	tabs.SetTabLocation(container.TabLocationTrailing)
 
 	tabs.OnSelected = func(tab *container.TabItem) {
+		if tab.Text == "Plugins" {
+			tab.Content.(*container.Scroll).Content = CreatePluginSettingsPage()
+			tab.Content.(*container.Scroll).Refresh()
+		}
 		if tab.Text == "Settings" {
 			Settings.BuildSettingsForm(nil, Settings.Config.SettingsFilename)
 			tab.Content.(*container.Scroll).Content = Settings.Form
 			tab.Content.(*container.Scroll).Refresh()
 		}
-		if tab.Text == "Plugins" {
-			tab.Content.(*container.Scroll).Content = CreatePluginSettingsPage()
-			tab.Content.(*container.Scroll).Refresh()
-		}
 	}
 
 	// Log logText updater thread
+
 	Fields.Field.LogText.Resize(fyne.NewSize(1200, 800))
 	go func(writer io.WriteCloser, reader io.Reader) {
 		_ = Fields.Field.LogText.RunWithConnection(writer, reader)

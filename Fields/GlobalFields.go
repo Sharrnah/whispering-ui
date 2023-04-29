@@ -1,6 +1,7 @@
 package Fields
 
 import (
+	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
@@ -8,6 +9,8 @@ import (
 	"log"
 	"whispering-tiger-ui/CustomWidget"
 )
+
+const SttTextTranslateLabelConst = "Automatic Text Translation from %s to %s"
 
 var Field = struct {
 	RealtimeResultLabel               *widget.Label // only displayed if realtime is enabled
@@ -22,6 +25,7 @@ var Field = struct {
 	TargetLanguageTxtTranslateCombo   *widget.Select
 	TtsModelCombo                     *widget.Select
 	TtsVoiceCombo                     *widget.Select
+	TextTranslateEnabled              *widget.Check
 	TtsEnabled                        *widget.Check
 	OscEnabled                        *widget.Check
 	OcrLanguageCombo                  *widget.Select
@@ -32,11 +36,11 @@ var Field = struct {
 	RealtimeResultLabel: widget.NewLabel(""),
 	ProcessingStatus:    nil,
 	WhisperResultList:   nil,
-	TranscriptionTaskCombo: widget.NewSelect([]string{"transcribe", "translate (to en)"}, func(value string) {
+	TranscriptionTaskCombo: widget.NewSelect([]string{"transcribe", "translate (to English)"}, func(value string) {
 		switch value {
 		case "transcribe":
 			value = "transcribe"
-		case "translate (to en)":
+		case "translate (to English)":
 			value = "translate"
 		}
 		sendMessage := SendMessageStruct{
@@ -117,17 +121,7 @@ var Field = struct {
 			Text:  "Auto",
 			Value: "auto",
 		},
-	}, func(valueObj CustomWidget.TextValueOption) {
-
-		sendMessage := SendMessageStruct{
-			Type:  "setting_change",
-			Name:  "src_lang",
-			Value: valueObj.Value,
-		}
-		sendMessage.SendMessage()
-
-		log.Println("Select set to", valueObj.Value)
-	}, 0),
+	}, func(valueObj CustomWidget.TextValueOption) {}, 0),
 	TargetLanguageCombo: widget.NewSelect([]string{"None"}, func(value string) {
 
 		sendMessage := SendMessageStruct{
@@ -161,8 +155,9 @@ var Field = struct {
 
 		log.Println("Select set to", value)
 	}),
-	TtsEnabled: widget.NewCheckWithData("Automatic Text 2 Speech", DataBindings.TextToSpeechEnabledDataBinding),
-	OscEnabled: widget.NewCheckWithData("Automatic OSC", DataBindings.OSCEnabledDataBinding),
+	TextTranslateEnabled: widget.NewCheckWithData(fmt.Sprintf(SttTextTranslateLabelConst, "?", "?"), DataBindings.TextTranslateEnabledDataBinding),
+	TtsEnabled:           widget.NewCheckWithData("Automatic Text 2 Speech", DataBindings.TextToSpeechEnabledDataBinding),
+	OscEnabled:           widget.NewCheckWithData("Automatic OSC", DataBindings.OSCEnabledDataBinding),
 
 	OcrLanguageCombo: widget.NewSelect([]string{}, func(value string) {
 		sendMessage := SendMessageStruct{
@@ -189,6 +184,43 @@ func init() {
 	Field.RealtimeResultLabel.TextStyle = fyne.TextStyle{Italic: true}
 
 	// Set onchange events
+	Field.SourceLanguageCombo.OnChanged = func(valueObj CustomWidget.TextValueOption) {
+		sendMessage := SendMessageStruct{
+			Type:  "setting_change",
+			Name:  "src_lang",
+			Value: valueObj.Value,
+		}
+		sendMessage.SendMessage()
+
+		Field.TextTranslateEnabled.Text = fmt.Sprintf(SttTextTranslateLabelConst, valueObj.Value, Field.TargetLanguageCombo.Selected)
+		Field.TextTranslateEnabled.Refresh()
+
+		log.Println("Select set to", valueObj.Value)
+	}
+	Field.TargetLanguageCombo.OnChanged = func(value string) {
+
+		sendMessage := SendMessageStruct{
+			Type:  "setting_change",
+			Name:  "trg_lang",
+			Value: value,
+		}
+		sendMessage.SendMessage()
+
+		Field.TextTranslateEnabled.Text = fmt.Sprintf(SttTextTranslateLabelConst, Field.SourceLanguageCombo.GetSelected().Text, value)
+		Field.TextTranslateEnabled.Refresh()
+
+		log.Println("Select set to", value)
+	}
+
+	Field.TextTranslateEnabled.OnChanged = func(value bool) {
+		sendMessage := SendMessageStruct{
+			Type:  "setting_change",
+			Name:  "txt_translate",
+			Value: value,
+		}
+		sendMessage.SendMessage()
+	}
+
 	Field.TtsEnabled.OnChanged = func(value bool) {
 		sendMessage := SendMessageStruct{
 			Type:  "setting_change",

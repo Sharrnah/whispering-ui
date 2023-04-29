@@ -13,15 +13,14 @@ import (
 )
 
 func CreateSpeechToTextWindow() fyne.CanvasObject {
-	languageRow := container.New(
-		layout.NewFormLayout(), widget.NewLabel("Speech Task:"),
-		container.New(
-			layout.NewGridLayout(2),
-			Fields.Field.TranscriptionTaskCombo,
+	languageRow := container.New(layout.NewVBoxLayout(),
+		container.New(layout.NewFormLayout(),
+			widget.NewLabel("Speech Language:"),
 			Fields.Field.TranscriptionSpeakerLanguageCombo,
+
+			widget.NewLabel("Speech Task:"),
+			Fields.Field.TranscriptionTaskCombo,
 		),
-		widget.NewLabel("Target Language:"),
-		Fields.Field.TargetLanguageCombo,
 	)
 
 	transcriptionRow := container.New(
@@ -33,6 +32,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 	// quick options row
 	quickOptionsRow := container.New(
 		layout.NewVBoxLayout(),
+		Fields.Field.TextTranslateEnabled,
 		Fields.Field.TtsEnabled,
 		Fields.Field.OscEnabled,
 	)
