@@ -46,6 +46,7 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 1. Create a Profile by entering a name and clicking on the **New** button.
 2. `Websocket IP + Port` can be kept at the default values "127.0.0.1" and "5000".
    - _These are only useful if you want to run multiple instances or have the Backend Platform run on a separate PC._
+   - _If you want to run multiple instances, you need to change the Port for each instance._
 
 3. Select your Audio Input and Output devices. You can test them by speaking into your microphone and clicking on the Test button.
    - You should see the **Audio Input** bar move when you speak. and hear a test-audio and see the **Audio Output** bar move when you click on the **Test** button.
