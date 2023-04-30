@@ -63,16 +63,14 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
    - **Note:** The A.I. Model of the selected size and precision will be downloaded automatically when you start the application for the first time.
 
 6. Select the **Speech to Text Precision** and **Text Translation Precision**
-   - The higher the precision, the more accurate.
+   - The higher the precision, the more accurate and the more (V-)RAM is used. (_However the accuracy differences are almost negligible_).
    - Modern GPU's have a better acceleration for `float16`.
    - CPU's only support `float32`, `int16` or `int8` precision.
 
 > **Note:**
 > <br>
 > - You can play with the values until you get your desired results.
-> <br>
 > - If something does not work, check the **Log** under the **Advanced** tab. And check for any error.
-> <br>
 > - Enable **Write log to file** to save the log to a file.
 
 ### Plugins Setup
