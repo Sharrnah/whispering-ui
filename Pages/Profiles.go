@@ -23,6 +23,7 @@ import (
 	"whispering-tiger-ui/Resources"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
+	"whispering-tiger-ui/Utilities/Hardwareinfo"
 )
 
 type CurrentPlaybackDevice struct {
@@ -297,6 +298,82 @@ func stopAndClose(playBackDevice CurrentPlaybackDevice, onClose func()) {
 	onClose()
 }
 
+type ProfileAIModelOption struct {
+	AIModel           string
+	AIModelType       string
+	AIModelSize       string
+	Precision         int
+	Device            string
+	MemoryConsumption float64
+}
+
+var AllProfileAIModelOptions = make([]ProfileAIModelOption, 0)
+
+func (p ProfileAIModelOption) CalculateMemoryConsumption(CPUbar *widget.ProgressBar, GPUBar *widget.ProgressBar) {
+	addToList := true
+	lastIndex := -1
+	for index, profileAIModelOption := range AllProfileAIModelOptions {
+		if profileAIModelOption.AIModel == p.AIModel {
+			// update existing entry
+			println("Device updated...")
+			if p.Device != "" {
+				AllProfileAIModelOptions[index].Device = p.Device
+			}
+			if p.AIModelType != "" {
+				AllProfileAIModelOptions[index].AIModelType = p.AIModelType
+			}
+			if p.AIModelSize != "" {
+				AllProfileAIModelOptions[index].AIModelSize = p.AIModelSize
+			}
+			if p.Precision != 0 {
+				AllProfileAIModelOptions[index].Precision = p.Precision
+			}
+			AllProfileAIModelOptions[index].MemoryConsumption = p.MemoryConsumption
+			addToList = false
+			lastIndex = index
+			break
+		}
+	}
+	if lastIndex > -1 && len(AllProfileAIModelOptions) >= lastIndex+1 {
+		// iterate through all Hardwareinfo.Models structs and find the one that matches the current Name
+		for _, model := range Hardwareinfo.Models {
+			fullModelName := AllProfileAIModelOptions[lastIndex].AIModel + AllProfileAIModelOptions[lastIndex].AIModelType + "_" + AllProfileAIModelOptions[lastIndex].AIModelSize
+			if model.Name == fullModelName {
+				finalMemoryUsage := Hardwareinfo.EstimateMemoryUsage(model.Float32PrecisionMemoryUsage, AllProfileAIModelOptions[lastIndex].Precision)
+				println("FullName:")
+				println(model.Name)
+				println("finalMemoryUsage:")
+				println(int(finalMemoryUsage))
+
+				AllProfileAIModelOptions[lastIndex].MemoryConsumption = finalMemoryUsage
+			}
+		}
+	}
+
+	if addToList {
+		println("Device added...")
+		AllProfileAIModelOptions = append(AllProfileAIModelOptions, p)
+	}
+
+	// update memory usage bars
+	GPUBar.Value = 0.0
+	CPUbar.Value = 0.0
+	for _, profileAIModelOption := range AllProfileAIModelOptions {
+		println(profileAIModelOption.AIModel, profileAIModelOption.MemoryConsumption)
+		if strings.ToLower(profileAIModelOption.Device) == "cuda" {
+			println("CUDA MEMORY:")
+			println(int(profileAIModelOption.MemoryConsumption))
+			GPUBar.Value = GPUBar.Value + profileAIModelOption.MemoryConsumption
+		} else if strings.ToLower(profileAIModelOption.Device) == "cpu" {
+			println("CPU MEMORY:")
+			println(int(profileAIModelOption.MemoryConsumption))
+			CPUbar.Value = CPUbar.Value + profileAIModelOption.MemoryConsumption
+		}
+	}
+	CPUbar.Refresh()
+	GPUBar.Refresh()
+}
+
 func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	playBackDevice := CurrentPlaybackDevice{}
 
@@ -304,6 +381,24 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 	audioInputDevices, _ := GetAudioDevices(malgo.Capture, 0)
 	audioOutputDevices, _ := GetAudioDevices(malgo.Playback, len(audioInputDevices))
+
+	// show memory usage
+	CPUMemoryBar := widget.NewProgressBar()
+	totalCPUMemory := Hardwareinfo.GetCPUMemory()
+	CPUMemoryBar.Max = float64(totalCPUMemory)
+	CPUMemoryBar.TextFormatter = func() string {
+		return "Estimated CPU RAM Usage: " + strconv.Itoa(int(CPUMemoryBar.Value)) + " / " + strconv.Itoa(int(CPUMemoryBar.Max)) + " MiB"
+	}
+
+	GPUMemoryBar := widget.NewProgressBar()
+	totalGPUMemory := int64(0)
+	if Hardwareinfo.HasNVIDIACard() {
+		_, totalGPUMemory = Hardwareinfo.GetGPUMemory()
+		GPUMemoryBar.Max = float64(totalGPUMemory)
+	}
+	GPUMemoryBar.TextFormatter = func() string {
+		return "Estimated Video-RAM Usage: " + strconv.Itoa(int(GPUMemoryBar.Value)) + " / " + strconv.Itoa(int(GPUMemoryBar.Max)) + " MiB"
+	}
 
 	BuildProfileForm := func() fyne.CanvasObject {
 		profileForm := widget.NewForm()
@@ -381,7 +476,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		appendWidgetToForm(profileForm, "VAD Speech confidence", container.NewBorder(nil, nil, nil, vadConfidenceSliderState, vadConfidenceSliderWidget), "The confidence level required to detect speech.")
 
 		energySliderState := widget.NewLabel("0.0")
-		energySliderWidget := widget.NewSlider(0, 1000)
+		energySliderWidget := widget.NewSlider(0, 2000)
 		energySliderWidget.OnChanged = func(value float64) {
 			energySliderState.SetText(fmt.Sprintf("%.0f", value))
 		}
@@ -406,7 +501,14 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileForm.Append("A.I. Device for Speech to Text", CustomWidget.NewTextValueSelect("ai_device", []CustomWidget.TextValueOption{
 			{Text: "CUDA", Value: "cuda"},
 			{Text: "CPU", Value: "cpu"},
-		}, func(s CustomWidget.TextValueOption) {}, 0))
+		}, func(s CustomWidget.TextValueOption) {
+			// calculate memory consumption
+			AIModel := ProfileAIModelOption{
+				AIModel: "Whisper",
+				Device:  s.Value,
+			}
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+		}, 0))
 
 		sttModelSize := CustomWidget.NewTextValueSelect("model", []CustomWidget.TextValueOption{
 			{Text: "Tiny", Value: "tiny"},
@@ -420,7 +522,17 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Large (Defaults to Version 2)", Value: "large"},
 			{Text: "Large Version 1", Value: "large-v1"},
 			{Text: "Large Version 2", Value: "large-v2"},
-		}, func(s CustomWidget.TextValueOption) {}, 0)
+		}, func(s CustomWidget.TextValueOption) {
+			sizeName, _ := strings.CutSuffix(s.Value, ".en")
+			sizeName, _ = strings.CutSuffix(sizeName, "-v1")
+			sizeName, _ = strings.CutSuffix(sizeName, "-v2")
+			// calculate memory consumption
+			AIModel := ProfileAIModelOption{
+				AIModel:     "Whisper",
+				AIModelSize: sizeName,
+			}
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+		}, 0)
 
 		sttPrecisionSelect := CustomWidget.NewTextValueSelect("Precision", []CustomWidget.TextValueOption{
 			{Text: "float32 precision", Value: "float32"},
@@ -428,12 +540,35 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "int16 precision", Value: "int16"},
 			{Text: "int8_float16 precision", Value: "int8_float16"},
 			{Text: "int8 precision", Value: "int8"},
-		}, func(s CustomWidget.TextValueOption) {}, 0)
+		}, func(s CustomWidget.TextValueOption) {
+			precisionType := Hardwareinfo.Float32
+			switch s.Value {
+			case "float32":
+				precisionType = Hardwareinfo.Float32
+			case "float16":
+				precisionType = Hardwareinfo.Float16
+			case "int32":
+				precisionType = Hardwareinfo.Int32
+			case "int16":
+				precisionType = Hardwareinfo.Int16
+			case "int8_float16":
+				precisionType = Hardwareinfo.Int8
+			case "int8":
+				precisionType = Hardwareinfo.Int8
+			}
+			// calculate memory consumption
+			AIModel := ProfileAIModelOption{
+				AIModel:   "Whisper",
+				Precision: precisionType,
+			}
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+		}, 0)
 
 		profileForm.Append("Speech to Text Size", container.NewGridWithColumns(2, sttModelSize, sttPrecisionSelect))
 
 		sttFasterWhisperCheckbox := widget.NewCheck("Faster Whisper", func(b bool) {
 			selectedPrecision := sttPrecisionSelect.GetSelected().Value
+			AIModelType := ""
 			if b {
 				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
 					{Text: "float32 precision", Value: "float32"},
@@ -442,6 +577,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					{Text: "int8_float16 precision", Value: "int8_float16"},
 					{Text: "int8 precision", Value: "int8"},
 				}
+				AIModelType = "CT2"
 			} else {
 				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
 					{Text: "float32 precision", Value: "float32"},
@@ -450,7 +586,14 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" {
 					sttPrecisionSelect.SetSelected("float16")
 				}
+				AIModelType = "O"
 			}
+			// calculate memory consumption
+			AIModel := ProfileAIModelOption{
+				AIModel:     "Whisper",
+				AIModelType: AIModelType,
+			}
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
 		})
 		profileForm.Append("Speech to Text Options", container.NewGridWithColumns(1, sttFasterWhisperCheckbox))
 
@@ -459,13 +602,29 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileForm.Append("A.I. Device for Text Translation", CustomWidget.NewTextValueSelect("txt_translator_device", []CustomWidget.TextValueOption{
 			{Text: "CUDA", Value: "cuda"},
 			{Text: "CPU", Value: "cpu"},
-		}, func(s CustomWidget.TextValueOption) {}, 0))
+		}, func(s CustomWidget.TextValueOption) {
+			// calculate memory consumption
+			AIModel := ProfileAIModelOption{
+				AIModel:     "NLLB200",
+				AIModelType: "CT2",
+				Device:      s.Value,
+			}
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+		}, 0))
 
 		txtTranslatorDeviceSelect := CustomWidget.NewTextValueSelect("txt_translator_device", []CustomWidget.TextValueOption{
 			{Text: "Small", Value: "small"},
 			{Text: "Medium", Value: "medium"},
 			{Text: "Large", Value: "large"},
-		}, func(s CustomWidget.TextValueOption) {}, 0)
+		}, func(s CustomWidget.TextValueOption) {
+			// calculate memory consumption
+			AIModel := ProfileAIModelOption{
+				AIModel:     "NLLB200",
+				AIModelType: "CT2",
+				AIModelSize: s.Value,
+			}
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+		}, 0)
 
 		txtTranslatorPrecisionSelect := CustomWidget.NewTextValueSelect("txt_translator_precision", []CustomWidget.TextValueOption{
 			{Text: "float32 precision", Value: "float32"},
@@ -473,18 +632,61 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "int16 precision", Value: "int16"},
 			{Text: "int8_float16 precision", Value: "int8_float16"},
 			{Text: "int8 precision", Value: "int8"},
-		}, func(s CustomWidget.TextValueOption) {}, 0)
+		}, func(s CustomWidget.TextValueOption) {
+			precisionType := Hardwareinfo.Float32
+			switch s.Value {
+			case "float32":
+				precisionType = Hardwareinfo.Float32
+			case "float16":
+				precisionType = Hardwareinfo.Float16
+			case "int32":
+				precisionType = Hardwareinfo.Int32
+			case "int16":
+				precisionType = Hardwareinfo.Int16
+			case "int8_float16":
+				precisionType = Hardwareinfo.Int8
+			case "int8":
+				precisionType = Hardwareinfo.Int8
+			}
+			// calculate memory consumption
+			AIModel := ProfileAIModelOption{
+				AIModel:     "NLLB200",
+				AIModelType: "CT2",
+				Precision:   precisionType,
+			}
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+		}, 0)
 
 		profileForm.Append("Text Translation Size", container.NewGridWithColumns(2, txtTranslatorDeviceSelect, txtTranslatorPrecisionSelect))
 
 		profileForm.Append("", layout.NewSpacer())
 
-		profileForm.Append("Text to Speech Enable", widget.NewCheck("", func(b bool) {}))
+		profileForm.Append("Text to Speech Enable", widget.NewCheck("", func(b bool) {
+			enabledType := "N"
+			if b {
+				enabledType = "O"
+			}
+			// calculate memory consumption
+			AIModel := ProfileAIModelOption{
+				AIModel:     "Silero",
+				AIModelType: enabledType,
+				Precision:   Hardwareinfo.Float32,
+			}
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+		}))
 
 		profileForm.Append("A.I. Device for Text to Speech", CustomWidget.NewTextValueSelect("tts_ai_device", []CustomWidget.TextValueOption{
 			{Text: "CUDA", Value: "cuda"},
 			{Text: "CPU", Value: "cpu"},
-		}, func(s CustomWidget.TextValueOption) {}, 0))
+		}, func(s CustomWidget.TextValueOption) {
+			// calculate memory consumption
+			AIModel := ProfileAIModelOption{
+				AIModel:   "Silero",
+				Device:    s.Value,
+				Precision: Hardwareinfo.Float32,
+			}
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+		}, 0))
 		return profileForm
 	}
 
@@ -825,9 +1027,14 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileList.Refresh()
 	}), newProfileEntry)
 
+	memoryArea := container.NewVBox(
+		CPUMemoryBar,
+		GPUMemoryBar,
+	)
+
 	mainContent := container.NewHSplit(
 		container.NewMax(profileHelpTextContent, profileListContent),
-		container.NewBorder(newProfileRow, nil, nil, nil, profileList),
+		container.NewBorder(newProfileRow, memoryArea, nil, nil, profileList),
 	)
 	mainContent.SetOffset(0.6)
 
