@@ -12,6 +12,7 @@ type Profile struct {
 	Device_index     interface{} `yaml:"device_index"`
 	Device_out_index interface{} `yaml:"device_out_index"`
 
+	Audio_api           string `yaml:"audio_api"`
 	Audio_input_device  string `yaml:"audio_input_device"`
 	Audio_output_device string `yaml:"audio_output_device"`
 

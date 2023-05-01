@@ -32,6 +32,7 @@ type CurrentPlaybackDevice struct {
 	InputWaveWidget  *widget.ProgressBar
 	OutputWaveWidget *widget.ProgressBar
 	Context          *malgo.AllocatedContext
+	AudioAPI         malgo.Backend
 
 	device              *malgo.Device
 	stopChannel         chan bool
@@ -233,7 +234,7 @@ func (c *CurrentPlaybackDevice) Init() {
 
 	//######################
 	var err error
-	c.Context, err = malgo.InitContext([]malgo.Backend{Utilities.AudioBackend}, malgo.ContextConfig{}, func(message string) {
+	c.Context, err = malgo.InitContext([]malgo.Backend{c.AudioAPI}, malgo.ContextConfig{}, func(message string) {
 		fmt.Printf("LOG <%v>\n", message)
 	})
 	if err != nil {
@@ -241,8 +242,10 @@ func (c *CurrentPlaybackDevice) Init() {
 		os.Exit(1)
 	}
 	defer func() {
-		_ = c.Context.Uninit()
-		c.Context.Free()
+		if c.Context != nil {
+			_ = c.Context.Uninit()
+			c.Context.Free()
+		}
 	}()
 
 	// run as long as no stop signal is received
@@ -260,9 +263,9 @@ func (c *CurrentPlaybackDevice) Init() {
 
 }
 
-func GetAudioDevices(deviceType malgo.DeviceType, deviceIndexStartPoint int) ([]CustomWidget.TextValueOption, error) {
+func GetAudioDevices(audioApi malgo.Backend, deviceType malgo.DeviceType, deviceIndexStartPoint int) ([]CustomWidget.TextValueOption, error) {
 
-	deviceList, _ := Utilities.GetAudioDevices(deviceType, deviceIndexStartPoint)
+	deviceList, _ := Utilities.GetAudioDevices(audioApi, deviceType, deviceIndexStartPoint)
 
 	if deviceList == nil {
 		return nil, fmt.Errorf("no devices found")
@@ -377,10 +380,70 @@ func (p ProfileAIModelOption) CalculateMemoryConsumption(CPUbar *widget.Progress
 func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	playBackDevice := CurrentPlaybackDevice{}
 
+	playBackDevice.AudioAPI = malgo.BackendWinmm
 	go playBackDevice.Init()
 
-	audioInputDevices, _ := GetAudioDevices(malgo.Capture, 0)
-	audioOutputDevices, _ := GetAudioDevices(malgo.Playback, len(audioInputDevices))
+	audioInputDevices, _ := GetAudioDevices(playBackDevice.AudioAPI, malgo.Capture, 0)
+	audioOutputDevices, _ := GetAudioDevices(playBackDevice.AudioAPI, malgo.Playback, len(audioInputDevices))
+
+	audioInputSelect := CustomWidget.NewTextValueSelect("device_index", audioInputDevices,
+		func(s CustomWidget.TextValueOption) {
+			println(s.Value)
+			playBackDevice.InputDeviceName = s.Text
+			err := playBackDevice.InitDevices()
+			if err != nil {
+				var newError = fmt.Errorf("audio Input (mic): %v", err)
+				dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
+			}
+		},
+		0)
+
+	audioOutputSelect := CustomWidget.NewTextValueSelect("device_out_index", audioOutputDevices,
+		func(s CustomWidget.TextValueOption) {
+			println(s.Value)
+			playBackDevice.OutputDeviceName = s.Text
+			err := playBackDevice.InitDevices()
+			if err != nil {
+				var newError = fmt.Errorf("audio Output (speaker): %v", err)
+				dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
+			}
+		},
+		0)
+
+	audioApiSelect := CustomWidget.NewTextValueSelect("audio_api",
+		[]CustomWidget.TextValueOption{
+			{Text: "MME", Value: "MME"},
+			{Text: "DirectSound", Value: "DirectSound"},
+			{Text: "WASAPI", Value: "WASAPI"},
+		},
+		func(s CustomWidget.TextValueOption) {
+			var value malgo.Backend = malgo.BackendWinmm
+			switch s.Value {
+			case "MME":
+				value = malgo.BackendWinmm
+			case "DirectSound":
+				value = malgo.BackendDsound
+			case "WASAPI":
+				value = malgo.BackendWasapi
+			}
+			if playBackDevice.AudioAPI != value && playBackDevice.AudioAPI != malgo.BackendNull {
+				playBackDevice.Stop()
+				time.Sleep(1 * time.Second)
+				playBackDevice.AudioAPI = value
+
+				go playBackDevice.Init()
+				audioInputDevices, _ = GetAudioDevices(playBackDevice.AudioAPI, malgo.Capture, 0)
+				audioOutputDevices, _ = GetAudioDevices(playBackDevice.AudioAPI, malgo.Playback, len(audioInputDevices))
+
+				audioInputSelect.Options = audioInputDevices
+				audioOutputSelect.Options = audioOutputDevices
+				audioInputSelect.SetSelectedIndex(0)
+				audioOutputSelect.SetSelectedIndex(0)
+				audioInputSelect.Refresh()
+				audioOutputSelect.Refresh()
+			}
+		},
+		2)
 
 	// show memory usage
 	CPUMemoryBar := widget.NewProgressBar()
@@ -421,33 +484,13 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		appendWidgetToForm(profileForm, "Websocket IP + Port", container.NewGridWithColumns(3, websocketIp, websocketPort, runBackendCheckbox), "IP + Port of the websocket server the backend will start and the UI will connect to.")
 		profileForm.Append("", layout.NewSpacer())
 
-		appendWidgetToForm(profileForm, "Audio Input (mic)", CustomWidget.NewTextValueSelect("device_index", audioInputDevices,
-			func(s CustomWidget.TextValueOption) {
-				println(s.Value)
-				playBackDevice.InputDeviceName = s.Text
-				err := playBackDevice.InitDevices()
-				if err != nil {
-					var newError = fmt.Errorf("audio Input (mic): %v", err)
-					dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
-				}
-			},
-			0),
-			"")
+		appendWidgetToForm(profileForm, "Audio API", audioApiSelect, "")
+
+		appendWidgetToForm(profileForm, "Audio Input (mic)", audioInputSelect, "")
 
 		profileForm.Append("", audioInputProgress)
 
-		appendWidgetToForm(profileForm, "Audio Output (speaker)", CustomWidget.NewTextValueSelect("device_out_index", audioOutputDevices,
-			func(s CustomWidget.TextValueOption) {
-				println(s.Value)
-				playBackDevice.OutputDeviceName = s.Text
-				err := playBackDevice.InitDevices()
-				if err != nil {
-					var newError = fmt.Errorf("audio Output (speaker): %v", err)
-					dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
-				}
-			},
-			0),
-			"")
+		appendWidgetToForm(profileForm, "Audio Output (speaker)", audioOutputSelect, "")
 
 		profileForm.Append("", audioOutputProgress)
 
@@ -730,6 +773,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Run_backend:              true,
 			Device_index:             -1,
 			Device_out_index:         -1,
+			Audio_api:                "MME",
 			Audio_input_device:       "",
 			Audio_output_device:      "",
 			Ai_device:                "cuda",
@@ -786,8 +830,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileForm.Items[0].Widget.(*fyne.Container).Objects[1].(*widget.Entry).SetText(strconv.Itoa(profileSettings.Websocket_port))
 		profileForm.Items[0].Widget.(*fyne.Container).Objects[2].(*widget.Check).SetChecked(profileSettings.Run_backend)
 		// spacer
+		profileForm.Items[2].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Audio_api)
+
 		deviceInValue := "-1"
-		deviceInWidget := profileForm.Items[2].Widget.(*CustomWidget.TextValueSelect)
+		deviceInWidget := profileForm.Items[3].Widget.(*CustomWidget.TextValueSelect)
 		if profileSettings.Device_index != nil {
 			switch profileSettings.Device_index.(type) {
 			case int:
@@ -810,7 +856,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 		// audio progressbar
 		deviceOutValue := "-1"
-		deviceOutWidget := profileForm.Items[4].Widget.(*CustomWidget.TextValueSelect)
+		deviceOutWidget := profileForm.Items[5].Widget.(*CustomWidget.TextValueSelect)
 		if profileSettings.Device_out_index != nil {
 			switch profileSettings.Device_out_index.(type) {
 			case int:
@@ -834,31 +880,31 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		// audio progressbar
 		// spacer
-		profileForm.Items[6].Widget.(*fyne.Container).Objects[0].(*widget.Check).SetChecked(profileSettings.Vad_enabled)
-		profileForm.Items[6].Widget.(*fyne.Container).Objects[1].(*widget.Check).SetChecked(profileSettings.Vad_on_full_clip)
-		profileForm.Items[6].Widget.(*fyne.Container).Objects[2].(*widget.Check).SetChecked(profileSettings.Realtime)
+		profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Check).SetChecked(profileSettings.Vad_enabled)
+		profileForm.Items[7].Widget.(*fyne.Container).Objects[1].(*widget.Check).SetChecked(profileSettings.Vad_on_full_clip)
+		profileForm.Items[7].Widget.(*fyne.Container).Objects[2].(*widget.Check).SetChecked(profileSettings.Realtime)
 
 		VadConfidenceThreshold, _ := strconv.ParseFloat(profileSettings.Vad_confidence_threshold, 64)
 
-		profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(VadConfidenceThreshold)
+		profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(VadConfidenceThreshold)
 		if profileSettings.Vad_enabled {
-			profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Show()
+			profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Show()
 		} else {
-			profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Hide()
+			profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Hide()
 		}
-		profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Energy))
-		profileForm.Items[9].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Pause))
-		profileForm.Items[10].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Phrase_time_limit))
+		profileForm.Items[9].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Energy))
+		profileForm.Items[10].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Pause))
+		profileForm.Items[11].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Phrase_time_limit))
 
 		if profileSettings.Ai_device != nil {
-			profileForm.Items[11].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Ai_device.(string))
+			profileForm.Items[12].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Ai_device.(string))
 		}
-		profileForm.Items[12].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Model)
-		profileForm.Items[12].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Whisper_precision)
+		profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Model)
+		profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Whisper_precision)
 		// show only available precision options depending on whisper project
-		selectedPrecision := profileForm.Items[12].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected().Value
+		selectedPrecision := profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected().Value
 		if profileSettings.Faster_whisper {
-			profileForm.Items[12].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
+			profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
 				{Text: "float32 precision", Value: "float32"},
 				{Text: "float16 precision", Value: "float16"},
 				{Text: "int16 precision", Value: "int16"},
@@ -866,55 +912,56 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				{Text: "int8 precision", Value: "int8"},
 			}
 		} else {
-			profileForm.Items[12].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
+			profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
 				{Text: "float32 precision", Value: "float32"},
 				{Text: "float16 precision", Value: "float16"},
 			}
 			if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" {
-				profileForm.Items[12].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected("float16")
+				profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected("float16")
 			}
 		}
-		profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*widget.Check).SetChecked(profileSettings.Faster_whisper)
+		profileForm.Items[14].Widget.(*fyne.Container).Objects[0].(*widget.Check).SetChecked(profileSettings.Faster_whisper)
 
 		// spacer
-		profileForm.Items[15].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_device)
-		profileForm.Items[16].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_size)
-		profileForm.Items[16].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_precision)
+		profileForm.Items[16].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_device)
+		profileForm.Items[17].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_size)
+		profileForm.Items[17].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_precision)
 
-		profileForm.Items[18].Widget.(*widget.Check).SetChecked(profileSettings.Tts_enabled)
-		profileForm.Items[19].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Tts_ai_device)
+		profileForm.Items[19].Widget.(*widget.Check).SetChecked(profileSettings.Tts_enabled)
+		profileForm.Items[20].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Tts_ai_device)
 
 		profileForm.OnSubmit = func() {
 			profileSettings.Websocket_ip = profileForm.Items[0].Widget.(*fyne.Container).Objects[0].(*widget.Entry).Text
 			profileSettings.Websocket_port, _ = strconv.Atoi(profileForm.Items[0].Widget.(*fyne.Container).Objects[1].(*widget.Entry).Text)
 			profileSettings.Run_backend = profileForm.Items[0].Widget.(*fyne.Container).Objects[2].(*widget.Check).Checked
 
-			profileSettings.Device_index, _ = strconv.Atoi(profileForm.Items[2].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value)
-			profileSettings.Audio_input_device = profileForm.Items[2].Widget.(*CustomWidget.TextValueSelect).GetSelected().Text
+			profileSettings.Audio_api = profileForm.Items[2].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Device_index, _ = strconv.Atoi(profileForm.Items[3].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value)
+			profileSettings.Audio_input_device = profileForm.Items[3].Widget.(*CustomWidget.TextValueSelect).GetSelected().Text
 
-			profileSettings.Device_out_index, _ = strconv.Atoi(profileForm.Items[4].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value)
-			profileSettings.Audio_output_device = profileForm.Items[4].Widget.(*CustomWidget.TextValueSelect).GetSelected().Text
+			profileSettings.Device_out_index, _ = strconv.Atoi(profileForm.Items[5].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value)
+			profileSettings.Audio_output_device = profileForm.Items[5].Widget.(*CustomWidget.TextValueSelect).GetSelected().Text
 
-			profileSettings.Vad_enabled = profileForm.Items[6].Widget.(*fyne.Container).Objects[0].(*widget.Check).Checked
-			profileSettings.Vad_on_full_clip = profileForm.Items[6].Widget.(*fyne.Container).Objects[1].(*widget.Check).Checked
-			profileSettings.Realtime = profileForm.Items[6].Widget.(*fyne.Container).Objects[2].(*widget.Check).Checked
-			profileSettings.Vad_confidence_threshold = fmt.Sprintf("%f", profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value)
+			profileSettings.Vad_enabled = profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Check).Checked
+			profileSettings.Vad_on_full_clip = profileForm.Items[7].Widget.(*fyne.Container).Objects[1].(*widget.Check).Checked
+			profileSettings.Realtime = profileForm.Items[7].Widget.(*fyne.Container).Objects[2].(*widget.Check).Checked
+			profileSettings.Vad_confidence_threshold = fmt.Sprintf("%f", profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value)
 
-			profileSettings.Energy = int(profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value)
-			profileSettings.Pause = profileForm.Items[9].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value
-			profileSettings.Phrase_time_limit = profileForm.Items[10].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value
+			profileSettings.Energy = int(profileForm.Items[9].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value)
+			profileSettings.Pause = profileForm.Items[10].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value
+			profileSettings.Phrase_time_limit = profileForm.Items[11].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value
 
-			profileSettings.Ai_device = profileForm.Items[11].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Model = profileForm.Items[12].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Whisper_precision = profileForm.Items[12].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Faster_whisper = profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*widget.Check).Checked
+			profileSettings.Ai_device = profileForm.Items[12].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Model = profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Whisper_precision = profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Faster_whisper = profileForm.Items[14].Widget.(*fyne.Container).Objects[0].(*widget.Check).Checked
 
-			profileSettings.Txt_translator_device = profileForm.Items[15].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Txt_translator_size = profileForm.Items[16].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Txt_translator_precision = profileForm.Items[16].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Txt_translator_device = profileForm.Items[16].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Txt_translator_size = profileForm.Items[17].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Txt_translator_precision = profileForm.Items[17].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected().Value
 
-			profileSettings.Tts_enabled = profileForm.Items[18].Widget.(*widget.Check).Checked
-			profileSettings.Tts_ai_device = profileForm.Items[19].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Tts_enabled = profileForm.Items[19].Widget.(*widget.Check).Checked
+			profileSettings.Tts_ai_device = profileForm.Items[20].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
 
 			// update existing settings or create new one if it does not exist yet
 			if Utilities.FileExists(settingsFiles[id]) {
@@ -926,6 +973,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					Websocket_port:   profileSettings.Websocket_port,
 					Run_Backend:      profileSettings.Run_backend,
 
+					Audio_api:           profileSettings.Audio_api,
 					Device_index:        profileSettings.Device_index,
 					Audio_input_device:  profileSettings.Audio_input_device,
 					Device_out_index:    profileSettings.Device_out_index,
