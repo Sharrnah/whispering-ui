@@ -26,6 +26,7 @@ type Conf struct {
 	Device_index     interface{} `yaml:"device_index,omitempty" json:"device_index,omitempty"`
 	Device_out_index interface{} `yaml:"device_out_index,omitempty" json:"device_out_index,omitempty"`
 
+	Audio_api           string `yaml:"audio_api" json:"audio_api"`
 	Audio_input_device  string `yaml:"audio_input_device" json:"audio_input_device"`
 	Audio_output_device string `yaml:"audio_output_device" json:"audio_output_device"`
 
@@ -131,6 +132,7 @@ var ExcludeConfigFields = []string{
 	"plugin_settings",
 	"plugin_timer_timeout",
 	"plugin_timer",
+	"audio_api",
 	"audio_input_device",
 	"audio_output_device",
 }
