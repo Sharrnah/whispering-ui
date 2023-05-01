@@ -53,17 +53,23 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
      
      <img src="doc/images/setup/audio-devices.png" width=710 alt="Audio Test">
    - See also [**Audio configuration (TTS to Mic, Game Audio translation, etc.)**](doc/audio-config.md) for more information on specific Audio Setups.
-    
-4. Select the **A.I. Device for Speech to Text** and **Text Translation** according to your Hardware.
+
+4. Keep an eye on the estimated Memory consumption in the lower right corner.
+   
+   _It is only a rough estimate and can vary, but it should give you an idea of how much (V-)RAM you need for your selected A.I. Models. and Options._
+   
+   <img src="doc/images/setup/mem-estimates.png" width=706 alt="Memory Consumption Estimates">
+
+5. Select the **A.I. Device for Speech to Text** and **Text Translation** according to your Hardware.
    - CUDA (_requires an NVIDIA GPU_) or CPU.
    - CUDA will load the A.I. into V-RAM and will be faster than CPU.
 
-5. Select the **Speech to Text Size** and **Text Translation Size**.
+6. Select the **Speech to Text Size** and **Text Translation Size**.
    - The larger the size, the more accurate but also slower the transcription will be.
    - The larger the size, the more (V-)RAM it will use.
    - **Note:** The A.I. Model of the selected size and precision will be downloaded automatically when you start the application for the first time.
 
-6. Select the **Speech to Text Precision** and **Text Translation Precision**
+7. Select the **Speech to Text Precision** and **Text Translation Precision**
    - The higher the precision, the more accurate and the more (V-)RAM is used. (_However the accuracy differences are almost negligible_).
    - Modern GPU's have a better acceleration for `float16`.
    - CPU's only support `float32`, `int16` or `int8` precision.
@@ -83,6 +89,21 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 > **Note:**
 > <br>
 > Most Plugins have specific settings that can be configured in the textboxes of the Plugin in the **Plugins** tab.
+
+> <details><summary>Example Setup of Japanese TTS "VoiceVox" Plugin</summary>
+> 
+> 1. Download the Plugin from GitHub.
+>    <img src="doc/images/setup/plugin-dl.png" width=650 alt="Download Plugin">
+> 2. Place the `voicevox_tts_plugin.py` from inside the ZIP file in the **Plugins** folder.
+> 3. Restart the application.
+> 4. The Plugin should now be available in the **Advanced** -> **Plugins** tab.
+> 5. Enable the Plugin if it is not already enabled.
+> 6. Configure the Plugin to your liking. (e.g. set **speaker:** to the ID of the speaker you want to use)
+>    you can find the [list of speakers and their IDs here](https://eu2.contabostorage.com/bf1a89517e2643359087e5d8219c0c67:share/voicevox-voice-ids.html).
+>    <br><img src="doc/images/setup/plugin-settings.png" width=650 alt="Download Plugin">
+> 7. You can now use the TTS of the Plugin everywhere like the included TTS before.
+>    <br>For example in the **Text 2 Speech** Tab or enabling **Automatic Text 2 Speech**
+> </details>
 
 ### Specific Usage Setup
 - [**Audio configuration (TTS to Mic, Game Audio translation, etc.)**](doc/audio-config.md)
