@@ -33,7 +33,9 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 - **Auto-Update** to the latest version of **Whispering Tiger**.
 
 ## Download
-[**Download Latest Version**](https://github.com/Sharrnah/whispering-ui/releases/latest)
+[**Download Latest Version**](https://github.com/Sharrnah/whispering-ui/releases/latest) from the Releases Page.
+
+<img src=doc/images/whispering-ui-dl.png width=305 alt="Speech 2 Text Tab">
 
 ## Installation
 1. After the download the latest version from the [**Releases**], extract it to a folder of your choice on a drive with enough free space.
