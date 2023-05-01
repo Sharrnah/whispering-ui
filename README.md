@@ -13,6 +13,7 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 - [Installation](#installation)
 - [Setup](#setup)
   - [Plugins Setup](#plugins-setup)
+  - [_Example Setup of Plugin VoiceVox (Japanese TTS)_](doc/plugin-example.md)
   - [Specific Audio configuration (TTS to Mic, Game Audio translation, etc.)](doc/audio-config.md)
 - [Advanced Features](#advanced-features)
 - [Additional Help](#additional-help)
@@ -90,20 +91,7 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 > <br>
 > Most Plugins have specific settings that can be configured in the textboxes of the Plugin in the **Plugins** tab.
 
-> <details><summary>Example Setup of Japanese TTS "VoiceVox" Plugin</summary>
-> 
-> 1. Download the Plugin from GitHub.
->    <img src="doc/images/setup/plugin-dl.png" width=650 alt="Download Plugin">
-> 2. Place the `voicevox_tts_plugin.py` from inside the ZIP file in the **Plugins** folder.
-> 3. Restart the application.
-> 4. The Plugin should now be available in the **Advanced** -> **Plugins** tab.
-> 5. Enable the Plugin if it is not already enabled.
-> 6. Configure the Plugin to your liking. (e.g. set **speaker:** to the ID of the speaker you want to use)
->    you can find the [list of speakers and their IDs here](https://eu2.contabostorage.com/bf1a89517e2643359087e5d8219c0c67:share/voicevox-voice-ids.html).
->    <br><img src="doc/images/setup/plugin-settings.png" width=650 alt="Download Plugin">
-> 7. You can now use the TTS of the Plugin everywhere like the included TTS before.
->    <br>For example in the **Text 2 Speech** Tab or enabling **Automatic Text 2 Speech**
-> </details>
+> See also [**Example Setup of Plugin VoiceVox (Japanese TTS)**](doc/plugin-example.md) As example how to setup the VoiceVox Plugin.
 
 ### Specific Usage Setup
 - [**Audio configuration (TTS to Mic, Game Audio translation, etc.)**](doc/audio-config.md)
