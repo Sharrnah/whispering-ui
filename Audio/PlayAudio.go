@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"time"
+	"whispering-tiger-ui/Utilities"
 )
 
 type TtsResultRaw struct {
@@ -44,7 +45,7 @@ func (res *TtsResultRaw) PlayWAVFromBase64() error {
 	//	out.Close()
 
 	// initialize malgo
-	var backends = []malgo.Backend{malgo.BackendWasapi}
+	var backends = []malgo.Backend{Utilities.AudioBackend}
 
 	ctx, err := malgo.InitContext(backends, malgo.ContextConfig{}, func(message string) {
 		fmt.Printf("LOG <%v>\n", message)

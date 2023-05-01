@@ -17,11 +17,13 @@ type AudioDeviceList struct {
 	Devices    []AudioDevice
 }
 
+const AudioBackend = malgo.BackendWinmm
+
 func GetAudioDevices(deviceType malgo.DeviceType, deviceIndexStartPoint int) ([]AudioDevice, error) {
 	//a.DeviceType = deviceType
 
 	// initialize malgo
-	var backends = []malgo.Backend{malgo.BackendWinmm}
+	var backends = []malgo.Backend{AudioBackend}
 
 	ctx, err := malgo.InitContext(backends, malgo.ContextConfig{}, func(message string) {
 		fmt.Printf("LOG <%v>\n", message)

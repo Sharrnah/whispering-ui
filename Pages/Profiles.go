@@ -232,7 +232,7 @@ func (c *CurrentPlaybackDevice) Init() {
 
 	//######################
 	var err error
-	c.Context, err = malgo.InitContext([]malgo.Backend{malgo.BackendWinmm}, malgo.ContextConfig{}, func(message string) {
+	c.Context, err = malgo.InitContext([]malgo.Backend{Utilities.AudioBackend}, malgo.ContextConfig{}, func(message string) {
 		fmt.Printf("LOG <%v>\n", message)
 	})
 	if err != nil {
