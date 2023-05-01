@@ -432,6 +432,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				playBackDevice.AudioAPI = value
 
 				go playBackDevice.Init()
+
 				audioInputDevices, _ = GetAudioDevices(playBackDevice.AudioAPI, malgo.Capture, 0)
 				audioOutputDevices, _ = GetAudioDevices(playBackDevice.AudioAPI, malgo.Playback, len(audioInputDevices))
 
