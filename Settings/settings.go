@@ -64,6 +64,7 @@ type Conf struct {
 	Whisper_num_workers           int         `yaml:"whisper_num_workers" json:"whisper_num_workers"`
 	Realtime                      bool        `yaml:"realtime" json:"realtime"`
 	Realtime_frame_multiply       int         `yaml:"realtime_frame_multiply" json:"realtime_frame_multiply"`
+	Realtime_frequency_time       float64     `yaml:"realtime_frequency_time" json:"realtime_frequency_time"`
 	Realtime_whisper_model        string      `yaml:"realtime_whisper_model" json:"realtime_whisper_model"`
 	Realtime_whisper_precision    string      `yaml:"realtime_whisper_precision" json:"realtime_whisper_precision"`
 	Realtime_whisper_beam_size    int         `yaml:"realtime_whisper_beam_size" json:"realtime_whisper_beam_size"`
