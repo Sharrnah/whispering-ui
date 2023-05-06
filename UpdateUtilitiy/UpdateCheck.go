@@ -23,7 +23,8 @@ var updateInfoUrl = "https://s3.libs.space:9000/projects/whispering/latest.yaml"
 func versionDownload(updater Updater.UpdatePackages, packageName, filename string, window fyne.Window, startBackend bool, progressTitle string) error {
 	statusBar := widget.NewProgressBar()
 	statusBarContainer := container.NewVBox(statusBar)
-	dialog.ShowCustom(progressTitle, "Hide (Download will continue)", statusBarContainer, window)
+	downloadDialog := dialog.NewCustom(progressTitle, "Hide (Download will continue)", statusBarContainer, window)
+	downloadDialog.Show()
 	downloadingLabel := widget.NewLabel("Downloading... ")
 
 	hasEUServer := false
@@ -127,6 +128,8 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 
 	if err == nil {
 		statusBarContainer.Add(widget.NewLabel("Finished."))
+		downloadDialog.SetDismissText("Close")
+		downloadDialog.Refresh()
 	}
 
 	statusBarContainer.Refresh()

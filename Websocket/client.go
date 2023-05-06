@@ -122,9 +122,11 @@ func (c *Client) Start() {
 
 			previouslyConnected = true
 
-			var msg MessageStruct
-			msg.GetMessage(message)
-			msg.HandleReceiveMessage()
+			go func() {
+				var msg MessageStruct
+				msg.GetMessage(message)
+				msg.HandleReceiveMessage()
+			}()
 
 			//log.Printf("recv: %s", msg)
 		}
