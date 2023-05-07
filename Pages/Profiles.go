@@ -19,6 +19,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"syscall"
 	"time"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Profiles"
@@ -314,8 +315,6 @@ type ProfileAIModelOption struct {
 
 var AllProfileAIModelOptions = make([]ProfileAIModelOption, 0)
 
-const energyDetectionTime = 10
-
 func (p ProfileAIModelOption) CalculateMemoryConsumption(CPUbar *widget.ProgressBar, GPUBar *widget.ProgressBar) {
 	addToList := true
 	lastIndex := -1
@@ -380,6 +379,9 @@ func (p ProfileAIModelOption) CalculateMemoryConsumption(CPUbar *widget.Progress
 	CPUbar.Refresh()
 	GPUBar.Refresh()
 }
+
+const energyDetectionTime = 10
+const EnergySliderMax = 2000
 
 func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	playBackDevice := CurrentPlaybackDevice{}
@@ -523,7 +525,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileForm.Append("VAD (Voice activity detection)", container.NewGridWithColumns(3, vadEnableCheckbox, vadOnFullClipCheckbox, vadRealtimeCheckbox))
 		appendWidgetToForm(profileForm, "VAD Speech confidence", container.NewBorder(nil, nil, nil, vadConfidenceSliderState, vadConfidenceSliderWidget), "The confidence level required to detect speech.")
 
-		energySliderWidget := widget.NewSlider(0, 3000)
+		energySliderWidget := widget.NewSlider(0, EnergySliderMax)
 
 		// energy autodetect
 		autoDetectEnergyDialog := dialog.NewCustomConfirm("This will detect the current noise level.", "Detect noise level now.", "Cancel",
@@ -540,10 +542,13 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					if Utilities.FileExists("audioWhisper.py") {
 						cmd = exec.Command("python", []string{"-u", "audioWhisper.py", "--audio_api", audioApiSelect.GetSelected().Value, "--device_index", audioInputSelect.GetSelected().Value, "--detect_energy", "--detect_energy_time", strconv.Itoa(energyDetectionTime)}...)
 					} else if Utilities.FileExists("audioWhisper/audioWhisper.exe") {
-						cmd = exec.Command("audioWhisper/audioWhisper.exe", []string{"-u", "audioWhisper.py", "--audio_api", audioApiSelect.GetSelected().Value, "--device_index", audioInputSelect.GetSelected().Value, "--detect_energy", "--detect_energy_time", strconv.Itoa(energyDetectionTime)}...)
+						cmd = exec.Command("audioWhisper/audioWhisper.exe", []string{"--audio_api", audioApiSelect.GetSelected().Value, "--device_index", audioInputSelect.GetSelected().Value, "--detect_energy", "--detect_energy_time", strconv.Itoa(energyDetectionTime)}...)
 					} else {
 						dialog.ShowInformation("Error", "Could not find audioWhisper.py or audioWhisper.exe", fyne.CurrentApp().Driver().AllWindows()[1])
 						return
+					}
+					cmd.SysProcAttr = &syscall.SysProcAttr{
+						HideWindow: true,
 					}
 					out, err := cmd.Output()
 					if err != nil {
@@ -555,6 +560,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					matches := re.FindStringSubmatch(string(out))
 					if len(matches) > 0 {
 						detectedEnergy, _ := strconv.ParseFloat(matches[1], 64)
+						energySliderWidget.Max = EnergySliderMax
+						if detectedEnergy >= energySliderWidget.Max {
+							energySliderWidget.Max = detectedEnergy + 200
+						}
 						energySliderWidget.SetValue(detectedEnergy + 20)
 					} else {
 						dialog.ShowInformation("Error", "Could not find detected_energy in output.", fyne.CurrentApp().Driver().AllWindows()[1])
@@ -567,6 +576,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		})
 		energySliderState := widget.NewLabel("0.0")
 		energySliderWidget.OnChanged = func(value float64) {
+			if value >= energySliderWidget.Max {
+				energySliderWidget.Max += 10
+			}
 			energySliderState.SetText(fmt.Sprintf("%.0f", value))
 		}
 		appendWidgetToForm(profileForm, "Speech volume Level", container.NewBorder(nil, nil, nil, container.NewHBox(energySliderState, energyHelpBtn), energySliderWidget), "The volume level at which the speech detection will trigger.")
@@ -938,6 +950,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Show()
 		} else {
 			profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Hide()
+		}
+
+		profileForm.Items[9].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Max = EnergySliderMax
+		if float64(profileSettings.Energy) >= profileForm.Items[9].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Max-10 {
+			profileForm.Items[9].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Max = float64(profileSettings.Energy + 200)
 		}
 		profileForm.Items[9].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Energy))
 		profileForm.Items[10].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Pause))
