@@ -17,12 +17,13 @@ import (
 	"whispering-tiger-ui/Settings"
 )
 
-func messageLoader(c interface{}, message []byte) interface{} {
+func messageLoader(c interface{}, message []byte) (interface{}, error) {
 	err := json.Unmarshal(message, c)
 	if err != nil {
 		log.Fatalf("Unmarshal: %v", err)
+		return nil, err
 	}
-	return c
+	return c, nil
 }
 
 type Client struct {
@@ -122,11 +123,11 @@ func (c *Client) Start() {
 
 			previouslyConnected = true
 
-			go func() {
-				var msg MessageStruct
-				msg.GetMessage(message)
+			var msg MessageStruct
+			messageStruct := msg.GetMessage(message)
+			if messageStruct != nil {
 				msg.HandleReceiveMessage()
-			}()
+			}
 
 			//log.Printf("recv: %s", msg)
 		}

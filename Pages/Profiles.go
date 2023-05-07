@@ -15,6 +15,8 @@ import (
 	"io"
 	"math"
 	"os"
+	"os/exec"
+	"regexp"
 	"strconv"
 	"strings"
 	"time"
@@ -312,6 +314,8 @@ type ProfileAIModelOption struct {
 
 var AllProfileAIModelOptions = make([]ProfileAIModelOption, 0)
 
+const energyDetectionTime = 10
+
 func (p ProfileAIModelOption) CalculateMemoryConsumption(CPUbar *widget.ProgressBar, GPUBar *widget.ProgressBar) {
 	addToList := true
 	lastIndex := -1
@@ -519,12 +523,53 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileForm.Append("VAD (Voice activity detection)", container.NewGridWithColumns(3, vadEnableCheckbox, vadOnFullClipCheckbox, vadRealtimeCheckbox))
 		appendWidgetToForm(profileForm, "VAD Speech confidence", container.NewBorder(nil, nil, nil, vadConfidenceSliderState, vadConfidenceSliderWidget), "The confidence level required to detect speech.")
 
+		energySliderWidget := widget.NewSlider(0, 3000)
+
+		// energy autodetect
+		autoDetectEnergyDialog := dialog.NewCustomConfirm("This will detect the current noise level.", "Detect noise level now.", "Cancel",
+			container.NewVBox(widget.NewLabel("This will record for "+strconv.Itoa(energyDetectionTime)+" seconds and sets the energy to the max detected level.\nPlease behave normally (breathing etc.) but don't say anything.\n\nThis value can later be fine-tuned without restarting by setting the \"energy\" value in Advanced -> Settings.")), func(b bool) {
+				if b {
+					statusBar := widget.NewProgressBarInfinite()
+					statusBarContainer := container.NewVBox(statusBar)
+					statusBarContainer.Add(widget.NewLabel("Please behave normally (breathing etc.) but don't say anything for around " + strconv.Itoa(energyDetectionTime) + " seconds to have it record only your noise level."))
+					detectDialog := dialog.NewCustom("detecting...", "Hide", statusBarContainer, fyne.CurrentApp().Driver().AllWindows()[1])
+					detectDialog.Show()
+
+					cmd := exec.Command("---")
+					// start application that detects the energy level and returns the value before exiting.
+					if Utilities.FileExists("audioWhisper.py") {
+						cmd = exec.Command("python", []string{"-u", "audioWhisper.py", "--audio_api", audioApiSelect.GetSelected().Value, "--device_index", audioInputSelect.GetSelected().Value, "--detect_energy", "--detect_energy_time", strconv.Itoa(energyDetectionTime)}...)
+					} else if Utilities.FileExists("audioWhisper/audioWhisper.exe") {
+						cmd = exec.Command("audioWhisper/audioWhisper.exe", []string{"-u", "audioWhisper.py", "--audio_api", audioApiSelect.GetSelected().Value, "--device_index", audioInputSelect.GetSelected().Value, "--detect_energy", "--detect_energy_time", strconv.Itoa(energyDetectionTime)}...)
+					} else {
+						dialog.ShowInformation("Error", "Could not find audioWhisper.py or audioWhisper.exe", fyne.CurrentApp().Driver().AllWindows()[1])
+						return
+					}
+					out, err := cmd.Output()
+					if err != nil {
+						dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
+						return
+					}
+					// find and convert cmd detected energy output to float64
+					re := regexp.MustCompile(`detected_energy: (\d+)`)
+					matches := re.FindStringSubmatch(string(out))
+					if len(matches) > 0 {
+						detectedEnergy, _ := strconv.ParseFloat(matches[1], 64)
+						energySliderWidget.SetValue(detectedEnergy + 20)
+					} else {
+						dialog.ShowInformation("Error", "Could not find detected_energy in output.", fyne.CurrentApp().Driver().AllWindows()[1])
+					}
+					detectDialog.Hide()
+				}
+			}, fyne.CurrentApp().Driver().AllWindows()[1])
+		energyHelpBtn := widget.NewButtonWithIcon("Autodetect", theme.SearchIcon(), func() {
+			autoDetectEnergyDialog.Show()
+		})
 		energySliderState := widget.NewLabel("0.0")
-		energySliderWidget := widget.NewSlider(0, 2000)
 		energySliderWidget.OnChanged = func(value float64) {
 			energySliderState.SetText(fmt.Sprintf("%.0f", value))
 		}
-		appendWidgetToForm(profileForm, "Speech volume Level", container.NewBorder(nil, nil, nil, energySliderState, energySliderWidget), "The volume level at which the speech detection will trigger.")
+		appendWidgetToForm(profileForm, "Speech volume Level", container.NewBorder(nil, nil, nil, container.NewHBox(energySliderState, energyHelpBtn), energySliderWidget), "The volume level at which the speech detection will trigger.")
 
 		pauseSliderState := widget.NewLabel("0.0")
 		pauseSliderWidget := widget.NewSlider(0, 5)

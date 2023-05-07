@@ -87,8 +87,17 @@ func processingStopTimer() {
 }
 
 func (c *MessageStruct) GetMessage(messageData []byte) *MessageStruct {
+	// no message data
+	if messageData == nil {
+		return nil
+	}
 	c.Raw = messageData
-	return messageLoader(c, messageData).(*MessageStruct)
+	msgStruct, err := messageLoader(c, messageData)
+	if err != nil {
+		log.Println(err)
+		return nil
+	}
+	return msgStruct.(*MessageStruct)
 }
 
 // Handle the different receiving message types
@@ -100,21 +109,45 @@ func (c *MessageStruct) HandleReceiveMessage() {
 	case "error":
 		errorMessage := Messages.ExceptionMessage{}
 		err = json.Unmarshal(c.Raw, &errorMessage)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 		errorMessage.ShowError(fyne.CurrentApp().Driver().AllWindows()[0])
 	case "installed_languages":
 		err = json.Unmarshal(c.Raw, &Messages.InstalledLanguages)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 		Messages.InstalledLanguages.Update()
 	case "available_tts_models":
 		err = json.Unmarshal(c.Raw, &Messages.TtsLanguages)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 		Messages.TtsLanguages.Update()
 	case "available_tts_voices":
 		err = json.Unmarshal(c.Raw, &Messages.TtsVoices)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 		Messages.TtsVoices.Update()
 	case "available_img_languages":
 		err = json.Unmarshal(c.Raw, &Messages.OcrLanguagesList)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 		Messages.OcrLanguagesList.Update()
 	case "windows_list":
 		err = json.Unmarshal(c.Raw, &Messages.WindowsList)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 		Messages.WindowsList.Update()
 	case "settings_values":
 		var (
@@ -122,6 +155,10 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			ok bool
 		)
 		err = json.Unmarshal(c.Data, &i)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 		if Settings.ConfigValues, ok = i.(map[string]interface{}); !ok {
 			log.Println("failed to type assert data")
 		}
@@ -198,6 +235,10 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		//	go Audio.LastFile.Play()
 	case "ocr_result":
 		err = json.Unmarshal(c.Data, &Messages.OcrResult)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 		Messages.OcrResult.Update()
 
 	// special case for LLM plugin
@@ -219,6 +260,10 @@ func (c *MessageStruct) HandleReceiveMessage() {
 	case "processing_start":
 		var processingStarted = false
 		err = json.Unmarshal(c.Data, &processingStarted)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 		if processingStarted {
 			Fields.Field.ProcessingStatus.Start()
 			select {
@@ -232,6 +277,10 @@ func (c *MessageStruct) HandleReceiveMessage() {
 	case "processing_data":
 		var processingData = ""
 		err = json.Unmarshal(c.Data, &processingData)
+		if err != nil {
+			log.Println(err)
+			return
+		}
 		if processingData != "" {
 			Fields.Field.ProcessingStatus.Start()
 			Fields.Field.RealtimeResultLabel.Show()
@@ -245,7 +294,15 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			}
 		}
 	case "loading_state":
+		if c.Raw == nil {
+			return
+		}
 		err = json.Unmarshal(c.Raw, &Messages.CurrentLoadingState)
+		if err != nil {
+			Messages.LoadingStateContainer.RemoveAll()
+			Messages.LoadingStateDialog.Hide()
+			return
+		}
 		Messages.CurrentLoadingState.Update()
 	case "tts_save":
 		ttsSpeechAudio := Messages.TtsSpeechAudio{}

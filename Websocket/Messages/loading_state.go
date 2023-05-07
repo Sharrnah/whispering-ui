@@ -34,10 +34,12 @@ func (res LoadingState) Update() *LoadingState {
 			showLoading = true
 		}
 	}
-	if showLoading {
-		LoadingStateDialog.Show()
-	} else {
-		LoadingStateDialog.Hide()
+	if LoadingStateDialog != nil {
+		if showLoading {
+			LoadingStateDialog.Show()
+		} else {
+			LoadingStateDialog.Hide()
+		}
 	}
 
 	return &res

@@ -11,7 +11,7 @@ import (
 	"time"
 )
 
-const defaultChunkSize int64 = 10 * 1024 * 1024 // 10 MB
+const DefaultChunkSize int64 = 20 * 1024 * 1024 // 20 MB
 const defaultConcurrentDownloads = 1
 
 type OnProgress func(bytesWritten, contentLength uint64)
@@ -51,7 +51,7 @@ func (d *Download) DownloadFile(retries int) error {
 		d.ConcurrentDownloads = defaultConcurrentDownloads
 	}
 	if d.ChunkSize == 0 {
-		d.ChunkSize = defaultChunkSize
+		d.ChunkSize = DefaultChunkSize
 	}
 	return d.downloadFileWithRetry(retries)
 }

@@ -27,6 +27,11 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 	downloadDialog.Show()
 	downloadingLabel := widget.NewLabel("Downloading... ")
 
+	reOpenAfterHide := false
+	downloadDialog.SetOnClosed(func() {
+		reOpenAfterHide = true
+	})
+
 	hasEUServer := false
 	hasUSServer := false
 	var mergedUrls []string
@@ -110,8 +115,11 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 	if len(RuntimeBackend.BackendsList) > 0 && RuntimeBackend.BackendsList[0].IsRunning() {
 		statusBarContainer.Add(widget.NewLabel("Stopping Backend..."))
 		RuntimeBackend.BackendsList[0].Stop()
-		time.Sleep(2 * time.Second)
+		time.Sleep(1 * time.Second)
 	}
+
+	// wait a bit before trying to extract
+	time.Sleep(1 * time.Second)
 
 	statusBarContainer.Add(widget.NewLabel("Extracting..."))
 	statusBarContainer.Refresh()
@@ -130,6 +138,9 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 		statusBarContainer.Add(widget.NewLabel("Finished."))
 		downloadDialog.SetDismissText("Close")
 		downloadDialog.Refresh()
+		if reOpenAfterHide {
+			downloadDialog.Show()
+		}
 	}
 
 	statusBarContainer.Refresh()
