@@ -539,10 +539,12 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 					cmd := exec.Command("---")
 					// start application that detects the energy level and returns the value before exiting.
+					cmdArguments := []string{"--audio_api", audioApiSelect.GetSelected().Value, "--device_index", audioInputSelect.GetSelected().Value, "--audio_input_device", audioInputSelect.GetSelected().Text, "--detect_energy", "--detect_energy_time", strconv.Itoa(energyDetectionTime)}
 					if Utilities.FileExists("audioWhisper.py") {
-						cmd = exec.Command("python", []string{"-u", "audioWhisper.py", "--audio_api", audioApiSelect.GetSelected().Value, "--device_index", audioInputSelect.GetSelected().Value, "--detect_energy", "--detect_energy_time", strconv.Itoa(energyDetectionTime)}...)
+						cmdArguments = append([]string{"-u", "audioWhisper.py"}, cmdArguments...)
+						cmd = exec.Command("python", cmdArguments...)
 					} else if Utilities.FileExists("audioWhisper/audioWhisper.exe") {
-						cmd = exec.Command("audioWhisper/audioWhisper.exe", []string{"--audio_api", audioApiSelect.GetSelected().Value, "--device_index", audioInputSelect.GetSelected().Value, "--detect_energy", "--detect_energy_time", strconv.Itoa(energyDetectionTime)}...)
+						cmd = exec.Command("audioWhisper/audioWhisper.exe", cmdArguments...)
 					} else {
 						dialog.ShowInformation("Error", "Could not find audioWhisper.py or audioWhisper.exe", fyne.CurrentApp().Driver().AllWindows()[1])
 						return
@@ -599,17 +601,67 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 		appendWidgetToForm(profileForm, "Phrase time limit", container.NewBorder(nil, nil, nil, phraseLimitSliderState, phraseLimitSliderWidget), "The max. time limit in seconds after which the audio processing starts.")
 
-		profileForm.Append("A.I. Device for Speech to Text", CustomWidget.NewTextValueSelect("ai_device", []CustomWidget.TextValueOption{
+		sttAiDeviceSelect := CustomWidget.NewTextValueSelect("ai_device", []CustomWidget.TextValueOption{
 			{Text: "CUDA", Value: "cuda"},
 			{Text: "CPU", Value: "cpu"},
-		}, func(s CustomWidget.TextValueOption) {
+		}, func(s CustomWidget.TextValueOption) {}, 0)
+
+		sttPrecisionSelect := CustomWidget.NewTextValueSelect("Precision", []CustomWidget.TextValueOption{
+			{Text: "float32 precision", Value: "float32"},
+			{Text: "float16 precision", Value: "float16"},
+			{Text: "int16 precision", Value: "int16"},
+			{Text: "int8_float16 precision", Value: "int8_float16"},
+			{Text: "int8 precision", Value: "int8"},
+		}, func(s CustomWidget.TextValueOption) {}, 0)
+
+		sttAiDeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+			if !Hardwareinfo.HasNVIDIACard() && s.Value == "cuda" {
+				dialog.ShowInformation("No NVIDIA Card found", "No NVIDIA Card found. You might need to use CPU instead for it to work.", fyne.CurrentApp().Driver().AllWindows()[1])
+			}
+			if s.Value == "cpu" && (sttPrecisionSelect.GetSelected().Value == "float16" || sttPrecisionSelect.GetSelected().Value == "int8_float16") {
+				sttPrecisionSelect.SetSelected("float32")
+			}
+			if s.Value == "cuda" && sttPrecisionSelect.GetSelected().Value == "int16" {
+				sttPrecisionSelect.SetSelected("float16")
+			}
 			// calculate memory consumption
 			AIModel := ProfileAIModelOption{
 				AIModel: "Whisper",
 				Device:  s.Value,
 			}
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
-		}, 0))
+		}
+		sttPrecisionSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+			precisionType := Hardwareinfo.Float32
+			switch s.Value {
+			case "float32":
+				precisionType = Hardwareinfo.Float32
+			case "float16":
+				precisionType = Hardwareinfo.Float16
+			case "int32":
+				precisionType = Hardwareinfo.Int32
+			case "int16":
+				precisionType = Hardwareinfo.Int16
+			case "int8_float16":
+				precisionType = Hardwareinfo.Int8
+			case "int8":
+				precisionType = Hardwareinfo.Int8
+			}
+			if sttAiDeviceSelect.GetSelected().Value == "cpu" && (s.Value == "float16" || s.Value == "int8_float16") {
+				dialog.ShowInformation("Information", "Most CPU's do not support float16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
+			}
+			if sttAiDeviceSelect.GetSelected().Value == "cuda" && (s.Value == "int16") {
+				dialog.ShowInformation("Information", "Most CUDA GPU's do not support int16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
+			}
+			// calculate memory consumption
+			AIModel := ProfileAIModelOption{
+				AIModel:   "Whisper",
+				Precision: precisionType,
+			}
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+		}
+
+		profileForm.Append("A.I. Device for Speech to Text", sttAiDeviceSelect)
 
 		sttModelSize := CustomWidget.NewTextValueSelect("model", []CustomWidget.TextValueOption{
 			{Text: "Tiny", Value: "tiny"},
@@ -631,36 +683,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			AIModel := ProfileAIModelOption{
 				AIModel:     "Whisper",
 				AIModelSize: sizeName,
-			}
-			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
-		}, 0)
-
-		sttPrecisionSelect := CustomWidget.NewTextValueSelect("Precision", []CustomWidget.TextValueOption{
-			{Text: "float32 precision", Value: "float32"},
-			{Text: "float16 precision", Value: "float16"},
-			{Text: "int16 precision", Value: "int16"},
-			{Text: "int8_float16 precision", Value: "int8_float16"},
-			{Text: "int8 precision", Value: "int8"},
-		}, func(s CustomWidget.TextValueOption) {
-			precisionType := Hardwareinfo.Float32
-			switch s.Value {
-			case "float32":
-				precisionType = Hardwareinfo.Float32
-			case "float16":
-				precisionType = Hardwareinfo.Float16
-			case "int32":
-				precisionType = Hardwareinfo.Int32
-			case "int16":
-				precisionType = Hardwareinfo.Int16
-			case "int8_float16":
-				precisionType = Hardwareinfo.Int8
-			case "int8":
-				precisionType = Hardwareinfo.Int8
-			}
-			// calculate memory consumption
-			AIModel := ProfileAIModelOption{
-				AIModel:   "Whisper",
-				Precision: precisionType,
 			}
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
 		}, 0)
@@ -700,32 +722,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		profileForm.Append("", layout.NewSpacer())
 
-		profileForm.Append("A.I. Device for Text Translation", CustomWidget.NewTextValueSelect("txt_translator_device", []CustomWidget.TextValueOption{
+		txtTranslatorDeviceSelect := CustomWidget.NewTextValueSelect("txt_translator_device", []CustomWidget.TextValueOption{
 			{Text: "CUDA", Value: "cuda"},
 			{Text: "CPU", Value: "cpu"},
-		}, func(s CustomWidget.TextValueOption) {
-			// calculate memory consumption
-			AIModel := ProfileAIModelOption{
-				AIModel:     "NLLB200",
-				AIModelType: "CT2",
-				Device:      s.Value,
-			}
-			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
-		}, 0))
-
-		txtTranslatorDeviceSelect := CustomWidget.NewTextValueSelect("txt_translator_device", []CustomWidget.TextValueOption{
-			{Text: "Small", Value: "small"},
-			{Text: "Medium", Value: "medium"},
-			{Text: "Large", Value: "large"},
-		}, func(s CustomWidget.TextValueOption) {
-			// calculate memory consumption
-			AIModel := ProfileAIModelOption{
-				AIModel:     "NLLB200",
-				AIModelType: "CT2",
-				AIModelSize: s.Value,
-			}
-			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
-		}, 0)
+		}, func(s CustomWidget.TextValueOption) {}, 0)
 
 		txtTranslatorPrecisionSelect := CustomWidget.NewTextValueSelect("txt_translator_precision", []CustomWidget.TextValueOption{
 			{Text: "float32 precision", Value: "float32"},
@@ -733,7 +733,28 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "int16 precision", Value: "int16"},
 			{Text: "int8_float16 precision", Value: "int8_float16"},
 			{Text: "int8 precision", Value: "int8"},
-		}, func(s CustomWidget.TextValueOption) {
+		}, func(s CustomWidget.TextValueOption) {}, 0)
+
+		txtTranslatorDeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+			if !Hardwareinfo.HasNVIDIACard() && s.Value == "cuda" {
+				dialog.ShowInformation("No NVIDIA Card found", "No NVIDIA Card found. You might need to use CPU instead for it to work.", fyne.CurrentApp().Driver().AllWindows()[1])
+			}
+			if s.Value == "cpu" && (txtTranslatorPrecisionSelect.GetSelected().Value == "float16" || txtTranslatorPrecisionSelect.GetSelected().Value == "int8_float16") {
+				txtTranslatorPrecisionSelect.SetSelected("float32")
+			}
+			if s.Value == "cuda" && txtTranslatorPrecisionSelect.GetSelected().Value == "int16" {
+				txtTranslatorPrecisionSelect.SetSelected("float16")
+			}
+			// calculate memory consumption
+			AIModel := ProfileAIModelOption{
+				AIModel:     "NLLB200",
+				AIModelType: "CT2",
+				Device:      s.Value,
+			}
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+		}
+
+		txtTranslatorPrecisionSelect.OnChanged = func(s CustomWidget.TextValueOption) {
 			precisionType := Hardwareinfo.Float32
 			switch s.Value {
 			case "float32":
@@ -749,6 +770,12 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			case "int8":
 				precisionType = Hardwareinfo.Int8
 			}
+			if txtTranslatorDeviceSelect.GetSelected().Value == "cpu" && (s.Value == "float16" || s.Value == "int8_float16") {
+				dialog.ShowInformation("Information", "Most CPU's do not support float16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
+			}
+			if txtTranslatorDeviceSelect.GetSelected().Value == "cuda" && (s.Value == "int16") {
+				dialog.ShowInformation("Information", "Most CUDA GPU's do not support int16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
+			}
 			// calculate memory consumption
 			AIModel := ProfileAIModelOption{
 				AIModel:     "NLLB200",
@@ -756,9 +783,25 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				Precision:   precisionType,
 			}
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+		}
+
+		profileForm.Append("A.I. Device for Text Translation", txtTranslatorDeviceSelect)
+
+		txtTranslatorSizeSelect := CustomWidget.NewTextValueSelect("txt_translator_size", []CustomWidget.TextValueOption{
+			{Text: "Small", Value: "small"},
+			{Text: "Medium", Value: "medium"},
+			{Text: "Large", Value: "large"},
+		}, func(s CustomWidget.TextValueOption) {
+			// calculate memory consumption
+			AIModel := ProfileAIModelOption{
+				AIModel:     "NLLB200",
+				AIModelType: "CT2",
+				AIModelSize: s.Value,
+			}
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
 		}, 0)
 
-		profileForm.Append("Text Translation Size", container.NewGridWithColumns(2, txtTranslatorDeviceSelect, txtTranslatorPrecisionSelect))
+		profileForm.Append("Text Translation Size", container.NewGridWithColumns(2, txtTranslatorSizeSelect, txtTranslatorPrecisionSelect))
 
 		profileForm.Append("", layout.NewSpacer())
 
@@ -780,6 +823,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "CUDA", Value: "cuda"},
 			{Text: "CPU", Value: "cpu"},
 		}, func(s CustomWidget.TextValueOption) {
+			if !Hardwareinfo.HasNVIDIACard() && s.Value == "cuda" {
+				dialog.ShowInformation("No NVIDIA Card found", "No NVIDIA Card found. You might need to use CPU instead for it to work.", fyne.CurrentApp().Driver().AllWindows()[1])
+			}
 			// calculate memory consumption
 			AIModel := ProfileAIModelOption{
 				AIModel:   "Silero",
@@ -831,10 +877,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Run_backend:              true,
 			Device_index:             -1,
 			Device_out_index:         -1,
-			Audio_api:                "MME",
+			Audio_api:                "WASAPI",
 			Audio_input_device:       "",
 			Audio_output_device:      "",
-			Ai_device:                "cuda",
+			Ai_device:                "cpu",
 			Model:                    "tiny",
 			Txt_translator_size:      "small",
 			Txt_translator_device:    "cpu",
@@ -862,7 +908,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Whisper_precision:             "float32",
 			Faster_whisper:                true,
 			Temperature_fallback:          true,
-			Phrase_time_limit:             10.0,
+			Phrase_time_limit:             30.0,
 			Pause:                         1.0,
 			Energy:                        300,
 			Beam_size:                     5,
@@ -872,7 +918,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Realtime_frame_multiply:       15,
 			Realtime_frequency_time:       1.0,
 			Realtime_whisper_model:        "",
-			Realtime_whisper_precision:    "float16",
+			Realtime_whisper_precision:    "float32",
 			Realtime_whisper_beam_size:    1,
 			Realtime_temperature_fallback: false,
 		}

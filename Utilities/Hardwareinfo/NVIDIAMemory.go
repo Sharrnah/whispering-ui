@@ -29,7 +29,7 @@ func HasNVIDIACard() bool {
 
 	for _, card := range gpu.GraphicsCards {
 		fmt.Printf(" %v\n", card)
-		if card.DeviceInfo.Vendor.Name == "NVIDIA" {
+		if strings.ToLower(card.DeviceInfo.Vendor.Name) == strings.ToLower("NVIDIA") {
 			fmt.Printf("NVIDIA Card found.\n")
 			return true
 		}
