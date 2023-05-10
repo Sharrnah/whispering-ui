@@ -672,7 +672,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Small (English only)", Value: "small.en"},
 			{Text: "Medium", Value: "medium"},
 			{Text: "Medium (English only)", Value: "medium.en"},
-			{Text: "Large (Defaults to Version 2)", Value: "large"},
+			{Text: "Large (Defaults to Version 2)", Value: "large-v2"},
 			{Text: "Large Version 1", Value: "large-v1"},
 			{Text: "Large Version 2", Value: "large-v2"},
 		}, func(s CustomWidget.TextValueOption) {

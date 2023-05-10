@@ -56,6 +56,7 @@ type WhisperProcessConfig struct {
 	DeviceIndex     string
 	DeviceOutIndex  string
 	SettingsFile    string
+	UiDownload      bool
 	Program         *exec.Cmd
 	ReaderBackend   *io.PipeReader
 	WriterBackend   *io.PipeWriter
@@ -165,18 +166,21 @@ func (c *WhisperProcessConfig) Start() {
 		var tmpReader io.Reader
 		var err error
 
+		cmdArguments := []string{
+			"--device_index", c.DeviceIndex,
+			"--device_out_index", c.DeviceOutIndex,
+			"--config", c.SettingsFile,
+		}
+
+		if c.UiDownload {
+			cmdArguments = append(cmdArguments, "--ui_download")
+		}
+
 		if Utilities.FileExists("audioWhisper.py") {
-			err = c.RunWithStreams("python", []string{"-u", "audioWhisper.py",
-				"--device_index", c.DeviceIndex,
-				"--device_out_index", c.DeviceOutIndex,
-				"--config", c.SettingsFile,
-			}, tmpReader, c.WriterBackend, c.WriterBackend)
+			cmdArguments = append([]string{"-u", "audioWhisper.py"}, cmdArguments...)
+			err = c.RunWithStreams("python", cmdArguments, tmpReader, c.WriterBackend, c.WriterBackend)
 		} else if Utilities.FileExists("audioWhisper/audioWhisper.exe") {
-			err = c.RunWithStreams("audioWhisper/audioWhisper.exe", []string{
-				"--device_index", c.DeviceIndex,
-				"--device_out_index", c.DeviceOutIndex,
-				"--config", c.SettingsFile,
-			}, tmpReader, c.WriterBackend, c.WriterBackend)
+			err = c.RunWithStreams("audioWhisper/audioWhisper.exe", cmdArguments, tmpReader, c.WriterBackend, c.WriterBackend)
 		} else {
 			err = errors.New("could not start audioWhisper")
 		}

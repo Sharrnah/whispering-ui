@@ -99,6 +99,13 @@ func (c *Client) Start() {
 				Type: "setting_update_req",
 			}
 			sendMessage.SendMessage()
+		} else {
+			// send info that backend is running locally
+			sendMessage := Fields.SendMessageStruct{
+				Type:  "ui_connected",
+				Value: true,
+			}
+			sendMessage.SendMessage()
 		}
 
 		defer close(done)
@@ -133,36 +140,48 @@ func (c *Client) Start() {
 		}
 	}()
 
-	for {
-		select {
-		case <-done:
-			return
-		case message := <-c.sendMessageChan:
-			HandleSendMessage(&message)
-			if message.Value != SkipMessage {
-				sendMessage, _ := json.Marshal(message)
-				err := c.Conn.WriteMessage(websocket.TextMessage, sendMessage)
-				if err != nil {
-					log.Println("write:", err)
-					//return
+	go func() {
+		for {
+			select {
+			//case <-done:
+			//	return
+			case message := <-c.sendMessageChan:
+				HandleSendMessage(&message)
+				if message.Value != SkipMessage {
+					sendMessage, _ := json.Marshal(message)
+					err := c.Conn.WriteMessage(websocket.TextMessage, sendMessage)
+					if err != nil {
+						log.Println("write:", err)
+						//return
+					}
 				}
-			}
 
-		case <-c.InterruptChan:
-			log.Println("interrupt")
+			case <-c.InterruptChan:
+				log.Println("interrupt")
 
-			// Cleanly close the connection by sending a close message and then
-			// waiting (with timeout) for the server to close the connection.
-			err := c.Conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
-			if err != nil {
-				log.Println("write close:", err)
+				// Cleanly close the connection by sending a close message and then
+				// waiting (with timeout) for the server to close the connection.
+				err := c.Conn.WriteMessage(websocket.CloseMessage, websocket.FormatCloseMessage(websocket.CloseNormalClosure, ""))
+				if err != nil {
+					log.Println("write close:", err)
+					return
+				}
+				select {
+				case <-done:
+				case <-time.After(time.Second):
+				}
 				return
 			}
+		}
+	}()
+
+	// keep function running until interrupted
+	for {
+		for {
 			select {
 			case <-done:
-			case <-time.After(time.Second):
+				return
 			}
-			return
 		}
 	}
 }

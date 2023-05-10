@@ -313,6 +313,20 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		if err == nil && len(ttsSpeechAudio.WavData) > 0 {
 			ttsSpeechAudio.SaveWav()
 		}
+	case "download":
+		download := Messages.DownloadMessage{}
+		err = json.Unmarshal(c.Raw, &download)
+		if err != nil {
+			dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[0])
+			return
+		}
+		go func() {
+			err = download.StartDownload()
+			if err != nil {
+				dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[0])
+				return
+			}
+		}()
 	}
 	if err != nil {
 		log.Printf("Unmarshal: %v", err)
