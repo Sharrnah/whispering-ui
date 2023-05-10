@@ -16,7 +16,7 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
   - [_Example Setup of Plugin VoiceVox (Japanese TTS)_](doc/plugin-example.md)
   - [Specific Audio configuration (TTS to Mic, Game Audio translation, etc.)](doc/audio-config.md)
 - [Advanced Features](#advanced-features)
-- [Additional Help](#additional-help)
+- [Additional Help (Discord)](#additional-help)
 - [Screenshots](#screenshots)
 
 ## Features
@@ -38,7 +38,7 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 <img src=doc/images/whispering-ui-dl.png width=305 alt="Speech 2 Text Tab">
 
 ## Installation
-1. After the download the latest version from the [**Releases**], extract it to a folder of your choice on a drive with enough free space.
+1. After downloading the latest version from the [**Releases**], extract it to a folder of your choice on a drive with enough free space. **(Do not run it directly from the zip file.)**
 2. [Install CUDA for GPU Acceleration](https://developer.nvidia.com/cuda-downloads) (Optional but recommended for NVIDIA GPUs).
 3. Run the **Whispering Tiger.exe** file.
 4. Let it download the latest version of **Whispering Tiger**. (It will ask to download the Platform.)
