@@ -6,7 +6,10 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"strings"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/Settings"
+	"whispering-tiger-ui/Utilities"
 	"whispering-tiger-ui/Websocket/Messages"
 )
 
@@ -17,13 +20,16 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 
 	switchButton := container.NewCenter(widget.NewButton("<==>", func() {
 		sourceLanguage := Fields.Field.SourceLanguageCombo.Selected
+		// use last detected language when switching between source and target language
+		if strings.HasPrefix(sourceLanguage, "Auto") && Settings.Config.Last_auto_txt_translate_lang != "" {
+			sourceLanguage = Utilities.LanguageMapList.GetName(Settings.Config.Last_auto_txt_translate_lang)
+		}
+
 		targetLanguage := Fields.Field.TargetLanguageCombo.Selected
 		if targetLanguage == "None" {
 			targetLanguage = "Auto"
 		}
-		if sourceLanguage == "Auto" {
-			sourceLanguage = "None"
-		}
+
 		Fields.Field.SourceLanguageCombo.SetSelected(targetLanguage)
 		Fields.Field.TargetLanguageCombo.SetSelected(sourceLanguage)
 

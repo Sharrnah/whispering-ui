@@ -65,6 +65,10 @@ func (res TranslateSetting) Update() *TranslateSetting {
 	// Set TargetLanguageCombo
 	if strings.ToLower(Fields.Field.TargetLanguageCombo.Selected) != strings.ToLower(InstalledLanguages.GetNameByCode(res.Trg_lang)) {
 		Fields.Field.TargetLanguageCombo.SetSelected(cases.Title(language.English, cases.Compact).String(InstalledLanguages.GetNameByCode(res.Trg_lang)))
+		// Set TargetLanguageTxtTranslateCombo if it is not set
+		if Fields.Field.TargetLanguageTxtTranslateCombo.Selected == "" {
+			Fields.Field.TargetLanguageTxtTranslateCombo.SetSelected(cases.Title(language.English, cases.Compact).String(InstalledLanguages.GetNameByCode(res.Trg_lang)))
+		}
 	}
 
 	checkValue, _ := Fields.DataBindings.TextTranslateEnabledDataBinding.Get()

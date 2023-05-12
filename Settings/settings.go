@@ -113,6 +113,9 @@ type Conf struct {
 	Plugin_settings      interface{}     `yaml:"plugin_settings,omitempty" json:"plugin_settings,omitempty"`
 	Plugin_timer_timeout interface{}     `yaml:"plugin_timer_timeout,omitempty" json:"plugin_timer_timeout,omitempty"`
 	Plugin_timer         interface{}     `yaml:"plugin_timer,omitempty" json:"plugin_timer,omitempty"`
+
+	// others
+	Last_auto_txt_translate_lang string
 }
 
 var ConfigValues map[string]interface{} = nil
@@ -136,6 +139,7 @@ var ExcludeConfigFields = []string{
 	"audio_api",
 	"audio_input_device",
 	"audio_output_device",
+	"last_auto_txt_translate_lang",
 }
 
 var Config Conf

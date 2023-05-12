@@ -510,6 +510,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		vadOnFullClipCheckbox := widget.NewCheck("+ Check on Full Clip", func(b bool) {})
 		vadOnFullClipCheckbox.Hide() // hide for now as it does not seem very useful
+
 		vadRealtimeCheckbox := widget.NewCheck("Realtime", func(b bool) {})
 		vadEnableCheckbox := widget.NewCheck("Enable", func(b bool) {
 			if b {
@@ -520,6 +521,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				vadConfidenceSliderWidget.Hide()
 				vadOnFullClipCheckbox.Hide()
 				vadRealtimeCheckbox.Hide()
+				if audioApiSelect.Selected != "MME" {
+					dialog.ShowInformation("Info", "Disabled VAD is only supported with \"MME\" Audio API.\nPlease make sure MME is selected as audio API.\n\n(Enabling VAD is highly recommended)", fyne.CurrentApp().Driver().AllWindows()[1])
+				}
 			}
 		})
 		profileForm.Append("VAD (Voice activity detection)", container.NewGridWithColumns(3, vadEnableCheckbox, vadOnFullClipCheckbox, vadRealtimeCheckbox))
