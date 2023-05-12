@@ -52,6 +52,8 @@ func (c *Client) Close() {
 func (c *Client) Start() {
 	previouslyConnected := false
 
+	runBackend := Settings.Config.Run_backend
+
 	statusBar := widget.NewProgressBarInfinite()
 	connectingStateContainer := container.NewVBox()
 	connectingStateDialog := dialog.NewCustom(
@@ -84,6 +86,7 @@ func (c *Client) Start() {
 		log.Println("retrying... ")
 		c.Conn, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
 	}
+	time.Sleep(100)
 
 	connectingStateDialog.Hide()
 	previouslyConnected = true
@@ -94,7 +97,7 @@ func (c *Client) Start() {
 
 	go func() {
 		// send remote settings request if running remote backend
-		if !Settings.Config.Run_backend {
+		if !runBackend {
 			sendMessage := Fields.SendMessageStruct{
 				Type: "setting_update_req",
 			}
@@ -115,14 +118,23 @@ func (c *Client) Start() {
 				log.Println("read:", err)
 				// retry
 				for err != nil {
-					time.Sleep(500)
-					log.Println("retrying... ")
+					log.Println("retrying after disconnect... ")
 					if previouslyConnected {
 						connectingStateDialog.Show()
 						previouslyConnected = false
 					}
 					c.Conn, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
+					time.Sleep(500)
 					connectingStateDialog.Hide()
+				}
+				if runBackend {
+					log.Println("send ui_connected!!!!!!!!!")
+					// send info that backend is running locally
+					sendMessage := Fields.SendMessageStruct{
+						Type:  "ui_connected",
+						Value: true,
+					}
+					sendMessage.SendMessage()
 				}
 				continue
 				//return

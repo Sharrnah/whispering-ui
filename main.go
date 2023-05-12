@@ -129,7 +129,9 @@ func main() {
 			RuntimeBackend.BackendsList[0].AttachEnvironment("Path", filepath.Join(appPath, "ffmpeg/bin"))
 		}
 		if Settings.Config.Run_backend {
-			RuntimeBackend.BackendsList[0].UiDownload = true
+			if !fyne.CurrentApp().Preferences().BoolWithFallback("DisableUiDownloads", false) {
+				RuntimeBackend.BackendsList[0].UiDownload = true
+			}
 			RuntimeBackend.BackendsList[0].Start()
 		}
 
