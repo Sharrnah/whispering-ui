@@ -14,12 +14,14 @@ import (
 const DefaultChunkSize int64 = 20 * 1024 * 1024 // 20 MB
 const defaultConcurrentDownloads = 1
 
-type OnProgress func(bytesWritten, contentLength uint64)
+type OnProgress func(bytesWritten, contentLength uint64, speed float64)
 
 type WriteCounter struct {
 	Total         uint64
 	ContentLength uint64
 	OnProgress    OnProgress
+	startTime     time.Time
+	speedMA       *MovingAverage
 }
 
 type Download struct {
@@ -39,9 +41,27 @@ type Download struct {
 	nextWrite           int64
 }
 
+func (d *Download) getRemoteFileSize() (int64, error) {
+	resp, err := http.Head(d.getCurrentUrl())
+	if err != nil {
+		return 0, err
+	}
+	defer resp.Body.Close()
+
+	if resp.StatusCode != http.StatusOK {
+		return 0, fmt.Errorf("unexpected status code: %d", resp.StatusCode)
+	}
+
+	return resp.ContentLength, nil
+}
+
 func (wc *WriteCounter) addBytes(n uint64) {
 	wc.Total += n
-	wc.OnProgress(wc.Total, wc.ContentLength)
+	elapsed := time.Since(wc.startTime).Seconds()
+	speed := float64(wc.Total) / elapsed
+	wc.speedMA.Add(speed)
+	avgSpeed := wc.speedMA.Average()
+	wc.OnProgress(wc.Total, wc.ContentLength, avgSpeed)
 }
 
 func (d *Download) DownloadFile(retries int) error {
@@ -53,6 +73,25 @@ func (d *Download) DownloadFile(retries int) error {
 	if d.ChunkSize == 0 {
 		d.ChunkSize = DefaultChunkSize
 	}
+	d.WriteCounter.speedMA = NewMovingAverage(movingAverageWindow) // 10 is the moving average window size
+	d.WriteCounter.startTime = time.Now()                          // Record the start time when download starts
+
+	// check if the server file is smaller than the local file (which means something is wrong)
+	// Call getRemoteFileSize to get the size of the remote file
+	remoteFileSize, err := d.getRemoteFileSize()
+	if err != nil {
+		return err
+	}
+	// Check if the local file exists and if it's larger than the remote file
+	localFileSize := d.getFileSize(d.Filepath + ".tmp")
+	if localFileSize > remoteFileSize {
+		// If the local file is larger than the remote file, delete the local file
+		err := os.Remove(d.Filepath + ".tmp")
+		if err != nil {
+			return err
+		}
+	}
+
 	return d.downloadFileWithRetry(retries)
 }
 
@@ -272,4 +311,40 @@ func (d *Download) getFileSize(filepath string) int64 {
 		return 0
 	}
 	return info.Size()
+}
+
+// ################
+// moving average
+// ################
+
+const movingAverageWindow = 5
+
+type MovingAverage struct {
+	size  int
+	sum   float64
+	queue []float64
+}
+
+func NewMovingAverage(size int) *MovingAverage {
+	return &MovingAverage{
+		size:  size,
+		sum:   0.0,
+		queue: make([]float64, 0, size),
+	}
+}
+
+func (ma *MovingAverage) Add(value float64) {
+	if len(ma.queue) >= ma.size {
+		ma.sum -= ma.queue[0]
+		ma.queue = ma.queue[1:]
+	}
+	ma.queue = append(ma.queue, value)
+	ma.sum += value
+}
+
+func (ma *MovingAverage) Average() float64 {
+	if len(ma.queue) == 0 {
+		return 0
+	}
+	return ma.sum / float64(len(ma.queue))
 }

@@ -19,7 +19,7 @@ import (
 	"whispering-tiger-ui/Resources"
 	"whispering-tiger-ui/RuntimeBackend"
 	"whispering-tiger-ui/Settings"
-	"whispering-tiger-ui/UpdateUtilitiy"
+	"whispering-tiger-ui/UpdateUtility"
 )
 
 func parseURL(urlStr string) *url.URL {
@@ -47,7 +47,7 @@ func buildAboutInfo() *fyne.Container {
 	aboutCard.SetImage(aboutImage)
 
 	checkForUpdatesButton := widget.NewButton("Check for updates", func() {
-		if !UpdateUtilitiy.VersionCheck(fyne.CurrentApp().Driver().AllWindows()[0], true) {
+		if !UpdateUtility.VersionCheck(fyne.CurrentApp().Driver().AllWindows()[0], true) {
 			dialog.ShowInformation("No update available", "You are running the latest version of Whispering Tiger.", fyne.CurrentApp().Driver().AllWindows()[0])
 		}
 	})

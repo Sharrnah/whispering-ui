@@ -1,4 +1,4 @@
-package UpdateUtilitiy
+package UpdateUtility
 
 import (
 	"fmt"
@@ -75,7 +75,7 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 		ConcurrentDownloads: 4,
 		ChunkSize:           15 * 1024 * 1024, // 15 MB
 	}
-	downloader.WriteCounter.OnProgress = func(progress, total uint64) {
+	downloader.WriteCounter.OnProgress = func(progress, total uint64, speed float64) {
 		if int64(total) == -1 {
 			statusBarContainer.Remove(statusBar)
 			statusBarContainer.Add(widget.NewProgressBarInfinite())
@@ -89,7 +89,16 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 				resumeStatusText = " (Resume)"
 			}
 
-			downloadingLabel.SetText("Downloading from " + locationString + "... " + humanize.Bytes(total) + resumeStatusText)
+			speedStr := ""
+			if speed < 1024 {
+				speedStr = fmt.Sprintf("%.2f B/s", speed)
+			} else if speed < 1024*1024 {
+				speedStr = fmt.Sprintf("%.2f KiB/s", speed/1024)
+			} else {
+				speedStr = fmt.Sprintf("%.2f MiB/s", speed/(1024*1024))
+			}
+
+			downloadingLabel.SetText("Downloading from " + locationString + "... " + humanize.Bytes(total) + " (" + speedStr + ") " + resumeStatusText)
 		}
 	}
 

@@ -17,7 +17,7 @@ import (
 
 const rootCacheFolder = ".cache"
 
-func DownloadFile(urls []string, targetDir string, checksum string) error {
+func DownloadFile(urls []string, targetDir string, checksum string, title string) error {
 	// find active window
 	window := fyne.CurrentApp().Driver().AllWindows()[0]
 	if len(fyne.CurrentApp().Driver().AllWindows()) == 1 && fyne.CurrentApp().Driver().AllWindows()[0] != nil {
@@ -38,7 +38,12 @@ func DownloadFile(urls []string, targetDir string, checksum string) error {
 	// create download dialog
 	statusBar := widget.NewProgressBar()
 	statusBarContainer := container.NewVBox(statusBar)
-	downloadDialog := dialog.NewCustom("Downloading "+filename, "Hide (Download will continue)", statusBarContainer, window)
+
+	dialogTitlePart := filename
+	if title != "" {
+		dialogTitlePart = title + " [" + filename + "]"
+	}
+	downloadDialog := dialog.NewCustom("Downloading "+dialogTitlePart, "Hide (Download will continue)", statusBarContainer, window)
 	downloadDialog.Show()
 	downloadingLabel := widget.NewLabel("Downloading... ")
 
@@ -70,7 +75,7 @@ func DownloadFile(urls []string, targetDir string, checksum string) error {
 		ConcurrentDownloads: 4,
 		ChunkSize:           15 * 1024 * 1024, // 15 MB
 	}
-	downloader.WriteCounter.OnProgress = func(progress, total uint64) {
+	downloader.WriteCounter.OnProgress = func(progress, total uint64, speed float64) {
 		if int64(total) == -1 {
 			statusBarContainer.Remove(statusBar)
 			statusBarContainer.Add(widget.NewProgressBarInfinite())
@@ -84,7 +89,16 @@ func DownloadFile(urls []string, targetDir string, checksum string) error {
 				resumeStatusText = " (Resume)"
 			}
 
-			downloadingLabel.SetText("Downloading from " + subdomain + "... " + humanize.Bytes(total) + resumeStatusText)
+			speedStr := ""
+			if speed < 1024 {
+				speedStr = fmt.Sprintf("%.2f B/s", speed)
+			} else if speed < 1024*1024 {
+				speedStr = fmt.Sprintf("%.2f KiB/s", speed/1024)
+			} else {
+				speedStr = fmt.Sprintf("%.2f MiB/s", speed/(1024*1024))
+			}
+
+			downloadingLabel.SetText("Downloading from " + subdomain + "... " + humanize.Bytes(total) + " (" + speedStr + ") " + resumeStatusText)
 		}
 	}
 
@@ -162,7 +176,7 @@ func (c *modelNameLinksMap) DownloadModel(modelName string, modelType string) er
 		return fmt.Errorf("no active window found")
 	}
 
-	err := DownloadFile(modelLinks.urls, modelCachePath, modelChecksum)
+	err := DownloadFile(modelLinks.urls, modelCachePath, modelChecksum, modelName+" "+modelType)
 	if err != nil {
 		dialog.ShowError(err, window)
 	}
