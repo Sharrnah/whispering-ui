@@ -70,7 +70,7 @@ func buildAboutInfo() *fyne.Container {
 	updateCheckAtStartupCheckbox.Checked = fyne.CurrentApp().Preferences().BoolWithFallback("CheckForUpdateAtStartup", true)
 
 	settingsLabel := widget.NewLabel("\nExperimental Flags:")
-	disableUiDownloadsCheckbox := widget.NewCheck("Disable experimental UI downloading AI Models instead of Python.", nil)
+	disableUiDownloadsCheckbox := widget.NewCheck("Disable experimental UI downloading of AI Models.", nil)
 	disableUiDownloadsCheckbox.OnChanged = func(b bool) {
 		fyne.CurrentApp().Preferences().SetBool("DisableUiDownloads", b)
 	}
