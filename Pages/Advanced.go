@@ -11,6 +11,7 @@ import (
 	"io"
 	"net/url"
 	"os"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -188,7 +189,31 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 		}
 	}
 
-	return container.NewVScroll(pluginAccordion)
+	pluginsContent := fyne.CanvasObject(nil)
+	if len(pluginFiles) == 0 {
+		openPluginsFolderButton := widget.NewButton("Open Plugins folder", func() {
+			appExec, _ := os.Executable()
+			appPath := filepath.Dir(appExec)
+			uiPluginsFolder, _ := url.Parse(filepath.Join(appPath, "Plugins"))
+			err := fyne.CurrentApp().OpenURL(uiPluginsFolder)
+			if err != nil {
+				println(err)
+				dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[0])
+			}
+		})
+		pluginsContent = container.NewCenter(
+			container.NewVBox(
+				widget.NewLabel("\nNo Plugins found.\nGo to the following link to find some:"),
+				widget.NewHyperlink("https://github.com/Sharrnah/whispering/blob/main/documentation/plugins.md", parseURL("https://github.com/Sharrnah/whispering/blob/main/documentation/plugins.md")),
+				widget.NewLabel("Download a Plugin you like and place the *.py file in the Plugins folder."),
+				openPluginsFolderButton,
+			),
+		)
+	} else {
+		pluginsContent = container.NewVScroll(pluginAccordion)
+	}
+
+	return pluginsContent
 }
 
 func CreateAdvancedWindow() fyne.CanvasObject {
