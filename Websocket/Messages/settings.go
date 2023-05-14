@@ -79,7 +79,7 @@ func (res TranslateSetting) Update() *TranslateSetting {
 	Fields.Field.TextTranslateEnabled.Refresh()
 
 	checkValue, _ = Fields.DataBindings.TextToSpeechEnabledDataBinding.Get()
-	if checkValue != res.Tts_enabled {
+	if checkValue != res.Tts_answer {
 		Fields.DataBindings.TextToSpeechEnabledDataBinding.Set(res.Tts_answer)
 	}
 	checkValue, _ = Fields.DataBindings.OSCEnabledDataBinding.Get()

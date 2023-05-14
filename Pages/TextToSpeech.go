@@ -6,6 +6,7 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
 )
 
@@ -43,7 +44,7 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 		sendMessage.SendMessage()
 	})
 
-	sendButton := widget.NewButtonWithIcon("Send to Text 2 Speech", theme.MediaPlayIcon(), func() {
+	sendFunction := func() {
 		valueData := struct {
 			Text     string `json:"text"`
 			ToDevice bool   `json:"to_device"`
@@ -58,7 +59,8 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 			Value: valueData,
 		}
 		sendMessage.SendMessage()
-	})
+	}
+	sendButton := widget.NewButtonWithIcon("Send to Text 2 Speech", theme.MediaPlayIcon(), sendFunction)
 	sendButton.Importance = widget.HighImportance
 
 	testButton := widget.NewButton("Test the Voice", func() {
@@ -97,6 +99,33 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 			container.New(layout.NewVBoxLayout(), buttonRow),
 		),
 	)
+
+	// add shortcuts
+	sendShortcut := CustomWidget.ShortcutEntrySubmit{
+		KeyName:  fyne.KeyReturn,
+		Modifier: fyne.KeyModifierControl,
+		Handler: func() {
+			if mainContent.Visible() {
+				sendFunction()
+			} else {
+				if Fields.Field.TtsEnabled.Checked {
+					sendFunction()
+				}
+				if Fields.Field.OscEnabled.Checked {
+					sendMessage := Fields.SendMessageStruct{
+						Type: "send_osc",
+						Value: struct {
+							Text *string `json:"text"`
+						}{
+							Text: &Fields.Field.TranscriptionTranslationInput.Text,
+						},
+					}
+					sendMessage.SendMessage()
+				}
+			}
+		},
+	}
+	Fields.Field.TranscriptionTranslationInput.AddCustomShortcut(sendShortcut)
 
 	return mainContent
 }

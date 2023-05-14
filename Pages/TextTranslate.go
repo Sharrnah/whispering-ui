@@ -7,6 +7,7 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"strings"
+	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
@@ -43,7 +44,7 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 
 	transcriptionRow := container.New(layout.NewGridLayout(2), Fields.Field.TranscriptionInput, Fields.Field.TranscriptionTranslationInput)
 
-	translateButton := widget.NewButtonWithIcon("translate", theme.ConfirmIcon(), func() {
+	translateOnlyFunction := func() {
 		fromLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.SourceLanguageCombo.Selected)
 		if fromLang == "" {
 			fromLang = "auto"
@@ -53,20 +54,56 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 		sendMessage := Fields.SendMessageStruct{
 			Type: "translate_req",
 			Value: struct {
-				Text      string `json:"text"`
-				From_lang string `json:"from_lang"`
-				To_lang   string `json:"to_lang"`
+				Text                string `json:"text"`
+				From_lang           string `json:"from_lang"`
+				To_lang             string `json:"to_lang"`
+				Ignore_send_options bool   `json:"ignore_send_options"`
 			}{
-				Text:      Fields.Field.TranscriptionInput.Text,
-				From_lang: fromLang,
-				To_lang:   toLang,
+				Text:                Fields.Field.TranscriptionInput.Text,
+				From_lang:           fromLang,
+				To_lang:             toLang,
+				Ignore_send_options: true,
 			},
 		}
 		sendMessage.SendMessage()
-	})
+	}
+	translateOnlyButton := widget.NewButtonWithIcon("Translate Only\n[CTRL+ALT+Enter]", theme.MenuExpandIcon(), translateOnlyFunction)
+
+	translateFunction := func() {
+		fromLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.SourceLanguageCombo.Selected)
+		if fromLang == "" {
+			fromLang = "auto"
+		}
+		toLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.TargetLanguageCombo.Selected)
+		//goland:noinspection GoSnakeCaseUsage
+		sendMessage := Fields.SendMessageStruct{
+			Type: "translate_req",
+			Value: struct {
+				Text                string `json:"text"`
+				From_lang           string `json:"from_lang"`
+				To_lang             string `json:"to_lang"`
+				Ignore_send_options bool   `json:"ignore_send_options"`
+			}{
+				Text:                Fields.Field.TranscriptionInput.Text,
+				From_lang:           fromLang,
+				To_lang:             toLang,
+				Ignore_send_options: false,
+			},
+		}
+		sendMessage.SendMessage()
+	}
+	translateButton := widget.NewButtonWithIcon("Translate (and send)\n[CTRL+Enter]", theme.ConfirmIcon(), translateFunction)
 	translateButton.Importance = widget.HighImportance
 
-	translateButtonRow := container.NewHBox(layout.NewSpacer(),
+	// quick options row
+	quickOptionsRow := container.New(
+		layout.NewVBoxLayout(),
+		Fields.Field.TtsEnabled,
+		Fields.Field.OscEnabled,
+	)
+
+	translateButtonRow := container.NewHBox(container.NewBorder(nil, nil, quickOptionsRow, nil), layout.NewSpacer(),
+		translateOnlyButton,
 		translateButton,
 	)
 
@@ -81,6 +118,28 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 			container.New(layout.NewVBoxLayout(), translateButtonRow),
 		),
 	)
+
+	// add shortcuts to source text field
+	translateShortcut := CustomWidget.ShortcutEntrySubmit{
+		KeyName:  fyne.KeyReturn,
+		Modifier: fyne.KeyModifierControl,
+		Handler:  translateFunction,
+	}
+	Fields.Field.TranscriptionInput.AddCustomShortcut(translateShortcut)
+
+	translateOnlyShortcut := CustomWidget.ShortcutEntrySubmit{
+		KeyName:  fyne.KeyReturn,
+		Modifier: fyne.KeyModifierControl | fyne.KeyModifierAlt,
+		Handler: func() {
+			if mainContent.Visible() {
+				translateOnlyFunction()
+			}
+		},
+	}
+	Fields.Field.TranscriptionInput.AddCustomShortcut(translateOnlyShortcut)
+
+	// add shortcuts to target text field
+	Fields.Field.TranscriptionTranslationInput.AddCustomShortcut(translateOnlyShortcut)
 
 	return mainContent
 }
