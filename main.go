@@ -148,6 +148,15 @@ func main() {
 		)
 		appTabs.SetTabLocation(container.TabLocationTop)
 
+		appTabs.OnSelected = func(tab *container.TabItem) {
+			if tab.Text == "Advanced" {
+				if tab.Content.(*container.AppTabs).SelectedIndex() == 0 {
+					// force trigger onselect for first tab (Plugins Tab)
+					tab.Content.(*container.AppTabs).OnSelected(tab.Content.(*container.AppTabs).Items[0])
+				}
+			}
+		}
+
 		w.SetContent(appTabs)
 
 		// set main window size

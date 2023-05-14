@@ -116,6 +116,13 @@ func getPluginStatusString(pluginClassName string) string {
 
 func CreatePluginSettingsPage() fyne.CanvasObject {
 
+	// load settings file for plugin settings
+	SettingsFile := Settings.Conf{}
+	err := SettingsFile.LoadYamlSettings(Settings.Config.SettingsFilename)
+	if err != nil {
+		SettingsFile = Settings.Config
+	}
+
 	// build plugins list
 	var pluginFiles []string
 	files, err := os.ReadDir("./Plugins")
@@ -154,8 +161,8 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 			// plugin settings
 			pluginSettingsForm := widget.NewMultiLineEntry()
 
-			if Settings.Config.Plugin_settings != nil {
-				if settings, ok := Settings.Config.Plugin_settings.(map[string]interface{})[pluginClassName]; ok {
+			if SettingsFile.Plugin_settings != nil {
+				if settings, ok := SettingsFile.Plugin_settings.(map[string]interface{})[pluginClassName]; ok {
 					if settingsMap, ok := settings.(map[string]interface{}); ok {
 						settingsStr, err := yaml.Marshal(settingsMap)
 						if err != nil {
@@ -172,11 +179,11 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 					println(err)
 					dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[0])
 				} else {
-					Settings.Config.Plugin_settings.(map[string]interface{})[pluginClassName] = settingsMap
+					SettingsFile.Plugin_settings.(map[string]interface{})[pluginClassName] = settingsMap
 					sendMessage := Fields.SendMessageStruct{
 						Type:  "setting_change",
 						Name:  "plugin_settings",
-						Value: Settings.Config.Plugin_settings,
+						Value: SettingsFile.Plugin_settings,
 					}
 					sendMessage.SendMessage()
 				}
