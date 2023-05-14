@@ -208,14 +208,14 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 				dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[0])
 			}
 		})
-		pluginsContent = container.NewCenter(
+		pluginsContent = container.NewVScroll(container.NewCenter(
 			container.NewVBox(
 				widget.NewLabel("\nNo Plugins found.\nGo to the following link to find some:"),
 				widget.NewHyperlink("https://github.com/Sharrnah/whispering/blob/main/documentation/plugins.md", parseURL("https://github.com/Sharrnah/whispering/blob/main/documentation/plugins.md")),
 				widget.NewLabel("Download a Plugin you like and place the *.py file in the Plugins folder."),
 				openPluginsFolderButton,
 			),
-		)
+		))
 	} else {
 		pluginsContent = container.NewVScroll(pluginAccordion)
 	}
