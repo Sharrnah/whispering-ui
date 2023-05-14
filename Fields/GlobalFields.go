@@ -10,7 +10,7 @@ import (
 	"whispering-tiger-ui/CustomWidget"
 )
 
-const SttTextTranslateLabelConst = "Automatic Text Translation from %s to %s"
+const SttTextTranslateLabelConst = "Automatic Text Translate from %s to %s"
 
 var Field = struct {
 	RealtimeResultLabel               *widget.Label // only displayed if realtime is enabled
@@ -78,10 +78,15 @@ var Field = struct {
 			}
 			sendMessage.SendMessage()
 		}))
-		entry.AddAdditionalMenuItem(fyne.NewMenuItem("Send to OSC", func() {
+		entry.AddAdditionalMenuItem(fyne.NewMenuItem("Send to OSC (VRChat)", func() {
 			sendMessage := SendMessageStruct{
-				Type:  "send_osc",
-				Value: &entry.Text,
+				Type: "send_osc",
+				//Value: &entry.Text,
+				Value: struct {
+					Text *string `json:"text"`
+				}{
+					Text: &entry.Text,
+				},
 			}
 			sendMessage.SendMessage()
 		}))
@@ -107,10 +112,16 @@ var Field = struct {
 			}
 			sendMessage.SendMessage()
 		}))
-		entry.AddAdditionalMenuItem(fyne.NewMenuItem("Send to OSC", func() {
+		entry.AddAdditionalMenuItem(fyne.NewMenuItem("Send to OSC (VRChat)", func() {
+
 			sendMessage := SendMessageStruct{
-				Type:  "send_osc",
-				Value: &entry.Text,
+				Type: "send_osc",
+				//Value: &entry.Text,
+				Value: struct {
+					Text *string `json:"text"`
+				}{
+					Text: &entry.Text,
+				},
 			}
 			sendMessage.SendMessage()
 		}))
@@ -157,7 +168,7 @@ var Field = struct {
 	}),
 	TextTranslateEnabled: widget.NewCheckWithData(fmt.Sprintf(SttTextTranslateLabelConst, "?", "?"), DataBindings.TextTranslateEnabledDataBinding),
 	TtsEnabled:           widget.NewCheckWithData("Automatic Text 2 Speech", DataBindings.TextToSpeechEnabledDataBinding),
-	OscEnabled:           widget.NewCheckWithData("Automatic OSC", DataBindings.OSCEnabledDataBinding),
+	OscEnabled:           widget.NewCheckWithData("Automatic OSC (VRChat)", DataBindings.OSCEnabledDataBinding),
 
 	OcrLanguageCombo: widget.NewSelect([]string{}, func(value string) {
 		sendMessage := SendMessageStruct{
