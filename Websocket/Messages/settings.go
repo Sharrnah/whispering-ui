@@ -110,10 +110,15 @@ func (res TranslateSetting) Update() *TranslateSetting {
 	}
 
 	// set oscEnabledLabel Update function
+	if res.OscAutoProcessingEnabled {
+		Fields.Field.OscLimitHint.Show()
+	} else {
+		Fields.Field.OscLimitHint.Hide()
+	}
 	Fields.OscLimitHintUpdateFunc = func() {
-		transcriptionInputCount := len(Fields.Field.TranscriptionInput.Text)
-		transcriptionTranslationInputCount := len(Fields.Field.TranscriptionTranslationInput.Text)
-		oscSplitCount := len(Settings.Config.Osc_type_transfer_split)
+		transcriptionInputCount := Utilities.CountUTF16CodeUnits(Fields.Field.TranscriptionInput.Text)
+		transcriptionTranslationInputCount := Utilities.CountUTF16CodeUnits(Fields.Field.TranscriptionTranslationInput.Text)
+		oscSplitCount := Utilities.CountUTF16CodeUnits(Settings.Config.Osc_type_transfer_split)
 		maxCount := res.Conf.Osc_chat_limit
 
 		Fields.Field.OscLimitHint.Text = fmt.Sprintf(Fields.OscLimitLabelConst, 0, maxCount)

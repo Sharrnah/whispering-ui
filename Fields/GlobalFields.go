@@ -252,6 +252,11 @@ func init() {
 		sendMessage.SendMessage()
 	}
 	Field.OscEnabled.OnChanged = func(value bool) {
+		if value {
+			Field.OscLimitHint.Show()
+		} else {
+			Field.OscLimitHint.Hide()
+		}
 		sendMessage := SendMessageStruct{
 			Type:  "setting_change",
 			Name:  "osc_auto_processing_enabled",
