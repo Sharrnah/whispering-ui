@@ -42,7 +42,10 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 
 	languageRow := container.New(layout.NewGridLayout(2), sourceLanguageRow, targetLanguageRow)
 
-	transcriptionRow := container.New(layout.NewGridLayout(2), Fields.Field.TranscriptionInput, Fields.Field.TranscriptionTranslationInput)
+	transcriptionRow := container.New(layout.NewGridLayout(2),
+		container.NewBorder(nil, Fields.Field.TranscriptionInputHint, nil, nil, Fields.Field.TranscriptionInput),
+		container.NewBorder(nil, Fields.Field.TranscriptionTranslationInputHint, nil, nil, Fields.Field.TranscriptionTranslationInput),
+	)
 
 	translateOnlyFunction := func() {
 		fromLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.SourceLanguageCombo.Selected)
@@ -99,7 +102,7 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 	quickOptionsRow := container.New(
 		layout.NewVBoxLayout(),
 		Fields.Field.TtsEnabled,
-		Fields.Field.OscEnabled,
+		container.NewBorder(nil, nil, nil, Fields.Field.OscLimitHint, Fields.Field.OscEnabled),
 	)
 
 	translateButtonRow := container.NewHBox(container.NewBorder(nil, nil, quickOptionsRow, nil), layout.NewSpacer(),

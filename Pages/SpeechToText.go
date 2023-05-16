@@ -25,8 +25,8 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 
 	transcriptionRow := container.New(
 		layout.NewGridLayout(2),
-		Fields.Field.TranscriptionInput,
-		Fields.Field.TranscriptionTranslationInput,
+		container.NewBorder(nil, Fields.Field.TranscriptionInputHint, nil, nil, Fields.Field.TranscriptionInput),
+		container.NewBorder(nil, Fields.Field.TranscriptionTranslationInputHint, nil, nil, Fields.Field.TranscriptionTranslationInput),
 	)
 
 	// quick options row

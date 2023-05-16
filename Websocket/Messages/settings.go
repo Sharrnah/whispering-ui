@@ -109,6 +109,26 @@ func (res TranslateSetting) Update() *TranslateSetting {
 		Fields.Field.OcrLanguageCombo.SetSelected(OcrLanguagesList.GetNameByCode(res.Ocr_lang))
 	}
 
+	// set oscEnabledLabel Update function
+	Fields.OscLimitHintUpdateFunc = func() {
+		transcriptionInputCount := len(Fields.Field.TranscriptionInput.Text)
+		transcriptionTranslationInputCount := len(Fields.Field.TranscriptionTranslationInput.Text)
+		oscSplitCount := len(Settings.Config.Osc_type_transfer_split)
+		maxCount := res.Conf.Osc_chat_limit
+
+		Fields.Field.OscLimitHint.Text = fmt.Sprintf(Fields.OscLimitLabelConst, 0, maxCount)
+		switch res.Conf.Osc_type_transfer {
+		case "source":
+			Fields.Field.OscLimitHint.Text = fmt.Sprintf(Fields.OscLimitLabelConst, transcriptionInputCount, maxCount)
+		case "translation_result":
+			Fields.Field.OscLimitHint.Text = fmt.Sprintf(Fields.OscLimitLabelConst, transcriptionTranslationInputCount, maxCount)
+		case "both":
+			Fields.Field.OscLimitHint.Text = fmt.Sprintf(Fields.OscLimitLabelConst, transcriptionInputCount+oscSplitCount+transcriptionTranslationInputCount, maxCount)
+		}
+		Fields.Field.OscLimitHint.Refresh()
+	}
+	Fields.OscLimitHintUpdateFunc()
+
 	Settings.Config = res.Conf
 
 	return &res

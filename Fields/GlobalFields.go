@@ -3,7 +3,9 @@ package Fields
 import (
 	"fmt"
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/fyne-io/terminal"
 	"log"
@@ -11,6 +13,9 @@ import (
 )
 
 const SttTextTranslateLabelConst = "Automatic Text Translate from %s to %s"
+const OscLimitLabelConst = "[%d / %d]"
+
+var OscLimitHintUpdateFunc = func() {}
 
 var Field = struct {
 	RealtimeResultLabel               *widget.Label // only displayed if realtime is enabled
@@ -19,7 +24,9 @@ var Field = struct {
 	TranscriptionTaskCombo            *widget.Select
 	TranscriptionSpeakerLanguageCombo *widget.Select
 	TranscriptionInput                *CustomWidget.EntryWithPopupMenu
+	TranscriptionInputHint            *canvas.Text
 	TranscriptionTranslationInput     *CustomWidget.EntryWithPopupMenu
+	TranscriptionTranslationInputHint *canvas.Text
 	SourceLanguageCombo               *CustomWidget.TextValueSelect
 	TargetLanguageCombo               *widget.Select
 	TargetLanguageTxtTranslateCombo   *widget.Select
@@ -28,6 +35,7 @@ var Field = struct {
 	TextTranslateEnabled              *widget.Check
 	TtsEnabled                        *widget.Check
 	OscEnabled                        *widget.Check
+	OscLimitHint                      *canvas.Text
 	OcrLanguageCombo                  *widget.Select
 	OcrWindowCombo                    *CustomWidget.TappableSelect
 	OcrImageContainer                 *fyne.Container
@@ -92,6 +100,7 @@ var Field = struct {
 		}))
 		return entry
 	}(),
+	TranscriptionInputHint: canvas.NewText("0", theme.PlaceHolderColor()),
 	TranscriptionTranslationInput: func() *CustomWidget.EntryWithPopupMenu {
 		entry := CustomWidget.NewMultiLineEntry()
 		entry.Wrapping = fyne.TextWrapWord
@@ -127,6 +136,7 @@ var Field = struct {
 		}))
 		return entry
 	}(),
+	TranscriptionTranslationInputHint: canvas.NewText("0", theme.PlaceHolderColor()),
 	SourceLanguageCombo: CustomWidget.NewTextValueSelect("src_lang", []CustomWidget.TextValueOption{
 		{
 			Text:  "Auto",
@@ -169,6 +179,7 @@ var Field = struct {
 	TextTranslateEnabled: widget.NewCheckWithData(fmt.Sprintf(SttTextTranslateLabelConst, "?", "?"), DataBindings.TextTranslateEnabledDataBinding),
 	TtsEnabled:           widget.NewCheckWithData("Automatic Text 2 Speech", DataBindings.TextToSpeechEnabledDataBinding),
 	OscEnabled:           widget.NewCheckWithData("Automatic OSC (VRChat)", DataBindings.OSCEnabledDataBinding),
+	OscLimitHint:         canvas.NewText(fmt.Sprintf(OscLimitLabelConst, 0, 0), theme.PlaceHolderColor()),
 
 	OcrLanguageCombo: widget.NewSelect([]string{}, func(value string) {
 		sendMessage := SendMessageStruct{
@@ -254,6 +265,25 @@ func init() {
 			Type: "get_windows_list",
 		}
 		sendMessage.SendMessage()
+	}
+
+	Field.OscLimitHint.TextSize = theme.TextSize()
+
+	Field.TranscriptionInputHint.TextSize = theme.CaptionTextSize()
+	Field.TranscriptionInputHint.Alignment = fyne.TextAlignLeading
+	Field.TranscriptionInput.OnChanged = func(value string) {
+		Field.TranscriptionInputHint.Text = fmt.Sprintf("%d", len([]rune(value)))
+		Field.TranscriptionInputHint.Refresh()
+
+		OscLimitHintUpdateFunc()
+	}
+	Field.TranscriptionTranslationInputHint.TextSize = theme.CaptionTextSize()
+	Field.TranscriptionTranslationInputHint.Alignment = fyne.TextAlignLeading
+	Field.TranscriptionTranslationInput.OnChanged = func(value string) {
+		Field.TranscriptionTranslationInputHint.Text = fmt.Sprintf("%d", len([]rune(value)))
+		Field.TranscriptionTranslationInputHint.Refresh()
+
+		OscLimitHintUpdateFunc()
 	}
 
 }

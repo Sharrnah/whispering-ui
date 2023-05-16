@@ -95,7 +95,9 @@ type Conf struct {
 	Osc_convert_ascii           bool   `yaml:"osc_convert_ascii" json:"osc_convert_ascii"`
 	Osc_auto_processing_enabled bool   `yaml:"osc_auto_processing_enabled" json:"osc_auto_processing_enabled"`
 	Osc_chat_prefix             string `yaml:"osc_chat_prefix" json:"osc_chat_prefix"`
+	Osc_chat_limit              int    `yaml:"osc_chat_limit" json:"osc_chat_limit"`
 	Osc_type_transfer           string `yaml:"osc_type_transfer" json:"osc_type_transfer"`
+	Osc_type_transfer_split     string `yaml:"osc_type_transfer_split" json:"osc_type_transfer_split"`
 
 	// OCR settings
 	Ocr_lang        string `yaml:"ocr_lang" json:"ocr_lang"`
