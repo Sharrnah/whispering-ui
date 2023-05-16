@@ -40,6 +40,7 @@ type Profile struct {
 	Whisper_precision        string      `yaml:"whisper_precision"`
 	Faster_whisper           bool        `yaml:"faster_whisper"`
 	Realtime                 bool        `yaml:"realtime"`
+	Push_to_talk_key         string      `yaml:"push_to_talk_key"`
 }
 
 func (p *Profile) Load(fileName string) {

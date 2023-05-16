@@ -69,6 +69,7 @@ type Conf struct {
 	Realtime_whisper_precision    string      `yaml:"realtime_whisper_precision" json:"realtime_whisper_precision"`
 	Realtime_whisper_beam_size    int         `yaml:"realtime_whisper_beam_size" json:"realtime_whisper_beam_size"`
 	Realtime_temperature_fallback bool        `yaml:"realtime_temperature_fallback" json:"realtime_temperature_fallback"`
+	Push_to_talk_key              string      `yaml:"push_to_talk_key" json:"push_to_talk_key"`
 
 	// text translate settings
 	Txt_translate            bool   `yaml:"txt_translate" json:"txt_translate"`

@@ -512,21 +512,30 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		vadOnFullClipCheckbox.Hide() // hide for now as it does not seem very useful
 
 		vadRealtimeCheckbox := widget.NewCheck("Realtime", func(b bool) {})
+
+		PushToTalkInput := CustomWidget.NewHotKeyEntry()
+		PushToTalkInput.PlaceHolder = "Keypress"
+
+		pushToTalkBlock := container.NewBorder(nil, nil, container.NewHBox(widget.NewLabel("Push to Talk"), widget.NewIcon(theme.ComputerIcon())), nil, PushToTalkInput)
+
 		vadEnableCheckbox := widget.NewCheck("Enable", func(b bool) {
 			if b {
 				vadConfidenceSliderWidget.Show()
 				// vadOnFullClipCheckbox.Show()
 				vadRealtimeCheckbox.Show()
+				pushToTalkBlock.Show()
 			} else {
 				vadConfidenceSliderWidget.Hide()
 				vadOnFullClipCheckbox.Hide()
 				vadRealtimeCheckbox.Hide()
+				pushToTalkBlock.Hide()
 				if audioApiSelect.Selected != "MME" {
 					dialog.ShowInformation("Info", "Disabled VAD is only supported with \"MME\" Audio API.\nPlease make sure MME is selected as audio API.\n\n(Enabling VAD is highly recommended)", fyne.CurrentApp().Driver().AllWindows()[1])
 				}
 			}
 		})
-		profileForm.Append("VAD (Voice activity detection)", container.NewGridWithColumns(3, vadEnableCheckbox, vadOnFullClipCheckbox, vadRealtimeCheckbox))
+
+		profileForm.Append("VAD (Voice activity detection)", container.NewGridWithColumns(3, vadEnableCheckbox, vadOnFullClipCheckbox, vadRealtimeCheckbox, pushToTalkBlock))
 		appendWidgetToForm(profileForm, "VAD Speech confidence", container.NewBorder(nil, nil, nil, vadConfidenceSliderState, vadConfidenceSliderWidget), "The confidence level required to detect speech.")
 
 		energySliderWidget := widget.NewSlider(0, EnergySliderMax)
@@ -577,7 +586,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					detectDialog.Hide()
 				}
 			}, fyne.CurrentApp().Driver().AllWindows()[1])
-		energyHelpBtn := widget.NewButtonWithIcon("Autodetect", theme.SearchIcon(), func() {
+		energyHelpBtn := widget.NewButtonWithIcon("Autodetect", theme.VolumeUpIcon(), func() {
 			autoDetectEnergyDialog.Show()
 		})
 		energySliderState := widget.NewLabel("0.0")
@@ -903,6 +912,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Vad_confidence_threshold: "0.4",
 			Vad_num_samples:          3000,
 			Vad_thread_num:           1,
+			Push_to_talk_key:         "",
 
 			Speaker_change_check:            false,
 			Speaker_similarity_threshold:    0.7,
@@ -992,6 +1002,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Check).SetChecked(profileSettings.Vad_enabled)
 		profileForm.Items[7].Widget.(*fyne.Container).Objects[1].(*widget.Check).SetChecked(profileSettings.Vad_on_full_clip)
 		profileForm.Items[7].Widget.(*fyne.Container).Objects[2].(*widget.Check).SetChecked(profileSettings.Realtime)
+		profileForm.Items[7].Widget.(*fyne.Container).Objects[3].(*fyne.Container).Objects[0].(*CustomWidget.HotKeyEntry).SetText(profileSettings.Push_to_talk_key)
 
 		VadConfidenceThreshold, _ := strconv.ParseFloat(profileSettings.Vad_confidence_threshold, 64)
 
@@ -1059,6 +1070,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			profileSettings.Vad_enabled = profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Check).Checked
 			profileSettings.Vad_on_full_clip = profileForm.Items[7].Widget.(*fyne.Container).Objects[1].(*widget.Check).Checked
 			profileSettings.Realtime = profileForm.Items[7].Widget.(*fyne.Container).Objects[2].(*widget.Check).Checked
+			profileSettings.Push_to_talk_key = profileForm.Items[7].Widget.(*fyne.Container).Objects[3].(*fyne.Container).Objects[0].(*CustomWidget.HotKeyEntry).Text
 			profileSettings.Vad_confidence_threshold = fmt.Sprintf("%f", profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value)
 
 			profileSettings.Energy = int(profileForm.Items[9].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value)
