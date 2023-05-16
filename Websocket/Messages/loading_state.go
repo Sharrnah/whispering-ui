@@ -25,6 +25,18 @@ func (res LoadingState) Update() *LoadingState {
 		LoadingStateDialog.Hide()
 		return &res
 	}
+	// also hide if all states are false
+	allFalse := true
+	for _, value := range res.States {
+		if value {
+			allFalse = false
+			break
+		}
+	}
+	if allFalse {
+		LoadingStateDialog.Hide()
+        return &res
+	}
 
 	LoadingStateContainer.RemoveAll()
 	showLoading := false
