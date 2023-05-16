@@ -114,6 +114,14 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			return
 		}
 		errorMessage.ShowError(fyne.CurrentApp().Driver().AllWindows()[0])
+	case "info":
+		errorMessage := Messages.ExceptionMessage{}
+		err = json.Unmarshal(c.Raw, &errorMessage)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		errorMessage.ShowInfo(fyne.CurrentApp().Driver().AllWindows()[0])
 	case "installed_languages":
 		err = json.Unmarshal(c.Raw, &Messages.InstalledLanguages)
 		if err != nil {

@@ -20,7 +20,7 @@ import (
 
 var updateInfoUrl = "https://s3.libs.space:9000/projects/whispering/latest.yaml"
 
-func versionDownload(updater Updater.UpdatePackages, packageName, filename string, window fyne.Window, startBackend bool, progressTitle string) error {
+func versionDownload(updater Updater.UpdatePackages, packageName, filename string, window fyne.Window, startBackend bool, progressTitle string, cleanUpFunc func()) error {
 	statusBar := widget.NewProgressBar()
 	statusBarContainer := container.NewVBox(statusBar)
 	downloadDialog := dialog.NewCustom(progressTitle, "Hide (Download will continue)", statusBarContainer, window)
@@ -128,8 +128,15 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 	}
 
 	// wait a bit before trying to extract
-	time.Sleep(1 * time.Second)
+	time.Sleep(2 * time.Second)
 
+	// clean up before extracting
+	if cleanUpFunc != nil {
+		statusBarContainer.Add(widget.NewLabel("Removing old version..."))
+		cleanUpFunc()
+	}
+
+	// extract
 	statusBarContainer.Add(widget.NewLabel("Extracting..."))
 	statusBarContainer.Refresh()
 	err = Updater.Unzip(filename, filepath.Dir(appExec))
@@ -202,7 +209,15 @@ func VersionCheck(window fyne.Window, startBackend bool) bool {
 		dialog.ShowConfirm(platformUpdateTitle, platformUpdateText, func(b bool) {
 			if b {
 				go func() {
-					err = versionDownload(updater, "ai_platform", "audioWhisper_platform.zip", window, startBackend, progressTitle)
+					cleanUpFunc := func() {
+						appExec, _ := os.Executable()
+						oldVersionDir := filepath.Join(filepath.Dir(appExec), "audioWhisper")
+						err := os.RemoveAll(oldVersionDir)
+						if err != nil {
+							dialog.ShowError(err, window)
+						}
+					}
+					err = versionDownload(updater, "ai_platform", "audioWhisper_platform.zip", window, startBackend, progressTitle, cleanUpFunc)
 					if err == nil {
 						packageInfo := updater.Packages["ai_platform"]
 						packageInfo.WriteYaml(".current_platform.yaml")

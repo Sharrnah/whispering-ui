@@ -21,3 +21,12 @@ func (res ExceptionMessage) ShowError(window fyne.Window) {
 	)
 	errorDialog.Show()
 }
+
+func (res ExceptionMessage) ShowInfo(window fyne.Window) {
+	infoDialog := dialog.NewInformation(
+		"Info",
+		res.ErrorMessage,
+		window,
+	)
+	infoDialog.Show()
+}
