@@ -75,8 +75,6 @@ func (res TranslateSetting) Update() *TranslateSetting {
 	if checkValue != res.Txt_translate {
 		Fields.DataBindings.TextTranslateEnabledDataBinding.Set(res.Txt_translate)
 	}
-	Fields.Field.TextTranslateEnabled.Text = fmt.Sprintf(Fields.SttTextTranslateLabelConst, Fields.Field.SourceLanguageCombo.GetSelected().Value, Fields.Field.TargetLanguageCombo.Selected)
-	Fields.Field.TextTranslateEnabled.Refresh()
 
 	checkValue, _ = Fields.DataBindings.TextToSpeechEnabledDataBinding.Get()
 	if checkValue != res.Tts_answer {

@@ -189,7 +189,13 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 				}
 			}
 
-			pluginSettingsForm.SetMinRowsVisible(6)
+			// count number of lines in pluginSettingsForm and set minRowsVisible
+			lines := strings.Count(pluginSettingsForm.Text, "\n")
+			if lines < 5 {
+				lines = 5
+			}
+			pluginSettingsForm.SetMinRowsVisible(lines + 1)
+
 			pluginSettings.Add(pluginSettingsForm)
 
 			pluginAccordion.Append(pluginAccordionItem)

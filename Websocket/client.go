@@ -143,9 +143,11 @@ func (c *Client) Start() {
 			previouslyConnected = true
 
 			var msg MessageStruct
-			messageStruct := msg.GetMessage(message)
-			if messageStruct != nil {
-				msg.HandleReceiveMessage()
+			if message != nil && len(message) > 0 {
+				messageStruct := msg.GetMessage(message)
+				if messageStruct != nil {
+					msg.HandleReceiveMessage()
+				}
 			}
 
 			//log.Printf("recv: %s", msg)
@@ -161,10 +163,12 @@ func (c *Client) Start() {
 				HandleSendMessage(&message)
 				if message.Value != SkipMessage {
 					sendMessage, _ := json.Marshal(message)
-					err := c.Conn.WriteMessage(websocket.TextMessage, sendMessage)
-					if err != nil {
-						log.Println("write:", err)
-						//return
+					if c.Conn != nil { // make sure connection is not closed before sending message
+						err := c.Conn.WriteMessage(websocket.TextMessage, sendMessage)
+						if err != nil {
+							log.Println("write:", err)
+							//return
+						}
 					}
 				}
 

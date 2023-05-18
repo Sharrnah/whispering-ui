@@ -104,13 +104,15 @@ type Conf struct {
 	Ocr_window_name string `yaml:"ocr_window_name" json:"ocr_window_name"`
 
 	// TTS settings
-	Tts_enabled       bool     `yaml:"tts_enabled" json:"tts_enabled"`
-	Tts_ai_device     string   `yaml:"tts_ai_device" json:"tts_ai_device"`
-	Tts_answer        bool     `yaml:"tts_answer" json:"tts_answer"`
-	Tts_model         []string `yaml:"tts_model" json:"tts_model"`
-	Tts_voice         string   `yaml:"tts_voice" json:"tts_voice"`
-	Tts_prosody_rate  string   `yaml:"tts_prosody_rate" json:"tts_prosody_rate"`
-	Tts_prosody_pitch string   `yaml:"tts_prosody_pitch" json:"tts_prosody_pitch"`
+	Tts_enabled                   bool     `yaml:"tts_enabled" json:"tts_enabled"`
+	Tts_ai_device                 string   `yaml:"tts_ai_device" json:"tts_ai_device"`
+	Tts_answer                    bool     `yaml:"tts_answer" json:"tts_answer"`
+	Tts_model                     []string `yaml:"tts_model" json:"tts_model"`
+	Tts_voice                     string   `yaml:"tts_voice" json:"tts_voice"`
+	Tts_prosody_rate              string   `yaml:"tts_prosody_rate" json:"tts_prosody_rate"`
+	Tts_prosody_pitch             string   `yaml:"tts_prosody_pitch" json:"tts_prosody_pitch"`
+	Tts_use_secondary_playback    bool     `yaml:"tts_use_secondary_playback" json:"tts_use_secondary_playback"`
+	Tts_secondary_playback_device int      `yaml:"tts_secondary_playback_device" json:"tts_secondary_playback_device"`
 
 	// Plugin Settings
 	Plugins              map[string]bool `yaml:"plugins,omitempty" json:"plugins,omitempty"`

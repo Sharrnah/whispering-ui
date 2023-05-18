@@ -218,7 +218,7 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		if c.OriginalText != "" {
 			Fields.Field.TranscriptionInput.SetText(c.OriginalText)
 		}
-		if Fields.Field.SourceLanguageCombo.GetSelected().Value == "Auto" {
+		if Fields.Field.SourceLanguageCombo.GetSelected() != nil && Fields.Field.SourceLanguageCombo.GetSelected().Value == "Auto" {
 			langName := Utilities.LanguageMapList.GetName(c.TxtFromLang)
 			Settings.Config.Last_auto_txt_translate_lang = c.TxtFromLang
 			if langName == "" {
