@@ -128,7 +128,7 @@ func (c *Client) Start() {
 					connectingStateDialog.Hide()
 				}
 				if runBackend {
-					log.Println("send ui_connected!!!!!!!!!")
+					log.Println("send ui_connected")
 					// send info that backend is running locally
 					sendMessage := Fields.SendMessageStruct{
 						Type:  "ui_connected",
