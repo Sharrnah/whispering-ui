@@ -6,13 +6,16 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"gopkg.in/yaml.v3"
+	"image/color"
 	"io"
 	"net/url"
 	"os"
 	"path/filepath"
 	"regexp"
+	"sort"
 	"strconv"
 	"strings"
 	"time"
@@ -134,12 +137,12 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 	for _, file := range files {
 		if !file.IsDir() && !strings.HasPrefix(file.Name(), ".") && !strings.HasPrefix(file.Name(), "__init__") && (strings.HasSuffix(file.Name(), ".py")) {
 			pluginFiles = append(pluginFiles, file.Name())
-			pluginSettings := container.NewVBox()
+			pluginSettingsContainer := container.NewVBox()
 			pluginClassName := GetClassNameOfPlugin("./Plugins/" + file.Name())
 
 			pluginAccordionItem := widget.NewAccordionItem(
 				pluginClassName+getPluginStatusString(pluginClassName),
-				pluginSettings,
+				pluginSettingsContainer,
 			)
 
 			// plugin enabled checkbox
@@ -156,47 +159,41 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 				pluginAccordion.Refresh()
 			})
 			pluginEnabledCheckbox.Checked = Settings.Config.Plugins[pluginClassName]
-			pluginSettings.Add(pluginEnabledCheckbox)
+			pluginSettingsContainer.Add(pluginEnabledCheckbox)
 
-			// plugin settings
-			pluginSettingsForm := widget.NewMultiLineEntry()
+			line := canvas.NewHorizontalGradient(&color.NRGBA{R: 198, G: 123, B: 0, A: 255}, &color.NRGBA{R: 198, G: 123, B: 0, A: 0})
+			line.Resize(fyne.NewSize(pluginEnabledCheckbox.Size().Width, 2))
+			pluginSettingsContainer.Add(container.NewGridWithColumns(2, line))
 
+			//pluginSettingsContainer.Add(layout.NewSpacer())
+
+			// get plugin settings
+			var pluginSettings map[string]interface{}
 			if SettingsFile.Plugin_settings != nil {
 				if settings, ok := SettingsFile.Plugin_settings.(map[string]interface{})[pluginClassName]; ok {
 					if settingsMap, ok := settings.(map[string]interface{}); ok {
-						settingsStr, err := yaml.Marshal(settingsMap)
-						if err != nil {
-							println(err)
-						}
-						pluginSettingsForm.SetText(string(settingsStr))
+						pluginSettings = settingsMap
 					}
 				}
 			}
-			pluginSettingsForm.OnChanged = func(text string) {
-				var settingsMap map[string]interface{}
-				err := yaml.Unmarshal([]byte(text), &settingsMap)
-				if err != nil {
-					println(err)
-					dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[0])
-				} else {
-					SettingsFile.Plugin_settings.(map[string]interface{})[pluginClassName] = settingsMap
-					sendMessage := Fields.SendMessageStruct{
-						Type:  "setting_change",
-						Name:  "plugin_settings",
-						Value: SettingsFile.Plugin_settings,
-					}
-					sendMessage.SendMessage()
+
+			// create settings fields
+			var sortedSettingNames []string
+			for settingName := range pluginSettings {
+				sortedSettingNames = append(sortedSettingNames, settingName)
+			}
+			sort.Strings(sortedSettingNames) // sort the keys in ascending order
+
+			for _, settingName := range sortedSettingNames {
+				settingsFields := createSettingsFields(pluginSettings, settingName, &SettingsFile, pluginClassName)
+				for _, field := range settingsFields {
+					pluginSettingsContainer.Add(field)
 				}
 			}
 
-			// count number of lines in pluginSettingsForm and set minRowsVisible
-			lines := strings.Count(pluginSettingsForm.Text, "\n")
-			if lines < 5 {
-				lines = 5
-			}
-			pluginSettingsForm.SetMinRowsVisible(lines + 1)
-
-			pluginSettings.Add(pluginSettingsForm)
+			spacerText := canvas.NewText("", &color.NRGBA{R: 0, G: 0, B: 0, A: 0})
+			spacerText.TextSize = theme.CaptionTextSize()
+			pluginSettingsContainer.Add(spacerText)
 
 			pluginAccordion.Append(pluginAccordionItem)
 		}
@@ -227,6 +224,85 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 	}
 
 	return pluginsContent
+}
+
+func createSettingsFields(pluginSettings map[string]interface{}, settingName string, SettingsFile *Settings.Conf, pluginClassName string) []fyne.CanvasObject {
+	var settingsFields []fyne.CanvasObject
+
+	switch v := pluginSettings[settingName].(type) {
+	case bool:
+		check := widget.NewCheck(settingName, func(value bool) {
+			pluginSettings[settingName] = value
+			updateSettings(*SettingsFile, pluginClassName, pluginSettings)
+		})
+		check.Checked = v
+		settingsFields = append(settingsFields, check)
+	case int, float64:
+		entry := widget.NewEntry()
+		entry.SetText(fmt.Sprintf("%v", v))
+		entry.OnChanged = func(text string) {
+			if val, err := strconv.ParseFloat(text, 64); err == nil {
+				pluginSettings[settingName] = val
+				updateSettings(*SettingsFile, pluginClassName, pluginSettings)
+			}
+		}
+		settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, entry))
+	case string:
+		if strings.Contains(v, "\n") {
+			entry := widget.NewMultiLineEntry()
+			entry.SetText(v)
+			entry.OnChanged = func(text string) {
+				pluginSettings[settingName] = text
+				updateSettings(*SettingsFile, pluginClassName, pluginSettings)
+			}
+			// count number of lines in pluginSettingsForm and set minRowsVisible
+			lines := strings.Count(entry.Text, "\n")
+			if lines < 5 {
+				lines = 5
+			}
+			entry.SetMinRowsVisible(lines + 1)
+			settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, entry))
+		} else {
+			entry := widget.NewEntry()
+			entry.SetText(v)
+			entry.OnChanged = func(text string) {
+				pluginSettings[settingName] = text
+				updateSettings(*SettingsFile, pluginClassName, pluginSettings)
+			}
+			settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, entry))
+		}
+	case map[string]interface{}:
+		yamlBytes, _ := yaml.Marshal(v)
+		entry := widget.NewMultiLineEntry()
+		entry.SetText(string(yamlBytes))
+		entry.OnChanged = func(text string) {
+			var newValue map[string]interface{}
+			if err := yaml.Unmarshal([]byte(text), &newValue); err == nil {
+				pluginSettings[settingName] = newValue
+				updateSettings(*SettingsFile, pluginClassName, pluginSettings)
+			}
+		}
+		// count number of lines in pluginSettingsForm and set minRowsVisible
+		lines := strings.Count(entry.Text, "\n")
+		if lines < 5 {
+			lines = 5
+		}
+		entry.SetMinRowsVisible(lines + 1)
+		settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, entry))
+	}
+
+	return settingsFields
+}
+
+// Helper function to update settings
+func updateSettings(SettingsFile Settings.Conf, pluginClassName string, pluginSettings map[string]interface{}) {
+	SettingsFile.Plugin_settings.(map[string]interface{})[pluginClassName] = pluginSettings
+	sendMessage := Fields.SendMessageStruct{
+		Type:  "setting_change",
+		Name:  "plugin_settings",
+		Value: SettingsFile.Plugin_settings,
+	}
+	sendMessage.SendMessage()
 }
 
 func CreateAdvancedWindow() fyne.CanvasObject {
