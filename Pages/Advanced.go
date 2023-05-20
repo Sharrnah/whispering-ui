@@ -1,6 +1,7 @@
 package Pages
 
 import (
+	"encoding/json"
 	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -137,12 +138,11 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 	for _, file := range files {
 		if !file.IsDir() && !strings.HasPrefix(file.Name(), ".") && !strings.HasPrefix(file.Name(), "__init__") && (strings.HasSuffix(file.Name(), ".py")) {
 			pluginFiles = append(pluginFiles, file.Name())
-			pluginSettingsContainer := container.NewVBox()
 			pluginClassName := GetClassNameOfPlugin("./Plugins/" + file.Name())
 
 			pluginAccordionItem := widget.NewAccordionItem(
 				pluginClassName+getPluginStatusString(pluginClassName),
-				pluginSettingsContainer,
+				nil,
 			)
 
 			// plugin enabled checkbox
@@ -159,13 +159,12 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 				pluginAccordion.Refresh()
 			})
 			pluginEnabledCheckbox.Checked = Settings.Config.Plugins[pluginClassName]
-			pluginSettingsContainer.Add(pluginEnabledCheckbox)
 
-			line := canvas.NewHorizontalGradient(&color.NRGBA{R: 198, G: 123, B: 0, A: 255}, &color.NRGBA{R: 198, G: 123, B: 0, A: 0})
-			line.Resize(fyne.NewSize(pluginEnabledCheckbox.Size().Width, 2))
-			pluginSettingsContainer.Add(container.NewGridWithColumns(2, line))
+			beginLine := canvas.NewHorizontalGradient(&color.NRGBA{R: 198, G: 123, B: 0, A: 255}, &color.NRGBA{R: 198, G: 123, B: 0, A: 0})
+			beginLine.Resize(fyne.NewSize(pluginEnabledCheckbox.Size().Width, 2))
 
-			//pluginSettingsContainer.Add(layout.NewSpacer())
+			spacerText := canvas.NewText("", &color.NRGBA{R: 0, G: 0, B: 0, A: 0})
+			spacerText.TextSize = theme.CaptionTextSize()
 
 			// get plugin settings
 			var pluginSettings map[string]interface{}
@@ -177,23 +176,85 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 				}
 			}
 
-			// create settings fields
-			var sortedSettingNames []string
-			for settingName := range pluginSettings {
-				sortedSettingNames = append(sortedSettingNames, settingName)
-			}
-			sort.Strings(sortedSettingNames) // sort the keys in ascending order
+			// check if settings_groups exists
+			if groupData, exists := pluginSettings["settings_groups"]; exists && groupData != nil {
+				// create settings fields grouped by 'settings_groups'
+				var settingsGroups map[string][]string
+				settingsGroupsByte, _ := json.Marshal(groupData)
+				json.Unmarshal(settingsGroupsByte, &settingsGroups)
 
-			for _, settingName := range sortedSettingNames {
-				settingsFields := createSettingsFields(pluginSettings, settingName, &SettingsFile, pluginClassName)
-				for _, field := range settingsFields {
-					pluginSettingsContainer.Add(field)
+				// Convert the map to a slice and sort
+				type kv struct {
+					Key   string
+					Value []string
 				}
-			}
 
-			spacerText := canvas.NewText("", &color.NRGBA{R: 0, G: 0, B: 0, A: 0})
-			spacerText.TextSize = theme.CaptionTextSize()
-			pluginSettingsContainer.Add(spacerText)
+				var settingsGroupList []kv
+				for k, v := range settingsGroups {
+					settingsGroupList = append(settingsGroupList, kv{k, v})
+				}
+
+				sort.Slice(settingsGroupList, func(i, j int) bool {
+					if strings.EqualFold(settingsGroupList[i].Key, "General") {
+						return true
+					} else if strings.EqualFold(settingsGroupList[j].Key, "General") {
+						return false
+					}
+					return strings.ToLower(settingsGroupList[i].Key) < strings.ToLower(settingsGroupList[j].Key)
+				})
+
+				settingsGroupTabs := container.NewAppTabs()
+				for _, kv := range settingsGroupList {
+					groupName := kv.Key
+					settingsGroup := kv.Value
+
+					groupContainer := container.NewVBox()
+
+					sort.Strings(settingsGroup)
+
+					for _, settingName := range settingsGroup {
+						if _, ok := pluginSettings[settingName]; ok && settingName != "settings_groups" {
+							settingsFields := createSettingsFields(pluginSettings, settingName, &SettingsFile, pluginClassName)
+							for _, field := range settingsFields {
+								groupContainer.Add(field)
+							}
+						}
+					}
+					settingsGroupTabs.Append(container.NewTabItem(groupName, groupContainer))
+				}
+
+				pluginSettingsContainer := container.NewVBox(
+					pluginEnabledCheckbox,
+					container.NewGridWithColumns(2, beginLine),
+					settingsGroupTabs,
+					spacerText,
+				)
+				pluginAccordionItem.Detail = pluginSettingsContainer
+			} else {
+				// no grouping
+				pluginSettingsContainer := container.NewVBox()
+				pluginSettingsContainer.Add(pluginEnabledCheckbox)
+				pluginSettingsContainer.Add(container.NewGridWithColumns(2, beginLine))
+
+				var sortedSettingNames []string
+				for settingName := range pluginSettings {
+					sortedSettingNames = append(sortedSettingNames, settingName)
+				}
+				sort.Strings(sortedSettingNames) // sort the keys in ascending order
+
+				for _, settingName := range sortedSettingNames {
+					if settingName != "settings_groups" {
+						settingsFields := createSettingsFields(pluginSettings, settingName, &SettingsFile, pluginClassName)
+						for _, field := range settingsFields {
+							pluginSettingsContainer.Add(field)
+						}
+					}
+				}
+
+				pluginSettingsContainer.Add(spacerText)
+
+				pluginAccordionItem.Detail = pluginSettingsContainer
+			}
 
 			pluginAccordion.Append(pluginAccordionItem)
 		}
@@ -228,6 +289,11 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 
 func createSettingsFields(pluginSettings map[string]interface{}, settingName string, SettingsFile *Settings.Conf, pluginClassName string) []fyne.CanvasObject {
 	var settingsFields []fyne.CanvasObject
+
+	// Skip creating a field for "settings_groups"
+	if settingName == "settings_groups" {
+		return settingsFields
+	}
 
 	switch v := pluginSettings[settingName].(type) {
 	case bool:
