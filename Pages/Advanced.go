@@ -295,6 +295,20 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 		return settingsFields
 	}
 
+	// widget Entry OnChange function
+	entryOnChange := func(text string) {
+		if val, err := strconv.ParseFloat(text, 64); err == nil {
+			pluginSettings[settingName] = val
+		} else if val, err := strconv.ParseInt(text, 10, 64); err == nil {
+			pluginSettings[settingName] = val
+		} else if text == "None" {
+			pluginSettings[settingName] = nil
+		} else {
+			pluginSettings[settingName] = text
+		}
+		updateSettings(*SettingsFile, pluginClassName, pluginSettings)
+	}
+
 	switch v := pluginSettings[settingName].(type) {
 	case bool:
 		check := widget.NewCheck(settingName, func(value bool) {
@@ -306,12 +320,7 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 	case int, float64:
 		entry := widget.NewEntry()
 		entry.SetText(fmt.Sprintf("%v", v))
-		entry.OnChanged = func(text string) {
-			if val, err := strconv.ParseFloat(text, 64); err == nil {
-				pluginSettings[settingName] = val
-				updateSettings(*SettingsFile, pluginClassName, pluginSettings)
-			}
-		}
+		entry.OnChanged = entryOnChange
 		settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, entry))
 	case string:
 		if strings.Contains(v, "\n") {
@@ -331,12 +340,14 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 		} else {
 			entry := widget.NewEntry()
 			entry.SetText(v)
-			entry.OnChanged = func(text string) {
-				pluginSettings[settingName] = text
-				updateSettings(*SettingsFile, pluginClassName, pluginSettings)
-			}
+			entry.OnChanged = entryOnChange
 			settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, entry))
 		}
+	case nil:
+		entry := widget.NewEntry()
+		entry.SetText("None")
+		entry.OnChanged = entryOnChange
+		settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, entry))
 	case map[string]interface{}:
 		yamlBytes, _ := yaml.Marshal(v)
 		entry := widget.NewMultiLineEntry()
