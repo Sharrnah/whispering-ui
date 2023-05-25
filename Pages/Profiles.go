@@ -895,6 +895,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Audio_output_device:      "",
 			Ai_device:                "cpu",
 			Model:                    "tiny",
+			Txt_translator:           "NLLB200_CT2",
 			Txt_translator_size:      "small",
 			Txt_translator_device:    "cpu",
 			Txt_translator_precision: "float32",

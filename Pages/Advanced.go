@@ -2,6 +2,7 @@ package Pages
 
 import (
 	"encoding/json"
+	"errors"
 	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -34,6 +35,17 @@ func parseURL(urlStr string) *url.URL {
 	}
 
 	return link
+}
+
+func toFloat64(i interface{}) (float64, error) {
+	switch v := i.(type) {
+	case float64:
+		return v, nil
+	case int:
+		return float64(v), nil
+	default:
+		return 0, errors.New("Unsupported type")
+	}
 }
 
 func buildAboutInfo() *fyne.Container {
@@ -349,23 +361,91 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 		entry.OnChanged = entryOnChange
 		settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, entry))
 	case map[string]interface{}:
-		yamlBytes, _ := yaml.Marshal(v)
-		entry := widget.NewMultiLineEntry()
-		entry.SetText(string(yamlBytes))
-		entry.OnChanged = func(text string) {
-			var newValue map[string]interface{}
-			if err := yaml.Unmarshal([]byte(text), &newValue); err == nil {
-				pluginSettings[settingName] = newValue
+		// if 'type' field is set to 'button', create a button
+		if v["type"] == "button" {
+			label := v["label"].(string)
+			button := widget.NewButton(label, func() {
+				sendMessage := Fields.SendMessageStruct{
+					Type:  "plugin_button_press",
+					Name:  pluginClassName,
+					Value: settingName,
+				}
+				sendMessage.SendMessage()
+			})
+			if v["style"] == "primary" {
+				button.Importance = widget.HighImportance
+			} else {
+				button.Importance = widget.MediumImportance
+			}
+
+			settingsFields = append(settingsFields, container.NewHBox(button))
+		} else if v["type"] == "slider" {
+			min, _ := toFloat64(v["min"])
+			max, _ := toFloat64(v["max"])
+			step, _ := toFloat64(v["step"])
+			value, _ := toFloat64(v["value"])
+			slider := widget.NewSlider(min, max)
+			slider.Step = step
+			slider.SetValue(value)
+			// get precision from step size
+			precision := 0
+			if step < 1 {
+				precision = len(strings.Split(strings.TrimRight(fmt.Sprintf("%f", step), "0"), ".")[1])
+			}
+			// set precision for sprintf
+			precisionString := fmt.Sprintf("%%.%df", precision)
+
+			sliderState := widget.NewLabel(fmt.Sprintf(precisionString, value))
+			slider.OnChanged = func(value float64) {
+				sliderState.SetText(fmt.Sprintf(precisionString, value))
+				v["value"] = value
+				pluginSettings[settingName] = v
 				updateSettings(*SettingsFile, pluginClassName, pluginSettings)
 			}
+			settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), sliderState, slider))
+		} else if v["type"] == "select" {
+			var optionsString []string
+			if v["values"] != nil {
+				for _, val := range v["values"].([]interface{}) {
+					optionsString = append(optionsString, fmt.Sprintf("%v", val))
+				}
+			}
+			selectEntry := widget.NewSelect(optionsString, func(value string) {
+				v["value"] = value
+				pluginSettings[settingName] = v
+				updateSettings(*SettingsFile, pluginClassName, pluginSettings)
+			})
+			selectEntry.Selected = v["value"].(string)
+			settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, selectEntry))
+		} else if v["type"] == "textarea" {
+			entry := widget.NewMultiLineEntry()
+			entry.SetText(v["value"].(string))
+			entry.OnChanged = func(text string) {
+				v["value"] = text
+				pluginSettings[settingName] = v
+				updateSettings(*SettingsFile, pluginClassName, pluginSettings)
+			}
+			entry.SetMinRowsVisible(v["rows"].(int))
+			settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, entry))
+		} else {
+			yamlBytes, _ := yaml.Marshal(v)
+			entry := widget.NewMultiLineEntry()
+			entry.SetText(string(yamlBytes))
+			entry.OnChanged = func(text string) {
+				var newValue map[string]interface{}
+				if err := yaml.Unmarshal([]byte(text), &newValue); err == nil {
+					pluginSettings[settingName] = newValue
+					updateSettings(*SettingsFile, pluginClassName, pluginSettings)
+				}
+			}
+			// count number of lines in pluginSettingsForm and set minRowsVisible
+			lines := strings.Count(entry.Text, "\n")
+			if lines < 5 {
+				lines = 5
+			}
+			entry.SetMinRowsVisible(lines + 1)
+			settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, entry))
 		}
-		// count number of lines in pluginSettingsForm and set minRowsVisible
-		lines := strings.Count(entry.Text, "\n")
-		if lines < 5 {
-			lines = 5
-		}
-		entry.SetMinRowsVisible(lines + 1)
-		settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, entry))
 	}
 
 	return settingsFields
