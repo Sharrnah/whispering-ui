@@ -461,7 +461,8 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 					label.Alignment = fyne.TextAlignCenter
 				}
 			}
-			settingsFields = append(settingsFields, container.NewHBox(label))
+			label.Wrapping = fyne.TextWrapWord
+			settingsFields = append(settingsFields, label)
 		} else if v["type"] == "file_open" || v["type"] == "file_save" || v["type"] == "folder_open" || v["type"] == "dir_open" {
 			selectButtonLabel := "Select File"
 			entry := widget.NewEntry()
