@@ -3,7 +3,10 @@ package Messages
 import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/storage"
 	"log"
+	"os"
+	"path/filepath"
 	"strings"
 	"time"
 	"whispering-tiger-ui/Fields"
@@ -82,10 +85,28 @@ func (res TtsSpeechAudio) SaveWav() {
 		}
 		defer writer.Close()
 		writer.Write(res.WavData) // write wav data to file
+
+		fyne.CurrentApp().Preferences().SetString("LastTTSSavePath", filepath.Dir(writer.URI().Path()))
+
 	}, fyne.CurrentApp().Driver().AllWindows()[0])
 
+	fileSaveDialog.SetFilter(storage.NewExtensionFileFilter([]string{".wav"}))
 	fileSaveDialog.SetFileName("tts_" + time.Now().Format("2006-01-02_15-04-05") + ".wav")
 
+	saveStartingPath := fyne.CurrentApp().Preferences().StringWithFallback("LastTTSSavePath", "")
+	if saveStartingPath != "" {
+		// check if folder exists
+		folderExists := false
+		if _, err := os.Stat(saveStartingPath); !os.IsNotExist(err) {
+			folderExists = true
+		}
+		if folderExists {
+			fileURI := storage.NewFileURI(saveStartingPath)
+			fileLister, _ := storage.ListerForURI(fileURI)
+
+			fileSaveDialog.SetLocation(fileLister)
+		}
+	}
 
 	dialogSize := fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size()
 	dialogSize.Height = dialogSize.Height - 50

@@ -903,10 +903,15 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Tts_enabled:              true,
 			Tts_ai_device:            "cpu",
 			Current_language:         "",
-			Osc_ip:                   "127.0.0.1",
-			Osc_port:                 9000,
-			Logprob_threshold:        "-1.0",
-			No_speech_threshold:      "0.6",
+
+			Osc_ip:                  "127.0.0.1",
+			Osc_port:                9000,
+			Osc_chat_limit:          144,
+			Osc_type_transfer:       "translation_result",
+			Osc_type_transfer_split: " 🌐 ",
+
+			Logprob_threshold:   "-1.0",
+			No_speech_threshold: "0.6",
 
 			Vad_enabled:              true,
 			Vad_on_full_clip:         false,

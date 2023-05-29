@@ -34,7 +34,9 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		layout.NewVBoxLayout(),
 		Fields.Field.TextTranslateEnabled,
 		Fields.Field.TtsEnabled,
-		Fields.Field.OscEnabled,
+		container.NewHBox(
+			container.NewBorder(nil, nil, nil, Fields.Field.OscLimitHint, Fields.Field.OscEnabled),
+		),
 	)
 
 	// main layout
@@ -45,7 +47,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		nil, nil, nil,
 		container.NewVSplit(
 			transcriptionRow,
-			container.New(layout.NewVBoxLayout(), quickOptionsRow),
+			container.New(layout.NewHBoxLayout(), quickOptionsRow),
 		),
 	)
 

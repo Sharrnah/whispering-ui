@@ -150,43 +150,6 @@ var ExcludeConfigFields = []string{
 
 var Config Conf
 
-/*
-var (
-	ErrNoValue      = errors.New("no value for field 'value'")
-	ErrInvalidValue = errors.New("invalid value for field 'value'")
-)
-
-func (c *conf) UnmarshalYAML(unmarshal func(interface{}) error) error {
-	mstr := make(map[string]string)
-	if err := unmarshal(&mstr); err == nil {
-		if str, ok := mstr["value"]; ok {
-			c.TtsModel = []string{str}
-			return nil
-		}
-
-		return ErrNoValue
-	}
-
-	miface := make(map[interface{}]interface{})
-	if err := unmarshal(&miface); err == nil {
-		sstr := make([]string, 0)
-		if val, ok := miface["value"]; ok {
-			for _, v := range val.([]interface{}) {
-				if str, ok := v.(string); ok {
-					sstr = append(sstr, str)
-				}
-			}
-
-			c.TtsModel = sstr
-			return nil
-		}
-
-		return ErrNoValue
-	}
-
-	return ErrInvalidValue
-}*/
-
 // FileExists checks a file's existence
 func FileExists(name string) bool {
 	if _, err := os.Stat(name); err != nil {
