@@ -261,11 +261,29 @@ loop:
 	wg.Wait()
 
 	// Close the file without defer so it can happen before Rename()
-	out.Close()
-
-	if err = os.Rename(d.Filepath+".tmp", d.Filepath); err != nil {
+	if err := out.Close(); err != nil {
 		return err
 	}
+
+	// Maximum number of retries for rename
+	maxRetries := 5
+
+	// Time to wait between rename retries
+	retryWait := time.Second
+
+	var renameErr error
+	for i := 0; i < maxRetries; i++ {
+		renameErr = os.Rename(d.Filepath+".tmp", d.Filepath)
+		if renameErr == nil {
+			break
+		}
+		// The error occurred, wait for a bit before trying again
+		time.Sleep(retryWait)
+	}
+	if renameErr != nil {
+		return renameErr
+	}
+
 	return nil
 }
 
