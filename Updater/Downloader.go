@@ -55,6 +55,32 @@ func (d *Download) getRemoteFileSize() (int64, error) {
 	return resp.ContentLength, nil
 }
 
+func (d *Download) getRemoteFileSizeWithRetry(retries int) (int64, error) {
+	for i := 0; i <= retries; i++ {
+		remoteFileSize, err := d.getRemoteFileSize()
+		if err == nil {
+			return remoteFileSize, nil
+		}
+
+		if i < retries {
+			fmt.Printf("Error getting remote file size %s: %s. Retrying in 1 second...\n", d.Url, err.Error())
+			time.Sleep(1 * time.Second)
+		} else {
+			// Switch to the next fallback url if available
+			if d.urlIndex < len(d.FallbackUrls) {
+				fmt.Printf("All retries for URL %s have failed. Trying the next fallback URL...\n", d.getCurrentUrl())
+				d.urlIndex++
+				i = -1 // reset retry count for the next url
+				continue
+			} else {
+				fmt.Printf("All retries for URL %s and all fallback URLs have failed.\n", d.getCurrentUrl())
+				return 0, err
+			}
+		}
+	}
+	return 0, fmt.Errorf("Failed to get remote file size after %d retries", retries)
+}
+
 func (wc *WriteCounter) addBytes(n uint64) {
 	wc.Total += n
 	elapsed := time.Since(wc.startTime).Seconds()
@@ -78,7 +104,7 @@ func (d *Download) DownloadFile(retries int) error {
 
 	// check if the server file is smaller than the local file (which means something is wrong)
 	// Call getRemoteFileSize to get the size of the remote file
-	remoteFileSize, err := d.getRemoteFileSize()
+	remoteFileSize, err := d.getRemoteFileSizeWithRetry(retries)
 	if err != nil {
 		return err
 	}
