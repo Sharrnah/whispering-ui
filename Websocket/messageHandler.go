@@ -337,6 +337,15 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			}
 		}()
 	}
+
+	// set focus to main window
+	if fyne.CurrentApp().Preferences().BoolWithFallback("AutoRefocusWindow", false) {
+		fyne.CurrentApp().Driver().AllWindows()[0].RequestFocus()
+	}
+
+	// refresh window
+	fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Content().Refresh()
+
 	if err != nil {
 		log.Printf("Unmarshal: %v", err)
 	}
