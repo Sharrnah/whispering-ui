@@ -10,6 +10,7 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 ## Content
 - [Features](#features)
 - [Download](#download)
+- [Tutorials](#tutorials)
 - [Installation](#installation)
 - [Setup](#setup)
   - [Plugins Setup](#plugins-setup)
@@ -36,6 +37,9 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 [**Download Latest Version**](https://github.com/Sharrnah/whispering-ui/releases/latest) from the Releases Page.
 
 <img src=doc/images/whispering-ui-dl.png width=305 alt="Speech 2 Text Tab">
+
+## Tutorials
+- Video Tutorial: [**Whispering Tiger - Live Translation and Transcription**](https://youtu.be/VNh6lFdQC70)
 
 ## Installation
 1. After downloading the latest version from the [**Releases**], extract it to a folder of your choice on a drive with enough free space. **(Do not run it directly from the zip file.)**
