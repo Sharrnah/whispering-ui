@@ -39,7 +39,7 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 <img src=doc/images/whispering-ui-dl.png width=305 alt="Speech 2 Text Tab">
 
 ## Tutorials
-- Video Tutorial "_Whispering Tiger - Live Translation and Transcription_":
+- Video Tutorial "[_Whispering Tiger - Live Translation and Transcription_](https://youtu.be/VNh6lFdQC70)":
   
   [<img src=doc/images/whispering-tiger-yt.png width=480 alt="Whispering Tiger - Live Translation and Transcription Video Tutorial">](https://youtu.be/VNh6lFdQC70)
 
