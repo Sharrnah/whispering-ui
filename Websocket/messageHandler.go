@@ -206,6 +206,7 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		Fields.Field.ProcessingStatus.Stop()
 
 		Fields.Field.RealtimeResultLabel.SetText(c.Text)
+		Fields.Field.RealtimeResultLabel.Refresh()
 
 		select {
 		// reset processing status timer
@@ -294,6 +295,7 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			Fields.Field.ProcessingStatus.Start()
 			Fields.Field.RealtimeResultLabel.Show()
 			Fields.Field.RealtimeResultLabel.SetText(processingData)
+			Fields.Field.RealtimeResultLabel.Refresh()
 			select {
 			// reset hide realtime label timer
 			case resetRealtimeLabelHideTimer <- true:
@@ -344,7 +346,7 @@ func (c *MessageStruct) HandleReceiveMessage() {
 	}
 
 	// refresh window
-	fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Content().Refresh()
+	//fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Content().Refresh()
 
 	if err != nil {
 		log.Printf("Unmarshal: %v", err)
