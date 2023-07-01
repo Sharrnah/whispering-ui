@@ -19,6 +19,12 @@ var Models = []AIModel{
 	{"WhisperCT2_small", 1873.0},
 	{"WhisperCT2_medium", 3905.0},
 	{"WhisperCT2_large", 6985.0},
+	// Speech T5
+	{"Whispert5_tiny", 927.0},
+	{"Whispert5_base", 927.0},
+	{"Whispert5_small", 927.0},
+	{"Whispert5_medium", 927.0},
+	{"Whispert5_large", 927.0},
 	// NLLB200CT2 models
 	{"NLLB200CT2_small", 3087.0},
 	{"NLLB200CT2_medium", 6069.0},

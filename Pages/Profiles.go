@@ -702,7 +702,48 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		profileForm.Append("Speech to Text Size", container.NewGridWithColumns(2, sttModelSize, sttPrecisionSelect))
 
-		sttFasterWhisperCheckbox := widget.NewCheck("Faster Whisper", func(b bool) {
+		sttTypeSelect := CustomWidget.NewTextValueSelect("stt_type", []CustomWidget.TextValueOption{
+			{Text: "Faster Whisper", Value: "faster_whisper"},
+			{Text: "Original Whisper", Value: "original_whisper"},
+			{Text: "Speech T5 (English only)", Value: "speech_t5"},
+		}, func(s CustomWidget.TextValueOption) {
+			selectedPrecision := sttPrecisionSelect.GetSelected().Value
+			AIModelType := ""
+			sttPrecisionSelect.Enable()
+			sttModelSize.Enable()
+
+			if s.Value == "faster_whisper" {
+				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
+					{Text: "float32 precision", Value: "float32"},
+					{Text: "float16 precision", Value: "float16"},
+					{Text: "int16 precision", Value: "int16"},
+					{Text: "int8_float16 precision", Value: "int8_float16"},
+					{Text: "int8 precision", Value: "int8"},
+				}
+				AIModelType = "CT2"
+			} else if s.Value == "original_whisper" {
+				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
+					{Text: "float32 precision", Value: "float32"},
+					{Text: "float16 precision", Value: "float16"},
+				}
+				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" {
+					sttPrecisionSelect.SetSelected("float16")
+				}
+				AIModelType = "O"
+			} else if s.Value == "speech_t5" {
+				sttPrecisionSelect.Disable()
+				sttModelSize.Disable()
+				AIModelType = "t5"
+			}
+			// calculate memory consumption
+			AIModel := ProfileAIModelOption{
+				AIModel:     "Whisper",
+				AIModelType: AIModelType,
+			}
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+		}, 0)
+
+		/*sttFasterWhisperCheckbox := widget.NewCheck("Faster Whisper", func(b bool) {
 			selectedPrecision := sttPrecisionSelect.GetSelected().Value
 			AIModelType := ""
 			if b {
@@ -730,8 +771,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				AIModelType: AIModelType,
 			}
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
-		})
-		profileForm.Append("Speech to Text Options", container.NewGridWithColumns(1, sttFasterWhisperCheckbox))
+		})*/
+		profileForm.Append("Speech to Text Options", container.NewGridWithColumns(1, sttTypeSelect))
 
 		profileForm.Append("", layout.NewSpacer())
 
@@ -925,8 +966,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Speaker_diarization_window_size: 15,
 			Speaker_min_duration:            0.5,
 
-			Whisper_precision:             "float32",
-			Faster_whisper:                true,
+			Whisper_precision: "float32",
+			//Faster_whisper:                true,
+			Stt_type:                      "faster_whisper",
 			Temperature_fallback:          true,
 			Phrase_time_limit:             30.0,
 			Pause:                         1.0,
@@ -1034,7 +1076,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Whisper_precision)
 		// show only available precision options depending on whisper project
 		selectedPrecision := profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected().Value
-		if profileSettings.Faster_whisper {
+		if profileSettings.Stt_type == "faster_whisper" {
 			profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
 				{Text: "float32 precision", Value: "float32"},
 				{Text: "float16 precision", Value: "float16"},
@@ -1042,7 +1084,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				{Text: "int8_float16 precision", Value: "int8_float16"},
 				{Text: "int8 precision", Value: "int8"},
 			}
-		} else {
+		} else if profileSettings.Stt_type == "original_whisper" {
 			profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
 				{Text: "float32 precision", Value: "float32"},
 				{Text: "float16 precision", Value: "float16"},
@@ -1051,7 +1093,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected("float16")
 			}
 		}
-		profileForm.Items[14].Widget.(*fyne.Container).Objects[0].(*widget.Check).SetChecked(profileSettings.Faster_whisper)
+		//profileForm.Items[14].Widget.(*fyne.Container).Objects[0].(*widget.Check).SetChecked(profileSettings.Faster_whisper)
+		profileForm.Items[14].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Stt_type)
 
 		// spacer
 		profileForm.Items[16].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_device)
@@ -1086,7 +1129,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			profileSettings.Ai_device = profileForm.Items[12].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
 			profileSettings.Model = profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
 			profileSettings.Whisper_precision = profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Faster_whisper = profileForm.Items[14].Widget.(*fyne.Container).Objects[0].(*widget.Check).Checked
+			//profileSettings.Faster_whisper = profileForm.Items[14].Widget.(*fyne.Container).Objects[0].(*widget.Check).Checked
+			profileSettings.Stt_type = profileForm.Items[14].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
 
 			profileSettings.Txt_translator_device = profileForm.Items[16].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
 			profileSettings.Txt_translator_size = profileForm.Items[17].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
@@ -1122,7 +1166,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					Ai_device:         profileSettings.Ai_device,
 					Model:             profileSettings.Model,
 					Whisper_precision: profileSettings.Whisper_precision,
-					Faster_whisper:    profileSettings.Faster_whisper,
+					//Faster_whisper:    profileSettings.Faster_whisper,
+					Stt_type: profileSettings.Stt_type,
 
 					Txt_translator_device:    profileSettings.Txt_translator_device,
 					Txt_translator_size:      profileSettings.Txt_translator_size,

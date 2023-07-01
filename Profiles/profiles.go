@@ -38,9 +38,10 @@ type Profile struct {
 	Tts_enabled              bool        `yaml:"tts_enabled"`
 	Tts_ai_device            string      `yaml:"tts_ai_device"`
 	Whisper_precision        string      `yaml:"whisper_precision"`
-	Faster_whisper           bool        `yaml:"faster_whisper"`
-	Realtime                 bool        `yaml:"realtime"`
-	Push_to_talk_key         string      `yaml:"push_to_talk_key"`
+	//Faster_whisper           bool        `yaml:"faster_whisper"`
+	Stt_type         string `yaml:"stt_type"`
+	Realtime         bool   `yaml:"realtime"`
+	Push_to_talk_key string `yaml:"push_to_talk_key"`
 }
 
 func (p *Profile) Load(fileName string) {
