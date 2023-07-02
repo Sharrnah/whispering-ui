@@ -18,6 +18,8 @@ import (
 
 var BackendsList []WhisperProcessConfig
 
+const MaxClipboardLogLines = 2000
+
 // RunWithStreams ComposeWithStreams executes a command
 // stdin/stdout/stderr
 func (c *WhisperProcessConfig) RunWithStreams(name string, arguments []string, stdIn io.Reader, stdOut io.Writer, stdErr io.Writer, action ...string) error {
@@ -37,10 +39,13 @@ func (c *WhisperProcessConfig) RunWithStreams(name string, arguments []string, s
 		proc.Env = c.environmentVars
 	}
 
-	// Create a new pipe for the Stdout field
+	// Create a new pipe for the StdErr field
 	stdErrPipeReader, stdErrPipeWriter := io.Pipe()
+	// Create a new pipe for the StdOut field
+	stdOutPipeReader, stdOutPipeWriter := io.Pipe()
 
-	proc.Stdout = stdOut
+	//proc.Stdout = stdOut
+	proc.Stdout = io.MultiWriter(stdOut, stdOutPipeWriter)
 	proc.Stdin = stdIn
 	proc.Stderr = io.MultiWriter(stdErr, stdErrPipeWriter)
 
@@ -48,6 +53,8 @@ func (c *WhisperProcessConfig) RunWithStreams(name string, arguments []string, s
 
 	// parse for errors coming from the backend process and printed to stderr
 	go c.SetErrorOutputHandling(stdErrPipeReader)
+
+	go c.SetLogOutputHandling(stdOutPipeReader)
 
 	return proc.Run()
 }
@@ -61,6 +68,7 @@ type WhisperProcessConfig struct {
 	ReaderBackend   *io.PipeReader
 	WriterBackend   *io.PipeWriter
 	environmentVars []string
+	RecentLog       []string
 }
 
 func NewWhisperProcess() WhisperProcessConfig {
@@ -120,6 +128,20 @@ func (c *WhisperProcessConfig) AttachEnvironment(envName, envValue string) {
 	}
 }
 
+func (c *WhisperProcessConfig) SetLogOutputHandling(stdout io.Reader) {
+	scanner := bufio.NewScanner(stdout)
+	for scanner.Scan() {
+		line := scanner.Text()
+
+		// write to c.RecentLog
+		c.RecentLog = append(c.RecentLog, line)
+		// remove first element if length is greater than 2000
+		if len(c.RecentLog) > MaxClipboardLogLines {
+			c.RecentLog = c.RecentLog[1:]
+		}
+	}
+}
+
 func (c *WhisperProcessConfig) SetErrorOutputHandling(stdout io.Reader) {
 	scanner := bufio.NewScanner(stdout)
 	for scanner.Scan() {
@@ -145,6 +167,13 @@ func (c *WhisperProcessConfig) SetErrorOutputHandling(stdout io.Reader) {
 			} else {
 				fmt.Printf("%s\n", exceptionMessage.Error)
 			}
+		}
+
+		// write to c.RecentLog
+		c.RecentLog = append(c.RecentLog, line)
+		// remove first element if length is greater than 2000
+		if len(c.RecentLog) > MaxClipboardLogLines {
+			c.RecentLog = c.RecentLog[1:]
 		}
 	}
 	if err := scanner.Err(); err != nil {

@@ -386,7 +386,7 @@ const EnergySliderMax = 2000
 func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	playBackDevice := CurrentPlaybackDevice{}
 
-	playBackDevice.AudioAPI = malgo.BackendWinmm
+	playBackDevice.AudioAPI = malgo.BackendWasapi
 	go playBackDevice.Init()
 
 	audioInputDevices, _ := GetAudioDevices(playBackDevice.AudioAPI, malgo.Capture, 0)

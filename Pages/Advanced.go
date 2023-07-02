@@ -109,7 +109,7 @@ func buildAboutInfo() *fyne.Container {
 	disableUiDownloadsCheckbox.Checked = fyne.CurrentApp().Preferences().BoolWithFallback("DisableUiDownloads", false)
 
 	// refocus flag
-	autoRefocusCheckbox := widget.NewCheck("Refocus Window on message receive", nil)
+	autoRefocusCheckbox := widget.NewCheck("focus window on message receive (can improve speed in VR)", nil)
 	autoRefocusCheckbox.OnChanged = func(b bool) {
 		fyne.CurrentApp().Preferences().SetBool("AutoRefocusWindow", b)
 	}
@@ -605,12 +605,18 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 		}
 	})
 
+	copyLogButton := widget.NewButtonWithIcon("Copy Log", theme.ContentCopyIcon(), func() {
+		fyne.CurrentApp().Driver().AllWindows()[0].Clipboard().SetContent(
+			strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\n"),
+		)
+	})
+
 	writeLogFileCheckbox := widget.NewCheck("Write log file", func(writeLogFile bool) {
 		fyne.CurrentApp().Preferences().SetBool("WriteLogfile", writeLogFile)
 	})
 	writeLogFileCheckbox.Checked = fyne.CurrentApp().Preferences().BoolWithFallback("WriteLogfile", false)
 
-	logTabContent := container.NewBorder(nil, container.NewHBox(RestartBackendButton, writeLogFileCheckbox), nil, nil, container.NewScroll(Fields.Field.LogText))
+	logTabContent := container.NewBorder(nil, container.NewHBox(RestartBackendButton, writeLogFileCheckbox, copyLogButton), nil, nil, container.NewScroll(Fields.Field.LogText))
 
 	tabs := container.NewAppTabs(
 		container.NewTabItem("Plugins", CreatePluginSettingsPage()),
@@ -633,7 +639,6 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 	}
 
 	// Log logText updater thread
-
 	Fields.Field.LogText.Resize(fyne.NewSize(1200, 800))
 	go func(writer io.WriteCloser, reader io.Reader) {
 		_ = Fields.Field.LogText.RunWithConnection(writer, reader)

@@ -69,6 +69,7 @@ func (res OcrResultData) Update() *OcrResultData {
 		ocrResultImage.FillMode = canvas.ImageFillContain
 		Fields.Field.OcrImageContainer.RemoveAll()
 		Fields.Field.OcrImageContainer.Add(ocrResultImage)
+		ocrResultImage.Refresh()
 	}
 
 	return &res

@@ -204,6 +204,7 @@ func (c *MessageStruct) HandleReceiveMessage() {
 
 		// stop processing status
 		Fields.Field.ProcessingStatus.Stop()
+		Fields.Field.ProcessingStatus.Refresh()
 
 		Fields.Field.RealtimeResultLabel.SetText(c.Text)
 		Fields.Field.RealtimeResultLabel.Refresh()
@@ -227,6 +228,7 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			}
 			Fields.Field.SourceLanguageCombo.Options[0].Text = "Auto [detected: " + langName + "]"
 			Fields.Field.SourceLanguageCombo.SetSelected(Fields.Field.SourceLanguageCombo.Options[0].Value)
+			Fields.Field.SourceLanguageCombo.Refresh()
 		}
 		//case "tts_save":
 		//	var audioData = Audio.TtsResultRaw{}
@@ -266,6 +268,7 @@ func (c *MessageStruct) HandleReceiveMessage() {
 
 		// stop processing status
 		Fields.Field.ProcessingStatus.Stop()
+		Fields.Field.ProcessingStatus.Refresh()
 
 	case "processing_start":
 		var processingStarted = false
@@ -276,6 +279,7 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		}
 		if processingStarted {
 			Fields.Field.ProcessingStatus.Start()
+			Fields.Field.ProcessingStatus.Refresh()
 			select {
 			// reset processing status timer
 			case resetProcessingStopTimer <- true:
@@ -283,6 +287,7 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			}
 		} else {
 			Fields.Field.ProcessingStatus.Stop()
+			Fields.Field.ProcessingStatus.Refresh()
 		}
 	case "processing_data":
 		var processingData = ""
@@ -293,6 +298,7 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		}
 		if processingData != "" {
 			Fields.Field.ProcessingStatus.Start()
+			Fields.Field.ProcessingStatus.Refresh()
 			Fields.Field.RealtimeResultLabel.Show()
 			Fields.Field.RealtimeResultLabel.SetText(processingData)
 			Fields.Field.RealtimeResultLabel.Refresh()
@@ -315,6 +321,7 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			return
 		}
 		Messages.CurrentLoadingState.Update()
+		fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Content().Refresh()
 	case "tts_save":
 		ttsSpeechAudio := Messages.TtsSpeechAudio{}
 		err = json.Unmarshal(c.Raw, &ttsSpeechAudio)
@@ -337,6 +344,7 @@ func (c *MessageStruct) HandleReceiveMessage() {
 				dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[0])
 				return
 			}
+			fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Content().Refresh()
 		}()
 	}
 
