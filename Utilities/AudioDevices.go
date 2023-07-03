@@ -42,6 +42,13 @@ func GetAudioDevices(audioAPI malgo.Backend, deviceType malgo.DeviceType, device
 		return nil, err
 	}
 
+	var nameSuffix string
+	// if deviceType is Loopback, change it to Capture to get the correct device info (and prevent crash of miniaudio)
+	if deviceType == malgo.Loopback {
+		deviceType = malgo.Capture
+		nameSuffix = " [Loopback]"
+	}
+
 	deviceList := make([]AudioDevice, 0)
 	for index, deviceInfo := range devices {
 		fullInfo, err := ctx.DeviceInfo(deviceType, deviceInfo.ID, malgo.Shared)
@@ -49,7 +56,7 @@ func GetAudioDevices(audioAPI malgo.Backend, deviceType malgo.DeviceType, device
 			continue
 		}
 		deviceList = append(deviceList, AudioDevice{
-			Name:      deviceInfo.Name(),
+			Name:      deviceInfo.Name() + nameSuffix,
 			Index:     index + deviceIndexStartPoint,
 			ID:        deviceInfo.ID.String(),
 			IsDefault: fullInfo.IsDefault != 0,

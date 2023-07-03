@@ -52,6 +52,10 @@ func (c *CurrentPlaybackDevice) PlayStopTestAudio() {
 	c.playTestAudio = !c.playTestAudio
 }
 
+func (c *CurrentPlaybackDevice) IsPlayingTestAudio() bool {
+	return c.playTestAudio
+}
+
 // From arduino map() lol
 func int32Map(x int32, in_min int32, in_max int32, out_min int32, out_max int32) int32 {
 	var _x = int64(x)
@@ -80,7 +84,7 @@ func (c *CurrentPlaybackDevice) InitTestAudio() (*bytes.Reader, *wav.Reader) {
 	return byteReader, testAudioReader
 }
 
-func (c *CurrentPlaybackDevice) InitDevices() error {
+func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 	byteReader, testAudioReader := c.InitTestAudio()
 
 	if c.device != nil && c.device.IsStarted() {
@@ -92,13 +96,30 @@ func (c *CurrentPlaybackDevice) InitDevices() error {
 		fmt.Println(err)
 	}
 
+	isLoopback := false
 	selectedCaptureDeviceIndex := -1
 	for index, deviceInfo := range captureDevices {
 		if deviceInfo.Name() == c.InputDeviceName {
 			selectedCaptureDeviceIndex = index
-			fmt.Println("Found input device: ", deviceInfo.Name(), " at index: ", index)
+			fmt.Println("Found input device: ", deviceInfo.Name(), " at index: ", selectedCaptureDeviceIndex)
 			break
 		}
+	}
+
+	if selectedCaptureDeviceIndex == -1 {
+		captureLoopbackDevices, err := c.Context.Devices(malgo.Loopback)
+		if err != nil {
+			fmt.Println(err)
+		}
+		for index, deviceInfo := range captureLoopbackDevices {
+			if deviceInfo.Name()+" [Loopback]" == c.InputDeviceName {
+				selectedCaptureDeviceIndex = len(captureDevices) + index
+				isLoopback = true
+				fmt.Println("Found input loopback device: ", deviceInfo.Name(), " at index: ", selectedCaptureDeviceIndex)
+				break
+			}
+		}
+		captureDevices = append(captureDevices, captureLoopbackDevices...)
 	}
 
 	playbackDevices, err := c.Context.Devices(malgo.Playback)
@@ -115,6 +136,12 @@ func (c *CurrentPlaybackDevice) InitDevices() error {
 	}
 
 	deviceConfig := malgo.DefaultDeviceConfig(malgo.Duplex)
+	if isLoopback {
+		deviceConfig = malgo.DefaultDeviceConfig(malgo.Loopback)
+	}
+	if isPlayback {
+		deviceConfig = malgo.DefaultDeviceConfig(malgo.Playback)
+	}
 	deviceConfig.Capture.Format = malgo.FormatS32
 	if selectedCaptureDeviceIndex > -1 {
 		deviceConfig.Capture.DeviceID = captureDevices[selectedCaptureDeviceIndex].ID.Pointer()
@@ -263,12 +290,22 @@ func (c *CurrentPlaybackDevice) Init() {
 			return
 		}
 	}
-
 }
 
-func GetAudioDevices(audioApi malgo.Backend, deviceType malgo.DeviceType, deviceIndexStartPoint int) ([]CustomWidget.TextValueOption, error) {
+func GetAudioDevices(audioApi malgo.Backend, deviceTypes []malgo.DeviceType, deviceIndexStartPoint int) ([]CustomWidget.TextValueOption, error) {
 
-	deviceList, _ := Utilities.GetAudioDevices(audioApi, deviceType, deviceIndexStartPoint)
+	deviceList := make([]Utilities.AudioDevice, 0)
+
+	for _, deviceType := range deviceTypes {
+		// skip loopback devices for all apis except wasapi
+		if audioApi != malgo.BackendWasapi && deviceType == malgo.Loopback {
+			continue
+		}
+		deviceListPart, _ := Utilities.GetAudioDevices(audioApi, deviceType, len(deviceList)+deviceIndexStartPoint)
+		deviceList = append(deviceList, deviceListPart...)
+	}
+
+	//deviceList, _ := Utilities.GetAudioDevices(audioApi, deviceType, deviceIndexStartPoint)
 
 	if deviceList == nil {
 		return nil, fmt.Errorf("no devices found")
@@ -389,14 +426,14 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	playBackDevice.AudioAPI = malgo.BackendWasapi
 	go playBackDevice.Init()
 
-	audioInputDevices, _ := GetAudioDevices(playBackDevice.AudioAPI, malgo.Capture, 0)
-	audioOutputDevices, _ := GetAudioDevices(playBackDevice.AudioAPI, malgo.Playback, len(audioInputDevices))
+	audioInputDevices, _ := GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0)
+	audioOutputDevices, _ := GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Playback}, len(audioInputDevices))
 
 	audioInputSelect := CustomWidget.NewTextValueSelect("device_index", audioInputDevices,
 		func(s CustomWidget.TextValueOption) {
 			println(s.Value)
 			playBackDevice.InputDeviceName = s.Text
-			err := playBackDevice.InitDevices()
+			err := playBackDevice.InitDevices(false)
 			if err != nil {
 				var newError = fmt.Errorf("audio Input (mic): %v", err)
 				dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
@@ -408,7 +445,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		func(s CustomWidget.TextValueOption) {
 			println(s.Value)
 			playBackDevice.OutputDeviceName = s.Text
-			err := playBackDevice.InitDevices()
+			err := playBackDevice.InitDevices(false)
 			if err != nil {
 				var newError = fmt.Errorf("audio Output (speaker): %v", err)
 				dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
@@ -439,8 +476,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 				go playBackDevice.Init()
 
-				audioInputDevices, _ = GetAudioDevices(playBackDevice.AudioAPI, malgo.Capture, 0)
-				audioOutputDevices, _ = GetAudioDevices(playBackDevice.AudioAPI, malgo.Playback, len(audioInputDevices))
+				audioInputDevices, _ = GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0)
+				audioOutputDevices, _ = GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Playback}, len(audioInputDevices))
 
 				audioInputSelect.Options = audioInputDevices
 				audioOutputSelect.Options = audioOutputDevices
@@ -479,7 +516,19 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		audioInputProgress := playBackDevice.InputWaveWidget
 		audioOutputProgress := container.NewBorder(nil, nil, nil, widget.NewButtonWithIcon("Test", theme.MediaPlayIcon(), func() {
+			err := playBackDevice.InitDevices(true)
+			if err != nil {
+				var newError = fmt.Errorf("audio test error: %v", err)
+				dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
+			}
 			playBackDevice.PlayStopTestAudio()
+			go func() {
+				// wait as long as playBackDevice.TestAudio is running
+				for playBackDevice.IsPlayingTestAudio() {
+					time.Sleep(100 * time.Millisecond)
+				}
+				_ = playBackDevice.InitDevices(false)
+			}()
 		}), playBackDevice.OutputWaveWidget)
 
 		runBackendCheckbox := widget.NewCheck("Run Backend", func(b bool) {
@@ -584,6 +633,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 						dialog.ShowInformation("Error", "Could not find detected_energy in output.", fyne.CurrentApp().Driver().AllWindows()[1])
 					}
 					detectDialog.Hide()
+
+					// reinit devices after detection
+					_ = playBackDevice.InitDevices(false)
 				}
 			}, fyne.CurrentApp().Driver().AllWindows()[1])
 		energyHelpBtn := widget.NewButtonWithIcon("Autodetect", theme.VolumeUpIcon(), func() {
@@ -1255,7 +1307,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		profileForm.Refresh()
 
-		err = playBackDevice.InitDevices()
+		err = playBackDevice.InitDevices(false)
 		if err != nil {
 			dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
 		}
