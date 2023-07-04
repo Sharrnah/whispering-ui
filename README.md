@@ -52,33 +52,41 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
    - On the first start, it will start downloading the A.I. Models which can take a while depending on your selected Model size. (currently it does not show the status of the model downloads)
 
 ## Setup
-1. Create a Profile by entering a name and clicking on the **New** button.
+1. **Create a Profile** by entering a name and clicking on the **New** button.
 2. `Websocket IP + Port` can be kept at the default values "127.0.0.1" and "5000".
    - _These are only useful if you want to run multiple instances or have the Backend Platform run on a separate PC._
    - _If you want to run multiple instances, you need to change the Port for each instance._
 
-3. Select your Audio Input and Output devices. You can test them by speaking into your microphone and clicking on the Test button.
+3. **Select your Audio Input and Output devices.** You can test them by speaking into your microphone and clicking on the Test button.
    - You should see the **Audio Input** bar move when you speak. and hear a test-audio and see the **Audio Output** bar move when you click on the **Test** button.
      
      <img src="doc/images/setup/audio-devices.png" width=710 alt="Audio Test">
    - See also [**Audio configuration (TTS to Mic, Game Audio translation, etc.)**](doc/audio-config.md) for more information on specific Audio Setups.
+     
+     _(like when you want to translate Audio of Games, Videos or Streams that are played on your PC instead of using a Microphone as Input.)_.
 
-4. Keep an eye on the estimated Memory consumption in the lower right corner.
+4. **(Optional) use Push to Talk** Click into the field and press the keys you want to use for Push to Talk
+   
+   _(each key separately, but all keys will be required to be pressed at the same time when using Push to Talk)_
+
+   - To disable autodetect of speech to only use Push to Talk, set `Speech volume Level` and `Speech pause detection` to 0.
+
+5. **Keep an eye on the estimated Memory consumption** in the lower right corner.
    
    _It is only a rough estimate and can vary, but it should give you an idea of how much (V-)RAM you need for your selected A.I. Models. and Options._
    
    <img src="doc/images/setup/mem-estimates.png" width=706 alt="Memory Consumption Estimates">
 
-5. Select the **A.I. Device for Speech to Text** and **Text Translation** according to your Hardware.
+6. **Select the A.I. Device for Speech to Text** and **Text Translation** according to your Hardware.
    - CUDA (_requires an NVIDIA GPU_) or CPU.
    - CUDA will load the A.I. into V-RAM and will be faster than CPU.
 
-6. Select the **Speech to Text Size** and **Text Translation Size**.
+7. **Select the Speech to Text Size** and **Text Translation Size**.
    - The larger the size, the more accurate but also slower the transcription will be.
    - The larger the size, the more (V-)RAM it will use.
    - **Note:** The A.I. Model of the selected size and precision will be downloaded automatically when you start the application for the first time.
 
-7. Select the **Speech to Text Precision** and **Text Translation Precision**
+8. **Select the Speech to Text Precision** and **Text Translation Precision**
    - The higher the precision, the more accurate and the more (V-)RAM is used. (_However the accuracy differences are almost negligible_).
    - Modern GPU's have a better acceleration for `float16`.
    - CPU's only support `float32`, `int16` or `int8` precision.
@@ -103,6 +111,7 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 
 ### Specific Usage Setup
 - [**Audio configuration (TTS to Mic, Game Audio translation, etc.)**](doc/audio-config.md)
+- [**Realtime Configuration and speed improvements**](doc/realtime-config.md)
 
 ## Advanced Features
 - [**Larger UI Scaling (VR-Mode)**](doc/advanced.md#larger-ui-scaling--vr-mode-)
