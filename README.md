@@ -69,7 +69,7 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 
 4. **(Optional) use Push to Talk** Click into the field and press the keys you want to use for Push to Talk
    
-   _(press each key separately to configure, When running the Profile, all keys will be required to be pressed at the same time when using Push to Talk)_
+   _(press each key separately to configure. When running the Profile, all keys will be required to be pressed at the same time when using Push to Talk)_
 
    - To disable autodetect of speech to only use Push to Talk, set `Speech volume Level` and `Speech pause detection` to 0.
 
