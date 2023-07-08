@@ -16,6 +16,7 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
   - [Plugins Setup](#plugins-setup)
   - [_Example Setup of Plugin VoiceVox (Japanese TTS)_](doc/plugin-example.md)
   - [Specific Audio configuration (TTS to Mic, Game Audio translation, etc.)](doc/audio-config.md)
+  - [Realtime Configuration and speed improvements](doc/realtime-config.md)
 - [Advanced Features](#advanced-features)
 - [Additional Help (Discord)](#additional-help)
 - [Screenshots](#screenshots)
