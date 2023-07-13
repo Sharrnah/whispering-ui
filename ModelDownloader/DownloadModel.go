@@ -17,7 +17,7 @@ import (
 
 const rootCacheFolder = ".cache"
 
-func DownloadFile(urls []string, targetDir string, checksum string, title string) error {
+func DownloadFile(urls []string, targetDir string, checksum string, title string, extractFormat string) error {
 	// find active window
 	window := fyne.CurrentApp().Driver().AllWindows()[0]
 	if len(fyne.CurrentApp().Driver().AllWindows()) == 1 && fyne.CurrentApp().Driver().AllWindows()[0] != nil {
@@ -54,8 +54,20 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 
 	// is filename a zip file?
 	needsExtract := false
+	extractType := ""
 	if strings.HasSuffix(filename, ".zip") {
 		needsExtract = true
+		extractType = "zip"
+	} else if strings.HasSuffix(filename, ".tar.gz") {
+		needsExtract = true
+		extractType = "tar.gz"
+	}
+	if extractFormat != "" {
+		needsExtract = true
+		extractType = extractFormat
+	} else if extractFormat == "none" {
+		needsExtract = false
+		extractType = ""
 	}
 
 	// get subdomain from download url
@@ -125,7 +137,11 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 
 		statusBarContainer.Add(widget.NewLabel("Extracting..."))
 		statusBarContainer.Refresh()
-		err = Updater.Unzip(targetDir, downloadTargetDir)
+		if extractType == "zip" {
+			err = Updater.Unzip(targetDir, downloadTargetDir)
+		} else if extractType == "tar.gz" {
+			err = Updater.Untar(targetDir, downloadTargetDir)
+		}
 		if err != nil {
 			dialog.ShowError(err, window)
 			return err
@@ -176,7 +192,7 @@ func (c *modelNameLinksMap) DownloadModel(modelName string, modelType string) er
 		return fmt.Errorf("no active window found")
 	}
 
-	err := DownloadFile(modelLinks.urls, modelCachePath, modelChecksum, modelName+" "+modelType)
+	err := DownloadFile(modelLinks.urls, modelCachePath, modelChecksum, modelName+" "+modelType, "")
 	if err != nil {
 		dialog.ShowError(err, window)
 	}

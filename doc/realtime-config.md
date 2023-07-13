@@ -30,7 +30,7 @@ To improve the speed of the realtime mode, you can use the following advanced Se
 > _(Its not really recommended though, as using this increases the used Memory, and using a smaller model only for realtime processing will increase differences between realtime results and the final result)_
 > 
 > | Setting                      | Description                                                                                                                                            |
-> |--------------------------------------------------------------------------------------------------------------------------------------------------------|---------------------------------------------------------------------------------------------------------------------------------------------------------|
+> |------------------------------|--------------------------------------------------------------------------------------------------------------------------------------------------------|
 > | `realtime_whisper_model`     | Optionally defines a separate Whisper model for realtime processing.<br>_Can improve speed in exchange for additional RAM usage and less precision._   |
 > | `realtime_whisper_precision` | Only used when `realtime_whisper_model` is set.<br>_Defines the precision of the Whisper model. (`float16` should be faster then `float32` with CUDA)_ |
 

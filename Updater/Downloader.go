@@ -2,6 +2,7 @@ package Updater
 
 import (
 	"fmt"
+	"io"
 	"io/ioutil"
 	"math"
 	"net/http"
@@ -9,6 +10,7 @@ import (
 	"sync"
 	"sync/atomic"
 	"time"
+	"whispering-tiger-ui/Utilities"
 )
 
 const DefaultChunkSize int64 = 20 * 1024 * 1024 // 20 MB
@@ -108,13 +110,26 @@ func (d *Download) DownloadFile(retries int) error {
 	if err != nil {
 		return err
 	}
-	// Check if the local file exists and if it's larger than the remote file
-	localFileSize := d.getFileSize(d.Filepath + ".tmp")
-	if localFileSize > remoteFileSize {
-		// If the local file is larger than the remote file, delete the local file
-		err := os.Remove(d.Filepath + ".tmp")
-		if err != nil {
-			return err
+
+	// If remote file size is -1, proceed to download without knowing the file size
+	if remoteFileSize == -1 {
+		d.ChunkSize = math.MaxInt64                   // set the chunk size to maximum value
+		d.WriteCounter.ContentLength = math.MaxUint64 // set the content length to maximum value
+		if Utilities.FileExists(d.Filepath + ".tmp") {
+			err := os.Remove(d.Filepath + ".tmp")
+			if err != nil {
+				return err
+			}
+		}
+	} else {
+		// Check if the local file exists and if it's larger than the remote file
+		localFileSize := d.getFileSize(d.Filepath + ".tmp")
+		if Utilities.FileExists(d.Filepath+".tmp") && localFileSize > remoteFileSize {
+			// If the local file is larger than the remote file, delete the local file
+			err := os.Remove(d.Filepath + ".tmp")
+			if err != nil {
+				return err
+			}
 		}
 	}
 
@@ -157,9 +172,29 @@ func (d *Download) IsResuming() bool {
 	return d.isResumed
 }
 
+func (d *Download) downloadFullFile(url string) error {
+	out, err := os.Create(d.Filepath + ".tmp")
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	resp, err := http.Get(url)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	_, err = io.Copy(out, resp.Body)
+	if err != nil {
+		return err
+	}
+
+	return nil
+}
+
 func (d *Download) downloadFileWithRetry(retries int) error {
 	currentUrl := d.getCurrentUrl()
-	//d.downloaded = make([]int64, 0)
 
 	req, err := http.NewRequest("HEAD", currentUrl, nil)
 	if err != nil {
@@ -174,121 +209,130 @@ func (d *Download) downloadFileWithRetry(retries int) error {
 	contentLength := resp.ContentLength
 	d.WriteCounter.ContentLength = uint64(contentLength)
 
-	// Define totalSize variable
-	totalSize := int64(d.WriteCounter.ContentLength)
-
-	// Check if the file already exists and get its size
-	var startBytes int64 = 0
-	if _, err := os.Stat(d.Filepath + ".tmp"); err == nil {
-		startBytes = d.getFileSize(d.Filepath + ".tmp")
-	}
-
-	// Set ResumeSupport to true if the file download is resumed and the server supports resuming
-	d.isResumed = startBytes > 0 && d.serverResumeSupport
-
-	// Create the file without overwriting it
-	out, err := os.OpenFile(d.Filepath+".tmp", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
-	if err != nil {
-		return err
-	}
-
-	defer out.Close()
-
-	//chunksCount := (contentLength + chunkSize - 1) / chunkSize
-
-	// Create channels for communication
-	chunksChannel := make(chan Chunk, d.ConcurrentDownloads)
-	errorsChannel := make(chan error, d.ConcurrentDownloads)
-
-	var wg sync.WaitGroup
-
-	totalChunks := int(math.Ceil(float64(contentLength) / float64(d.ChunkSize)))
-	startingChunk := startBytes / d.ChunkSize
-	remainingChunks := int64(totalChunks - int(startBytes/d.ChunkSize))
-
-	// Initialize the WriteCounter values
-	d.WriteCounter.Total = uint64(startBytes)
-	d.WriteCounter.ContentLength = uint64(totalSize)
-
-	// Initialize d.nextWrite
-	d.nextWrite = startBytes
-
-	// Concurrent download loop
-	for i := 0; i < d.ConcurrentDownloads; i++ {
-		wg.Add(1)
-		go func() {
-			defer wg.Done()
-
-			for {
-				chunkIndex := atomic.AddInt64(&startingChunk, 1) - 1
-				if chunkIndex >= int64(totalChunks) {
-					break
-				}
-
-				remaining := atomic.AddInt64(&remainingChunks, -1)
-				if remaining < 0 {
-					break
-				}
-
-				start := chunkIndex * d.ChunkSize // Updated start calculation
-				end := start + d.ChunkSize - 1
-				if end >= totalSize {
-					end = totalSize - 1
-				}
-
-				chunk, downloaded, err := d.downloadChunk(currentUrl, start, end)
-				if err != nil {
-					errorsChannel <- err
-					return
-				}
-
-				if downloaded {
-					chunksChannel <- *chunk
-				}
-			}
-		}()
-	}
-
-loop:
-	for {
-		select {
-		case err := <-errorsChannel:
-			return d.retryAction(retries, err)
-		case chunk := <-chunksChannel:
-			d.mu.Lock()
-			d.downloaded[chunk.offset] = chunk.data
-
-			for {
-				data, ok := d.downloaded[d.nextWrite]
-				if !ok {
-					break
-				}
-
-				_, err := out.Write(data)
-				if err != nil {
-					d.mu.Unlock()
-					return err
-				}
-
-				d.WriteCounter.addBytes(uint64(len(data)))
-				delete(d.downloaded, d.nextWrite)
-				d.nextWrite += int64(len(data))
-			}
-
-			if d.nextWrite == totalSize {
-				d.mu.Unlock()
-				break loop
-			}
-
-			d.mu.Unlock()
+	if contentLength == -1 {
+		// If the server doesn't support resuming, download the full file
+		println("Server doesn't support resuming. downloading full file...")
+		err = d.downloadFullFile(currentUrl)
+		if err != nil {
+			return err
 		}
-	}
+	} else {
+		// Define totalSize variable
+		totalSize := int64(d.WriteCounter.ContentLength)
 
-	wg.Wait()
+		// Check if the file already exists and get its size
+		var startBytes int64 = 0
+		if _, err := os.Stat(d.Filepath + ".tmp"); err == nil {
+			startBytes = d.getFileSize(d.Filepath + ".tmp")
+		}
 
-	// Close the file without defer so it can happen before Rename()
-	if err := out.Close(); err != nil {
-		return err
+		// Set ResumeSupport to true if the file download is resumed and the server supports resuming
+		d.isResumed = startBytes > 0 && d.serverResumeSupport
+
+		// Create the file without overwriting it
+		out, err := os.OpenFile(d.Filepath+".tmp", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+		if err != nil {
+			return err
+		}
+
+		defer out.Close()
+
+		//chunksCount := (contentLength + chunkSize - 1) / chunkSize
+
+		// Create channels for communication
+		chunksChannel := make(chan Chunk, d.ConcurrentDownloads)
+		errorsChannel := make(chan error, d.ConcurrentDownloads)
+
+		var wg sync.WaitGroup
+
+		totalChunks := int(math.Ceil(float64(contentLength) / float64(d.ChunkSize)))
+		startingChunk := startBytes / d.ChunkSize
+		remainingChunks := int64(totalChunks - int(startBytes/d.ChunkSize))
+
+		// Initialize the WriteCounter values
+		d.WriteCounter.Total = uint64(startBytes)
+		d.WriteCounter.ContentLength = uint64(totalSize)
+
+		// Initialize d.nextWrite
+		d.nextWrite = startBytes
+
+		// Concurrent download loop
+		for i := 0; i < d.ConcurrentDownloads; i++ {
+			wg.Add(1)
+			go func() {
+				defer wg.Done()
+
+				for {
+					chunkIndex := atomic.AddInt64(&startingChunk, 1) - 1
+					if chunkIndex >= int64(totalChunks) {
+						break
+					}
+
+					remaining := atomic.AddInt64(&remainingChunks, -1)
+					if remaining < 0 {
+						break
+					}
+
+					start := chunkIndex * d.ChunkSize // Updated start calculation
+					end := start + d.ChunkSize - 1
+					if end >= totalSize {
+						end = totalSize - 1
+					}
+
+					chunk, downloaded, err := d.downloadChunk(currentUrl, start, end)
+					if err != nil {
+						errorsChannel <- err
+						return
+					}
+
+					if downloaded {
+						chunksChannel <- *chunk
+					}
+				}
+			}()
+		}
+
+	loop:
+		for {
+			select {
+			case err := <-errorsChannel:
+				return d.retryAction(retries, err)
+			case chunk := <-chunksChannel:
+				d.mu.Lock()
+				d.downloaded[chunk.offset] = chunk.data
+
+				for {
+					data, ok := d.downloaded[d.nextWrite]
+					if !ok {
+						break
+					}
+
+					_, err := out.Write(data)
+					if err != nil {
+						d.mu.Unlock()
+						return err
+					}
+
+					d.WriteCounter.addBytes(uint64(len(data)))
+					delete(d.downloaded, d.nextWrite)
+					d.nextWrite += int64(len(data))
+				}
+
+				if d.nextWrite == totalSize {
+					d.mu.Unlock()
+					break loop
+				}
+
+				d.mu.Unlock()
+			}
+		}
+
+		wg.Wait()
+
+		// Close the file without defer so it can happen before Rename()
+		if err := out.Close(); err != nil {
+			return err
+		}
 	}
 
 	// Maximum number of retries for rename
@@ -309,7 +353,6 @@ loop:
 	if renameErr != nil {
 		return renameErr
 	}
-
 	return nil
 }
 
