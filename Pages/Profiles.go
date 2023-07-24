@@ -795,7 +795,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
 		}, 0)
 
-		profileForm.Append("Speech to Text Type", container.NewGridWithColumns(2, sttTypeSelect))
+		denoiseCheckbox := widget.NewCheck("A.I. Denoise", func(b bool) {})
+
+		profileForm.Append("Speech to Text Type", container.NewGridWithColumns(2, sttTypeSelect, denoiseCheckbox))
 
 		profileForm.Append("", layout.NewSpacer())
 
@@ -1053,6 +1055,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Speaker_diarization_window_size: 15,
 			Speaker_min_duration:            0.5,
 
+			Denoise_audio:             true,
+			Denoise_audio_post_filter: false,
+
 			Whisper_precision:             "float32",
 			Stt_type:                      "faster_whisper",
 			Temperature_fallback:          true,
@@ -1180,6 +1185,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			}
 		}
 		profileForm.Items[14].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Stt_type)
+		profileForm.Items[14].Widget.(*fyne.Container).Objects[1].(*widget.Check).SetChecked(profileSettings.Denoise_audio)
 
 		// spacer
 		profileForm.Items[16].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_device)
@@ -1216,6 +1222,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			profileSettings.Model = profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
 			profileSettings.Whisper_precision = profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected().Value
 			profileSettings.Stt_type = profileForm.Items[14].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Denoise_audio = profileForm.Items[14].Widget.(*fyne.Container).Objects[1].(*widget.Check).Checked
 
 			profileSettings.Txt_translator_device = profileForm.Items[16].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
 			profileSettings.Txt_translator_size = profileForm.Items[17].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
@@ -1252,8 +1259,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					Ai_device:         profileSettings.Ai_device,
 					Model:             profileSettings.Model,
 					Whisper_precision: profileSettings.Whisper_precision,
-					//Faster_whisper:    profileSettings.Faster_whisper,
-					Stt_type: profileSettings.Stt_type,
+					Stt_type:          profileSettings.Stt_type,
+
+					Denoise_audio: profileSettings.Denoise_audio,
 
 					Txt_translator_device:    profileSettings.Txt_translator_device,
 					Txt_translator_size:      profileSettings.Txt_translator_size,

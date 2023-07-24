@@ -60,8 +60,14 @@ func (res TtsVoicesListing) Update() *TtsVoicesListing {
 			break
 		}
 	}
-	if !voicesListContainsSelectedVoice {
+	// only set new tts voice if select is not received tts_voice and
+	// if select is not empty and does not contain only one empty element
+	if !voicesListContainsSelectedVoice && Fields.Field.TtsVoiceCombo.Options != nil && (len(Fields.Field.TtsVoiceCombo.Options) > 0 &&
+		(len(Fields.Field.TtsVoiceCombo.Options) == 1 && Fields.Field.TtsVoiceCombo.Options[0] != "")) {
 		Fields.Field.TtsVoiceCombo.SetSelectedIndex(0)
+	}
+	if Settings.Config.Tts_voice != "" && voicesListContainsSelectedVoice {
+		Fields.Field.TtsVoiceCombo.SetSelected(Settings.Config.Tts_voice)
 	}
 
 	return &res

@@ -72,6 +72,8 @@ type Conf struct {
 	Push_to_talk_key              string      `yaml:"push_to_talk_key" json:"push_to_talk_key"`
 	Word_timestamps               bool        `yaml:"word_timestamps" json:"word_timestamps"`                     // if enabled, Whisper will add timestamps to the transcribed text.
 	Faster_without_timestamps     bool        `yaml:"faster_without_timestamps" json:"faster_without_timestamps"` // if enabled, faster whisper will only sample text tokens. (only when using stt_type=faster_whisper)
+	Denoise_audio                 bool        `yaml:"denoise_audio" json:"denoise_audio"`                         // if enabled, audio will be de-noised before processing.
+	Denoise_audio_post_filter     bool        `yaml:"denoise_audio_post_filter" json:"denoise_audio_post_filter"` // Enable post filter for some minor, extra noise reduction.
 
 	// text translate settings
 	Txt_translate            bool   `yaml:"txt_translate" json:"txt_translate"`
