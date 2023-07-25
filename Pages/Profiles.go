@@ -677,6 +677,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "int16 precision", Value: "int16"},
 			{Text: "int8_float16 precision", Value: "int8_float16"},
 			{Text: "int8 precision", Value: "int8"},
+			//{Text: "bfloat16 precision (CC 8 required)", Value: "bfloat16"},
+			//{Text: "int8_bfloat16 precision (CC 8 required)", Value: "int8_bfloat16"},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
 		sttAiDeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {
@@ -710,6 +712,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			case "int8_float16":
 				precisionType = Hardwareinfo.Int8
 			case "int8":
+				precisionType = Hardwareinfo.Int8
+			case "bfloat16":
+				precisionType = Hardwareinfo.Float16
+			case "int8_bfloat16":
 				precisionType = Hardwareinfo.Int8
 			}
 			if sttAiDeviceSelect.GetSelected().Value == "cpu" && (s.Value == "float16" || s.Value == "int8_float16") {
@@ -771,6 +777,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					{Text: "int16 precision", Value: "int16"},
 					{Text: "int8_float16 precision", Value: "int8_float16"},
 					{Text: "int8 precision", Value: "int8"},
+					//{Text: "bfloat16 precision (CC 8 required)", Value: "bfloat16"},
+					//{Text: "int8_bfloat16 precision (CC 8 required)", Value: "int8_bfloat16"},
 				}
 				AIModelType = "CT2"
 			} else if s.Value == "original_whisper" {
@@ -812,6 +820,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "int16 precision", Value: "int16"},
 			{Text: "int8_float16 precision", Value: "int8_float16"},
 			{Text: "int8 precision", Value: "int8"},
+			{Text: "bfloat16 precision (CC 8 required)", Value: "bfloat16"},
+			{Text: "int8_bfloat16 precision (CC 8 required)", Value: "int8_bfloat16"},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
 		txtTranslatorDeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {
@@ -846,6 +856,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			case "int8_float16":
 				precisionType = Hardwareinfo.Int8
 			case "int8":
+				precisionType = Hardwareinfo.Int8
+			case "bfloat16":
+				precisionType = Hardwareinfo.Float16
+			case "int8_bfloat16":
 				precisionType = Hardwareinfo.Int8
 			}
 			if txtTranslatorDeviceSelect.GetSelected().Value == "cpu" && (s.Value == "float16" || s.Value == "int8_float16") {
@@ -902,6 +916,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					{Text: "int16 precision", Value: "int16"},
 					{Text: "int8_float16 precision", Value: "int8_float16"},
 					{Text: "int8 precision", Value: "int8"},
+					{Text: "bfloat16 precision (CC 8 required)", Value: "bfloat16"},
+					{Text: "int8_bfloat16 precision (CC 8 required)", Value: "int8_bfloat16"},
 				}
 			}
 
@@ -1174,6 +1190,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				{Text: "int16 precision", Value: "int16"},
 				{Text: "int8_float16 precision", Value: "int8_float16"},
 				{Text: "int8 precision", Value: "int8"},
+				//{Text: "bfloat16 precision (CC 8 required)", Value: "bfloat16"},
+				//{Text: "int8_bfloat16 precision (CC 8 required)", Value: "int8_bfloat16"},
 			}
 		} else if profileSettings.Stt_type == "original_whisper" {
 			profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
