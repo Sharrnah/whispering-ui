@@ -1,6 +1,7 @@
 package Updater
 
 import (
+	"context"
 	"fmt"
 	"io"
 	"io/ioutil"
@@ -23,6 +24,7 @@ type WriteCounter struct {
 	ContentLength uint64
 	OnProgress    OnProgress
 	startTime     time.Time
+	LastUpdate    time.Time
 	speedMA       *MovingAverage
 }
 
@@ -84,15 +86,34 @@ func (d *Download) getRemoteFileSizeWithRetry(retries int) (int64, error) {
 }
 
 func (wc *WriteCounter) addBytes(n uint64) {
-	wc.Total += n
-	elapsed := time.Since(wc.startTime).Seconds()
-	speed := float64(wc.Total) / elapsed
-	wc.speedMA.Add(speed)
-	avgSpeed := wc.speedMA.Average()
-	wc.OnProgress(wc.Total, wc.ContentLength, avgSpeed)
+	if n > 0 {
+		wc.Total += n
+	}
+	if time.Since(wc.LastUpdate).Seconds() >= 1 {
+		elapsed := time.Since(wc.startTime).Seconds()
+		speed := float64(wc.Total) / elapsed
+		wc.speedMA.Add(speed)
+		avgSpeed := wc.speedMA.Average()
+		wc.OnProgress(wc.Total, wc.ContentLength, avgSpeed)
+		wc.LastUpdate = time.Now()
+	}
 }
 
 func (d *Download) DownloadFile(retries int) error {
+	progressCtx, progressCancel := context.WithCancel(context.Background())
+	defer progressCancel()
+
+	go func() {
+		for {
+			select {
+			case <-time.After(1 * time.Second):
+				d.WriteCounter.addBytes(0)
+			case <-progressCtx.Done():
+				return
+			}
+		}
+	}()
+
 	d.downloaded = make(map[int64][]byte)
 	d.maxRetries = retries
 	if d.ConcurrentDownloads == 0 {
@@ -133,7 +154,7 @@ func (d *Download) DownloadFile(retries int) error {
 		}
 	}
 
-	return d.downloadFileWithRetry(retries)
+	return d.downloadFileWithRetry(retries, progressCtx, progressCancel)
 }
 
 func (d *Download) getCurrentUrl() string {
@@ -144,18 +165,18 @@ func (d *Download) getCurrentUrl() string {
 	return currentUrl
 }
 
-func (d *Download) retryAction(retries int, err error) error {
+func (d *Download) retryAction(retries int, err error, progressCtx context.Context, contextCancel context.CancelFunc) error {
 	currentUrl := d.getCurrentUrl()
 
 	if retries > 0 {
 		fmt.Printf("Error downloading %s: %s. Retrying in 1 seconds...\n", d.Url, err.Error())
 		time.Sleep(2 * time.Second)
-		return d.downloadFileWithRetry(retries - 1)
+		return d.downloadFileWithRetry(retries-1, progressCtx, contextCancel)
 	} else {
 		if d.urlIndex < len(d.FallbackUrls) {
 			fmt.Printf("All retries for URL %s have failed. Trying the next fallback URL...\n", currentUrl)
 			d.urlIndex++
-			return d.downloadFileWithRetry(d.maxRetries)
+			return d.downloadFileWithRetry(d.maxRetries, progressCtx, contextCancel)
 		} else {
 			fmt.Printf("All retries for URL %s and all fallback URLs have failed.\n", currentUrl)
 			return err
@@ -193,16 +214,16 @@ func (d *Download) downloadFullFile(url string) error {
 	return nil
 }
 
-func (d *Download) downloadFileWithRetry(retries int) error {
+func (d *Download) downloadFileWithRetry(retries int, progressCtx context.Context, contextCancel context.CancelFunc) error {
 	currentUrl := d.getCurrentUrl()
 
 	req, err := http.NewRequest("HEAD", currentUrl, nil)
 	if err != nil {
-		return d.retryAction(retries, err)
+		return d.retryAction(retries, err, progressCtx, contextCancel)
 	}
 	resp, err := http.DefaultClient.Do(req)
 	if err != nil {
-		return d.retryAction(retries, err)
+		return d.retryAction(retries, err, progressCtx, contextCancel)
 	}
 	defer resp.Body.Close()
 
@@ -263,30 +284,35 @@ func (d *Download) downloadFileWithRetry(retries int) error {
 				defer wg.Done()
 
 				for {
-					chunkIndex := atomic.AddInt64(&startingChunk, 1) - 1
-					if chunkIndex >= int64(totalChunks) {
-						break
-					}
-
-					remaining := atomic.AddInt64(&remainingChunks, -1)
-					if remaining < 0 {
-						break
-					}
-
-					start := chunkIndex * d.ChunkSize // Updated start calculation
-					end := start + d.ChunkSize - 1
-					if end >= totalSize {
-						end = totalSize - 1
-					}
-
-					chunk, downloaded, err := d.downloadChunk(currentUrl, start, end)
-					if err != nil {
-						errorsChannel <- err
+					select {
+					case <-progressCtx.Done():
 						return
-					}
+					default:
+						chunkIndex := atomic.AddInt64(&startingChunk, 1) - 1
+						if chunkIndex >= int64(totalChunks) {
+							break
+						}
 
-					if downloaded {
-						chunksChannel <- *chunk
+						remaining := atomic.AddInt64(&remainingChunks, -1)
+						if remaining < 0 {
+							break
+						}
+
+						start := chunkIndex * d.ChunkSize // Updated start calculation
+						end := start + d.ChunkSize - 1
+						if end >= totalSize {
+							end = totalSize - 1
+						}
+
+						chunk, downloaded, err := d.downloadChunk(currentUrl, start, end)
+						if err != nil {
+							errorsChannel <- err
+							return
+						}
+
+						if downloaded {
+							chunksChannel <- *chunk
+						}
 					}
 				}
 			}()
@@ -296,7 +322,7 @@ func (d *Download) downloadFileWithRetry(retries int) error {
 		for {
 			select {
 			case err := <-errorsChannel:
-				return d.retryAction(retries, err)
+				return d.retryAction(retries, err, progressCtx, contextCancel)
 			case chunk := <-chunksChannel:
 				d.mu.Lock()
 				d.downloaded[chunk.offset] = chunk.data
@@ -319,6 +345,8 @@ func (d *Download) downloadFileWithRetry(retries int) error {
 				}
 
 				if d.nextWrite == totalSize {
+					contextCancel()            // cancel the progress update goroutine
+					d.WriteCounter.addBytes(0) // force progress update when finished
 					d.mu.Unlock()
 					break loop
 				}

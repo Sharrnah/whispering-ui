@@ -123,8 +123,10 @@ func main() {
 		RuntimeBackend.BackendsList[0].DeviceOutIndex = strconv.Itoa(Settings.Config.Device_out_index.(int))
 		RuntimeBackend.BackendsList[0].SettingsFile = Settings.Config.SettingsFilename
 		// Setting this to use UTF-8 encoding for Python does not work when build using PyInstaller
-		//RuntimeBackend.BackendsList[0].AttachEnvironment("PYTHONIOENCODING", "utf8")
-		//RuntimeBackend.BackendsList[0].AttachEnvironment("PYTHONUTF8", "1")
+		RuntimeBackend.BackendsList[0].AttachEnvironment("PYTHONIOENCODING", "UTF-8")
+		RuntimeBackend.BackendsList[0].AttachEnvironment("PYTHONLEGACYWINDOWSSTDIO", "UTF-8")
+		RuntimeBackend.BackendsList[0].AttachEnvironment("PYTHONUTF8", "1")
+		// RuntimeBackend.BackendsList[0].AttachEnvironment("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
 		if Utilities.FileExists("ffmpeg/bin/ffmpeg.exe") {
 			appExec, _ := os.Executable()
 			appPath := filepath.Dir(appExec)
