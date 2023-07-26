@@ -84,3 +84,29 @@ func GetGPUMemory() (memoryUsed int64, memoryTotal int64) {
 	}
 	return 0, 0
 }
+
+func GetGPUComputeCapability() (computeCapabilityVersion float32) {
+	if haveExe("nvidia-smi") {
+		cmd := exec.Command("nvidia-smi", "--query-gpu=compute_cap", "--format=csv,noheader")
+
+		// Hide command line window
+		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+
+		output, err := cmd.Output()
+		if err != nil {
+			fmt.Printf("Error running nvidia-smi: %v\n", err)
+			return 0.0
+		}
+
+		// output []byte to string
+		outputString := string(output[:])
+		outputString = strings.TrimSpace(outputString)
+
+		// convert outputString to float32
+		computeCapabilityVersion, _ := strconv.ParseFloat(outputString, 32)
+		return float32(computeCapabilityVersion)
+	} else {
+		fmt.Printf("nvidia-smi not found\n")
+	}
+	return 0.0
+}

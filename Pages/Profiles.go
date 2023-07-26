@@ -499,13 +499,17 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 	GPUMemoryBar := widget.NewProgressBar()
 	totalGPUMemory := int64(0)
+	var ComputeCapability float32 = 0.0
 	if Hardwareinfo.HasNVIDIACard() {
 		_, totalGPUMemory = Hardwareinfo.GetGPUMemory()
 		GPUMemoryBar.Max = float64(totalGPUMemory)
+
+		ComputeCapability = Hardwareinfo.GetGPUComputeCapability()
 	}
 	GPUMemoryBar.TextFormatter = func() string {
 		return "Estimated Video-RAM Usage: " + strconv.Itoa(int(GPUMemoryBar.Value)) + " / " + strconv.Itoa(int(GPUMemoryBar.Max)) + " MiB"
 	}
+	GPUInformationLabel := widget.NewLabel("Compute Capability: " + fmt.Sprintf("%.1f", ComputeCapability))
 
 	BuildProfileForm := func() fyne.CanvasObject {
 		profileForm := widget.NewForm()
@@ -677,8 +681,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "int16 precision", Value: "int16"},
 			{Text: "int8_float16 precision", Value: "int8_float16"},
 			{Text: "int8 precision", Value: "int8"},
-			//{Text: "bfloat16 precision (CC 8 required)", Value: "bfloat16"},
-			//{Text: "int8_bfloat16 precision (CC 8 required)", Value: "int8_bfloat16"},
+			//{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
+			//{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
 		sttAiDeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {
@@ -721,8 +725,14 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			if sttAiDeviceSelect.GetSelected().Value == "cpu" && (s.Value == "float16" || s.Value == "int8_float16") {
 				dialog.ShowInformation("Information", "Most CPU's do not support float16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
 			}
+			if sttAiDeviceSelect.GetSelected().Value == "cpu" && (s.Value == "bfloat16" || s.Value == "int8_bfloat16") {
+				dialog.ShowInformation("Information", "Most CPU's do not support bfloat16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
+			}
 			if sttAiDeviceSelect.GetSelected().Value == "cuda" && (s.Value == "int16") {
 				dialog.ShowInformation("Information", "Most CUDA GPU's do not support int16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
+			}
+			if sttAiDeviceSelect.GetSelected().Value == "cuda" && (s.Value == "bfloat16" || s.Value == "int8_bfloat16") && ComputeCapability < 8.0 {
+				dialog.ShowInformation("Information", "Your CUDA GPU most likely does not support bfloat16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 			// calculate memory consumption
 			AIModel := ProfileAIModelOption{
@@ -777,8 +787,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					{Text: "int16 precision", Value: "int16"},
 					{Text: "int8_float16 precision", Value: "int8_float16"},
 					{Text: "int8 precision", Value: "int8"},
-					//{Text: "bfloat16 precision (CC 8 required)", Value: "bfloat16"},
-					//{Text: "int8_bfloat16 precision (CC 8 required)", Value: "int8_bfloat16"},
+					//{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
+					//{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
 				}
 				AIModelType = "CT2"
 			} else if s.Value == "original_whisper" {
@@ -786,7 +796,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					{Text: "float32 precision", Value: "float32"},
 					{Text: "float16 precision", Value: "float16"},
 				}
-				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" {
+				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "bfloat16" || selectedPrecision == "int8_bfloat16" {
 					sttPrecisionSelect.SetSelected("float16")
 				}
 				AIModelType = "O"
@@ -820,8 +830,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "int16 precision", Value: "int16"},
 			{Text: "int8_float16 precision", Value: "int8_float16"},
 			{Text: "int8 precision", Value: "int8"},
-			{Text: "bfloat16 precision (CC 8 required)", Value: "bfloat16"},
-			{Text: "int8_bfloat16 precision (CC 8 required)", Value: "int8_bfloat16"},
+			{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
+			{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
 		txtTranslatorDeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {
@@ -829,6 +839,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				dialog.ShowInformation("No NVIDIA Card found", "No NVIDIA Card found. You might need to use CPU instead for it to work.", fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 			if s.Value == "cpu" && (txtTranslatorPrecisionSelect.GetSelected().Value == "float16" || txtTranslatorPrecisionSelect.GetSelected().Value == "int8_float16") {
+				txtTranslatorPrecisionSelect.SetSelected("float32")
+			}
+			if s.Value == "cpu" && (txtTranslatorPrecisionSelect.GetSelected().Value == "bfloat16" || txtTranslatorPrecisionSelect.GetSelected().Value == "int8_bfloat16") {
 				txtTranslatorPrecisionSelect.SetSelected("float32")
 			}
 			if s.Value == "cuda" && txtTranslatorPrecisionSelect.GetSelected().Value == "int16" {
@@ -865,8 +878,14 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			if txtTranslatorDeviceSelect.GetSelected().Value == "cpu" && (s.Value == "float16" || s.Value == "int8_float16") {
 				dialog.ShowInformation("Information", "Most CPU's do not support float16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
 			}
+			if txtTranslatorDeviceSelect.GetSelected().Value == "cpu" && (s.Value == "bfloat16" || s.Value == "int8_bfloat16") {
+				dialog.ShowInformation("Information", "Most CPU's do not support bfloat16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
+			}
 			if txtTranslatorDeviceSelect.GetSelected().Value == "cuda" && (s.Value == "int16") {
 				dialog.ShowInformation("Information", "Most CUDA GPU's do not support int16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
+			}
+			if sttAiDeviceSelect.GetSelected().Value == "cuda" && (s.Value == "bfloat16" || s.Value == "int8_bfloat16") && ComputeCapability < 8.0 {
+				dialog.ShowInformation("Information", "Your CUDA GPU most likely does not support bfloat16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 			// calculate memory consumption
 			AIModel := ProfileAIModelOption{
@@ -916,8 +935,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					{Text: "int16 precision", Value: "int16"},
 					{Text: "int8_float16 precision", Value: "int8_float16"},
 					{Text: "int8 precision", Value: "int8"},
-					{Text: "bfloat16 precision (CC 8 required)", Value: "bfloat16"},
-					{Text: "int8_bfloat16 precision (CC 8 required)", Value: "int8_bfloat16"},
+					{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
+					{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
 				}
 			}
 
@@ -1190,8 +1209,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				{Text: "int16 precision", Value: "int16"},
 				{Text: "int8_float16 precision", Value: "int8_float16"},
 				{Text: "int8 precision", Value: "int8"},
-				//{Text: "bfloat16 precision (CC 8 required)", Value: "bfloat16"},
-				//{Text: "int8_bfloat16 precision (CC 8 required)", Value: "int8_bfloat16"},
+				//{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
+				//{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
 			}
 		} else if profileSettings.Stt_type == "original_whisper" {
 			profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
@@ -1368,6 +1387,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	memoryArea := container.NewVBox(
 		CPUMemoryBar,
 		GPUMemoryBar,
+		GPUInformationLabel,
 	)
 
 	mainContent := container.NewHSplit(
