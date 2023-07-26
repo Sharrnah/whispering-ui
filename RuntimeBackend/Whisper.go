@@ -13,6 +13,8 @@ import (
 	"os/exec"
 	"strings"
 	"syscall"
+	"time"
+	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Utilities"
 )
 
@@ -92,12 +94,29 @@ func (c *WhisperProcessConfig) IsRunning() bool {
 }
 
 func (c *WhisperProcessConfig) Stop() {
+	timeout := 6 * time.Second
+
 	if c.Program != nil && c.Program.Process != nil {
 		println("Terminating process")
-		_ = c.Program.Process.Signal(syscall.SIGINT)
-		_ = c.Program.Process.Signal(syscall.SIGKILL)
-		_ = c.Program.Process.Signal(syscall.SIGTERM)
-		//_ = c.Program.Process.Kill()
+
+		sendMessage := Fields.SendMessageStruct{
+			Type:  "quit",
+			Name:  "quit",
+			Value: "",
+		}
+		sendMessage.SendMessage()
+
+		time.Sleep(timeout)
+
+		if c.Program.Process != nil {
+			_ = c.Program.Process.Signal(syscall.SIGINT)
+			time.Sleep(timeout / 2)
+		}
+
+		if c.Program.Process != nil {
+			_ = c.Program.Process.Signal(syscall.SIGKILL)
+			_ = c.Program.Process.Signal(syscall.SIGTERM)
+		}
 
 		c.Program.Stdout = nil
 		c.Program.Stdin = nil

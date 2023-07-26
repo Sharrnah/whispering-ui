@@ -113,7 +113,9 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			log.Println(err)
 			return
 		}
-		errorMessage.ShowError(fyne.CurrentApp().Driver().AllWindows()[0])
+		if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
+			errorMessage.ShowError(fyne.CurrentApp().Driver().AllWindows()[0])
+		}
 	case "info":
 		errorMessage := Messages.ExceptionMessage{}
 		err = json.Unmarshal(c.Raw, &errorMessage)
@@ -121,7 +123,9 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			log.Println(err)
 			return
 		}
-		errorMessage.ShowInfo(fyne.CurrentApp().Driver().AllWindows()[0])
+		if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
+			errorMessage.ShowInfo(fyne.CurrentApp().Driver().AllWindows()[0])
+		}
 	case "installed_languages":
 		err = json.Unmarshal(c.Raw, &Messages.InstalledLanguages)
 		if err != nil {
@@ -321,12 +325,16 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			return
 		}
 		Messages.CurrentLoadingState.Update()
-		fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Content().Refresh()
+		if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
+			fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Content().Refresh()
+		}
 	case "tts_save":
 		ttsSpeechAudio := Messages.TtsSpeechAudio{}
 		err = json.Unmarshal(c.Raw, &ttsSpeechAudio)
 		if err != nil {
-			dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[0])
+			if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
+				dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[0])
+			}
 		}
 		if err == nil && len(ttsSpeechAudio.WavData) > 0 {
 			ttsSpeechAudio.SaveWav()
@@ -335,16 +343,22 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		download := Messages.DownloadMessage{}
 		err = json.Unmarshal(c.Raw, &download)
 		if err != nil {
-			dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[0])
+			if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
+				dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[0])
+			}
 			return
 		}
 		go func() {
 			err = download.StartDownload()
 			if err != nil {
-				dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[0])
+				if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
+					dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[0])
+				}
 				return
 			}
-			fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Content().Refresh()
+			if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
+				fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Content().Refresh()
+			}
 		}()
 	}
 
