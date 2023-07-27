@@ -9,6 +9,7 @@ require (
 	github.com/gen2brain/malgo v0.11.10
 	github.com/gorilla/websocket v1.5.0
 	github.com/hajimehoshi/oto/v2 v2.3.1
+	github.com/hashicorp/go-cleanhttp v0.5.1
 	github.com/jaypipes/ghw v0.10.0
 	github.com/jeandeaual/go-locale v0.0.0-20220711133428-7de61946b173
 	github.com/youpy/go-wav v0.3.2

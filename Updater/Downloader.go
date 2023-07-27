@@ -3,6 +3,8 @@ package Updater
 import (
 	"context"
 	"fmt"
+	"fyne.io/fyne/v2"
+	"github.com/hashicorp/go-cleanhttp"
 	"io"
 	"io/ioutil"
 	"math"
@@ -16,6 +18,8 @@ import (
 
 const DefaultChunkSize int64 = 20 * 1024 * 1024 // 20 MB
 const defaultConcurrentDownloads = 1
+
+var netClient = cleanhttp.DefaultPooledClient()
 
 type OnProgress func(bytesWritten, contentLength uint64, speed float64)
 
@@ -43,10 +47,27 @@ type Download struct {
 	cond                *sync.Cond
 	downloaded          map[int64][]byte
 	nextWrite           int64
+	remoteFileSize      int64
+}
+
+func (d *Download) getUserAgent() string {
+	// convert build int to string
+	build := fyne.CurrentApp().Metadata().Build
+	buildStr := fmt.Sprintf("%d", build)
+
+	return "Whispering_Tiger_DL/" + fyne.CurrentApp().Metadata().Version + " (" + buildStr + ")"
 }
 
 func (d *Download) getRemoteFileSize() (int64, error) {
-	resp, err := http.Head(d.getCurrentUrl())
+	currentUrl := d.getCurrentUrl()
+
+	req, err := http.NewRequest("HEAD", currentUrl, nil)
+	if err != nil {
+		return 0, err
+	}
+	req.Header.Set("User-Agent", d.getUserAgent())
+
+	resp, err := netClient.Do(req)
 	if err != nil {
 		return 0, err
 	}
@@ -127,13 +148,14 @@ func (d *Download) DownloadFile(retries int) error {
 
 	// check if the server file is smaller than the local file (which means something is wrong)
 	// Call getRemoteFileSize to get the size of the remote file
-	remoteFileSize, err := d.getRemoteFileSizeWithRetry(retries)
+	err := error(nil)
+	d.remoteFileSize, err = d.getRemoteFileSizeWithRetry(retries)
 	if err != nil {
 		return err
 	}
 
 	// If remote file size is -1, proceed to download without knowing the file size
-	if remoteFileSize == -1 {
+	if d.remoteFileSize == -1 {
 		d.ChunkSize = math.MaxInt64                   // set the chunk size to maximum value
 		d.WriteCounter.ContentLength = math.MaxUint64 // set the content length to maximum value
 		if Utilities.FileExists(d.Filepath + ".tmp") {
@@ -145,7 +167,7 @@ func (d *Download) DownloadFile(retries int) error {
 	} else {
 		// Check if the local file exists and if it's larger than the remote file
 		localFileSize := d.getFileSize(d.Filepath + ".tmp")
-		if Utilities.FileExists(d.Filepath+".tmp") && localFileSize > remoteFileSize {
+		if Utilities.FileExists(d.Filepath+".tmp") && localFileSize > d.remoteFileSize {
 			// If the local file is larger than the remote file, delete the local file
 			err := os.Remove(d.Filepath + ".tmp")
 			if err != nil {
@@ -200,7 +222,12 @@ func (d *Download) downloadFullFile(url string) error {
 	}
 	defer out.Close()
 
-	resp, err := http.Get(url)
+	req, err := http.NewRequest("GET", url, nil)
+	if err != nil {
+		return err
+	}
+	req.Header.Set("User-Agent", d.getUserAgent())
+	resp, err := netClient.Do(req)
 	if err != nil {
 		return err
 	}
@@ -217,17 +244,10 @@ func (d *Download) downloadFullFile(url string) error {
 func (d *Download) downloadFileWithRetry(retries int, progressCtx context.Context, contextCancel context.CancelFunc) error {
 	currentUrl := d.getCurrentUrl()
 
-	req, err := http.NewRequest("HEAD", currentUrl, nil)
-	if err != nil {
-		return d.retryAction(retries, err, progressCtx, contextCancel)
-	}
-	resp, err := http.DefaultClient.Do(req)
-	if err != nil {
-		return d.retryAction(retries, err, progressCtx, contextCancel)
-	}
-	defer resp.Body.Close()
+	err := error(nil)
 
-	contentLength := resp.ContentLength
+	contentLength := d.remoteFileSize
+
 	d.WriteCounter.ContentLength = uint64(contentLength)
 
 	if contentLength == -1 {
@@ -257,8 +277,6 @@ func (d *Download) downloadFileWithRetry(retries int, progressCtx context.Contex
 		}
 
 		defer out.Close()
-
-		//chunksCount := (contentLength + chunkSize - 1) / chunkSize
 
 		// Create channels for communication
 		chunksChannel := make(chan Chunk, d.ConcurrentDownloads)
@@ -390,8 +408,9 @@ func (d *Download) downloadChunk(url string, start, end int64) (*Chunk, bool, er
 		return nil, false, err
 	}
 	req.Header.Set("Range", fmt.Sprintf("bytes=%d-%d", start, end))
+	req.Header.Set("User-Agent", d.getUserAgent())
 
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := netClient.Do(req)
 	if err != nil {
 		return nil, false, err
 	}
