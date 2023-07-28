@@ -26,6 +26,8 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 - **Easy to use** for both **beginners** and **advanced users**
 - **Access to all Whispering Tiger features**, which includes:
    - Transcription / Translation of audio streams
+   - Translation of Texts
+   - Text to Speech
    - Recognition and Translation of in-game images
    - Displaying the results in a web browser or VRChat, using Websockets or OSC
 - **Save** and **load** configurations
