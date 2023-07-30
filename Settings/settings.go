@@ -48,6 +48,7 @@ type Conf struct {
 	Speaker_min_duration            float64 `yaml:"speaker_min_duration" json:"speaker_min_duration"`
 
 	// Whisper Settings
+	Stt_enabled                   bool        `yaml:"stt_enabled" json:"stt_enabled"`
 	Ai_device                     interface{} `yaml:"ai_device" json:"ai_device"`
 	Whisper_task                  string      `yaml:"whisper_task" json:"whisper_task"`
 	Current_language              string      `yaml:"current_language" json:"current_language"`
@@ -60,6 +61,8 @@ type Conf struct {
 	Stt_type                      string      `yaml:"stt_type" json:"faster_whisper"`
 	Temperature_fallback          bool        `yaml:"temperature_fallback" json:"temperature_fallback"` // enables/disables temperature fallback (to prevent multiple whisper loops in a row)
 	Beam_size                     int         `yaml:"beam_size" json:"beam_size"`
+	Length_penalty                float64     `yaml:"length_penalty" json:"length_penalty"`
+	Beam_search_patience          float64     `yaml:"beam_search_patience" json:"beam_search_patience"`
 	Whisper_cpu_threads           int         `yaml:"whisper_cpu_threads" json:"whisper_cpu_threads"`
 	Whisper_num_workers           int         `yaml:"whisper_num_workers" json:"whisper_num_workers"`
 	Realtime                      bool        `yaml:"realtime" json:"realtime"`
@@ -92,16 +95,22 @@ type Conf struct {
 	Run_backend    bool   `yaml:"run_backend" json:"run_backend"`
 
 	// OSC settings
-	Osc_ip                      string `yaml:"osc_ip" json:"osc_ip"`
-	Osc_port                    int    `yaml:"osc_port" json:"osc_port"`
-	Osc_address                 string `yaml:"osc_address" json:"osc_address"`
-	Osc_typing_indicator        bool   `yaml:"osc_typing_indicator" json:"osc_typing_indicator"`
-	Osc_convert_ascii           bool   `yaml:"osc_convert_ascii" json:"osc_convert_ascii"`
-	Osc_auto_processing_enabled bool   `yaml:"osc_auto_processing_enabled" json:"osc_auto_processing_enabled"`
-	Osc_chat_prefix             string `yaml:"osc_chat_prefix" json:"osc_chat_prefix"`
-	Osc_chat_limit              int    `yaml:"osc_chat_limit" json:"osc_chat_limit"`
-	Osc_type_transfer           string `yaml:"osc_type_transfer" json:"osc_type_transfer"`
-	Osc_type_transfer_split     string `yaml:"osc_type_transfer_split" json:"osc_type_transfer_split"`
+	Osc_ip                      string  `yaml:"osc_ip" json:"osc_ip"`
+	Osc_port                    int     `yaml:"osc_port" json:"osc_port"`
+	Osc_address                 string  `yaml:"osc_address" json:"osc_address"`
+	Osc_typing_indicator        bool    `yaml:"osc_typing_indicator" json:"osc_typing_indicator"`
+	Osc_convert_ascii           bool    `yaml:"osc_convert_ascii" json:"osc_convert_ascii"`
+	Osc_auto_processing_enabled bool    `yaml:"osc_auto_processing_enabled" json:"osc_auto_processing_enabled"`
+	Osc_chat_prefix             string  `yaml:"osc_chat_prefix" json:"osc_chat_prefix"`
+	Osc_chat_limit              int     `yaml:"osc_chat_limit" json:"osc_chat_limit"`
+	Osc_type_transfer           string  `yaml:"osc_type_transfer" json:"osc_type_transfer"`
+	Osc_type_transfer_split     string  `yaml:"osc_type_transfer_split" json:"osc_type_transfer_split"`
+	Osc_time_limit              float64 `yaml:"osc_time_limit" json:"osc_time_limit"`
+	Osc_scroll_time_limit       float64 `yaml:"osc_scroll_time_limit" json:"osc_scroll_time_limit"`
+	Osc_initial_time_limit      float64 `yaml:"osc_initial_time_limit" json:"osc_initial_time_limit"`
+	Osc_scroll_size             int     `yaml:"osc_scroll_size" json:"osc_scroll_size"`
+	Osc_max_scroll_size         int     `yaml:"osc_max_scroll_size" json:"osc_max_scroll_size"`
+	Osc_send_type               string  `yaml:"osc_send_type" json:"osc_send_type"`
 
 	// OCR settings
 	Ocr_lang        string `yaml:"ocr_lang" json:"ocr_lang"`

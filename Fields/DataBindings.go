@@ -6,6 +6,7 @@ import (
 
 var DataBindings = struct {
 	WhisperResultsDataBinding       binding.ExternalUntypedList
+	SpeechToTextEnabledDataBinding  binding.Bool
 	TextTranslateEnabledDataBinding binding.Bool
 	TextToSpeechEnabledDataBinding  binding.Bool
 	OSCEnabledDataBinding           binding.Bool
@@ -13,6 +14,7 @@ var DataBindings = struct {
 	WhisperResultsDataBinding: binding.BindUntypedList(
 		&[]interface{}{},
 	),
+	SpeechToTextEnabledDataBinding:  binding.NewBool(),
 	TextTranslateEnabledDataBinding: binding.NewBool(),
 	TextToSpeechEnabledDataBinding:  binding.NewBool(),
 	OSCEnabledDataBinding:           binding.NewBool(),

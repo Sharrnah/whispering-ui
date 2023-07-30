@@ -107,6 +107,15 @@ func (s *TextValueSelect) updateSelected(text string) {
 	s.Refresh()
 }
 
+func (s *TextValueSelect) ContainsEntry(entry *TextValueOption) bool {
+	for i := 0; i < len(s.Options); i++ {
+		if s.Options[i].Value == entry.Value {
+			return true
+		}
+	}
+	return false
+}
+
 // Tapped is called when a pointer tapped event is captured and triggers any tap handler
 func (s *TextValueSelect) Tapped(tapEvent *fyne.PointEvent) {
 	// copy options over to base widget

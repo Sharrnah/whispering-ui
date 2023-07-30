@@ -33,6 +33,7 @@ var Field = struct {
 	TtsModelCombo                     *widget.Select
 	TtsVoiceCombo                     *widget.Select
 	TextTranslateEnabled              *widget.Check
+	SttEnabled                        *widget.Check
 	TtsEnabled                        *widget.Check
 	OscEnabled                        *widget.Check
 	OscLimitHint                      *canvas.Text
@@ -177,6 +178,7 @@ var Field = struct {
 		log.Println("Select set to", value)
 	}),
 	TextTranslateEnabled: widget.NewCheckWithData(fmt.Sprintf(SttTextTranslateLabelConst, "?", "?"), DataBindings.TextTranslateEnabledDataBinding),
+	SttEnabled:           widget.NewCheckWithData("Speech 2 Text Enabled", DataBindings.SpeechToTextEnabledDataBinding),
 	TtsEnabled:           widget.NewCheckWithData("Automatic Text 2 Speech", DataBindings.TextToSpeechEnabledDataBinding),
 	OscEnabled:           widget.NewCheckWithData("Automatic OSC (VRChat)", DataBindings.OSCEnabledDataBinding),
 	OscLimitHint:         canvas.NewText(fmt.Sprintf(OscLimitLabelConst, 0, 0), theme.PlaceHolderColor()),
@@ -243,6 +245,14 @@ func init() {
 		sendMessage.SendMessage()
 	}
 
+	Field.SttEnabled.OnChanged = func(value bool) {
+		sendMessage := SendMessageStruct{
+			Type:  "setting_change",
+			Name:  "stt_enabled",
+			Value: value,
+		}
+		sendMessage.SendMessage()
+	}
 	Field.TtsEnabled.OnChanged = func(value bool) {
 		sendMessage := SendMessageStruct{
 			Type:  "setting_change",

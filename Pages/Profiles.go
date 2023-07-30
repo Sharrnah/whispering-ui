@@ -744,7 +744,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		profileForm.Append("A.I. Device for Speech to Text", sttAiDeviceSelect)
 
-		sttModelSize := CustomWidget.NewTextValueSelect("model", []CustomWidget.TextValueOption{
+		originalWhisperModelList := []CustomWidget.TextValueOption{
 			{Text: "Tiny", Value: "tiny"},
 			{Text: "Tiny (English only)", Value: "tiny.en"},
 			{Text: "Base", Value: "base"},
@@ -753,13 +753,45 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Small (English only)", Value: "small.en"},
 			{Text: "Medium", Value: "medium"},
 			{Text: "Medium (English only)", Value: "medium.en"},
-			{Text: "Large (Defaults to Version 2)", Value: "large-v2"},
-			{Text: "Large Version 1", Value: "large-v1"},
-			{Text: "Large Version 2", Value: "large-v2"},
-		}, func(s CustomWidget.TextValueOption) {
-			sizeName, _ := strings.CutSuffix(s.Value, ".en")
+			{Text: "Large (Defaults to V2)", Value: "large-v2"},
+			{Text: "Large V1", Value: "large-v1"},
+			{Text: "Large V2", Value: "large-v2"},
+		}
+
+		fasterWhisperModelList := []CustomWidget.TextValueOption{
+			{Text: "Tiny", Value: "tiny"},
+			{Text: "Tiny (English only)", Value: "tiny.en"},
+			{Text: "Base", Value: "base"},
+			{Text: "Base (English only)", Value: "base.en"},
+			{Text: "Small", Value: "small"},
+			{Text: "Small (English only)", Value: "small.en"},
+			{Text: "Medium", Value: "medium"},
+			{Text: "Medium (English only)", Value: "medium.en"},
+			{Text: "Large (Defaults to V2)", Value: "large-v2"},
+			{Text: "Large V1", Value: "large-v1"},
+			{Text: "Large V2", Value: "large-v2"},
+			{Text: "Small (German finetune)", Value: "small.de"},
+			{Text: "Medium (German finetune)", Value: "medium.de"},
+			{Text: "Large V2 (German finetune)", Value: "large-v2.de2"},
+			{Text: "Small (German-Swiss finetune)", Value: "small.de-swiss"},
+			{Text: "Medium (Mix-Japanese-v2 finetune)", Value: "medium.mix-jpv2"},
+			{Text: "Large V2 (Mix-Japanese finetune)", Value: "large-v2.mix-jp"},
+			{Text: "Small (Japanese finetune)", Value: "small.jp"},
+			{Text: "Medium (Japanese finetune)", Value: "medium.jp"},
+			{Text: "Large V2 (Japanese finetune)", Value: "large-v2.jp"},
+			{Text: "Medium (Korean finetune)", Value: "medium.ko"},
+			{Text: "Large V2 (Korean finetune)", Value: "large-v2.ko"},
+			{Text: "Small (Chinese finetune)", Value: "small.zh"},
+			{Text: "Medium (Chinese finetune)", Value: "medium.zh"},
+			{Text: "Large V2 (Chinese finetune)", Value: "large-v2.zh"},
+		}
+
+		sttModelSize := CustomWidget.NewTextValueSelect("model", fasterWhisperModelList, func(s CustomWidget.TextValueOption) {
+			// remove last suffix starting with a dot
+			sizeName := strings.Split(s.Value, ".")[0]
 			sizeName, _ = strings.CutSuffix(sizeName, "-v1")
 			sizeName, _ = strings.CutSuffix(sizeName, "-v2")
+
 			// calculate memory consumption
 			AIModel := ProfileAIModelOption{
 				AIModel:     "Whisper",
@@ -780,7 +812,14 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			sttPrecisionSelect.Enable()
 			sttModelSize.Enable()
 
+			selectedModelSizeOption := sttModelSize.GetSelected()
 			if s.Value == "faster_whisper" {
+				sttModelSize.Options = fasterWhisperModelList
+				// unselect if not in list
+				if !sttModelSize.ContainsEntry(selectedModelSizeOption) {
+					sttModelSize.SetSelectedIndex(0)
+				}
+
 				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
 					{Text: "float32 precision", Value: "float32"},
 					{Text: "float16 precision", Value: "float16"},
@@ -792,6 +831,12 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				}
 				AIModelType = "CT2"
 			} else if s.Value == "original_whisper" {
+				sttModelSize.Options = originalWhisperModelList
+				// unselect if not in list
+				if !sttModelSize.ContainsEntry(selectedModelSizeOption) {
+					sttModelSize.SetSelectedIndex(0)
+				}
+
 				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
 					{Text: "float32 precision", Value: "float32"},
 					{Text: "float16 precision", Value: "float16"},
@@ -1074,6 +1119,12 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Osc_chat_limit:          144,
 			Osc_type_transfer:       "translation_result",
 			Osc_type_transfer_split: " 🌐 ",
+			Osc_send_type:           "chunks",
+			Osc_time_limit:          8.0,
+			Osc_scroll_time_limit:   1.3,
+			Osc_initial_time_limit:  10.0,
+			Osc_scroll_size:         3,
+			Osc_max_scroll_size:     30,
 
 			Logprob_threshold:   "-1.0",
 			No_speech_threshold: "0.6",
@@ -1100,6 +1151,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Pause:                         1.0,
 			Energy:                        300,
 			Beam_size:                     5,
+			Length_penalty:                1.0,
+			Beam_search_patience:          1.0,
 			Whisper_cpu_threads:           0,
 			Whisper_num_workers:           1,
 			Realtime:                      false,

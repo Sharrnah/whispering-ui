@@ -71,7 +71,12 @@ func (res TranslateSetting) Update() *TranslateSetting {
 		}
 	}
 
-	checkValue, _ := Fields.DataBindings.TextTranslateEnabledDataBinding.Get()
+	checkValue, _ := Fields.DataBindings.SpeechToTextEnabledDataBinding.Get()
+	if checkValue != res.Stt_enabled {
+		Fields.DataBindings.SpeechToTextEnabledDataBinding.Set(res.Stt_enabled)
+	}
+
+	checkValue, _ = Fields.DataBindings.TextTranslateEnabledDataBinding.Get()
 	if checkValue != res.Txt_translate {
 		Fields.DataBindings.TextTranslateEnabledDataBinding.Set(res.Txt_translate)
 	}

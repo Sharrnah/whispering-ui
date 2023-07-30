@@ -32,6 +32,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 	// quick options row
 	quickOptionsRow := container.New(
 		layout.NewVBoxLayout(),
+		Fields.Field.SttEnabled,
 		Fields.Field.TextTranslateEnabled,
 		Fields.Field.TtsEnabled,
 		container.NewHBox(
