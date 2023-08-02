@@ -106,18 +106,29 @@ func (d *Download) getRemoteFileSizeWithRetry(retries int) (int64, error) {
 	return 0, fmt.Errorf("Failed to get remote file size after %d retries", retries)
 }
 
-func (wc *WriteCounter) addBytes(n uint64) {
+func (d *Download) addBytes(n uint64) {
 	if n > 0 {
-		wc.Total += n
+		d.WriteCounter.Total += n
 	}
-	if time.Since(wc.LastUpdate).Seconds() >= 1 {
-		elapsed := time.Since(wc.startTime).Seconds()
-		speed := float64(wc.Total) / elapsed
-		wc.speedMA.Add(speed)
-		avgSpeed := wc.speedMA.Average()
-		wc.OnProgress(wc.Total, wc.ContentLength, avgSpeed)
-		wc.LastUpdate = time.Now()
+	if time.Since(d.WriteCounter.LastUpdate).Seconds() >= 1 || n == 0 {
+		elapsed := time.Since(d.WriteCounter.startTime).Seconds()
+		speed := float64(d.WriteCounter.Total) / elapsed
+		d.WriteCounter.speedMA.Add(speed)
+		avgSpeed := d.WriteCounter.speedMA.Average()
+		d.WriteCounter.OnProgress(d.WriteCounter.Total, d.WriteCounter.ContentLength, avgSpeed)
+		d.WriteCounter.LastUpdate = time.Now()
 	}
+}
+
+func (d *Download) GetTotalDownloadedSize() int64 {
+	// Calculate total size of chunks in memory
+	totalSizeInMemory := 0
+	for _, data := range d.downloaded {
+		totalSizeInMemory += len(data)
+	}
+
+	// Calculate the total downloaded size as the sum of the size of the temporary file and the total size of the chunks in memory
+	return d.getFileSize(d.Filepath+".tmp") + int64(totalSizeInMemory)
 }
 
 func (d *Download) DownloadFile(retries int) error {
@@ -128,7 +139,7 @@ func (d *Download) DownloadFile(retries int) error {
 		for {
 			select {
 			case <-time.After(1 * time.Second):
-				d.WriteCounter.addBytes(0)
+				d.addBytes(0)
 			case <-progressCtx.Done():
 				return
 			}
@@ -357,14 +368,14 @@ func (d *Download) downloadFileWithRetry(retries int, progressCtx context.Contex
 						return err
 					}
 
-					d.WriteCounter.addBytes(uint64(len(data)))
+					d.addBytes(uint64(len(data)))
 					delete(d.downloaded, d.nextWrite)
 					d.nextWrite += int64(len(data))
 				}
 
 				if d.nextWrite == totalSize {
-					contextCancel()            // cancel the progress update goroutine
-					d.WriteCounter.addBytes(0) // force progress update when finished
+					contextCancel() // cancel the progress update goroutine
+					d.addBytes(0)   // force progress update when finished
 					d.mu.Unlock()
 					break loop
 				}
