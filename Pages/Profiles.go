@@ -770,6 +770,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Large (Defaults to V2)", Value: "large-v2"},
 			{Text: "Large V1", Value: "large-v1"},
 			{Text: "Large V2", Value: "large-v2"},
+			{Text: "Small (European finetune)", Value: "small.eu"},
+			{Text: "Medium (European finetune)", Value: "medium.eu"},
 			{Text: "Small (German finetune)", Value: "small.de"},
 			{Text: "Medium (German finetune)", Value: "medium.de"},
 			{Text: "Large V2 (German finetune)", Value: "large-v2.de2"},
@@ -1132,7 +1134,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Vad_enabled:              true,
 			Vad_on_full_clip:         false,
 			Vad_confidence_threshold: "0.4",
-			Vad_num_samples:          3000,
+			Vad_num_samples:          1536,
 			Vad_thread_num:           1,
 			Push_to_talk_key:         "",
 
