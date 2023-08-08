@@ -364,7 +364,9 @@ func (c *MessageStruct) HandleReceiveMessage() {
 
 	// set focus to main window
 	if fyne.CurrentApp().Preferences().BoolWithFallback("AutoRefocusWindow", false) {
-		fyne.CurrentApp().Driver().AllWindows()[0].RequestFocus()
+		if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
+			fyne.CurrentApp().Driver().AllWindows()[0].RequestFocus()
+		}
 	}
 
 	// refresh window
