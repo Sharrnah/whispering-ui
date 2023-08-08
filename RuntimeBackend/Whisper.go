@@ -177,7 +177,10 @@ func (c *WhisperProcessConfig) SetErrorOutputHandling(stdout io.Reader) {
 			Traceback []string `json:"traceback"`
 		}
 		if err := json.Unmarshal([]byte(line), &exceptionMessage); err == nil {
-			lastTraceback := exceptionMessage.Traceback[len(exceptionMessage.Traceback)-1]
+			lastTraceback := ""
+			if exceptionMessage.Traceback != nil && len(exceptionMessage.Traceback) > 0 {
+				lastTraceback = exceptionMessage.Traceback[len(exceptionMessage.Traceback)-1]
+			}
 			// Handle error message
 			if len(fyne.CurrentApp().Driver().AllWindows()) == 1 && fyne.CurrentApp().Driver().AllWindows()[0] != nil {
 				dialog.ShowError(errors.New(exceptionMessage.Error+"\n\n"+lastTraceback), fyne.CurrentApp().Driver().AllWindows()[0])
