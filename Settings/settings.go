@@ -38,7 +38,7 @@ type Conf struct {
 	Vad_enabled              bool   `yaml:"vad_enabled" json:"vad_enabled"`
 	Vad_on_full_clip         bool   `yaml:"vad_on_full_clip" json:"vad_on_full_clip"`
 	Vad_confidence_threshold string `yaml:"vad_confidence_threshold" json:"vad_confidence_threshold"`
-	Vad_num_samples          int    `yaml:"vad_num_samples" json:"vad_num_samples"`
+	Vad_frames_per_buffer    int    `yaml:"vad_frames_per_buffer" json:"vad_frames_per_buffer"`
 	Vad_thread_num           int    `yaml:"vad_thread_num,omitempty" json:"vad_thread_num,omitempty"`
 
 	// speaker diarization
@@ -77,6 +77,16 @@ type Conf struct {
 	Faster_without_timestamps     bool        `yaml:"faster_without_timestamps" json:"faster_without_timestamps"` // if enabled, faster whisper will only sample text tokens. (only when using stt_type=faster_whisper)
 	Denoise_audio                 bool        `yaml:"denoise_audio" json:"denoise_audio"`                         // if enabled, audio will be de-noised before processing.
 	Denoise_audio_post_filter     bool        `yaml:"denoise_audio_post_filter" json:"denoise_audio_post_filter"` // Enable post filter for some minor, extra noise reduction.
+	Whisper_apply_voice_markers   bool        `yaml:"whisper_apply_voice_markers" json:"whisper_apply_voice_markers"`
+
+	Silence_cutting_enabled   bool    `yaml:"silence_cutting_enabled" json:"silence_cutting_enabled"`
+	Silence_offset            float64 `yaml:"silence_offset" json:"silence_offset"`
+	Max_silence_length        float64 `yaml:"max_silence_length" json:"max_silence_length"`
+	Keep_silence_length       float64 `yaml:"keep_silence_length" json:"keep_silence_length"`
+	Normalize_enabled         bool    `yaml:"normalize_enabled" json:"normalize_enabled"`
+	Normalize_lower_threshold float64 `yaml:"normalize_lower_threshold" json:"normalize_lower_threshold"`
+	Normalize_upper_threshold float64 `yaml:"normalize_upper_threshold" json:"normalize_upper_threshold"`
+	Normalize_gain_factor     float64 `yaml:"normalize_gain_factor" json:"normalize_gain_factor"`
 
 	// text translate settings
 	Txt_translate            bool   `yaml:"txt_translate" json:"txt_translate"`
@@ -159,6 +169,7 @@ var ExcludeConfigFields = []string{
 	"audio_input_device",
 	"audio_output_device",
 	"last_auto_txt_translate_lang",
+	"stt_enabled",
 }
 
 var Config Conf

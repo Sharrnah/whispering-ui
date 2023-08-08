@@ -681,8 +681,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "int16 precision", Value: "int16"},
 			{Text: "int8_float16 precision", Value: "int8_float16"},
 			{Text: "int8 precision", Value: "int8"},
-			//{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
-			//{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
+			{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
+			{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
 		sttAiDeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {
@@ -808,11 +808,13 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Faster Whisper", Value: "faster_whisper"},
 			{Text: "Original Whisper", Value: "original_whisper"},
 			{Text: "Speech T5 (English only)", Value: "speech_t5"},
+			{Text: "Disabled", Value: ""},
 		}, func(s CustomWidget.TextValueOption) {
 			selectedPrecision := sttPrecisionSelect.GetSelected().Value
 			AIModelType := ""
 			sttPrecisionSelect.Enable()
 			sttModelSize.Enable()
+			sttAiDeviceSelect.Enable()
 
 			selectedModelSizeOption := sttModelSize.GetSelected()
 			if s.Value == "faster_whisper" {
@@ -828,8 +830,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					{Text: "int16 precision", Value: "int16"},
 					{Text: "int8_float16 precision", Value: "int8_float16"},
 					{Text: "int8 precision", Value: "int8"},
-					//{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
-					//{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
+					{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
+					{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
 				}
 				AIModelType = "CT2"
 			} else if s.Value == "original_whisper" {
@@ -851,6 +853,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				sttPrecisionSelect.Disable()
 				sttModelSize.Disable()
 				AIModelType = "t5"
+			} else {
+				sttPrecisionSelect.Disable()
+				sttModelSize.Disable()
+				sttAiDeviceSelect.Disable()
+				AIModelType = "disabled"
 			}
 			// calculate memory consumption
 			AIModel := ProfileAIModelOption{
@@ -1134,7 +1141,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Vad_enabled:              true,
 			Vad_on_full_clip:         false,
 			Vad_confidence_threshold: "0.4",
-			Vad_num_samples:          1536,
+			Vad_frames_per_buffer:    2000,
 			Vad_thread_num:           1,
 			Push_to_talk_key:         "",
 
@@ -1164,6 +1171,16 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Realtime_whisper_precision:    "float32",
 			Realtime_whisper_beam_size:    1,
 			Realtime_temperature_fallback: false,
+			Whisper_apply_voice_markers:   false,
+
+			Silence_cutting_enabled:   true,
+			Silence_offset:            -40.0,
+			Max_silence_length:        30.0,
+			Keep_silence_length:       0.20,
+			Normalize_enabled:         true,
+			Normalize_lower_threshold: -24.0,
+			Normalize_upper_threshold: -16.0,
+			Normalize_gain_factor:     2.0,
 		}
 		if Utilities.FileExists(settingsFiles[id]) {
 			err = profileSettings.LoadYamlSettings(settingsFiles[id])
@@ -1264,8 +1281,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				{Text: "int16 precision", Value: "int16"},
 				{Text: "int8_float16 precision", Value: "int8_float16"},
 				{Text: "int8 precision", Value: "int8"},
-				//{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
-				//{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
+				{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
+				{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
 			}
 		} else if profileSettings.Stt_type == "original_whisper" {
 			profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
