@@ -7,11 +7,13 @@ require (
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fyne-io/terminal v0.0.0-20220805163222-7eef24013352
 	github.com/gen2brain/malgo v0.11.10
+	github.com/gomarkdown/markdown v0.0.0-20230716120725-531d2d74bc12
 	github.com/gorilla/websocket v1.5.0
 	github.com/hajimehoshi/oto/v2 v2.3.1
 	github.com/hashicorp/go-cleanhttp v0.5.1
 	github.com/jaypipes/ghw v0.10.0
 	github.com/jeandeaual/go-locale v0.0.0-20220711133428-7de61946b173
+	github.com/russross/blackfriday v1.6.0
 	github.com/youpy/go-wav v0.3.2
 	golang.org/x/text v0.3.8
 	gopkg.in/yaml.v3 v3.0.1
