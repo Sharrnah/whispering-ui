@@ -2,29 +2,35 @@ package Advanced
 
 import (
 	"bufio"
+	"bytes"
 	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"io"
 	"io/ioutil"
+	"log"
 	"net/http"
+	"os"
 	"regexp"
 	"strings"
+	"whispering-tiger-ui/Utilities"
 )
 
-func fetchAndAnalyzeGist(gistURL string) (string, string) {
-	resp, err := http.Get(gistURL)
+const PLUGIN_DIR = "./Plugins/"
+
+func getVersionAndClassFromReader(pluginCode io.Reader) (string, string, string) {
+	// Read the entire content into a byte slice
+	content, err := io.ReadAll(pluginCode)
 	if err != nil {
-		fmt.Printf("Error fetching gist: %v\n", err)
-		return "err", "err"
+		log.Fatalf("Error reading content: %v", err)
 	}
-	defer resp.Body.Close()
 
 	version, class := "", ""
-
-	scanner := bufio.NewScanner(resp.Body)
+	scanner := bufio.NewScanner(bytes.NewReader(content))
 	versionLine, classLine := "", ""
 	for scanner.Scan() {
 		line := strings.TrimSpace(scanner.Text())
@@ -40,8 +46,13 @@ func fetchAndAnalyzeGist(gistURL string) (string, string) {
 		}
 	}
 
+	hash, err := Utilities.FileHash(bytes.NewReader(content))
+	if err != nil {
+		fmt.Printf("Error calculating hash: %v\n", err)
+	}
+
 	if versionLine == "" && classLine == "" {
-		return versionLine, classLine
+		return versionLine, classLine, hash
 	}
 
 	re := regexp.MustCompile(`\d+\.\d+\.\d+`)
@@ -50,20 +61,50 @@ func fetchAndAnalyzeGist(gistURL string) (string, string) {
 		version = versionMatches[0]
 	}
 
-	re = regexp.MustCompile(`class (\w+)`)
+	re = regexp.MustCompile(`class\s+(\w+)\(Plugins\.Base\)`)
 	classMatches := re.FindStringSubmatch(classLine)
 	if len(classMatches) > 1 {
 		class = classMatches[1]
 	}
 
-	return version, class
+	return version, class, hash
 }
 
-func CreatePluginListWindow() {
+// fetchAndAnalyzeGist fetches the gist at the given URL and analyzes it for version and class information
+// returns the version, class, hash and binary of the gist
+func fetchAndAnalyzeGist(gistURL string) (string, string, string, []byte) {
+	resp, err := http.Get(gistURL)
+	if err != nil {
+		fmt.Printf("Error fetching gist: %v\n", err)
+		return "err", "err", "", nil
+	}
+	defer resp.Body.Close()
+
+	// Read the entire content into a byte slice
+	content, err := io.ReadAll(resp.Body)
+	if err != nil {
+		log.Fatalf("Error reading content: %v", err)
+	}
+
+	version, class, hash := getVersionAndClassFromReader(bytes.NewReader(content))
+
+	return version, class, hash, content
+}
+
+func CreatePluginListWindow(closeFunction func()) {
 	fileUrl := "https://raw.githubusercontent.com/Sharrnah/whispering/main/documentation/plugins.md"
 
 	pluginListWindow := fyne.CurrentApp().NewWindow("Plugin List")
 	pluginListWindow.Resize(fyne.NewSize(1400, 800))
+	pluginListWindow.CenterOnScreen()
+
+	CloseFunctionCall := func() {
+		closeFunction()
+		if pluginListWindow.Content().Visible() {
+			pluginListWindow.Close()
+		}
+	}
+	pluginListWindow.SetCloseIntercept(CloseFunctionCall)
 
 	// Create a new Fyne container for the table
 	tableContainer := container.NewVBox()
@@ -78,20 +119,47 @@ func CreatePluginListWindow() {
 	table := extractTable(md)
 
 	tableData := parseTableIntoStruct(table)
-	//fmt.Println(tableData)
+
+	localPluginFilesData := parseLocalPluginFiles()
 
 	checkAllButton := widget.NewButton("Check all Plugins for Updates", func() {
 		for _, row := range tableData {
-			fmt.Println("Checking update for: " + row.TitleLink)
+			titleLink := row.TitleLink
+			fmt.Println("Checking update for: " + titleLink)
 			if row.Widgets.RemoteVersion != nil {
-				remoteVersion, class := fetchAndAnalyzeGist(row.TitleLink)
+				remoteVersion, class, hash, _ := fetchAndAnalyzeGist(titleLink + "/raw")
+
+				localPluginFile := findLocalPluginFileByClass(localPluginFilesData, class)
+
+				localVersion := localPluginFile.LocalVersion
+
 				row.Widgets.RemoteVersion.SetText("Newest V: " + remoteVersion)
-				fmt.Println("found remote version: " + remoteVersion + ", class: " + class)
+				row.Widgets.CurrentVersion.SetText("Current V: " + localVersion)
+
+				if remoteVersion != localVersion && localVersion != "" {
+					row.Widgets.UpdateButton.Importance = widget.HighImportance
+					row.Widgets.UpdateButton.SetText("Update")
+				} else {
+					row.Widgets.UpdateButton.Importance = widget.LowImportance
+					if hash != localPluginFile.SHA256 {
+						row.Widgets.UpdateButton.Importance = widget.HighImportance
+					}
+					if (localVersion == "" && remoteVersion != "") || (localVersion == "" && remoteVersion == "") {
+						row.Widgets.UpdateButton.SetText("Install")
+					} else {
+						row.Widgets.UpdateButton.SetText("ReInstall")
+					}
+				}
+
+				fmt.Println("found remote version: " + remoteVersion + ", local version: " + localVersion + " class: " + class)
+				fmt.Println("remote sha256: " + hash + ", local sha256: " + localPluginFile.SHA256)
 			}
 		}
 	})
+	checkAllButton.Importance = widget.HighImportance
+	// hide button as we already update on window open
+	checkAllButton.Hide()
 
-	//grid := container.NewGridWithColumns(3)
 	grid := container.New(layout.NewFormLayout())
 	// iterate over the table data and create a new widget for each row
 	for _, row := range tableData {
@@ -103,15 +171,43 @@ func CreatePluginListWindow() {
 		remoteVersionLabel := widget.NewLabel("Newest V: ")
 		currentVersionLabel := widget.NewLabel("Current V: ")
 
-		titleLink := row.TitleLink
-		titleButton := widget.NewButtonWithIcon("Update / Install", theme.DownloadIcon(), func() {
-			fmt.Println("clicked Link")
-			fmt.Println(titleLink)
-		})
+		author := row.Author
+		authorLabel := widget.NewLabel("Author:\n" + author)
 
-		row.Widgets.UpdateButton = titleButton
 		row.Widgets.RemoteVersion = remoteVersionLabel
 		row.Widgets.CurrentVersion = currentVersionLabel
+
+		titleLink := row.TitleLink
+
+		titleButton := widget.NewButtonWithIcon("Update / Install", theme.DownloadIcon(), nil)
+		titleButton.OnTapped = func() {
+			version, class, _, fileContent := fetchAndAnalyzeGist(titleLink + "/raw")
+
+			pluginFileName := PLUGIN_DIR + Utilities.CamelToSnake(class) + ".py"
+
+			localPluginFile := findLocalPluginFileByClass(localPluginFilesData, class)
+			if localPluginFile.Class != "" {
+				pluginFileName = localPluginFile.FilePath
+			}
+
+			// write the file to disk
+			err := os.WriteFile(pluginFileName, fileContent, 0644)
+			if err != nil {
+				log.Fatalf("Error writing file: %v", err)
+			}
+
+			currentVersionLabel.SetText("Current V: " + version)
+
+			titleButton.Importance = widget.LowImportance
+			titleButton.SetText("Installed")
+
+			// show success installed dialog
+			dialog.ShowInformation("Plugin Installed", class+" has been installed. The Plugin is disabled by default.\n"+
+				"Please restart Whispering Tiger to load the Plugin.\n",
+				pluginListWindow)
+		}
+
+		row.Widgets.UpdateButton = titleButton
 
 		descriptionText := strings.ReplaceAll(row.Description, "</br>", "\n")
 		descriptionText = strings.ReplaceAll(descriptionText, "<br>", "\n")
@@ -122,19 +218,24 @@ func CreatePluginListWindow() {
 
 		descriptionLabel := widget.NewLabel(descriptionText)
 		descriptionLabel.Wrapping = fyne.TextWrapWord
-		//authorLabel := widget.NewLabel(row.Author)
 
-		//grid.Add(titleLabel)
 		grid.Add(container.NewVBox(titleLabel, row.Widgets.UpdateButton, row.Widgets.RemoteVersion, row.Widgets.CurrentVersion))
 		descriptionScroller := container.NewVScroll(descriptionLabel)
 		descriptionScroller.Resize(fyne.NewSize(descriptionScroller.Size().Width, 400))
-		grid.Add(descriptionScroller)
+
+		openPageButton := widget.NewButton("Open Page", func() {
+			err := fyne.CurrentApp().OpenURL(parseURL(titleLink))
+			if err != nil {
+				dialog.ShowError(err, pluginListWindow)
+			}
+		})
+		rightColumn := container.NewBorder(authorLabel, nil, nil, nil, openPageButton)
+		descriptionBorder := container.NewBorder(nil, nil, nil, rightColumn, descriptionScroller)
+
+		grid.Add(descriptionBorder)
 
 		grid.Add(widget.NewSeparator())
 		grid.Add(widget.NewSeparator())
-		//rowContainer := container.NewBorder(nil, nil, titleButton, authorLabel, descriptionLabel)
-
-		//tableContainer.Add(rowContainer)
 	}
 
 	// Set the content of the window to the table container
@@ -144,6 +245,9 @@ func CreatePluginListWindow() {
 
 	// Show and run the application
 	pluginListWindow.Show()
+
+	// run the check all button once at window showing
+	checkAllButton.OnTapped()
 }
 
 type TableDataWidgets struct {
@@ -161,6 +265,58 @@ type TableData struct {
 	Author      string
 	Version     string
 	Widgets     *TableDataWidgets
+}
+
+type LocalPluginFilesData struct {
+	Class        string
+	FilePath     string
+	LocalVersion string
+	SHA256       string
+}
+
+func parseLocalPluginFiles() []LocalPluginFilesData {
+	var localPluginFiles []LocalPluginFilesData
+	// build plugins list
+	var pluginFiles []string
+	files, err := os.ReadDir(PLUGIN_DIR)
+	if err != nil {
+		println(err)
+	}
+
+	for _, file := range files {
+		if !file.IsDir() && !strings.HasPrefix(file.Name(), ".") && !strings.HasPrefix(file.Name(), "__init__") && (strings.HasSuffix(file.Name(), ".py")) {
+			pluginFiles = append(pluginFiles, file.Name())
+			pluginPath := PLUGIN_DIR + file.Name()
+
+			// read local file and read its contents
+			data, err := os.ReadFile(pluginPath)
+			if err != nil {
+				fmt.Println("Error reading file:", err)
+				return nil
+			}
+			// Convert the byte slice to a string
+			pluginCode := string(data)
+			pluginCodeReader := strings.NewReader(pluginCode)
+			pluginVersion, pluginClass, sha256 := getVersionAndClassFromReader(pluginCodeReader)
+
+			localPluginFiles = append(localPluginFiles, LocalPluginFilesData{
+				Class:        pluginClass,
+				FilePath:     pluginPath,
+				LocalVersion: pluginVersion,
+				SHA256:       sha256,
+			})
+		}
+	}
+	return localPluginFiles
+}
+
+func findLocalPluginFileByClass(localPluginFiles []LocalPluginFilesData, class string) LocalPluginFilesData {
+	for _, file := range localPluginFiles {
+		if file.Class == class {
+			return file
+		}
+	}
+	return LocalPluginFilesData{}
 }
 
 func DownloadFile(url string) (string, error) {
@@ -241,7 +397,7 @@ func parseTableIntoStruct(table string) []TableData {
 
 		row := TableData{
 			Title:       strings.ReplaceAll(title, "**", ""),
-			TitleLink:   titleLink + "/raw",
+			TitleLink:   titleLink,
 			Preview:     preview,
 			PreviewLink: previewLink,
 			Description: description,

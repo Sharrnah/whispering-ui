@@ -91,8 +91,7 @@ func getPluginStatusString(pluginClassName string) string {
 	return pluginStatusString
 }
 
-func CreatePluginSettingsPage() fyne.CanvasObject {
-
+func BuildPluginSettingsAccordion() (fyne.CanvasObject, int) {
 	// load settings file for plugin settings
 	SettingsFile := Settings.Conf{}
 	err := SettingsFile.LoadYamlSettings(Settings.Config.SettingsFilename)
@@ -233,12 +232,30 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 		}
 	}
 
-	downloadButton := widget.NewButton("Download / Update Plugins", func() {
-		CreatePluginListWindow()
-	})
+	return pluginAccordion, len(pluginFiles)
+}
 
-	pluginsContent := fyne.CanvasObject(nil)
-	if len(pluginFiles) == 0 {
+func CreatePluginSettingsPage() fyne.CanvasObject {
+	pluginAccordion, pluginFilesCount := BuildPluginSettingsAccordion()
+
+	pluginsContent := container.NewVScroll(nil)
+
+	downloadButton := widget.NewButton("Download / Update Plugins", nil)
+	downloadButton.OnTapped = func() {
+		CreatePluginListWindow(func() {
+			pluginAccordion, pluginFilesCount = BuildPluginSettingsAccordion()
+			if pluginFilesCount > 0 {
+				pluginsContainerBorder := container.NewBorder(downloadButton, nil, nil, nil, pluginAccordion)
+				pluginsContent.Content = pluginsContainerBorder
+
+				pluginAccordion.Refresh()
+				pluginsContent.Refresh()
+			}
+		})
+	}
+	downloadButton.Importance = widget.HighImportance
+
+	if pluginFilesCount == 0 {
 		openPluginsFolderButton := widget.NewButton("Open Plugins folder", func() {
 			appExec, _ := os.Executable()
 			appPath := filepath.Dir(appExec)
@@ -249,17 +266,20 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 				dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[0])
 			}
 		})
-		pluginsContent = container.NewVScroll(container.NewCenter(
+
+		pluginsContent.Content = container.NewCenter(
 			container.NewVBox(
-				widget.NewLabel("\nNo Plugins found.\nGo to the following link to find some:"),
+				widget.NewLabel("\nNo Plugins found.\n\nDownload Plugins using the button below."),
+				downloadButton,
+				widget.NewLabel("\nOr download Plugins manually from:"),
 				widget.NewHyperlink("https://github.com/Sharrnah/whispering/blob/main/documentation/plugins.md", parseURL("https://github.com/Sharrnah/whispering/blob/main/documentation/plugins.md")),
-				widget.NewLabel("Download a Plugin you like and place the *.py file in the Plugins folder."),
+				widget.NewLabel("and place the *.py file in the Plugins folder."),
 				openPluginsFolderButton,
 			),
-		))
+		)
 	} else {
 		pluginsContainerBorder := container.NewBorder(downloadButton, nil, nil, nil, pluginAccordion)
-		pluginsContent = container.NewVScroll(pluginsContainerBorder)
+		pluginsContent.Content = pluginsContainerBorder
 	}
 
 	return pluginsContent

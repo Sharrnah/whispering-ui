@@ -1,17 +1,22 @@
 package Utilities
 
 import (
+	"bytes"
+	"crypto/sha256"
+	"encoding/hex"
 	"encoding/json"
 	"errors"
 	"fmt"
 	"image"
 	"image/color"
 	"image/draw"
+	"io"
 	"os"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
+	"unicode"
 )
 
 func Contains(s []string, str string) bool {
@@ -190,4 +195,34 @@ func KillProcessById(pid int) error {
 		return err
 	}
 	return process.Kill()
+}
+
+func CamelToSnake(s string) string {
+	var result bytes.Buffer
+	var prevChar rune
+
+	for _, char := range s {
+		if unicode.IsUpper(char) {
+			// For the first character, we don't want to prepend an underscore
+			if result.Len() > 0 && (unicode.IsLower(prevChar) || (prevChar != 0 && unicode.IsUpper(prevChar) && (len([]rune(s)) > result.Len() && unicode.IsLower([]rune(s)[result.Len()])))) {
+				result.WriteRune('_')
+			}
+			char = unicode.ToLower(char)
+		}
+		result.WriteRune(char)
+		prevChar = char
+	}
+
+	return result.String()
+}
+
+func FileHash(file io.Reader) (string, error) {
+	hasher := sha256.New()
+	if _, err := io.Copy(hasher, file); err != nil {
+		return "", fmt.Errorf("failed to compute hash: %w", err)
+	}
+
+	calculatedHash := hasher.Sum(nil)
+	calculatedHashStr := hex.EncodeToString(calculatedHash)
+	return calculatedHashStr, nil
 }

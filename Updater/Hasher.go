@@ -1,12 +1,10 @@
 package Updater
 
 import (
-	"crypto/sha256"
-	"encoding/hex"
 	"fmt"
-	"io"
 	"os"
 	"strings"
+	"whispering-tiger-ui/Utilities"
 )
 
 func CheckFileHash(filepath string, expectedHash string) error {
@@ -16,13 +14,10 @@ func CheckFileHash(filepath string, expectedHash string) error {
 	}
 	defer file.Close()
 
-	hasher := sha256.New()
-	if _, err := io.Copy(hasher, file); err != nil {
+	calculatedHashStr, err := Utilities.FileHash(file)
+	if err != nil {
 		return fmt.Errorf("failed to compute hash: %w", err)
 	}
-
-	calculatedHash := hasher.Sum(nil)
-	calculatedHashStr := hex.EncodeToString(calculatedHash)
 
 	if strings.ToLower(calculatedHashStr) != strings.ToLower(expectedHash) {
 		return fmt.Errorf("file hash does not match expected hash (calculated: %s, expected: %s)", calculatedHashStr, expectedHash)
