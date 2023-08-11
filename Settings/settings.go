@@ -252,11 +252,17 @@ func (c *Conf) SetOption(optionName string, value interface{}) {
 				case string:
 					tmpValue, _ := strconv.Atoi(value.(string))
 					setValue = reflect.ValueOf(tmpValue)
+				case float64:
+					tmpValue := int(value.(float64))
+					setValue = reflect.ValueOf(tmpValue)
 				}
 			case reflect.Float64:
 				switch value.(type) {
 				case string:
 					tmpValue, _ := strconv.ParseFloat(value.(string), 64)
+					setValue = reflect.ValueOf(tmpValue)
+				case int:
+					tmpValue := float64(value.(int))
 					setValue = reflect.ValueOf(tmpValue)
 				}
 

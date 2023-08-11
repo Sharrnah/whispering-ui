@@ -5,11 +5,13 @@ import (
 	"bytes"
 	"fmt"
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"image/color"
 	"io"
 	"io/ioutil"
 	"log"
@@ -134,9 +136,11 @@ func CreatePluginListWindow(closeFunction func()) {
 				localVersion := localPluginFile.LocalVersion
 
 				row.Widgets.RemoteVersion.SetText("Newest V: " + remoteVersion)
-				row.Widgets.CurrentVersion.SetText("Current V: " + localVersion)
+				//row.Widgets.CurrentVersion.SetText("Current V: " + localVersion)
+				row.Widgets.CurrentVersion.Text = "  Current V: " + localVersion
 
 				if remoteVersion != localVersion && localVersion != "" {
+					row.Widgets.CurrentVersion.Color = color.RGBA{R: 240, G: 0, B: 0, A: 255}
 					row.Widgets.UpdateButton.Importance = widget.HighImportance
 					row.Widgets.UpdateButton.SetText("Update")
 				} else {
@@ -150,6 +154,7 @@ func CreatePluginListWindow(closeFunction func()) {
 						row.Widgets.UpdateButton.SetText("ReInstall")
 					}
 				}
+				row.Widgets.CurrentVersion.Refresh()
 
 				fmt.Println("found remote version: " + remoteVersion + ", local version: " + localVersion + " class: " + class)
 				fmt.Println("remote sha256: " + hash + ", local sha256: " + localPluginFile.SHA256)
@@ -169,7 +174,9 @@ func CreatePluginListWindow(closeFunction func()) {
 		titleLabel.Wrapping = fyne.TextWrapWord
 
 		remoteVersionLabel := widget.NewLabel("Newest V: ")
-		currentVersionLabel := widget.NewLabel("Current V: ")
+		// currentVersionLabel := widget.NewLabel("Current V: ")
+		currentVersionLabel := canvas.NewText("  Current V: ", color.RGBA{255, 255, 255, 255})
+		currentVersionLabel.Move(fyne.NewPos(10, 0))
 
 		author := row.Author
 		authorLabel := widget.NewLabel("Author:\n" + author)
@@ -196,7 +203,9 @@ func CreatePluginListWindow(closeFunction func()) {
 				log.Fatalf("Error writing file: %v", err)
 			}
 
-			currentVersionLabel.SetText("Current V: " + version)
+			//currentVersionLabel.SetText("Current V: " + version)
+			currentVersionLabel.Text = "  Current V: " + version
+			currentVersionLabel.Refresh()
 
 			titleButton.Importance = widget.LowImportance
 			titleButton.SetText("Installed")
@@ -252,7 +261,7 @@ func CreatePluginListWindow(closeFunction func()) {
 
 type TableDataWidgets struct {
 	UpdateButton   *widget.Button
-	CurrentVersion *widget.Label
+	CurrentVersion *canvas.Text
 	RemoteVersion  *widget.Label
 }
 

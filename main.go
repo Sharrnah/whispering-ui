@@ -146,15 +146,23 @@ func main() {
 			container.NewTabItem("Text Translate", Pages.CreateTextTranslateWindow()),
 			container.NewTabItem("Text 2 Speech", Pages.CreateTextToSpeechWindow()),
 			container.NewTabItem("OCR", Pages.CreateOcrWindow()),
+			container.NewTabItem("Settings", Pages.CreateSettingsWindow()),
 			container.NewTabItem("Advanced", Pages.CreateAdvancedWindow()),
 		)
 		appTabs.SetTabLocation(container.TabLocationTop)
 
 		appTabs.OnSelected = func(tab *container.TabItem) {
+			if tab.Text == "Settings" {
+				tab.Content = Pages.CreateSettingsWindow()
+			}
 			if tab.Text == "Advanced" {
 				if tab.Content.(*container.AppTabs).SelectedIndex() == 0 {
-					// force trigger onselect for first tab (Plugins Tab)
+					// force trigger onselect for first tab (Advanced -> Plugins Tab)
 					tab.Content.(*container.AppTabs).OnSelected(tab.Content.(*container.AppTabs).Items[0])
+				}
+				if tab.Content.(*container.AppTabs).SelectedIndex() == 1 {
+					// force trigger onselect for second tab (Advanced -> Settings Tab)
+					tab.Content.(*container.AppTabs).OnSelected(tab.Content.(*container.AppTabs).Items[1])
 				}
 			}
 		}

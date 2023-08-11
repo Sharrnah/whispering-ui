@@ -130,7 +130,7 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 			tab.Content.(*container.Scroll).Refresh()
 		}
 		if tab.Text == "Settings" {
-			Settings.BuildSettingsForm(nil, Settings.Config.SettingsFilename)
+			Settings.Form = Settings.BuildSettingsForm(nil, Settings.Config.SettingsFilename).(*widget.Form)
 			tab.Content.(*container.Scroll).Content = Settings.Form
 			tab.Content.(*container.Scroll).Refresh()
 		}

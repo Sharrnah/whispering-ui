@@ -226,3 +226,9 @@ func FileHash(file io.Reader) (string, error) {
 	calculatedHashStr := hex.EncodeToString(calculatedHash)
 	return calculatedHashStr, nil
 }
+
+func Capitalize(str string) string {
+	runes := []rune(str)
+	runes[0] = unicode.ToUpper(runes[0])
+	return string(runes)
+}
