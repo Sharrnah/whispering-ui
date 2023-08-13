@@ -10,7 +10,7 @@ import (
 var SpeechToTextSettingsMapping = SettingsMapping{
 	Mappings: []SettingMapping{
 		{
-			SettingsName:         "Speech volume Level",
+			SettingsName:         "Speech volume level",
 			SettingsInternalName: "energy",
 			SettingsDescription:  "Volume level at which the speech detection will trigger.",
 			_widget: func() fyne.CanvasObject {
@@ -69,7 +69,7 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 			},
 		},
 		{
-			SettingsName:         "A.I. Denoise Audio",
+			SettingsName:         "A.I. denoise audio",
 			SettingsInternalName: "denoise_audio",
 			SettingsDescription:  "",
 			_widget: func() fyne.CanvasObject {
@@ -77,7 +77,7 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 			},
 		},
 		{
-			SettingsName:         "Apply Voice Markers to Audio",
+			SettingsName:         "Apply voice markers to audio",
 			SettingsInternalName: "whisper_apply_voice_markers",
 			SettingsDescription:  "Can reduce A.I. hallucinations.\nMight not work correctly with Speech Language set to \"Auto\".",
 			_widget: func() fyne.CanvasObject {
@@ -101,9 +101,9 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 			},
 		},
 		{
-			SettingsName:         "Search Beams",
+			SettingsName:         "Search beams",
 			SettingsInternalName: "beam_size",
-			SettingsDescription:  "Number of Beams to search for the best result.\nCan be 1-5. (lower = faster)",
+			SettingsDescription:  "Number of beams to search for the best result.\nCan be 1-5. (lower = faster)",
 			_widget: func() fyne.CanvasObject {
 				sliderWidget := widget.NewSlider(0, 5)
 				sliderState := widget.NewLabel("0")
@@ -115,7 +115,7 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 			},
 		},
 		{
-			SettingsName:         "Temperature Fallback",
+			SettingsName:         "Temperature fallback",
 			SettingsInternalName: "temperature_fallback",
 			SettingsDescription:  "If enabled, the temperature will fallback the temperature on low confidence.\n(disable for faster processing)",
 			_widget: func() fyne.CanvasObject {
@@ -123,7 +123,7 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 			},
 		},
 		{
-			SettingsName:         "Realtime Mode",
+			SettingsName:         "Real-time mode",
 			SettingsInternalName: "realtime",
 			SettingsDescription:  "",
 			_widget: func() fyne.CanvasObject {
@@ -131,7 +131,7 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 			},
 		},
 		{
-			SettingsName:         "Realtime Frequency",
+			SettingsName:         "Real-time frequency",
 			SettingsInternalName: "realtime_frequency_time",
 			SettingsDescription:  "How often the audio is processed in seconds.",
 			_widget: func() fyne.CanvasObject {
@@ -145,9 +145,9 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 			},
 		},
 		{
-			SettingsName:         "Search Beams for Realtime Mode",
+			SettingsName:         "Search beams for real-time mode",
 			SettingsInternalName: "realtime_whisper_beam_size",
-			SettingsDescription:  "Number of Beams to search for the best result.\nCan be 1-5. (lower = faster)",
+			SettingsDescription:  "Number of beams to search for the best result.\nCan be 1-5. (lower = faster)",
 			_widget: func() fyne.CanvasObject {
 				sliderWidget := widget.NewSlider(0, 5)
 				sliderState := widget.NewLabel("0")
@@ -159,7 +159,7 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 			},
 		},
 		{
-			SettingsName:         "Temperature Fallback for Realtime Mode",
+			SettingsName:         "Temperature fallback for real-time mode",
 			SettingsInternalName: "realtime_temperature_fallback",
 			SettingsDescription:  "If enabled, the temperature will fallback the temperature on low confidence.\n(disable for faster processing)",
 			_widget: func() fyne.CanvasObject {

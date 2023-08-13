@@ -116,9 +116,9 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 	logTabContent := container.NewBorder(nil, container.NewHBox(RestartBackendButton, writeLogFileCheckbox, copyLogButton), nil, nil, container.NewScroll(Fields.Field.LogText))
 
 	tabs := container.NewAppTabs(
-		container.NewTabItem("About", buildAboutInfo()),
-		container.NewTabItem("Settings", settingsTabContent),
-		container.NewTabItem("Log", logTabContent),
+		container.NewTabItem("About Whispering Tiger", buildAboutInfo()),
+		container.NewTabItem("Advanced Settings", settingsTabContent),
+		container.NewTabItem("Logs", logTabContent),
 	)
 	tabs.SetTabLocation(container.TabLocationLeading)
 

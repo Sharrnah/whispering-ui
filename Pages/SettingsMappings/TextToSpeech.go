@@ -8,7 +8,7 @@ import (
 var TextToSpeechSettingsMapping = SettingsMapping{
 	Mappings: []SettingMapping{
 		{
-			SettingsName:         "Enable integrated Text-To-Speech",
+			SettingsName:         "Enable integrated Text-to-Speech",
 			SettingsInternalName: "tts_enabled",
 			SettingsDescription:  "",
 			_widget: func() fyne.CanvasObject {
@@ -16,9 +16,9 @@ var TextToSpeechSettingsMapping = SettingsMapping{
 			},
 		},
 		{
-			SettingsName:         "Route Text-To-Speech to secondary audio device",
+			SettingsName:         "Route text-to-speech to secondary audio device",
 			SettingsInternalName: "tts_use_secondary_playback",
-			SettingsDescription:  "Play Text-To-Speech on a secondary audio device at the same time as the selected output device.\n(By default uses windows default audio device",
+			SettingsDescription:  "Play text-to-speech on a secondary audio device at the same time as the selected output device.\n(By default uses windows default audio device)",
 			_widget: func() fyne.CanvasObject {
 				return widget.NewCheck("", func(b bool) {})
 			},

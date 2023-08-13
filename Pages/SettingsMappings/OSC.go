@@ -9,7 +9,7 @@ import (
 var OSCSettingsMapping = SettingsMapping{
 	Mappings: []SettingMapping{
 		{
-			SettingsName:         "OSC IP Address",
+			SettingsName:         "OSC IP address",
 			SettingsInternalName: "osc_ip",
 			SettingsDescription:  "",
 			_widget: func() fyne.CanvasObject {
@@ -29,7 +29,7 @@ var OSCSettingsMapping = SettingsMapping{
 			},
 		},
 		{
-			SettingsName:         "OSC Typing Indicator",
+			SettingsName:         "OSC typing indicator",
 			SettingsInternalName: "osc_typing_indicator",
 			SettingsDescription:  "Display a typing indicator if you are currently speaking or the A.I. is processing.",
 			_widget: func() fyne.CanvasObject {
@@ -37,7 +37,7 @@ var OSCSettingsMapping = SettingsMapping{
 			},
 		},
 		{
-			SettingsName:         "OSC Chat Prefix",
+			SettingsName:         "OSC chat prefix",
 			SettingsInternalName: "osc_chat_prefix",
 			SettingsDescription:  "Adds a prefix to the chat messages.",
 			_widget: func() fyne.CanvasObject {
@@ -47,7 +47,7 @@ var OSCSettingsMapping = SettingsMapping{
 			},
 		},
 		{
-			SettingsName:         "OSC Initial Time Limit",
+			SettingsName:         "OSC initial time limit",
 			SettingsInternalName: "osc_initial_time_limit",
 			SettingsDescription:  "Display time of the first OSC message in seconds.",
 			_widget: func() fyne.CanvasObject {
@@ -57,7 +57,7 @@ var OSCSettingsMapping = SettingsMapping{
 			},
 		},
 		{
-			SettingsName:         "OSC Time Limit",
+			SettingsName:         "OSC time limit",
 			SettingsInternalName: "osc_time_limit",
 			SettingsDescription:  "Time between OSC messages in seconds.",
 			_widget: func() fyne.CanvasObject {
@@ -67,7 +67,7 @@ var OSCSettingsMapping = SettingsMapping{
 			},
 		},
 		{
-			SettingsName:         "OSC Scroll Time Limit",
+			SettingsName:         "OSC scroll time limit",
 			SettingsInternalName: "osc_scroll_time_limit",
 			SettingsDescription:  "Time between scrolling OSC messages in seconds.\n(Only used if OSC Send Type is set to 'Scroll')",
 			_widget: func() fyne.CanvasObject {
@@ -77,7 +77,7 @@ var OSCSettingsMapping = SettingsMapping{
 			},
 		},
 		{
-			SettingsName:         "OSC Send Type",
+			SettingsName:         "OSC send type",
 			SettingsInternalName: "osc_send_type",
 			SettingsDescription:  "",
 			_widget: func() fyne.CanvasObject {
@@ -91,7 +91,7 @@ var OSCSettingsMapping = SettingsMapping{
 			},
 		},
 		{
-			SettingsName:         "OSC Transfer Type",
+			SettingsName:         "OSC transfer type",
 			SettingsInternalName: "osc_type_transfer",
 			SettingsDescription:  "Type of OSC message to send.\nOnly Translation, Both or Source.",
 			_widget: func() fyne.CanvasObject {
@@ -104,7 +104,7 @@ var OSCSettingsMapping = SettingsMapping{
 			},
 		},
 		{
-			SettingsName:         "OSC Transfer Split",
+			SettingsName:         "OSC transfer split",
 			SettingsInternalName: "osc_type_transfer_split",
 			SettingsDescription:  "Text that is added between Source and Translation in the OSC message.\n(Only used if OSC Transfer Type is set to 'Both')",
 			_widget: func() fyne.CanvasObject {
