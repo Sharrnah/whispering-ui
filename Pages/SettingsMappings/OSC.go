@@ -29,9 +29,9 @@ var OSCSettingsMapping = SettingsMapping{
 			},
 		},
 		{
-			SettingsName:         "OSC typing indicator",
+			SettingsName:         "OSC typing indicator and notification",
 			SettingsInternalName: "osc_typing_indicator",
-			SettingsDescription:  "Display a typing indicator if you are currently speaking or the A.I. is processing.",
+			SettingsDescription:  "Display a typing indicator if you are currently speaking or the A.I. is processing.\nAnd plays the notification sound on a new message.",
 			_widget: func() fyne.CanvasObject {
 				return widget.NewCheck("", func(b bool) {})
 			},

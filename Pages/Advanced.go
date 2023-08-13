@@ -123,7 +123,7 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 	tabs.SetTabLocation(container.TabLocationLeading)
 
 	tabs.OnSelected = func(tab *container.TabItem) {
-		if tab.Text == "Settings" {
+		if tab.Text == "Advanced Settings" {
 			Settings.Form = Settings.BuildSettingsForm(nil, Settings.Config.SettingsFilename).(*widget.Form)
 			tab.Content.(*container.Scroll).Content = Settings.Form
 			tab.Content.(*container.Scroll).Content.Refresh()

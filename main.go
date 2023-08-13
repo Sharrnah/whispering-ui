@@ -148,8 +148,8 @@ func main() {
 			container.NewTabItemWithIcon("Text-Translate", theme.NewThemedResource(Resources.ResourceTranslateIconSvg), Pages.CreateTextTranslateWindow()),
 			container.NewTabItemWithIcon("Text-to-Speech", theme.NewThemedResource(Resources.ResourceTextToSpeechIconSvg), Pages.CreateTextToSpeechWindow()),
 			container.NewTabItemWithIcon("Image-to-Text", theme.NewThemedResource(Resources.ResourceImageRecognitionIconSvg), Pages.CreateOcrWindow()),
-			container.NewTabItemWithIcon("Settings", theme.SettingsIcon(), Pages.CreateSettingsWindow()),
 			container.NewTabItemWithIcon("Plugins", theme.NewThemedResource(Resources.ResourcePluginsIconSvg), Advanced.CreatePluginSettingsPage()),
+			container.NewTabItemWithIcon("Settings", theme.SettingsIcon(), Pages.CreateSettingsWindow()),
 			container.NewTabItemWithIcon("Advanced", theme.MoreVerticalIcon(), Pages.CreateAdvancedWindow()),
 		)
 		appTabs.SetTabLocation(container.TabLocationTop)
@@ -167,7 +167,7 @@ func main() {
 			if tab.Text == "Advanced" {
 				// check if tab content is of type container.AppTabs
 				if tabContent, ok := tab.Content.(*container.AppTabs); ok {
-					if tabContent.Selected().Text == "Settings" {
+					if tabContent.Selected().Text == "Advanced Settings" {
 						// force trigger onselect for (Advanced -> Settings) Tab
 						tabContent.OnSelected(tabContent.Items[tabContent.SelectedIndex()])
 					}
