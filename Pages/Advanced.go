@@ -13,7 +13,6 @@ import (
 	"strings"
 	"time"
 	"whispering-tiger-ui/Fields"
-	"whispering-tiger-ui/Pages/Advanced"
 	"whispering-tiger-ui/Resources"
 	"whispering-tiger-ui/RuntimeBackend"
 	"whispering-tiger-ui/Settings"
@@ -117,21 +116,17 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 	logTabContent := container.NewBorder(nil, container.NewHBox(RestartBackendButton, writeLogFileCheckbox, copyLogButton), nil, nil, container.NewScroll(Fields.Field.LogText))
 
 	tabs := container.NewAppTabs(
-		container.NewTabItem("Plugins", Advanced.CreatePluginSettingsPage()),
+		container.NewTabItem("About", buildAboutInfo()),
 		container.NewTabItem("Settings", settingsTabContent),
 		container.NewTabItem("Log", logTabContent),
-		container.NewTabItem("About", buildAboutInfo()),
 	)
-	tabs.SetTabLocation(container.TabLocationTrailing)
+	tabs.SetTabLocation(container.TabLocationLeading)
 
 	tabs.OnSelected = func(tab *container.TabItem) {
-		if tab.Text == "Plugins" {
-			tab.Content.(*container.Scroll).Content = Advanced.CreatePluginSettingsPage()
-			tab.Content.(*container.Scroll).Refresh()
-		}
 		if tab.Text == "Settings" {
 			Settings.Form = Settings.BuildSettingsForm(nil, Settings.Config.SettingsFilename).(*widget.Form)
 			tab.Content.(*container.Scroll).Content = Settings.Form
+			tab.Content.(*container.Scroll).Content.Refresh()
 			tab.Content.(*container.Scroll).Refresh()
 		}
 	}

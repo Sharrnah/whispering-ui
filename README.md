@@ -5,7 +5,7 @@ Whispering Tiger UI is a **Native-UI** that can be used to control the **Whisper
 [Whispering Tiger](https://github.com/Sharrnah/whispering) is a free and Open-Source tool that can listen/watch to any **audio stream** or **in-game image** on your machine and prints out the transcription or translation
 to a web browser using Websockets or over OSC (examples are **Streaming-overlays** or **VRChat**).
 
-<img src=doc/images/speech2text.png width=550 alt="Speech 2 Text Tab">
+<img src=doc/images/speech2text.png width=550 alt="Speech-to-Text Tab">
 
 ## Content
 - [Features](#features)
@@ -27,7 +27,7 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 - **Access to all Whispering Tiger features**, which includes:
    - Transcription / Translation of audio streams
    - Translation of Texts
-   - Text to Speech
+   - Text-to-Speech
    - Recognition and Translation of in-game images
    - Displaying the results in a web browser or VRChat, using Websockets or OSC
 - **Save** and **load** configurations
@@ -39,7 +39,7 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 ## Download
 [**Download Latest Version**](https://github.com/Sharrnah/whispering-ui/releases/latest) from the Releases Page.
 
-<img src=doc/images/whispering-ui-dl.png width=305 alt="Speech 2 Text Tab">
+<img src=doc/images/whispering-ui-dl.png width=305 alt="Speech-to-Text Tab">
 
 ## Tutorials
 - Video Tutorial "[_Whispering Tiger - Live Translation and Transcription_](https://youtu.be/VNh6lFdQC70)":
@@ -82,16 +82,16 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
    
    <img src="doc/images/setup/mem-estimates.png" width=706 alt="Memory Consumption Estimates">
 
-6. **Select the A.I. Device for Speech to Text** and **Text Translation** according to your Hardware.
+6. **Select the A.I. Device for Speech-to-Text** and **Text Translation** according to your Hardware.
    - CUDA (_requires an NVIDIA GPU_) or CPU.
    - CUDA will load the A.I. into V-RAM and will be faster than CPU.
 
-7. **Select the Speech to Text Size** and **Text Translation Size**.
+7. **Select the Speech-to-Text Size** and **Text Translation Size**.
    - The larger the size, the more accurate but also slower the transcription will be.
    - The larger the size, the more (V-)RAM it will use.
    - **Note:** The A.I. Model of the selected size and precision will be downloaded automatically when you start the application for the first time.
 
-8. **Select the Speech to Text Precision** and **Text Translation Precision**
+8. **Select the Speech-to-Text Precision** and **Text Translation Precision**
    - The higher the precision, the more accurate and the more (V-)RAM is used. (_However the accuracy differences are almost negligible_).
    - Modern GPU's have a better acceleration for `float16`.
    - CPU's only support `float32`, `int16` or `int8` precision.
@@ -126,10 +126,10 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 
 ## Screenshots
 <img src=doc/images/profile-selection.png width=845 alt="profile selection">
-<img src=doc/images/speech2text.png width=845 alt="Speech 2 Text Tab">
-<img src=doc/images/text-translate.png width=845 alt="Text Translate Tab">
-<img src=doc/images/text2speech.png width=845 alt="Text 2 Speech Tab">
-<img src=doc/images/ocr.png width=845 alt="Optical Character Recognition Tab">
+<img src=doc/images/speech2text.png width=845 alt="Speech-to-Text Tab">
+<img src=doc/images/text-translate.png width=845 alt="Text-Translate Tab">
+<img src=doc/images/text2speech.png width=845 alt="Text-to-Speech Tab">
+<img src=doc/images/ocr.png width=845 alt="Optical Character Recognition (Image-to-Text) Tab">
 <img src=doc/images/plugins.png width=845 alt="Plugins Tab">
 <img src=doc/images/advanced-settings.png width=845 alt="Advanced Settings Tab">
 <img src=doc/images/about.png width=845 alt="About Info Tab">

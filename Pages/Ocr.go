@@ -37,7 +37,7 @@ func CreateOcrWindow() fyne.CanvasObject {
 	}
 
 	container.New(layout.NewMaxLayout())
-	ocrLanguageWindowForm := container.New(layout.NewFormLayout(), widget.NewLabel("OCR Language:"), Fields.Field.OcrLanguageCombo, widget.NewLabel("Window:"), Fields.Field.OcrWindowCombo)
+	ocrLanguageWindowForm := container.New(layout.NewFormLayout(), widget.NewLabel("Text in Image Language:"), Fields.Field.OcrLanguageCombo, widget.NewLabel("Window:"), Fields.Field.OcrWindowCombo)
 	//ocrWindowForm := container.New(layout.NewFormLayout(), widget.NewLabel("Window:"), Fields.Field.OcrWindowCombo)
 	ocrSettingsRow := container.New(layout.NewGridLayout(1), ocrLanguageWindowForm)
 
@@ -78,7 +78,7 @@ func CreateOcrWindow() fyne.CanvasObject {
 		ocrSettingsRow,
 		container.New(layout.NewPaddedLayout(), buttonRow),
 		widget.NewSeparator(),
-		widget.NewLabel("Text Translation of OCR Result:"),
+		widget.NewLabel("Text-Translation of OCR Result:"),
 		languageRow,
 	)
 

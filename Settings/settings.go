@@ -35,11 +35,11 @@ type Conf struct {
 	Energy            int     `yaml:"energy" json:"energy"`
 
 	// VAD Settings
-	Vad_enabled              bool   `yaml:"vad_enabled" json:"vad_enabled"`
-	Vad_on_full_clip         bool   `yaml:"vad_on_full_clip" json:"vad_on_full_clip"`
-	Vad_confidence_threshold string `yaml:"vad_confidence_threshold" json:"vad_confidence_threshold"`
-	Vad_frames_per_buffer    int    `yaml:"vad_frames_per_buffer" json:"vad_frames_per_buffer"`
-	Vad_thread_num           int    `yaml:"vad_thread_num,omitempty" json:"vad_thread_num,omitempty"`
+	Vad_enabled              bool    `yaml:"vad_enabled" json:"vad_enabled"`
+	Vad_on_full_clip         bool    `yaml:"vad_on_full_clip" json:"vad_on_full_clip"`
+	Vad_confidence_threshold float64 `yaml:"vad_confidence_threshold" json:"vad_confidence_threshold"`
+	Vad_frames_per_buffer    int     `yaml:"vad_frames_per_buffer" json:"vad_frames_per_buffer"`
+	Vad_thread_num           int     `yaml:"vad_thread_num,omitempty" json:"vad_thread_num,omitempty"`
 
 	// speaker diarization
 	Speaker_change_check            bool    `yaml:"speaker_change_check" json:"speaker_change_check"`
@@ -445,13 +445,13 @@ func BuildSettingsForm(includeConfigFields []string, settingsFile string) fyne.C
 							println(s)
 						})
 
-						selectedValue := strconv.FormatFloat(settingsValue.(float64), 'f', 1, 64)
+						selectedValue := strconv.FormatFloat(settingsValue.(float64), 'f', 2, 64)
 						settingsWidget.SetSelected(selectedValue)
 						settingsForm.Append(settingsName, settingsWidget)
 					}
 				} else {
 					settingsWidget := widget.NewEntry()
-					settingsWidget.SetText(strconv.FormatFloat(settingsValue.(float64), 'f', 1, 64))
+					settingsWidget.SetText(strconv.FormatFloat(settingsValue.(float64), 'f', 2, 64))
 					settingsForm.Append(settingsName, settingsWidget)
 				}
 

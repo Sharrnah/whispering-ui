@@ -554,11 +554,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		profileForm.Append("", audioOutputProgress)
 
-		vadConfidenceSliderState := widget.NewLabel("0.0")
+		vadConfidenceSliderState := widget.NewLabel("0.00")
 		vadConfidenceSliderWidget := widget.NewSlider(0, 1)
-		vadConfidenceSliderWidget.Step = 0.1
+		vadConfidenceSliderWidget.Step = 0.01
 		vadConfidenceSliderWidget.OnChanged = func(value float64) {
-			vadConfidenceSliderState.SetText(fmt.Sprintf("%.1f", value))
+			vadConfidenceSliderState.SetText(fmt.Sprintf("%.2f", value))
 		}
 
 		vadOnFullClipCheckbox := widget.NewCheck("+ Check on Full Clip", func(b bool) {})
@@ -742,7 +742,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
 		}
 
-		profileForm.Append("A.I. Device for Speech to Text", sttAiDeviceSelect)
+		profileForm.Append("A.I. Device for Speech-to-Text", sttAiDeviceSelect)
 
 		originalWhisperModelList := []CustomWidget.TextValueOption{
 			{Text: "Tiny", Value: "tiny"},
@@ -802,7 +802,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
 		}, 0)
 
-		profileForm.Append("Speech to Text Size", container.NewGridWithColumns(2, sttModelSize, sttPrecisionSelect))
+		profileForm.Append("Speech-to-Text Size", container.NewGridWithColumns(2, sttModelSize, sttPrecisionSelect))
 
 		sttTypeSelect := CustomWidget.NewTextValueSelect("stt_type", []CustomWidget.TextValueOption{
 			{Text: "Faster Whisper", Value: "faster_whisper"},
@@ -869,7 +869,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		denoiseCheckbox := widget.NewCheck("A.I. Denoise", func(b bool) {})
 
-		profileForm.Append("Speech to Text Type", container.NewGridWithColumns(2, sttTypeSelect, denoiseCheckbox))
+		profileForm.Append("Speech-to-Text Type", container.NewGridWithColumns(2, sttTypeSelect, denoiseCheckbox))
 
 		profileForm.Append("", layout.NewSpacer())
 
@@ -949,7 +949,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
 		}
 
-		profileForm.Append("A.I. Device for Text Translation", txtTranslatorDeviceSelect)
+		profileForm.Append("A.I. Device for Text-Translation", txtTranslatorDeviceSelect)
 
 		txtTranslatorSizeSelect := CustomWidget.NewTextValueSelect("txt_translator_size", []CustomWidget.TextValueOption{
 			{Text: "Small", Value: "small"},
@@ -964,7 +964,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
 		}, 0)
 
-		profileForm.Append("Text Translation Size", container.NewGridWithColumns(2, txtTranslatorSizeSelect, txtTranslatorPrecisionSelect))
+		profileForm.Append("Text-Translation Size", container.NewGridWithColumns(2, txtTranslatorSizeSelect, txtTranslatorPrecisionSelect))
 
 		txtTranslatorTypeSelect := CustomWidget.NewTextValueSelect("txt_translator", []CustomWidget.TextValueOption{
 			{Text: "Faster NLLB200 (200 languages)", Value: "NLLB200_CT2"},
@@ -1033,11 +1033,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
 		}, 0)
 
-		profileForm.Append("Text Translation Type", container.NewGridWithColumns(2, txtTranslatorTypeSelect))
+		profileForm.Append("Text-Translation Type", container.NewGridWithColumns(2, txtTranslatorTypeSelect))
 
 		profileForm.Append("", layout.NewSpacer())
 
-		profileForm.Append("Text to Speech Enable", widget.NewCheck("", func(b bool) {
+		profileForm.Append("Text-to-Speech Enable", widget.NewCheck("", func(b bool) {
 			enabledType := "N"
 			if b {
 				enabledType = "O"
@@ -1051,7 +1051,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
 		}))
 
-		profileForm.Append("A.I. Device for Text to Speech", CustomWidget.NewTextValueSelect("tts_ai_device", []CustomWidget.TextValueOption{
+		profileForm.Append("A.I. Device for Text-to-Speech", CustomWidget.NewTextValueSelect("tts_ai_device", []CustomWidget.TextValueOption{
 			{Text: "CUDA", Value: "cuda"},
 			{Text: "CPU", Value: "cpu"},
 		}, func(s CustomWidget.TextValueOption) {
@@ -1140,7 +1140,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 			Vad_enabled:              true,
 			Vad_on_full_clip:         false,
-			Vad_confidence_threshold: "0.4",
+			Vad_confidence_threshold: 0.4,
 			Vad_frames_per_buffer:    2000,
 			Vad_thread_num:           1,
 			Push_to_talk_key:         "",
@@ -1250,9 +1250,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileForm.Items[7].Widget.(*fyne.Container).Objects[2].(*widget.Check).SetChecked(profileSettings.Realtime)
 		profileForm.Items[7].Widget.(*fyne.Container).Objects[3].(*fyne.Container).Objects[0].(*CustomWidget.HotKeyEntry).SetText(profileSettings.Push_to_talk_key)
 
-		VadConfidenceThreshold, _ := strconv.ParseFloat(profileSettings.Vad_confidence_threshold, 64)
-
-		profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(VadConfidenceThreshold)
+		profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Vad_confidence_threshold))
 		if profileSettings.Vad_enabled {
 			profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Show()
 		} else {
@@ -1321,7 +1319,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			profileSettings.Vad_on_full_clip = profileForm.Items[7].Widget.(*fyne.Container).Objects[1].(*widget.Check).Checked
 			profileSettings.Realtime = profileForm.Items[7].Widget.(*fyne.Container).Objects[2].(*widget.Check).Checked
 			profileSettings.Push_to_talk_key = profileForm.Items[7].Widget.(*fyne.Container).Objects[3].(*fyne.Container).Objects[0].(*CustomWidget.HotKeyEntry).Text
-			profileSettings.Vad_confidence_threshold = fmt.Sprintf("%f", profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value)
+			profileSettings.Vad_confidence_threshold = profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value
 
 			profileSettings.Energy = int(profileForm.Items[9].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value)
 			profileSettings.Pause = profileForm.Items[10].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value

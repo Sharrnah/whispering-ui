@@ -16,4 +16,4 @@
    <br><img src="images/setup/plugin-settings.png" width=789 alt="Download Plugin">
 
 7. You can now use the TTS of the Plugin everywhere like the included TTS before.
-   <br>For example in the **Text 2 Speech** Tab or enabling **Automatic Text 2 Speech**
+   <br>For example in the **Text-to-Speech** Tab or enabling **Automatic Text-to-Speech**

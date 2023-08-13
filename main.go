@@ -5,6 +5,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/theme"
 	"log"
 	"os"
 	"path/filepath"
@@ -12,6 +13,7 @@ import (
 	"runtime/debug"
 	"strconv"
 	"whispering-tiger-ui/Pages"
+	"whispering-tiger-ui/Pages/Advanced"
 	"whispering-tiger-ui/Resources"
 	"whispering-tiger-ui/RuntimeBackend"
 	"whispering-tiger-ui/Settings"
@@ -142,27 +144,33 @@ func main() {
 
 		// initialize main window
 		appTabs := container.NewAppTabs(
-			container.NewTabItem("Speech 2 Text", Pages.CreateSpeechToTextWindow()),
-			container.NewTabItem("Text Translate", Pages.CreateTextTranslateWindow()),
-			container.NewTabItem("Text 2 Speech", Pages.CreateTextToSpeechWindow()),
-			container.NewTabItem("OCR", Pages.CreateOcrWindow()),
-			container.NewTabItem("Settings", Pages.CreateSettingsWindow()),
-			container.NewTabItem("Advanced", Pages.CreateAdvancedWindow()),
+			container.NewTabItem("Speech-to-Text", Pages.CreateSpeechToTextWindow()),
+			container.NewTabItem("Text-Translate", Pages.CreateTextTranslateWindow()),
+			container.NewTabItem("Text-to-Speech", Pages.CreateTextToSpeechWindow()),
+			container.NewTabItem("Image-to-Text", Pages.CreateOcrWindow()),
+			container.NewTabItemWithIcon("Settings", theme.SettingsIcon(), Pages.CreateSettingsWindow()),
+			container.NewTabItemWithIcon("Plugins", theme.GridIcon(), Advanced.CreatePluginSettingsPage()),
+			container.NewTabItemWithIcon("Advanced", theme.MoreVerticalIcon(), Pages.CreateAdvancedWindow()),
 		)
 		appTabs.SetTabLocation(container.TabLocationTop)
 
 		appTabs.OnSelected = func(tab *container.TabItem) {
 			if tab.Text == "Settings" {
 				tab.Content = Pages.CreateSettingsWindow()
+				tab.Content.Refresh()
+			}
+			if tab.Text == "Plugins" {
+				tab.Content.(*container.Scroll).Content = Advanced.CreatePluginSettingsPage()
+				tab.Content.(*container.Scroll).Content.Refresh()
+				tab.Content.(*container.Scroll).Refresh()
 			}
 			if tab.Text == "Advanced" {
-				if tab.Content.(*container.AppTabs).SelectedIndex() == 0 {
-					// force trigger onselect for first tab (Advanced -> Plugins Tab)
-					tab.Content.(*container.AppTabs).OnSelected(tab.Content.(*container.AppTabs).Items[0])
-				}
-				if tab.Content.(*container.AppTabs).SelectedIndex() == 1 {
-					// force trigger onselect for second tab (Advanced -> Settings Tab)
-					tab.Content.(*container.AppTabs).OnSelected(tab.Content.(*container.AppTabs).Items[1])
+				// check if tab content is of type container.AppTabs
+				if tabContent, ok := tab.Content.(*container.AppTabs); ok {
+					if tabContent.Selected().Text == "Settings" {
+						// force trigger onselect for (Advanced -> Settings) Tab
+						tabContent.OnSelected(tabContent.Items[tabContent.SelectedIndex()])
+					}
 				}
 			}
 		}

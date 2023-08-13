@@ -12,7 +12,7 @@ import (
 	"whispering-tiger-ui/CustomWidget"
 )
 
-const SttTextTranslateLabelConst = "Automatic Text Translate from %s to %s"
+const SttTextTranslateLabelConst = "Automatic Text-Translate from %s to %s"
 const OscLimitLabelConst = "[%d / %d]"
 
 var OscLimitHintUpdateFunc = func() {}
@@ -71,7 +71,7 @@ var Field = struct {
 		entry := CustomWidget.NewMultiLineEntry()
 		entry.Wrapping = fyne.TextWrapWord
 
-		entry.AddAdditionalMenuItem(fyne.NewMenuItem("Send to Text 2 Speech", func() {
+		entry.AddAdditionalMenuItem(fyne.NewMenuItem("Send to Text-to-Speech", func() {
 			valueData := struct {
 				Text     string `json:"text"`
 				ToDevice bool   `json:"to_device"`
@@ -106,7 +106,7 @@ var Field = struct {
 		entry := CustomWidget.NewMultiLineEntry()
 		entry.Wrapping = fyne.TextWrapWord
 
-		entry.AddAdditionalMenuItem(fyne.NewMenuItem("Send to Text 2 Speech", func() {
+		entry.AddAdditionalMenuItem(fyne.NewMenuItem("Send to Text-to-Speech", func() {
 			valueData := struct {
 				Text     string `json:"text"`
 				ToDevice bool   `json:"to_device"`
@@ -178,8 +178,8 @@ var Field = struct {
 		log.Println("Select set to", value)
 	}),
 	TextTranslateEnabled: widget.NewCheckWithData(fmt.Sprintf(SttTextTranslateLabelConst, "?", "?"), DataBindings.TextTranslateEnabledDataBinding),
-	SttEnabled:           widget.NewCheckWithData("Speech 2 Text Enabled", DataBindings.SpeechToTextEnabledDataBinding),
-	TtsEnabled:           widget.NewCheckWithData("Automatic Text 2 Speech", DataBindings.TextToSpeechEnabledDataBinding),
+	SttEnabled:           widget.NewCheckWithData("Speech-to-Text Enabled", DataBindings.SpeechToTextEnabledDataBinding),
+	TtsEnabled:           widget.NewCheckWithData("Automatic Text-to-Speech", DataBindings.TextToSpeechEnabledDataBinding),
 	OscEnabled:           widget.NewCheckWithData("Automatic OSC (VRChat)", DataBindings.OSCEnabledDataBinding),
 	OscLimitHint:         canvas.NewText(fmt.Sprintf(OscLimitLabelConst, 0, 0), theme.PlaceHolderColor()),
 

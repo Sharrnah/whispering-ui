@@ -60,7 +60,7 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 		}
 		sendMessage.SendMessage()
 	}
-	sendButton := widget.NewButtonWithIcon("Send to Text 2 Speech", theme.MediaPlayIcon(), sendFunction)
+	sendButton := widget.NewButtonWithIcon("Send to Text-to-Speech", theme.MediaPlayIcon(), sendFunction)
 	sendButton.Importance = widget.HighImportance
 
 	testButton := widget.NewButton("Test the Voice", func() {

@@ -1,7 +1,7 @@
 # Audio configuration (TTS to Mic, Game Audio translation, etc.)
 
-## Text 2 Speech as Microphone input for Voice Chat (e.g. VRChat, Discord, etc.)
-For routing Text 2 Speech as Microphone input, you need to install [VB-Audio Virtual Cable](https://vb-audio.com/Cable/)
+## Text-to-Speech as Microphone input for Voice Chat (e.g. VRChat, Discord, etc.)
+For routing Text-to-Speech as Microphone input, you need to install [VB-Audio Virtual Cable](https://vb-audio.com/Cable/)
 - select it as `Audio Output (speaker)` in Whispering Tiger
 - select it in the Game as Microphone (or as default Microphone in Windows) accordingly.
 - If you want to listen to it at the same time, enable `tts_use_secondary_playback` in Advanced -> Settings. `tts_secondary_playback_device` = `-1` will play it on your windows default device.
