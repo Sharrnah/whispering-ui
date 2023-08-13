@@ -144,12 +144,12 @@ func main() {
 
 		// initialize main window
 		appTabs := container.NewAppTabs(
-			container.NewTabItem("Speech-to-Text", Pages.CreateSpeechToTextWindow()),
-			container.NewTabItem("Text-Translate", Pages.CreateTextTranslateWindow()),
-			container.NewTabItem("Text-to-Speech", Pages.CreateTextToSpeechWindow()),
-			container.NewTabItem("Image-to-Text", Pages.CreateOcrWindow()),
+			container.NewTabItemWithIcon("Speech-to-Text", theme.NewThemedResource(Resources.ResourceSpeechToTextIconSvg), Pages.CreateSpeechToTextWindow()),
+			container.NewTabItemWithIcon("Text-Translate", theme.NewThemedResource(Resources.ResourceTranslateIconSvg), Pages.CreateTextTranslateWindow()),
+			container.NewTabItemWithIcon("Text-to-Speech", theme.NewThemedResource(Resources.ResourceTextToSpeechIconSvg), Pages.CreateTextToSpeechWindow()),
+			container.NewTabItemWithIcon("Image-to-Text", theme.NewThemedResource(Resources.ResourceImageRecognitionIconSvg), Pages.CreateOcrWindow()),
 			container.NewTabItemWithIcon("Settings", theme.SettingsIcon(), Pages.CreateSettingsWindow()),
-			container.NewTabItemWithIcon("Plugins", theme.GridIcon(), Advanced.CreatePluginSettingsPage()),
+			container.NewTabItemWithIcon("Plugins", theme.NewThemedResource(Resources.ResourcePluginsIconSvg), Advanced.CreatePluginSettingsPage()),
 			container.NewTabItemWithIcon("Advanced", theme.MoreVerticalIcon(), Pages.CreateAdvancedWindow()),
 		)
 		appTabs.SetTabLocation(container.TabLocationTop)
