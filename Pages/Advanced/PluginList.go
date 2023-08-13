@@ -144,6 +144,7 @@ func CreatePluginListWindow(closeFunction func()) {
 					row.Widgets.UpdateButton.Importance = widget.HighImportance
 					row.Widgets.UpdateButton.SetText("Update")
 				} else {
+					row.Widgets.CurrentVersion.Color = color.RGBA{R: 255, G: 255, B: 255, A: 255}
 					row.Widgets.UpdateButton.Importance = widget.LowImportance
 					if hash != localPluginFile.SHA256 {
 						row.Widgets.UpdateButton.Importance = widget.HighImportance
@@ -204,6 +205,7 @@ func CreatePluginListWindow(closeFunction func()) {
 			}
 
 			//currentVersionLabel.SetText("Current V: " + version)
+			currentVersionLabel.Color = color.RGBA{R: 255, G: 255, B: 255, A: 255}
 			currentVersionLabel.Text = "  Current V: " + version
 			currentVersionLabel.Refresh()
 
