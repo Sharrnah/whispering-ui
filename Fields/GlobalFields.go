@@ -8,6 +8,7 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/fyne-io/terminal"
+	"image/color"
 	"log"
 	"whispering-tiger-ui/CustomWidget"
 )
@@ -101,7 +102,7 @@ var Field = struct {
 		}))
 		return entry
 	}(),
-	TranscriptionInputHint: canvas.NewText("0", theme.PlaceHolderColor()),
+	TranscriptionInputHint: canvas.NewText("0", color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}),
 	TranscriptionTranslationInput: func() *CustomWidget.EntryWithPopupMenu {
 		entry := CustomWidget.NewMultiLineEntry()
 		entry.Wrapping = fyne.TextWrapWord
@@ -137,7 +138,7 @@ var Field = struct {
 		}))
 		return entry
 	}(),
-	TranscriptionTranslationInputHint: canvas.NewText("0", theme.PlaceHolderColor()),
+	TranscriptionTranslationInputHint: canvas.NewText("0", color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}),
 	SourceLanguageCombo: CustomWidget.NewTextValueSelect("src_lang", []CustomWidget.TextValueOption{
 		{
 			Text:  "Auto",
@@ -181,7 +182,7 @@ var Field = struct {
 	SttEnabled:           widget.NewCheckWithData("Speech-to-Text Enabled", DataBindings.SpeechToTextEnabledDataBinding),
 	TtsEnabled:           widget.NewCheckWithData("Automatic Text-to-Speech", DataBindings.TextToSpeechEnabledDataBinding),
 	OscEnabled:           widget.NewCheckWithData("Automatic OSC (VRChat)", DataBindings.OSCEnabledDataBinding),
-	OscLimitHint:         canvas.NewText(fmt.Sprintf(OscLimitLabelConst, 0, 0), theme.PlaceHolderColor()),
+	OscLimitHint:         canvas.NewText(fmt.Sprintf(OscLimitLabelConst, 0, 0), color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}),
 
 	OcrLanguageCombo: widget.NewSelect([]string{}, func(value string) {
 		sendMessage := SendMessageStruct{
