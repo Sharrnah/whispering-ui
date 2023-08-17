@@ -9,6 +9,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"image/color"
@@ -19,6 +20,7 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Utilities"
 )
 
@@ -97,7 +99,15 @@ func CreatePluginListWindow(closeFunction func()) {
 	fileUrl := "https://raw.githubusercontent.com/Sharrnah/whispering/main/documentation/plugins.md"
 
 	pluginListWindow := fyne.CurrentApp().NewWindow("Plugin List")
-	pluginListWindow.Resize(fyne.NewSize(1400, 800))
+
+	windowSize := fyne.NewSize(1150, 700)
+	if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
+		windowSize = fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size()
+		windowSize.Height = windowSize.Height - 50
+		windowSize.Width = windowSize.Width - 50
+	}
+	pluginListWindow.Resize(windowSize)
+
 	pluginListWindow.CenterOnScreen()
 
 	CloseFunctionCall := func() {
@@ -113,6 +123,8 @@ func CreatePluginListWindow(closeFunction func()) {
 
 	tableContainer.Add(widget.NewLabel("Plugin List"))
 
+	loadingBar := widget.NewProgressBarInfinite()
+
 	md, err := DownloadFile(fileUrl)
 	if err != nil {
 		panic(err)
@@ -125,6 +137,7 @@ func CreatePluginListWindow(closeFunction func()) {
 	localPluginFilesData := parseLocalPluginFiles()
 
 	checkAllButton := widget.NewButton("Check all Plugins for Updates", func() {
+		loadingBar.Show()
 		for _, row := range tableData {
 			titleLink := row.TitleLink
 			fmt.Println("Checking update for: " + titleLink)
@@ -161,12 +174,22 @@ func CreatePluginListWindow(closeFunction func()) {
 				fmt.Println("remote sha256: " + hash + ", local sha256: " + localPluginFile.SHA256)
 			}
 		}
+		loadingBar.Hide()
 	})
 	checkAllButton.Importance = widget.HighImportance
 	// hide button as we already update on window open
 	checkAllButton.Hide()
 
 	grid := container.New(layout.NewFormLayout())
+
+	// Set the content of the window to the table container
+	scrollContainer := container.NewVScroll(grid)
+	verticalContent := container.NewBorder(container.NewVBox(checkAllButton, loadingBar), nil, nil, nil, scrollContainer)
+	pluginListWindow.SetContent(verticalContent)
+
+	// Show and run the application
+	pluginListWindow.Show()
+
 	// iterate over the table data and create a new widget for each row
 	for _, row := range tableData {
 
@@ -240,8 +263,37 @@ func CreatePluginListWindow(closeFunction func()) {
 				dialog.ShowError(err, pluginListWindow)
 			}
 		})
+
 		rightColumn := container.NewBorder(authorLabel, nil, nil, nil, openPageButton)
-		descriptionBorder := container.NewBorder(nil, nil, nil, rightColumn, descriptionScroller)
+
+		previewBorder := container.NewBorder(nil, nil, nil, nil, descriptionScroller)
+
+		previewLink := row.PreviewLink
+		if previewLink != "" {
+			previewFileUri, err := storage.ParseURI(previewLink)
+			if err == nil {
+				// is preview an image?
+				if previewFileUri.Extension() == ".png" || previewFileUri.Extension() == ".jpg" || previewFileUri.Extension() == ".jpeg" {
+					var previewImage *canvas.Image = nil
+					previewImage = canvas.NewImageFromURI(previewFileUri)
+					previewImage.ScaleMode = canvas.ImageScaleFastest
+					previewImage.FillMode = canvas.ImageFillContain
+					previewImage.SetMinSize(fyne.NewSize(220, 120))
+
+					previewBorder = container.NewBorder(nil, nil, nil, previewImage, descriptionScroller)
+				}
+				if previewFileUri.Extension() == ".gif" {
+					gif, err := CustomWidget.NewAnimatedGif(previewFileUri)
+					if err == nil {
+						gif.SetMinSize(fyne.NewSize(220, 120))
+						previewBorder = container.NewBorder(nil, nil, nil, gif, descriptionScroller)
+						gif.Start()
+					}
+				}
+			}
+		}
+
+		descriptionBorder := container.NewBorder(nil, nil, nil, rightColumn, previewBorder)
 
 		grid.Add(descriptionBorder)
 
@@ -249,13 +301,7 @@ func CreatePluginListWindow(closeFunction func()) {
 		grid.Add(widget.NewSeparator())
 	}
 
-	// Set the content of the window to the table container
-	scrollContainer := container.NewVScroll(grid)
-	verticalContent := container.NewBorder(checkAllButton, nil, nil, nil, scrollContainer)
-	pluginListWindow.SetContent(verticalContent)
-
-	// Show and run the application
-	pluginListWindow.Show()
+	loadingBar.Hide()
 
 	// run the check all button once at window showing
 	checkAllButton.OnTapped()
