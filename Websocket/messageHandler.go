@@ -3,6 +3,7 @@ package Websocket
 import (
 	"encoding/json"
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"log"
 	"strings"
@@ -212,6 +213,14 @@ func (c *MessageStruct) HandleReceiveMessage() {
 
 		Fields.Field.RealtimeResultLabel.SetText(c.Text)
 		Fields.Field.RealtimeResultLabel.Refresh()
+
+		// force refresh of speech-to-text tab
+		if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
+			appTabs := fyne.CurrentApp().Driver().AllWindows()[0].Content().(*container.AppTabs)
+			if appTabs.Selected().Text == "Speech-to-Text" {
+				appTabs.Selected().Content.Refresh()
+			}
+		}
 
 		select {
 		// reset processing status timer
