@@ -3,10 +3,13 @@ package SettingsMappings
 import (
 	"fmt"
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"image/color"
 	"reflect"
 	"strconv"
 	"strings"
@@ -178,12 +181,16 @@ func (s *SettingMapping) processWidget(settingsValue interface{}, settingWidget 
 	}
 	if topMost && s.SettingsDescription != "" {
 		originalWidget := settingWidget.(fyne.CanvasObject)
-		infoButton := widget.NewButtonWithIcon("Info", theme.InfoIcon(), func() {
+		infoButton := widget.NewButtonWithIcon("", theme.InfoIcon(), func() {
 			if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
 				dialog.ShowInformation(s.SettingsName, s.SettingsDescription, fyne.CurrentApp().Driver().AllWindows()[0])
 			}
 		})
-		s.Widget = container.NewBorder(nil, nil, nil, infoButton, originalWidget)
+		s.Widget = container.NewBorder(nil, nil, infoButton, nil, originalWidget)
+	} else {
+		originalWidget := settingWidget.(fyne.CanvasObject)
+		spacer := canvas.NewText("       ", color.Transparent)
+		s.Widget = container.NewBorder(nil, nil, container.New(layout.NewPaddedLayout(), spacer), nil, originalWidget)
 	}
 }
 

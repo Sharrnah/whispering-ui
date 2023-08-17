@@ -1,7 +1,9 @@
 package SettingsMappings
 
 import (
+	"fmt"
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
 	"whispering-tiger-ui/CustomWidget"
 )
@@ -26,6 +28,20 @@ var OSCSettingsMapping = SettingsMapping{
 				settingWidget := widget.NewEntry()
 				settingWidget.OnChanged = func(value string) {}
 				return settingWidget
+			},
+		},
+		{
+			SettingsName:         "OSC minimum time between messages",
+			SettingsInternalName: "osc_min_time_between_messages",
+			SettingsDescription:  "The minimum allowed time between messages in seconds.",
+			_widget: func() fyne.CanvasObject {
+				sliderWidget := widget.NewSlider(0, 10)
+				sliderState := widget.NewLabel(fmt.Sprintf("%.1f", sliderWidget.Min))
+				sliderWidget.Step = 0.1
+				sliderWidget.OnChanged = func(value float64) {
+					sliderState.SetText(fmt.Sprintf("%.1f", value))
+				}
+				return container.NewBorder(nil, nil, nil, sliderState, sliderWidget)
 			},
 		},
 		{
@@ -77,9 +93,9 @@ var OSCSettingsMapping = SettingsMapping{
 			},
 		},
 		{
-			SettingsName:         "OSC send type",
+			SettingsName:         "OSC text splitting send type",
 			SettingsInternalName: "osc_send_type",
-			SettingsDescription:  "",
+			SettingsDescription:  "How the OSC messages are send.\nChunks = Send the text in chunks if too long. Messages are separated via '...'.\nFull = Send the full text at once.\nFull or Scroll = Send the full text or scroll it if too long.\nScroll = Scroll the text.",
 			_widget: func() fyne.CanvasObject {
 				settingWidget := CustomWidget.NewTextValueSelect("osc_send_type", []CustomWidget.TextValueOption{
 					{Text: "Chunks", Value: "chunks"},
@@ -98,7 +114,8 @@ var OSCSettingsMapping = SettingsMapping{
 				settingWidget := CustomWidget.NewTextValueSelect("osc_type_transfer", []CustomWidget.TextValueOption{
 					{Text: "Send Translation", Value: "translation_result"},
 					{Text: "Send Source Text", Value: "source"},
-					{Text: "Send both Soruce and Translation", Value: "both"},
+					{Text: "Send both 'Source and Translation'", Value: "both"},
+					{Text: "Send both (inverted) 'Translation and Source'", Value: "both_inverted"},
 				}, func(s CustomWidget.TextValueOption) {}, 0)
 				return settingWidget
 			},
@@ -111,6 +128,14 @@ var OSCSettingsMapping = SettingsMapping{
 				settingWidget := widget.NewEntry()
 				settingWidget.OnChanged = func(value string) {}
 				return settingWidget
+			},
+		},
+		{
+			SettingsName:         "OSC delay until audio playback",
+			SettingsInternalName: "osc_delay_until_audio_playback",
+			SettingsDescription:  "Delays the OSC message until the audio playback started.\n(To better sync the audio with the text)\n(If no audio is played, the message will be delayed until a timeout is reached)",
+			_widget: func() fyne.CanvasObject {
+				return widget.NewCheck("", func(b bool) {})
 			},
 		},
 	},

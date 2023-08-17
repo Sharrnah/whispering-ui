@@ -15,7 +15,7 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 			SettingsDescription:  "Volume level at which the speech detection will trigger.",
 			_widget: func() fyne.CanvasObject {
 				sliderWidget := widget.NewSlider(0, EnergySliderMax)
-				sliderState := widget.NewLabel("0")
+				sliderState := widget.NewLabel(fmt.Sprintf("%.0f", sliderWidget.Min))
 				sliderWidget.Step = 1
 				sliderWidget.OnChanged = func(value float64) {
 					if value >= sliderWidget.Max {
@@ -32,7 +32,7 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 			SettingsDescription:  "Voice Activity Detection (VAD) confidence threshold. Can be 0-1",
 			_widget: func() fyne.CanvasObject {
 				sliderWidget := widget.NewSlider(0, 1)
-				sliderState := widget.NewLabel("0.00")
+				sliderState := widget.NewLabel(fmt.Sprintf("%.2f", sliderWidget.Min))
 				sliderWidget.Step = 0.01
 				sliderWidget.OnChanged = func(value float64) {
 					sliderState.SetText(fmt.Sprintf("%.2f", value))
@@ -46,7 +46,7 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 			SettingsDescription:  "Pause time in seconds after which the speech detection will stop and A.I. processing starts.",
 			_widget: func() fyne.CanvasObject {
 				sliderWidget := widget.NewSlider(0, 5)
-				sliderState := widget.NewLabel("0.0")
+				sliderState := widget.NewLabel(fmt.Sprintf("%.1f", sliderWidget.Min))
 				sliderWidget.Step = 0.1
 				sliderWidget.OnChanged = func(value float64) {
 					sliderState.SetText(fmt.Sprintf("%.1f", value))
@@ -60,7 +60,7 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 			SettingsDescription:  "Maximum time limit in seconds after which the audio processing starts.",
 			_widget: func() fyne.CanvasObject {
 				sliderWidget := widget.NewSlider(0, 30)
-				sliderState := widget.NewLabel("0.0")
+				sliderState := widget.NewLabel(fmt.Sprintf("%.1f", sliderWidget.Min))
 				sliderWidget.Step = 0.1
 				sliderWidget.OnChanged = func(value float64) {
 					sliderState.SetText(fmt.Sprintf("%.1f", value))
@@ -72,14 +72,6 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 			SettingsName:         "A.I. denoise audio",
 			SettingsInternalName: "denoise_audio",
 			SettingsDescription:  "",
-			_widget: func() fyne.CanvasObject {
-				return widget.NewCheck("", func(b bool) {})
-			},
-		},
-		{
-			SettingsName:         "Apply voice markers to audio",
-			SettingsInternalName: "whisper_apply_voice_markers",
-			SettingsDescription:  "Can reduce A.I. hallucinations.\nMight not work correctly with Speech Language set to \"Auto\".",
 			_widget: func() fyne.CanvasObject {
 				return widget.NewCheck("", func(b bool) {})
 			},
@@ -105,8 +97,8 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 			SettingsInternalName: "beam_size",
 			SettingsDescription:  "Number of beams to search for the best result.\nCan be 1-5. (lower = faster)",
 			_widget: func() fyne.CanvasObject {
-				sliderWidget := widget.NewSlider(0, 5)
-				sliderState := widget.NewLabel("0")
+				sliderWidget := widget.NewSlider(1, 5)
+				sliderState := widget.NewLabel(fmt.Sprintf("%.0f", sliderWidget.Min))
 				sliderWidget.Step = 1
 				sliderWidget.OnChanged = func(value float64) {
 					sliderState.SetText(fmt.Sprintf("%.0f", value))
@@ -118,6 +110,22 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 			SettingsName:         "Temperature fallback",
 			SettingsInternalName: "temperature_fallback",
 			SettingsDescription:  "If enabled, the temperature will fallback the temperature on low confidence.\n(disable for faster processing)",
+			_widget: func() fyne.CanvasObject {
+				return widget.NewCheck("", func(b bool) {})
+			},
+		},
+		{
+			SettingsName:         "Condition on previous text",
+			SettingsInternalName: "condition_on_previous_text",
+			SettingsDescription:  "Provides the previous text to the A.I. to improve the results.\n(disable for faster processing)\n(disabling can also reduce hallucinations)",
+			_widget: func() fyne.CanvasObject {
+				return widget.NewCheck("", func(b bool) {})
+			},
+		},
+		{
+			SettingsName:         "Apply voice markers to audio",
+			SettingsInternalName: "whisper_apply_voice_markers",
+			SettingsDescription:  "Can reduce A.I. hallucinations.\nMight not work correctly with Speech Language set to \"Auto\".",
 			_widget: func() fyne.CanvasObject {
 				return widget.NewCheck("", func(b bool) {})
 			},
@@ -136,7 +144,7 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 			SettingsDescription:  "How often the audio is processed in seconds.",
 			_widget: func() fyne.CanvasObject {
 				sliderWidget := widget.NewSlider(0, 20)
-				sliderState := widget.NewLabel("0.0")
+				sliderState := widget.NewLabel(fmt.Sprintf("%.1f", sliderWidget.Min))
 				sliderWidget.Step = 0.1
 				sliderWidget.OnChanged = func(value float64) {
 					sliderState.SetText(fmt.Sprintf("%.1f", value))
@@ -149,8 +157,8 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 			SettingsInternalName: "realtime_whisper_beam_size",
 			SettingsDescription:  "Number of beams to search for the best result.\nCan be 1-5. (lower = faster)",
 			_widget: func() fyne.CanvasObject {
-				sliderWidget := widget.NewSlider(0, 5)
-				sliderState := widget.NewLabel("0")
+				sliderWidget := widget.NewSlider(1, 5)
+				sliderState := widget.NewLabel(fmt.Sprintf("%.0f", sliderWidget.Min))
 				sliderWidget.Step = 1
 				sliderWidget.OnChanged = func(value float64) {
 					sliderState.SetText(fmt.Sprintf("%.0f", value))
