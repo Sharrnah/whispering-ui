@@ -82,11 +82,20 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 		sendMessage.SendMessage()
 	})
 
+	stopPlayButton := widget.NewButtonWithIcon("Stop playing", theme.MediaStopIcon(), func() {
+		sendMessage := Fields.SendMessageStruct{
+			Type:  "audio_stop",
+			Value: "tts",
+		}
+		sendMessage.SendMessage()
+	})
+
 	buttonRow := container.NewHBox(
 		exportSpeechButton,
 		layout.NewSpacer(),
 		testButton,
 		sendButton,
+		stopPlayButton,
 	)
 
 	mainContent := container.NewBorder(
