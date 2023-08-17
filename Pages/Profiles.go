@@ -338,6 +338,7 @@ func stopAndClose(playBackDevice CurrentPlaybackDevice, onClose func()) {
 
 	// Closes profile window, stop audio device, and call onClose
 	playBackDevice.Stop()
+	time.Sleep(500 * time.Millisecond) // wait for device to stop (hopefully fixes a crash when closing the profile window)
 	onClose()
 }
 
