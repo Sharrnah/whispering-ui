@@ -105,22 +105,26 @@ type Conf struct {
 	Run_backend    bool   `yaml:"run_backend" json:"run_backend"`
 
 	// OSC settings
-	Osc_ip                      string  `yaml:"osc_ip" json:"osc_ip"`
-	Osc_port                    int     `yaml:"osc_port" json:"osc_port"`
-	Osc_address                 string  `yaml:"osc_address" json:"osc_address"`
-	Osc_typing_indicator        bool    `yaml:"osc_typing_indicator" json:"osc_typing_indicator"`
-	Osc_convert_ascii           bool    `yaml:"osc_convert_ascii" json:"osc_convert_ascii"`
-	Osc_auto_processing_enabled bool    `yaml:"osc_auto_processing_enabled" json:"osc_auto_processing_enabled"`
-	Osc_chat_prefix             string  `yaml:"osc_chat_prefix" json:"osc_chat_prefix"`
-	Osc_chat_limit              int     `yaml:"osc_chat_limit" json:"osc_chat_limit"`
-	Osc_type_transfer           string  `yaml:"osc_type_transfer" json:"osc_type_transfer"`
-	Osc_type_transfer_split     string  `yaml:"osc_type_transfer_split" json:"osc_type_transfer_split"`
-	Osc_time_limit              float64 `yaml:"osc_time_limit" json:"osc_time_limit"`
-	Osc_scroll_time_limit       float64 `yaml:"osc_scroll_time_limit" json:"osc_scroll_time_limit"`
-	Osc_initial_time_limit      float64 `yaml:"osc_initial_time_limit" json:"osc_initial_time_limit"`
-	Osc_scroll_size             int     `yaml:"osc_scroll_size" json:"osc_scroll_size"`
-	Osc_max_scroll_size         int     `yaml:"osc_max_scroll_size" json:"osc_max_scroll_size"`
-	Osc_send_type               string  `yaml:"osc_send_type" json:"osc_send_type"`
+	Osc_ip                             string  `yaml:"osc_ip" json:"osc_ip"`
+	Osc_port                           int     `yaml:"osc_port" json:"osc_port"`
+	Osc_address                        string  `yaml:"osc_address" json:"osc_address"`
+	Osc_min_time_between_messages      float64 `yaml:"osc_min_time_between_messages" json:"osc_min_time_between_messages"`
+	Osc_typing_indicator               bool    `yaml:"osc_typing_indicator" json:"osc_typing_indicator"`
+	Osc_convert_ascii                  bool    `yaml:"osc_convert_ascii" json:"osc_convert_ascii"`
+	Osc_auto_processing_enabled        bool    `yaml:"osc_auto_processing_enabled" json:"osc_auto_processing_enabled"`
+	Osc_chat_prefix                    string  `yaml:"osc_chat_prefix" json:"osc_chat_prefix"`
+	Osc_chat_limit                     int     `yaml:"osc_chat_limit" json:"osc_chat_limit"`
+	Osc_type_transfer                  string  `yaml:"osc_type_transfer" json:"osc_type_transfer"`
+	Osc_type_transfer_split            string  `yaml:"osc_type_transfer_split" json:"osc_type_transfer_split"`
+	Osc_time_limit                     float64 `yaml:"osc_time_limit" json:"osc_time_limit"`
+	Osc_scroll_time_limit              float64 `yaml:"osc_scroll_time_limit" json:"osc_scroll_time_limit"`
+	Osc_initial_time_limit             float64 `yaml:"osc_initial_time_limit" json:"osc_initial_time_limit"`
+	Osc_scroll_size                    int     `yaml:"osc_scroll_size" json:"osc_scroll_size"`
+	Osc_max_scroll_size                int     `yaml:"osc_max_scroll_size" json:"osc_max_scroll_size"`
+	Osc_send_type                      string  `yaml:"osc_send_type" json:"osc_send_type"`
+	Osc_delay_until_audio_playback     bool    `yaml:"osc_delay_until_audio_playback" json:"osc_delay_until_audio_playback"`
+	Osc_delay_until_audio_playback_tag string  `yaml:"osc_delay_until_audio_playback_tag" json:"osc_delay_until_audio_playback_tag"`
+	Osc_delay_timeout                  float64 `yaml:"osc_delay_timeout" json:"osc_delay_timeout"`
 
 	// OCR settings
 	Ocr_lang        string `yaml:"ocr_lang" json:"ocr_lang"`
