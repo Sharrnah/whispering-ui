@@ -20,12 +20,15 @@ func (res InstalledLanguagesListing) Update() *InstalledLanguagesListing {
 	Fields.Field.TargetLanguageCombo.Options = nil
 	Fields.Field.TargetLanguageTxtTranslateCombo.Options = nil
 	Fields.Field.SourceLanguageCombo.Options = nil
+	Fields.Field.SourceLanguageCombo.OptionsTextValue = nil
 
 	// fill language text translate target combo-boxes (without None value)
 	for _, element := range InstalledLanguages.Languages {
 		Fields.Field.TargetLanguageTxtTranslateCombo.Options = append(Fields.Field.TargetLanguageTxtTranslateCombo.Options, element.Name)
 		Fields.Field.TargetLanguageCombo.Options = append(Fields.Field.TargetLanguageCombo.Options, element.Name)
 	}
+	Fields.Field.TargetLanguageTxtTranslateCombo.ResetOptionsFilter()
+	Fields.Field.TargetLanguageCombo.ResetOptionsFilter()
 
 	// Add None entry
 	InstalledLanguages.Languages = append([]InstalledLanguage{
@@ -39,13 +42,15 @@ func (res InstalledLanguagesListing) Update() *InstalledLanguagesListing {
 	for _, element := range InstalledLanguages.Languages {
 		elementName := element.Name
 		elementCode := element.Code
-		if elementCode == "" {
+		if elementCode == "" || elementCode == "auto" {
 			elementName = "Auto"
 		}
-		Fields.Field.SourceLanguageCombo.Options = append(Fields.Field.SourceLanguageCombo.Options, CustomWidget.TextValueOption{
+		Fields.Field.SourceLanguageCombo.Options = append(Fields.Field.SourceLanguageCombo.Options, elementName)
+		Fields.Field.SourceLanguageCombo.OptionsTextValue = append(Fields.Field.SourceLanguageCombo.OptionsTextValue, CustomWidget.TextValueOption{
 			Text:  elementName,
 			Value: elementName,
 		})
+		Fields.Field.SourceLanguageCombo.ResetOptionsFilter()
 	}
 
 	return &res

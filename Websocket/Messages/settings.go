@@ -49,31 +49,32 @@ func (res TranslateSetting) Update() *TranslateSetting {
 	if strings.Contains(res.Whisper_task, "transcribe") && !strings.Contains(Fields.Field.TranscriptionTaskCombo.Selected, "transcribe") {
 		Fields.Field.TranscriptionTaskCombo.SetSelected("transcribe")
 	}
-	//if Fields.Field.TranscriptionSpeakerLanguageCombo.Selected != TranslateSettings.GetWhisperLanguageNameByCode(res.Current_language) {
-	//	Fields.Field.TranscriptionSpeakerLanguageCombo.SetSelected(
-	//		cases.Title(language.English, cases.Compact).String(TranslateSettings.GetWhisperLanguageNameByCode(res.Current_language)),
-	//	)
-	//}
-	if Fields.Field.TranscriptionSpeakerLanguageCombo.SelectedText() != TranslateSettings.GetWhisperLanguageNameByCode(res.Current_language) {
+	if Fields.Field.TranscriptionSpeakerLanguageCombo.Text != TranslateSettings.GetWhisperLanguageNameByCode(res.Current_language) {
 		Fields.Field.TranscriptionSpeakerLanguageCombo.Text = cases.Title(language.English, cases.Compact).String(TranslateSettings.GetWhisperLanguageNameByCode(res.Current_language))
 		Fields.Field.TranscriptionSpeakerLanguageCombo.ResetOptionsFilter()
 	}
 
 	// Set SourceLanguageCombo
-	if strings.ToLower(Fields.Field.SourceLanguageCombo.Selected) != strings.ToLower(InstalledLanguages.GetNameByCode(res.Src_lang)) {
-		Fields.Field.SourceLanguageCombo.SetSelected(cases.Title(language.English, cases.Compact).String(InstalledLanguages.GetNameByCode(res.Src_lang)))
-	} else if Fields.Field.SourceLanguageCombo.Selected == "" && res.Src_lang == "auto" {
-		Fields.Field.SourceLanguageCombo.SetSelected(cases.Title(language.English, cases.Compact).String(res.Src_lang))
+	if strings.ToLower(Fields.Field.SourceLanguageCombo.Text) != strings.ToLower(InstalledLanguages.GetNameByCode(res.Src_lang)) {
+		Fields.Field.SourceLanguageCombo.Text = cases.Title(language.English, cases.Compact).String(InstalledLanguages.GetNameByCode(res.Src_lang))
+	} else if Fields.Field.SourceLanguageCombo.Text == "" && strings.ToLower(res.Src_lang) == "auto" {
+		Fields.Field.SourceLanguageCombo.Text = cases.Title(language.English, cases.Compact).String(res.Src_lang)
 	}
+	Fields.Field.SourceLanguageCombo.ResetOptionsFilter()
 
 	// Set TargetLanguageCombo
-	if strings.ToLower(Fields.Field.TargetLanguageCombo.Selected) != strings.ToLower(InstalledLanguages.GetNameByCode(res.Trg_lang)) {
-		Fields.Field.TargetLanguageCombo.SetSelected(cases.Title(language.English, cases.Compact).String(InstalledLanguages.GetNameByCode(res.Trg_lang)))
+	if strings.ToLower(Fields.Field.TargetLanguageCombo.Text) != strings.ToLower(InstalledLanguages.GetNameByCode(res.Trg_lang)) {
+		Fields.Field.TargetLanguageCombo.Text = cases.Title(language.English, cases.Compact).String(InstalledLanguages.GetNameByCode(res.Trg_lang))
+		Fields.Field.TargetLanguageCombo.ResetOptionsFilter()
 		// Set TargetLanguageTxtTranslateCombo if it is not set
-		if Fields.Field.TargetLanguageTxtTranslateCombo.Selected == "" {
-			Fields.Field.TargetLanguageTxtTranslateCombo.SetSelected(cases.Title(language.English, cases.Compact).String(InstalledLanguages.GetNameByCode(res.Trg_lang)))
+		if Fields.Field.TargetLanguageTxtTranslateCombo.Text == "" {
+			Fields.Field.TargetLanguageTxtTranslateCombo.Text = cases.Title(language.English, cases.Compact).String(InstalledLanguages.GetNameByCode(res.Trg_lang))
+			Fields.Field.TargetLanguageTxtTranslateCombo.ResetOptionsFilter()
 		}
 	}
+
+	Fields.Field.TextTranslateEnabled.Text = fmt.Sprintf(Fields.SttTextTranslateLabelConst, Fields.Field.SourceLanguageCombo.GetValueOptionEntryByText(Fields.Field.SourceLanguageCombo.Text).Value, Fields.Field.TargetLanguageCombo.Text)
+	Fields.Field.TextTranslateEnabled.Refresh()
 
 	checkValue, _ := Fields.DataBindings.SpeechToTextEnabledDataBinding.Get()
 	if checkValue != res.Stt_enabled {
@@ -115,9 +116,10 @@ func (res TranslateSetting) Update() *TranslateSetting {
 	}
 	//}
 	// Set OcrLanguageCombo
-	if Fields.Field.OcrLanguageCombo.Selected != res.Ocr_lang {
-		Fields.Field.OcrLanguageCombo.SetSelected(OcrLanguagesList.GetNameByCode(res.Ocr_lang))
+	if Fields.Field.OcrLanguageCombo.Text != res.Ocr_lang {
+		Fields.Field.OcrLanguageCombo.Text = OcrLanguagesList.GetNameByCode(res.Ocr_lang)
 	}
+	Fields.Field.OcrLanguageCombo.ResetOptionsFilter()
 
 	// set oscEnabledLabel Update function
 	if res.OscAutoProcessingEnabled {

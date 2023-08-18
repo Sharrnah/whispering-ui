@@ -6,6 +6,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"strings"
 )
 
 var _ fyne.Tappable = (*CompletionEntry)(nil)
@@ -16,6 +17,7 @@ type CompletionEntry struct {
 	popupMenu        *widget.PopUp
 	navigableList    *navigableList
 	Options          []string
+	OptionsTextValue []TextValueOption
 	FilteredOptions  []string
 	pause            bool
 	itemHeight       float32
@@ -30,6 +32,64 @@ func NewCompletionEntry(options []string) *CompletionEntry {
 	c := &CompletionEntry{Options: options, FilteredOptions: options}
 	c.ExtendBaseWidget(c)
 	return c
+}
+
+func (c *CompletionEntry) SetValueOptions(valueOptions []TextValueOption) {
+	for _, option := range valueOptions {
+		c.OptionsTextValue = append(c.OptionsTextValue, option)
+		c.Options = append(c.Options, option.Text)
+	}
+}
+
+func (c *CompletionEntry) GetCurrentValueOptionEntry() *TextValueOption {
+	var bestMatch *TextValueOption = nil
+	for i := 0; i < len(c.OptionsTextValue); i++ {
+		if strings.Contains(strings.ToLower(c.OptionsTextValue[i].Text), strings.ToLower(c.Text)) && bestMatch == nil {
+			bestMatch = &c.OptionsTextValue[i]
+		}
+		if c.OptionsTextValue[i].Text == c.Text {
+			return &c.OptionsTextValue[i]
+		}
+	}
+	// nothing found. return best match if it exists
+	if bestMatch != nil {
+		return bestMatch
+	}
+	return nil
+}
+
+func (c *CompletionEntry) GetValueOptionEntryByText(entry string) TextValueOption {
+	var bestMatch TextValueOption
+	for i := 0; i < len(c.OptionsTextValue); i++ {
+		if strings.Contains(strings.ToLower(c.OptionsTextValue[i].Text), strings.ToLower(entry)) && bestMatch == (TextValueOption{}) {
+			bestMatch = c.OptionsTextValue[i]
+		}
+		if c.OptionsTextValue[i].Text == entry {
+			return c.OptionsTextValue[i]
+		}
+	}
+	// nothing found. return best match if it exists
+	if bestMatch != (TextValueOption{}) {
+		return bestMatch
+	}
+	return TextValueOption{}
+}
+
+func (c *CompletionEntry) GetValueOptionEntryByValue(entry string) TextValueOption {
+	var bestMatch TextValueOption
+	for i := 0; i < len(c.OptionsTextValue); i++ {
+		if strings.Contains(strings.ToLower(c.OptionsTextValue[i].Value), strings.ToLower(entry)) && bestMatch == (TextValueOption{}) {
+			bestMatch = c.OptionsTextValue[i]
+		}
+		if c.OptionsTextValue[i].Value == entry {
+			return c.OptionsTextValue[i]
+		}
+	}
+	// nothing found. return best match if it exists
+	if bestMatch != (TextValueOption{}) {
+		return bestMatch
+	}
+	return TextValueOption{}
 }
 
 // HideCompletion hides the completion menu.
@@ -53,6 +113,9 @@ func (c *CompletionEntry) Tapped(ev *fyne.PointEvent) {
 	}
 
 	c.selectCurrentItem()
+
+	// select all text on initial tap
+	c.Entry.TypedShortcut(&fyne.ShortcutSelectAll{})
 }
 
 // Move changes the relative position of the select entry.
@@ -159,6 +222,9 @@ func (c *CompletionEntry) popUpPos() fyne.Position {
 }
 
 func (c *CompletionEntry) selectCurrentItem() {
+	if c.navigableList == nil {
+		return
+	}
 	c.navigableList.navigating = true
 	c.navigableList.UnselectAll()
 	c.navigableList.selected = -1
@@ -167,7 +233,6 @@ func (c *CompletionEntry) selectCurrentItem() {
 		if c.navigableList.items[i] == c.Entry.Text {
 			c.navigableList.ScrollToBottom()
 			c.navigableList.Select(i)
-			//c.navigableList.ScrollTo(i)
 			break
 		}
 	}
@@ -182,7 +247,6 @@ func (c *CompletionEntry) SelectItemByValue(s string) {
 	for i := 0; i < len(c.navigableList.items); i++ {
 		if c.navigableList.items[i] == s {
 			c.navigableList.ScrollToBottom()
-			//c.navigableList.Select(i)
 			c.navigableList.ScrollTo(i)
 			break
 		}
@@ -209,9 +273,9 @@ func (c *CompletionEntry) setTextFromMenu(s string) {
 
 	c.popupMenu.Hide()
 
-	//c.navigableList.navigating = false
-	//c.navigableList.OnSelected(c.navigableList.selected)
-	c.Entry.OnSubmitted(s)
+	if c.Entry.OnSubmitted != nil {
+		c.Entry.OnSubmitted(s)
+	}
 }
 
 type navigableList struct {
@@ -254,9 +318,7 @@ func newNavigableList(items []string, entry *widget.Entry, setTextFromMenu func(
 				fn(i, o)
 				return
 			}
-			//if len(n.items) > i { // fix crash
 			o.(*widget.Label).SetText(n.items[i])
-			//}
 		},
 		OnSelected: func(id widget.ListItemID) {
 			if !n.navigating && id > -1 {

@@ -56,12 +56,14 @@ func (s *TappableSelect) showPopUp() {
 		text := s.Options[i] // capture
 		items[i] = fyne.NewMenuItem(text, func() {
 			s.updateSelected(text)
+			s.popUp.Hide()
 			s.popUp = nil
 		})
 	}
 
 	c := fyne.CurrentApp().Driver().CanvasForObject(s.super())
 	s.popUp = widget.NewPopUpMenu(fyne.NewMenu("", items...), c)
+
 	//s.popUp.alignment = s.Alignment
 	s.popUp.ShowAtPosition(s.popUpPos())
 	s.popUp.Resize(fyne.NewSize(s.Size().Width, s.popUp.MinSize().Height))

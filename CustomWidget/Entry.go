@@ -174,3 +174,7 @@ func (e *EntryWithPopupMenu) TypedShortcut(s fyne.Shortcut) {
 		}
 	}
 }
+
+func (e *EntryWithPopupMenu) GetPopup() *widget.PopUpMenu {
+	return e.popUp
+}

@@ -7,6 +7,7 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"log"
+	"strings"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Utilities"
 	"whispering-tiger-ui/Websocket/Messages"
@@ -14,17 +15,25 @@ import (
 
 func CreateOcrWindow() fyne.CanvasObject {
 
-	Fields.Field.OcrLanguageCombo.OnChanged = func(value string) {
-		valueIso := Messages.OcrLanguagesList.GetCodeByName(value)
-		srcTargetLangCode := Utilities.LanguageMapList.GetISO1(valueIso)
-		if srcTargetLangCode == "" && len(Utilities.LanguageMapList.GetISO3(valueIso)) > 0 {
-			srcTargetLangCode = Utilities.LanguageMapList.GetISO3(valueIso)[0]
-		}
-		if srcTargetLangCode == "" {
-			srcTargetLangCode = valueIso
+	Fields.Field.OcrLanguageCombo.OnSubmitted = func(value string) {
+		for i := 0; i < len(Fields.Field.OcrLanguageCombo.Options); i++ {
+			if strings.Contains(strings.ToLower(Fields.Field.OcrLanguageCombo.Options[i]), strings.ToLower(value)) {
+				Fields.Field.OcrLanguageCombo.SelectItemByValue(Fields.Field.OcrLanguageCombo.Options[i])
+				value = Fields.Field.OcrLanguageCombo.Options[i]
+				Fields.Field.OcrLanguageCombo.Text = value
+				Fields.Field.OcrLanguageCombo.Entry.CursorColumn = len(Fields.Field.OcrLanguageCombo.Text)
+				Fields.Field.OcrLanguageCombo.Refresh()
+				break
+			}
 		}
 
-		Fields.Field.SourceLanguageCombo.SetSelected(srcTargetLangCode)
+		valueIso := Messages.OcrLanguagesList.GetCodeByName(value)
+		if valueIso == "" {
+			valueObj := Fields.Field.SourceLanguageCombo.GetValueOptionEntryByText(value)
+			value = valueObj.Value
+
+			valueIso = Messages.OcrLanguagesList.GetCodeByName(value)
+		}
 
 		sendMessage := Fields.SendMessageStruct{
 			Type:  "setting_change",
@@ -33,20 +42,43 @@ func CreateOcrWindow() fyne.CanvasObject {
 		}
 		sendMessage.SendMessage()
 
-		log.Println("Select set to", value)
+		log.Println("ocr Select set to", value)
 	}
 
 	container.New(layout.NewMaxLayout())
 	ocrLanguageWindowForm := container.New(layout.NewFormLayout(), widget.NewLabel("Text in Image Language:"), Fields.Field.OcrLanguageCombo, widget.NewLabel("Window:"), Fields.Field.OcrWindowCombo)
-	//ocrWindowForm := container.New(layout.NewFormLayout(), widget.NewLabel("Window:"), Fields.Field.OcrWindowCombo)
+
 	ocrSettingsRow := container.New(layout.NewGridLayout(1), ocrLanguageWindowForm)
 
 	ocrButton := widget.NewButtonWithIcon("process window with OCR", theme.ConfirmIcon(), func() {
-		fromLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.SourceLanguageCombo.Selected)
-		if fromLang == "" {
+
+		ocrLanguageCode := Messages.OcrLanguagesList.GetCodeByName(Fields.Field.OcrLanguageCombo.Text)
+
+		fromLang := ""
+		if len(Fields.Field.SourceLanguageCombo.OptionsTextValue) > 0 {
+			fromLang = Messages.InstalledLanguages.GetCodeByName(Fields.Field.SourceLanguageCombo.GetValueOptionEntryByText(Fields.Field.SourceLanguageCombo.Text).Value)
+		} else {
+			fromLang = Messages.InstalledLanguages.GetCodeByName(Fields.Field.SourceLanguageCombo.Text)
+		}
+		if fromLang == "" || fromLang == "Auto" {
 			fromLang = "auto"
 		}
-		toLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.TargetLanguageTxtTranslateCombo.Selected)
+		if fromLang == "auto" {
+			guessedSrcLangByOCRLang := ""
+			// try to guess the language from the OCR language selection if auto to lessen the language guessing
+			guessedSrcLangByOCRLang = Messages.InstalledLanguages.GetCodeByName(Fields.Field.OcrLanguageCombo.Text)
+			if guessedSrcLangByOCRLang == "" {
+				if Utilities.LanguageMapList.GetName(ocrLanguageCode) != "" {
+					guessedSrcLangByOCRLang = ocrLanguageCode
+				}
+			}
+			if guessedSrcLangByOCRLang != "" {
+				fromLang = guessedSrcLangByOCRLang
+				println("guessedSrcLangByOCRLang", guessedSrcLangByOCRLang)
+			}
+		}
+
+		toLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.TargetLanguageTxtTranslateCombo.Text)
 		//goland:noinspection GoSnakeCaseUsage
 		sendMessage := Fields.SendMessageStruct{
 			Type: "ocr_req",
@@ -55,7 +87,7 @@ func CreateOcrWindow() fyne.CanvasObject {
 				From_lang string `json:"from_lang"`
 				To_lang   string `json:"to_lang"`
 			}{
-				Ocr_lang:  Messages.OcrLanguagesList.GetCodeByName(Fields.Field.OcrLanguageCombo.Selected),
+				Ocr_lang:  ocrLanguageCode,
 				From_lang: fromLang,
 				To_lang:   toLang,
 			},

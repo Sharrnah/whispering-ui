@@ -20,19 +20,21 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 	targetLanguageRow := container.New(layout.NewFormLayout(), widget.NewLabel("Target Language:"), Fields.Field.TargetLanguageCombo)
 
 	switchButton := container.NewCenter(widget.NewButton("<==>", func() {
-		sourceLanguage := Fields.Field.SourceLanguageCombo.Selected
+		sourceLanguage := Fields.Field.SourceLanguageCombo.Text
 		// use last detected language when switching between source and target language
-		if strings.HasPrefix(sourceLanguage, "Auto") && Settings.Config.Last_auto_txt_translate_lang != "" {
+		if strings.HasPrefix(strings.ToLower(sourceLanguage), "auto") && Settings.Config.Last_auto_txt_translate_lang != "" {
 			sourceLanguage = Utilities.LanguageMapList.GetName(Settings.Config.Last_auto_txt_translate_lang)
 		}
 
-		targetLanguage := Fields.Field.TargetLanguageCombo.Selected
+		targetLanguage := Fields.Field.TargetLanguageCombo.Text
 		if targetLanguage == "None" {
 			targetLanguage = "Auto"
 		}
 
-		Fields.Field.SourceLanguageCombo.SetSelected(targetLanguage)
-		Fields.Field.TargetLanguageCombo.SetSelected(sourceLanguage)
+		Fields.Field.SourceLanguageCombo.Text = targetLanguage
+		Fields.Field.SourceLanguageCombo.Refresh()
+		Fields.Field.TargetLanguageCombo.Text = sourceLanguage
+		Fields.Field.TargetLanguageCombo.Refresh()
 
 		sourceField := Fields.Field.TranscriptionInput.Text
 		targetField := Fields.Field.TranscriptionTranslationInput.Text
@@ -48,11 +50,11 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 	)
 
 	translateOnlyFunction := func() {
-		fromLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.SourceLanguageCombo.Selected)
+		fromLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.SourceLanguageCombo.Text)
 		if fromLang == "" {
 			fromLang = "auto"
 		}
-		toLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.TargetLanguageCombo.Selected)
+		toLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.TargetLanguageCombo.Text)
 		//goland:noinspection GoSnakeCaseUsage
 		sendMessage := Fields.SendMessageStruct{
 			Type: "translate_req",
@@ -73,11 +75,11 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 	translateOnlyButton := widget.NewButtonWithIcon("Translate Only\n[CTRL+ALT+Enter]", theme.MenuExpandIcon(), translateOnlyFunction)
 
 	translateFunction := func() {
-		fromLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.SourceLanguageCombo.Selected)
+		fromLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.SourceLanguageCombo.Text)
 		if fromLang == "" {
 			fromLang = "auto"
 		}
-		toLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.TargetLanguageCombo.Selected)
+		toLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.TargetLanguageCombo.Text)
 		//goland:noinspection GoSnakeCaseUsage
 		sendMessage := Fields.SendMessageStruct{
 			Type: "translate_req",

@@ -233,14 +233,15 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		if c.OriginalText != "" {
 			Fields.Field.TranscriptionInput.SetText(c.OriginalText)
 		}
-		if Fields.Field.SourceLanguageCombo.GetSelected() != nil && Fields.Field.SourceLanguageCombo.GetSelected().Value == "Auto" {
+		if Fields.Field.SourceLanguageCombo.GetCurrentValueOptionEntry() != nil && Fields.Field.SourceLanguageCombo.GetCurrentValueOptionEntry().Value == "Auto" {
 			langName := Utilities.LanguageMapList.GetName(c.TxtFromLang)
 			Settings.Config.Last_auto_txt_translate_lang = c.TxtFromLang
 			if langName == "" {
 				langName = c.TxtFromLang
 			}
-			Fields.Field.SourceLanguageCombo.Options[0].Text = "Auto [detected: " + langName + "]"
-			Fields.Field.SourceLanguageCombo.SetSelected(Fields.Field.SourceLanguageCombo.Options[0].Value)
+			Fields.Field.SourceLanguageCombo.OptionsTextValue[0].Text = "Auto [detected: " + langName + "]"
+			Fields.Field.SourceLanguageCombo.Options[0] = Fields.Field.SourceLanguageCombo.OptionsTextValue[0].Text
+			Fields.Field.SourceLanguageCombo.Text = Fields.Field.SourceLanguageCombo.Options[0]
 			Fields.Field.SourceLanguageCombo.Refresh()
 		}
 		//case "tts_save":
