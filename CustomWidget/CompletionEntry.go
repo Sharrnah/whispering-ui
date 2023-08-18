@@ -8,14 +8,18 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
+var _ fyne.Tappable = (*CompletionEntry)(nil)
+
 // CompletionEntry is an Entry with options displayed in a PopUpMenu.
 type CompletionEntry struct {
 	widget.Entry
-	popupMenu     *widget.PopUp
-	navigableList *navigableList
-	Options       []string
-	pause         bool
-	itemHeight    float32
+	popupMenu        *widget.PopUp
+	navigableList    *navigableList
+	Options          []string
+	FilteredOptions  []string
+	pause            bool
+	itemHeight       float32
+	ShowAllEntryText string
 
 	CustomCreate func() fyne.CanvasObject
 	CustomUpdate func(id widget.ListItemID, object fyne.CanvasObject)
@@ -23,7 +27,7 @@ type CompletionEntry struct {
 
 // NewCompletionEntry creates a new CompletionEntry which creates a popup menu that responds to keystrokes to navigate through the items without losing the editing ability of the text input.
 func NewCompletionEntry(options []string) *CompletionEntry {
-	c := &CompletionEntry{Options: options}
+	c := &CompletionEntry{Options: options, FilteredOptions: options}
 	c.ExtendBaseWidget(c)
 	return c
 }
@@ -33,6 +37,22 @@ func (c *CompletionEntry) HideCompletion() {
 	if c.popupMenu != nil {
 		c.popupMenu.Hide()
 	}
+}
+
+func (c *CompletionEntry) Tapped(ev *fyne.PointEvent) {
+	c.Entry.Tapped(ev)
+
+	if c.Disabled() {
+		return
+	}
+
+	if c.OnChanged != nil {
+		c.OnChanged(c.Entry.Text)
+	} else {
+		c.ShowCompletion()
+	}
+
+	c.selectCurrentItem()
 }
 
 // Move changes the relative position of the select entry.
@@ -50,13 +70,28 @@ func (c *CompletionEntry) Move(pos fyne.Position) {
 func (c *CompletionEntry) Refresh() {
 	c.Entry.Refresh()
 	if c.navigableList != nil {
-		c.navigableList.SetOptions(c.Options)
+		c.navigableList.SetOptions(c.FilteredOptions)
 	}
 }
 
 // SetOptions set the completion list with itemList and update the view.
 func (c *CompletionEntry) SetOptions(itemList []string) {
 	c.Options = itemList
+	c.FilteredOptions = itemList
+	c.Refresh()
+}
+
+func (c *CompletionEntry) SetOptionsFilter(itemList []string) {
+	c.FilteredOptions = itemList
+	if c.ShowAllEntryText != "" && len(c.FilteredOptions) < len(c.Options) {
+		c.FilteredOptions = append(c.FilteredOptions, c.ShowAllEntryText)
+	}
+	c.Refresh()
+}
+
+func (c *CompletionEntry) ResetOptionsFilter() {
+	c.FilteredOptions = c.Options
+
 	c.Refresh()
 }
 
@@ -65,13 +100,13 @@ func (c *CompletionEntry) ShowCompletion() {
 	if c.pause {
 		return
 	}
-	if len(c.Options) == 0 {
+	if len(c.FilteredOptions) == 0 {
 		c.HideCompletion()
 		return
 	}
 
 	if c.navigableList == nil {
-		c.navigableList = newNavigableList(c.Options, &c.Entry, c.setTextFromMenu, c.HideCompletion,
+		c.navigableList = newNavigableList(c.FilteredOptions, &c.Entry, c.setTextFromMenu, c.HideCompletion,
 			c.CustomCreate, c.CustomUpdate)
 	} else {
 		c.navigableList.UnselectAll()
@@ -96,8 +131,17 @@ func (c *CompletionEntry) maxSize() fyne.Size {
 		c.itemHeight = c.navigableList.CreateItem().MinSize().Height
 	}
 
-	listheight := float32(len(c.Options))*(c.itemHeight+2*theme.Padding()+theme.SeparatorThicknessSize()) + 2*theme.Padding()
-	canvasSize := cnv.Size()
+	listheight := float32(len(c.FilteredOptions))*(c.itemHeight+2*theme.Padding()+theme.SeparatorThicknessSize()) + 2*theme.Padding()
+	canvasSize := fyne.Size{
+		Width:  0,
+		Height: 200,
+	}
+	// try to fall back if cnv is nil for some reason...
+	if cnv != nil {
+		canvasSize = cnv.Size()
+	} else if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
+		canvasSize = fyne.CurrentApp().Driver().AllWindows()[0].Content().Size()
+	}
 	entrySize := c.Size()
 	if canvasSize.Height > listheight {
 		return fyne.NewSize(entrySize.Width, listheight)
@@ -114,14 +158,60 @@ func (c *CompletionEntry) popUpPos() fyne.Position {
 	return entryPos.Add(fyne.NewPos(0, c.Size().Height))
 }
 
+func (c *CompletionEntry) selectCurrentItem() {
+	c.navigableList.navigating = true
+	c.navigableList.UnselectAll()
+	c.navigableList.selected = -1
+
+	for i := 0; i < len(c.navigableList.items); i++ {
+		if c.navigableList.items[i] == c.Entry.Text {
+			c.navigableList.ScrollToBottom()
+			c.navigableList.Select(i)
+			//c.navigableList.ScrollTo(i)
+			break
+		}
+	}
+	c.navigableList.navigating = false
+}
+
+func (c *CompletionEntry) SelectItemByValue(s string) {
+	c.navigableList.navigating = true
+	c.navigableList.UnselectAll()
+	c.navigableList.selected = -1
+
+	for i := 0; i < len(c.navigableList.items); i++ {
+		if c.navigableList.items[i] == s {
+			c.navigableList.ScrollToBottom()
+			//c.navigableList.Select(i)
+			c.navigableList.ScrollTo(i)
+			break
+		}
+	}
+}
+
 // Prevent the menu to open when the user validate value from the menu.
 func (c *CompletionEntry) setTextFromMenu(s string) {
 	c.pause = true
+	// reset filter on selection of ShowAllEntryText
+	if c.ShowAllEntryText != "" && (s == "" || s == c.ShowAllEntryText) {
+		c.ResetOptionsFilter()
+
+		c.popupMenu.Resize(c.maxSize())
+		c.selectCurrentItem()
+
+		c.pause = false
+		return
+	}
 	c.Entry.SetText(s)
 	c.Entry.CursorColumn = len([]rune(s))
 	c.Entry.Refresh()
 	c.pause = false
+
 	c.popupMenu.Hide()
+
+	//c.navigableList.navigating = false
+	//c.navigableList.OnSelected(c.navigableList.selected)
+	c.Entry.OnSubmitted(s)
 }
 
 type navigableList struct {
@@ -164,7 +254,9 @@ func newNavigableList(items []string, entry *widget.Entry, setTextFromMenu func(
 				fn(i, o)
 				return
 			}
+			//if len(n.items) > i { // fix crash
 			o.(*widget.Label).SetText(n.items[i])
+			//}
 		},
 		OnSelected: func(id widget.ListItemID) {
 			if !n.navigating && id > -1 {

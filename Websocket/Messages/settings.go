@@ -49,10 +49,14 @@ func (res TranslateSetting) Update() *TranslateSetting {
 	if strings.Contains(res.Whisper_task, "transcribe") && !strings.Contains(Fields.Field.TranscriptionTaskCombo.Selected, "transcribe") {
 		Fields.Field.TranscriptionTaskCombo.SetSelected("transcribe")
 	}
-	if Fields.Field.TranscriptionSpeakerLanguageCombo.Selected != TranslateSettings.GetWhisperLanguageNameByCode(res.Current_language) {
-		Fields.Field.TranscriptionSpeakerLanguageCombo.SetSelected(
-			cases.Title(language.English, cases.Compact).String(TranslateSettings.GetWhisperLanguageNameByCode(res.Current_language)),
-		)
+	//if Fields.Field.TranscriptionSpeakerLanguageCombo.Selected != TranslateSettings.GetWhisperLanguageNameByCode(res.Current_language) {
+	//	Fields.Field.TranscriptionSpeakerLanguageCombo.SetSelected(
+	//		cases.Title(language.English, cases.Compact).String(TranslateSettings.GetWhisperLanguageNameByCode(res.Current_language)),
+	//	)
+	//}
+	if Fields.Field.TranscriptionSpeakerLanguageCombo.SelectedText() != TranslateSettings.GetWhisperLanguageNameByCode(res.Current_language) {
+		Fields.Field.TranscriptionSpeakerLanguageCombo.Text = cases.Title(language.English, cases.Compact).String(TranslateSettings.GetWhisperLanguageNameByCode(res.Current_language))
+		Fields.Field.TranscriptionSpeakerLanguageCombo.ResetOptionsFilter()
 	}
 
 	// Set SourceLanguageCombo

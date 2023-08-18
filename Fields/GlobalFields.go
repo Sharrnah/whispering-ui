@@ -10,6 +10,7 @@ import (
 	"github.com/fyne-io/terminal"
 	"image/color"
 	"log"
+	"strings"
 	"whispering-tiger-ui/CustomWidget"
 )
 
@@ -23,7 +24,7 @@ var Field = struct {
 	ProcessingStatus                  *widget.ProgressBarInfinite
 	WhisperResultList                 *widget.List
 	TranscriptionTaskCombo            *widget.Select
-	TranscriptionSpeakerLanguageCombo *widget.Select
+	TranscriptionSpeakerLanguageCombo *CustomWidget.CompletionEntry
 	TranscriptionInput                *CustomWidget.EntryWithPopupMenu
 	TranscriptionInputHint            *canvas.Text
 	TranscriptionTranslationInput     *CustomWidget.EntryWithPopupMenu
@@ -60,14 +61,15 @@ var Field = struct {
 		}
 		sendMessage.SendMessage()
 	}),
-	TranscriptionSpeakerLanguageCombo: widget.NewSelect([]string{"Auto"}, func(value string) {
-		sendMessage := SendMessageStruct{
-			Type:  "setting_change",
-			Name:  "current_language",
-			Value: value,
-		}
-		sendMessage.SendMessage()
-	}),
+	TranscriptionSpeakerLanguageCombo: CustomWidget.NewCompletionEntry([]string{"Auto"}),
+	//TranscriptionSpeakerLanguageCombo: widget.NewSelect([]string{"Auto"}, func(value string) {
+	//	sendMessage := SendMessageStruct{
+	//		Type:  "setting_change",
+	//		Name:  "current_language",
+	//		Value: value,
+	//	}
+	//	sendMessage.SendMessage()
+	//}),
 	TranscriptionInput: func() *CustomWidget.EntryWithPopupMenu {
 		entry := CustomWidget.NewMultiLineEntry()
 		entry.Wrapping = fyne.TextWrapWord
@@ -146,7 +148,6 @@ var Field = struct {
 		},
 	}, func(valueObj CustomWidget.TextValueOption) {}, 0),
 	TargetLanguageCombo: widget.NewSelect([]string{"None"}, func(value string) {
-
 		sendMessage := SendMessageStruct{
 			Type:  "setting_change",
 			Name:  "trg_lang",
@@ -235,6 +236,55 @@ func init() {
 		Field.TextTranslateEnabled.Refresh()
 
 		log.Println("Select set to", value)
+	}
+
+	Field.TranscriptionSpeakerLanguageCombo.ShowAllEntryText = "... show all"
+	Field.TranscriptionSpeakerLanguageCombo.Entry.PlaceHolder = "Select a language"
+	Field.TranscriptionSpeakerLanguageCombo.OnChanged = func(value string) {
+		// filter out the values of FIeld.TranscriptionSpeakerLanguageCombo.Options that do not contain the value
+		var filteredValues []string
+		for i := 0; i < len(Field.TranscriptionSpeakerLanguageCombo.Options); i++ {
+			if strings.Contains(strings.ToLower(Field.TranscriptionSpeakerLanguageCombo.Options[i]), strings.ToLower(value)) {
+				filteredValues = append(filteredValues, Field.TranscriptionSpeakerLanguageCombo.Options[i])
+			}
+		}
+
+		// no results
+		if len(filteredValues) == 0 {
+			Field.TranscriptionSpeakerLanguageCombo.HideCompletion()
+			return
+		}
+
+		Field.TranscriptionSpeakerLanguageCombo.SetOptionsFilter(filteredValues)
+		Field.TranscriptionSpeakerLanguageCombo.ShowCompletion()
+
+		// select the first option
+		//if len(filteredValues) > 0 {
+		//	Field.TranscriptionSpeakerLanguageCombo.SelectItemByValue(filteredValues[0])
+		//}
+	}
+	Field.TranscriptionSpeakerLanguageCombo.OnSubmitted = func(value string) {
+		// check if value is not in Field.TranscriptionSpeakerLanguageCombo.Options
+		for i := 0; i < len(Field.TranscriptionSpeakerLanguageCombo.Options); i++ {
+			if strings.Contains(strings.ToLower(Field.TranscriptionSpeakerLanguageCombo.Options[i]), strings.ToLower(value)) {
+				Field.TranscriptionSpeakerLanguageCombo.SelectItemByValue(Field.TranscriptionSpeakerLanguageCombo.Options[i])
+				value = Field.TranscriptionSpeakerLanguageCombo.Options[i]
+				Field.TranscriptionSpeakerLanguageCombo.Text = value
+				Field.TranscriptionSpeakerLanguageCombo.Entry.CursorColumn = len(Field.TranscriptionSpeakerLanguageCombo.Text)
+				Field.TranscriptionSpeakerLanguageCombo.Refresh()
+				break
+			}
+		}
+
+		//Field.TranscriptionSpeakerLanguageCombo.GetSelectedOptionValueByName(value)
+
+		println("Submitted", value)
+		sendMessage := SendMessageStruct{
+			Type:  "setting_change",
+			Name:  "current_language",
+			Value: value,
+		}
+		sendMessage.SendMessage()
 	}
 
 	Field.TextTranslateEnabled.OnChanged = func(value bool) {
