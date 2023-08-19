@@ -84,10 +84,16 @@ func (s *SettingMapping) SendUpdatedValue(value interface{}) {
 	})
 }
 
-func (s *SettingMapping) processWidget(settingsValue interface{}, settingWidget interface{}, topMost bool) {
-	//fyneWidget := widget.(*fyne.Widget)
+// processWidget processes the widgets of each setting
+// settingsValue is the current value of the setting
+// settingWidget is the widget of the setting
+// _topMost is true if the widget is the topmost widget of the setting (used internally for recursive calls)
+func (s *SettingMapping) processWidget(settingsValue interface{}, settingWidget interface{}, _topMost bool) {
 	switch settingWidget.(type) {
 	case *widget.Check:
+		if settingsValue == nil {
+			settingsValue = settingWidget.(*widget.Check).Checked
+		}
 		value := settingsValue.(bool)
 		settingWidget.(*widget.Check).SetChecked(value)
 		println("setting check value to " + fmt.Sprintf("%t", value))
@@ -102,6 +108,9 @@ func (s *SettingMapping) processWidget(settingsValue interface{}, settingWidget 
 	case *widget.Slider:
 		var originalType interface{}
 		value := 0.0
+		if settingsValue == nil {
+			settingsValue = settingWidget.(*widget.Slider).Value
+		}
 		switch settingsValue.(type) {
 		case float64:
 			originalType = float64(0)
@@ -133,6 +142,9 @@ func (s *SettingMapping) processWidget(settingsValue interface{}, settingWidget 
 	case *widget.Entry:
 		var originalType interface{}
 		value := ""
+		if settingsValue == nil {
+			settingsValue = settingWidget.(*widget.Entry).Text
+		}
 		switch v := settingsValue.(type) {
 		case float64:
 			originalType = float64(0)
@@ -164,6 +176,9 @@ func (s *SettingMapping) processWidget(settingsValue interface{}, settingWidget 
 			}
 		}
 	case *CustomWidget.TextValueSelect:
+		if settingsValue == nil {
+			settingsValue = settingWidget.(*CustomWidget.TextValueSelect).Selected
+		}
 		value := settingsValue.(string)
 		println("setting entry value to " + value)
 		settingWidget.(*CustomWidget.TextValueSelect).SetSelected(value)
@@ -179,7 +194,7 @@ func (s *SettingMapping) processWidget(settingsValue interface{}, settingWidget 
 			s.processWidget(settingsValue, settingChild, false)
 		}
 	}
-	if topMost && s.SettingsDescription != "" {
+	if _topMost && s.SettingsDescription != "" {
 		originalWidget := settingWidget.(fyne.CanvasObject)
 		infoButton := widget.NewButtonWithIcon("", theme.InfoIcon(), func() {
 			if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
@@ -200,10 +215,6 @@ func CreateSettingsFormByMapping(mappings SettingsMapping) *container.Scroll {
 
 	// initialize widgets
 	for _, mapping := range mappings.Mappings {
-		println("mapping.SettingsName")
-		println(mapping.SettingsName)
-		println("mapping.SettingsInternalName")
-		println(mapping.SettingsInternalName)
 		mapping.Widget = mapping._widget()
 		if mapping.Widget == nil {
 			println("No widget created :thinking:")
@@ -211,24 +222,23 @@ func CreateSettingsFormByMapping(mappings SettingsMapping) *container.Scroll {
 
 		singleMapping := mapping
 
-		settingsFields := reflect.ValueOf(Settings.Config)
-		for i := 0; i < settingsFields.NumField(); i++ {
-			if settingsFields.Field(i).CanInterface() && strings.ToLower(settingsFields.Type().Field(i).Name) == singleMapping.SettingsInternalName {
-				settingsName := strings.ToLower(settingsFields.Type().Field(i).Name)
-				// check if the settings name is the same as the internal name
-				_, err := mappings.FindSettingByInternalName(settingsName)
-				if err != nil {
-					continue
-				} else {
-					println("found setting")
+		if !mapping.DoNotSendToBackend {
+			settingsFields := reflect.ValueOf(Settings.Config)
+			for i := 0; i < settingsFields.NumField(); i++ {
+				if settingsFields.Field(i).CanInterface() && strings.ToLower(settingsFields.Type().Field(i).Name) == singleMapping.SettingsInternalName {
+					settingsName := strings.ToLower(settingsFields.Type().Field(i).Name)
+					// check if the settings name is the same as the internal name
+					_, err := mappings.FindSettingByInternalName(settingsName)
+					if err != nil {
+						continue
+					}
+					settingsValue := settingsFields.Field(i).Interface()
+					singleMapping.processWidget(settingsValue, singleMapping.Widget, true)
+					break
 				}
-				settingsValue := settingsFields.Field(i).Interface()
-				println("type of widget")
-				println(reflect.TypeOf(singleMapping.Widget).Name())
-
-				singleMapping.processWidget(settingsValue, singleMapping.Widget, true)
-				break
 			}
+		} else {
+			singleMapping.processWidget(nil, singleMapping.Widget, true)
 		}
 
 		// add widget to form

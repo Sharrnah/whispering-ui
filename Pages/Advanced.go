@@ -65,22 +65,7 @@ func buildAboutInfo() *fyne.Container {
 	}
 	updateCheckAtStartupCheckbox.Checked = fyne.CurrentApp().Preferences().BoolWithFallback("CheckForUpdateAtStartup", true)
 
-	settingsLabel := widget.NewLabel("\nExperimental Flags:")
-	// UI downloading Flag
-	disableUiDownloadsCheckbox := widget.NewCheck("Disable experimental UI downloading of AI Models.", nil)
-	disableUiDownloadsCheckbox.OnChanged = func(b bool) {
-		fyne.CurrentApp().Preferences().SetBool("DisableUiDownloads", b)
-	}
-	disableUiDownloadsCheckbox.Checked = fyne.CurrentApp().Preferences().BoolWithFallback("DisableUiDownloads", false)
-
-	// refocus flag
-	autoRefocusCheckbox := widget.NewCheck("focus window on message receive (can improve speed in VR)", nil)
-	autoRefocusCheckbox.OnChanged = func(b bool) {
-		fyne.CurrentApp().Preferences().SetBool("AutoRefocusWindow", b)
-	}
-	autoRefocusCheckbox.Checked = fyne.CurrentApp().Preferences().BoolWithFallback("AutoRefocusWindow", false)
-
-	verticalLayout := container.NewVBox(aboutCard, checkForUpdatesButton, updateCheckAtStartupCheckbox, settingsLabel, disableUiDownloadsCheckbox, autoRefocusCheckbox)
+	verticalLayout := container.NewVBox(aboutCard, checkForUpdatesButton, updateCheckAtStartupCheckbox)
 
 	return container.NewCenter(verticalLayout)
 }
