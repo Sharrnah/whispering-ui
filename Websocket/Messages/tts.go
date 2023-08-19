@@ -31,7 +31,7 @@ func (res TtsLanguagesListing) Update() *TtsLanguagesListing {
 	for _, languageItem := range res.Languages {
 		//elementName := languageItem.Language
 		for _, modelItem := range languageItem.Models {
-			if strings.Contains(modelItem, "v3") {
+			if strings.Contains(modelItem, "v3") || strings.Contains(modelItem, "v4") {
 				Fields.Field.TtsModelCombo.Options = append(Fields.Field.TtsModelCombo.Options, modelItem)
 			}
 
