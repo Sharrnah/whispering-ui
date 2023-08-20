@@ -112,7 +112,7 @@ func CreatePluginListWindow(closeFunction func()) {
 
 	CloseFunctionCall := func() {
 		closeFunction()
-		if pluginListWindow.Content().Visible() {
+		if pluginListWindow != nil && pluginListWindow.Content().Visible() {
 			pluginListWindow.Close()
 		}
 	}

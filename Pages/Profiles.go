@@ -305,8 +305,6 @@ func GetAudioDevices(audioApi malgo.Backend, deviceTypes []malgo.DeviceType, dev
 		deviceList = append(deviceList, deviceListPart...)
 	}
 
-	//deviceList, _ := Utilities.GetAudioDevices(audioApi, deviceType, deviceIndexStartPoint)
-
 	if deviceList == nil {
 		return nil, fmt.Errorf("no devices found")
 	}
@@ -811,7 +809,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Speech T5 (English only)", Value: "speech_t5"},
 			{Text: "Disabled", Value: ""},
 		}, func(s CustomWidget.TextValueOption) {
-			selectedPrecision := sttPrecisionSelect.GetSelected().Value
+			sttPrecisionSelectOption := sttPrecisionSelect.GetSelected()
+			selectedPrecision := ""
+			if sttPrecisionSelectOption != nil {
+				selectedPrecision = sttPrecisionSelect.GetSelected().Value
+			}
 			AIModelType := ""
 			sttPrecisionSelect.Enable()
 			sttModelSize.Enable()
@@ -821,7 +823,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			if s.Value == "faster_whisper" {
 				sttModelSize.Options = fasterWhisperModelList
 				// unselect if not in list
-				if !sttModelSize.ContainsEntry(selectedModelSizeOption) {
+				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption) {
 					sttModelSize.SetSelectedIndex(0)
 				}
 
@@ -838,7 +840,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			} else if s.Value == "original_whisper" {
 				sttModelSize.Options = originalWhisperModelList
 				// unselect if not in list
-				if !sttModelSize.ContainsEntry(selectedModelSizeOption) {
+				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption) {
 					sttModelSize.SetSelectedIndex(0)
 				}
 
@@ -893,13 +895,13 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			if !Hardwareinfo.HasNVIDIACard() && s.Value == "cuda" {
 				dialog.ShowInformation("No NVIDIA Card found", "No NVIDIA Card found. You might need to use CPU instead for it to work.", fyne.CurrentApp().Driver().AllWindows()[1])
 			}
-			if s.Value == "cpu" && (txtTranslatorPrecisionSelect.GetSelected().Value == "float16" || txtTranslatorPrecisionSelect.GetSelected().Value == "int8_float16") {
+			if s.Value == "cpu" && txtTranslatorPrecisionSelect.GetSelected() != nil && (txtTranslatorPrecisionSelect.GetSelected().Value == "float16" || txtTranslatorPrecisionSelect.GetSelected().Value == "int8_float16") {
 				txtTranslatorPrecisionSelect.SetSelected("float32")
 			}
-			if s.Value == "cpu" && (txtTranslatorPrecisionSelect.GetSelected().Value == "bfloat16" || txtTranslatorPrecisionSelect.GetSelected().Value == "int8_bfloat16") {
+			if s.Value == "cpu" && txtTranslatorPrecisionSelect.GetSelected() != nil && (txtTranslatorPrecisionSelect.GetSelected().Value == "bfloat16" || txtTranslatorPrecisionSelect.GetSelected().Value == "int8_bfloat16") {
 				txtTranslatorPrecisionSelect.SetSelected("float32")
 			}
-			if s.Value == "cuda" && txtTranslatorPrecisionSelect.GetSelected().Value == "int16" {
+			if s.Value == "cuda" && txtTranslatorPrecisionSelect.GetSelected() != nil && txtTranslatorPrecisionSelect.GetSelected().Value == "int16" {
 				txtTranslatorPrecisionSelect.SetSelected("float16")
 			}
 			// calculate memory consumption
@@ -930,16 +932,16 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			case "int8_bfloat16":
 				precisionType = Hardwareinfo.Int8
 			}
-			if txtTranslatorDeviceSelect.GetSelected().Value == "cpu" && (s.Value == "float16" || s.Value == "int8_float16") {
+			if txtTranslatorDeviceSelect.GetSelected() != nil && txtTranslatorDeviceSelect.GetSelected().Value == "cpu" && (s.Value == "float16" || s.Value == "int8_float16") {
 				dialog.ShowInformation("Information", "Most CPU's do not support float16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
 			}
-			if txtTranslatorDeviceSelect.GetSelected().Value == "cpu" && (s.Value == "bfloat16" || s.Value == "int8_bfloat16") {
+			if txtTranslatorDeviceSelect.GetSelected() != nil && txtTranslatorDeviceSelect.GetSelected().Value == "cpu" && (s.Value == "bfloat16" || s.Value == "int8_bfloat16") {
 				dialog.ShowInformation("Information", "Most CPU's do not support bfloat16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
 			}
-			if txtTranslatorDeviceSelect.GetSelected().Value == "cuda" && (s.Value == "int16") {
+			if txtTranslatorDeviceSelect.GetSelected() != nil && txtTranslatorDeviceSelect.GetSelected().Value == "cuda" && (s.Value == "int16") {
 				dialog.ShowInformation("Information", "Most CUDA GPU's do not support int16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
 			}
-			if sttAiDeviceSelect.GetSelected().Value == "cuda" && (s.Value == "bfloat16" || s.Value == "int8_bfloat16") && ComputeCapability < 8.0 {
+			if sttAiDeviceSelect.GetSelected() != nil && sttAiDeviceSelect.GetSelected().Value == "cuda" && (s.Value == "bfloat16" || s.Value == "int8_bfloat16") && ComputeCapability < 8.0 {
 				dialog.ShowInformation("Information", "Your CUDA GPU most likely does not support bfloat16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 			// calculate memory consumption
@@ -973,8 +975,16 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "M2M100 (100 languages)", Value: "M2M100"},
 			{Text: "Disabled", Value: ""},
 		}, func(s CustomWidget.TextValueOption) {
-			selectedPrecision := txtTranslatorPrecisionSelect.GetSelected().Value
-			selectedSize := txtTranslatorSizeSelect.GetSelected().Value
+			selectedPrecisionOption := txtTranslatorPrecisionSelect.GetSelected()
+			selectedPrecision := ""
+			if selectedPrecisionOption != nil {
+				selectedPrecision = selectedPrecisionOption.Value
+			}
+			selectedSizeOption := txtTranslatorSizeSelect.GetSelected()
+			selectedSize := ""
+			if selectedSizeOption != nil {
+				selectedSize = selectedSizeOption.Value
+			}
 			if s.Value == "NLLB200" {
 				txtTranslatorPrecisionSelect.Options = []CustomWidget.TextValueOption{
 					{Text: "float32 precision", Value: "float32"},
@@ -1221,7 +1231,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				}
 			}
 		}
-		if deviceInWidget.GetSelected().Value != deviceInValue {
+		deviceInWidgetOption := deviceInWidget.GetSelected()
+		if deviceInWidgetOption != nil && deviceInWidgetOption.Value != deviceInValue {
 			deviceInWidget.SetSelected(deviceInValue)
 		}
 		// audio progressbar
@@ -1244,7 +1255,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				}
 			}
 		}
-		if deviceOutWidget.GetSelected().Value != deviceOutValue {
+		deviceOutWidgetOption := deviceOutWidget.GetSelected()
+		if deviceOutWidgetOption != nil && deviceOutWidgetOption.Value != deviceOutValue {
 			deviceOutWidget.SetSelected(deviceOutValue)
 		}
 
@@ -1276,7 +1288,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Model)
 		profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Whisper_precision)
 		// show only available precision options depending on whisper project
-		selectedPrecision := profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected().Value
+		selectedPrecisionOption := profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected()
+		selectedPrecision := ""
+		if selectedPrecisionOption != nil {
+			selectedPrecision = selectedPrecisionOption.Value
+		}
 		if profileSettings.Stt_type == "faster_whisper" {
 			profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
 				{Text: "float32 precision", Value: "float32"},
