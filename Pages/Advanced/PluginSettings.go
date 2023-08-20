@@ -91,6 +91,8 @@ func getPluginStatusString(pluginClassName string) string {
 	return pluginStatusString
 }
 
+var onlyShowEnabledPlugins bool
+
 func BuildPluginSettingsAccordion() (fyne.CanvasObject, int) {
 	// load settings file for plugin settings
 	SettingsFile := Settings.Conf{}
@@ -111,6 +113,11 @@ func BuildPluginSettingsAccordion() (fyne.CanvasObject, int) {
 		if !file.IsDir() && !strings.HasPrefix(file.Name(), ".") && !strings.HasPrefix(file.Name(), "__init__") && (strings.HasSuffix(file.Name(), ".py")) {
 			pluginFiles = append(pluginFiles, file.Name())
 			pluginClassName := GetClassNameOfPlugin("./Plugins/" + file.Name())
+
+			// only display enabled plugins if onlyShowEnabledPlugins is true
+			if onlyShowEnabledPlugins && !Settings.Config.Plugins[pluginClassName] {
+				continue
+			}
 
 			pluginAccordionItem := widget.NewAccordionItem(
 				pluginClassName+getPluginStatusString(pluginClassName),
@@ -241,11 +248,14 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 	pluginsContent := container.NewVScroll(nil)
 
 	downloadButton := widget.NewButton("Download / Update Plugins", nil)
+	filterEnabledPluginsCheckbox := widget.NewCheck("Only show enabled plugins", nil)
+	filterEnabledPluginsCheckbox.Checked = onlyShowEnabledPlugins
+	topContainer := container.NewBorder(nil, nil, nil, filterEnabledPluginsCheckbox, downloadButton)
 	downloadButton.OnTapped = func() {
 		CreatePluginListWindow(func() {
 			pluginAccordion, pluginFilesCount = BuildPluginSettingsAccordion()
 			if pluginFilesCount > 0 {
-				pluginsContainerBorder := container.NewBorder(downloadButton, nil, nil, nil, pluginAccordion)
+				pluginsContainerBorder := container.NewBorder(topContainer, nil, nil, nil, pluginAccordion)
 				pluginsContent.Content = pluginsContainerBorder
 
 				pluginAccordion.Refresh()
@@ -254,6 +264,20 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 		})
 	}
 	downloadButton.Importance = widget.HighImportance
+	downloadButton.Refresh()
+
+	filterEnabledPluginsCheckbox.OnChanged = func(enabled bool) {
+		onlyShowEnabledPlugins = enabled
+
+		pluginAccordion, pluginFilesCount = BuildPluginSettingsAccordion()
+		if pluginFilesCount > 0 {
+			pluginsContainerBorder := container.NewBorder(topContainer, nil, nil, nil, pluginAccordion)
+			pluginsContent.Content = pluginsContainerBorder
+
+			pluginAccordion.Refresh()
+			pluginsContent.Refresh()
+		}
+	}
 
 	if pluginFilesCount == 0 {
 		openPluginsFolderButton := widget.NewButton("Open Plugins folder", func() {
@@ -278,7 +302,7 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 			),
 		)
 	} else {
-		pluginsContainerBorder := container.NewBorder(downloadButton, nil, nil, nil, pluginAccordion)
+		pluginsContainerBorder := container.NewBorder(topContainer, nil, nil, nil, pluginAccordion)
 		pluginsContent.Content = pluginsContainerBorder
 	}
 
