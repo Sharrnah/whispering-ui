@@ -131,5 +131,5 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 <img src=doc/images/text2speech.png width=845 alt="Text-to-Speech Tab">
 <img src=doc/images/ocr.png width=845 alt="Optical Character Recognition (Image-to-Text) Tab">
 <img src=doc/images/plugins.png width=845 alt="Plugins Tab">
-<img src=doc/images/advanced-settings.png width=845 alt="Advanced Settings Tab">
+<img src=doc/images/settings.png width=845 alt="Advanced Settings Tab">
 <img src=doc/images/about.png width=845 alt="About Info Tab">
