@@ -22,6 +22,7 @@ import (
 	"strings"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Settings"
+	"whispering-tiger-ui/Utilities"
 )
 
 func parseURL(urlStr string) *url.URL {
@@ -243,6 +244,8 @@ func BuildPluginSettingsAccordion() (fyne.CanvasObject, int) {
 }
 
 func CreatePluginSettingsPage() fyne.CanvasObject {
+	defer Utilities.PanicLogger()
+
 	pluginAccordion, pluginFilesCount := BuildPluginSettingsAccordion()
 
 	pluginsContent := container.NewVScroll(nil)

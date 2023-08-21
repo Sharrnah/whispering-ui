@@ -18,6 +18,7 @@ import (
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Settings"
+	"whispering-tiger-ui/Utilities"
 )
 
 var timerLock sync.Mutex
@@ -210,6 +211,7 @@ func (s *SettingMapping) processWidget(settingsValue interface{}, settingWidget 
 }
 
 func CreateSettingsFormByMapping(mappings SettingsMapping) *container.Scroll {
+	defer Utilities.PanicLogger()
 
 	settingsForm := widget.NewForm()
 

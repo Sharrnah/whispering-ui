@@ -104,6 +104,8 @@ func (c *MessageStruct) GetMessage(messageData []byte) *MessageStruct {
 // Handle the different receiving message types
 
 func (c *MessageStruct) HandleReceiveMessage() {
+	defer Utilities.PanicLogger()
+
 	var err error = nil
 
 	switch c.Type {
@@ -389,6 +391,8 @@ func (c *MessageStruct) HandleReceiveMessage() {
 }
 
 func HandleSendMessage(sendMessage *Fields.SendMessageStruct) {
+	defer Utilities.PanicLogger()
+
 	switch sendMessage.Type {
 	case "setting_change":
 		switch sendMessage.Name {

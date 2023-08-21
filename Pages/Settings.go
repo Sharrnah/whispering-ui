@@ -4,9 +4,12 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"whispering-tiger-ui/Pages/SettingsMappings"
+	"whispering-tiger-ui/Utilities"
 )
 
 func CreateSettingsWindow() fyne.CanvasObject {
+	defer Utilities.PanicLogger()
+
 	settingsFormTabs := container.NewAppTabs(
 		container.NewTabItem("Speech-to-Text Options", SettingsMappings.CreateSettingsFormByMapping(SettingsMappings.SpeechToTextSettingsMapping)),
 		container.NewTabItem("Text-Translate Options", SettingsMappings.CreateSettingsFormByMapping(SettingsMappings.TextTranslateSettingsMapping)),

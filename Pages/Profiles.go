@@ -420,6 +420,8 @@ const energyDetectionTime = 10
 const EnergySliderMax = 2000
 
 func CreateProfileWindow(onClose func()) fyne.CanvasObject {
+	defer Utilities.PanicLogger()
+
 	playBackDevice := CurrentPlaybackDevice{}
 
 	playBackDevice.AudioAPI = malgo.BackendWasapi

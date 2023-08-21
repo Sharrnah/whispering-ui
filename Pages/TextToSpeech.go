@@ -8,9 +8,12 @@ import (
 	"fyne.io/fyne/v2/widget"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/Utilities"
 )
 
 func CreateTextToSpeechWindow() fyne.CanvasObject {
+	defer Utilities.PanicLogger()
+
 	ttsModels := container.New(layout.NewFormLayout(), widget.NewLabel("Model:"), Fields.Field.TtsModelCombo)
 
 	saveRandomVoiceButton := widget.NewButtonWithIcon("Save Random Voice", theme.DocumentSaveIcon(), func() {

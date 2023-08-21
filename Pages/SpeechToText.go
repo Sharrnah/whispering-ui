@@ -9,10 +9,13 @@ import (
 	"time"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Settings"
+	"whispering-tiger-ui/Utilities"
 	"whispering-tiger-ui/Websocket/Messages"
 )
 
 func CreateSpeechToTextWindow() fyne.CanvasObject {
+	defer Utilities.PanicLogger()
+
 	languageRow := container.New(layout.NewVBoxLayout(),
 		container.New(layout.NewFormLayout(),
 			widget.NewLabel("Speech Language:"),

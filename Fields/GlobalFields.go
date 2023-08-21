@@ -12,6 +12,7 @@ import (
 	"log"
 	"strings"
 	"whispering-tiger-ui/CustomWidget"
+	"whispering-tiger-ui/Utilities"
 )
 
 const SttTextTranslateLabelConst = "Automatic Text-Translate from %s to %s"
@@ -177,6 +178,8 @@ var Field = struct {
 }
 
 func init() {
+	defer Utilities.PanicLogger()
+
 	Field.RealtimeResultLabel.Wrapping = fyne.TextWrapWord
 	Field.RealtimeResultLabel.TextStyle = fyne.TextStyle{Italic: true}
 

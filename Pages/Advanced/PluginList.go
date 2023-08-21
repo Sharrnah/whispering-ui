@@ -96,6 +96,8 @@ func fetchAndAnalyzeGist(gistURL string) (string, string, string, []byte) {
 }
 
 func CreatePluginListWindow(closeFunction func()) {
+	defer Utilities.PanicLogger()
+
 	fileUrl := "https://raw.githubusercontent.com/Sharrnah/whispering/main/documentation/plugins.md"
 
 	pluginListWindow := fyne.CurrentApp().NewWindow("Plugin List")

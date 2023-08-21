@@ -204,6 +204,8 @@ func (c *WhisperProcessConfig) SetErrorOutputHandling(stdout io.Reader) {
 }
 
 func (c *WhisperProcessConfig) Start() {
+	defer Utilities.PanicLogger()
+
 	// Create a pipe to capture the output from the process
 	_, pw := io.Pipe()
 
@@ -214,6 +216,8 @@ func (c *WhisperProcessConfig) Start() {
 	stdoutTee := io.TeeReader(c.ReaderBackend, multiWriter)
 
 	go func(stdOut io.Reader) {
+		defer Utilities.PanicLogger()
+
 		var tmpReader io.Reader
 		var err error
 

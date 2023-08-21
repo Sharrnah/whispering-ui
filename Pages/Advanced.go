@@ -17,6 +17,7 @@ import (
 	"whispering-tiger-ui/RuntimeBackend"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/UpdateUtility"
+	"whispering-tiger-ui/Utilities"
 )
 
 func parseURL(urlStr string) *url.URL {
@@ -71,6 +72,8 @@ func buildAboutInfo() *fyne.Container {
 }
 
 func CreateAdvancedWindow() fyne.CanvasObject {
+	defer Utilities.PanicLogger()
+
 	Settings.Form = Settings.BuildSettingsForm(nil, Settings.Config.SettingsFilename).(*widget.Form)
 
 	settingsTabContent := container.NewVScroll(Settings.Form)
@@ -119,6 +122,7 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 	// Log logText updater thread
 	Fields.Field.LogText.Resize(fyne.NewSize(1200, 800))
 	go func(writer io.WriteCloser, reader io.Reader) {
+		defer Utilities.PanicLogger()
 		_ = Fields.Field.LogText.RunWithConnection(writer, reader)
 	}(RuntimeBackend.BackendsList[0].WriterBackend, RuntimeBackend.BackendsList[0].ReaderBackend)
 

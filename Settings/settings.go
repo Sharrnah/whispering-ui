@@ -342,6 +342,8 @@ func MergeSettings(firstConf Conf, secondConf Conf) Conf {
 }
 
 func BuildSettingsForm(includeConfigFields []string, settingsFile string) fyne.CanvasObject {
+	defer Utilities.PanicLogger()
+	
 	settingsForm := widget.NewForm()
 
 	settingsForm.Append("Profile", widget.NewLabel(Config.SettingsFilename))

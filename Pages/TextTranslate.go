@@ -15,6 +15,7 @@ import (
 )
 
 func CreateTextTranslateWindow() fyne.CanvasObject {
+	defer Utilities.PanicLogger()
 
 	sourceLanguageRow := container.New(layout.NewFormLayout(), widget.NewLabel("Source Language:"), Fields.Field.SourceLanguageCombo)
 	targetLanguageRow := container.New(layout.NewFormLayout(), widget.NewLabel("Target Language:"), Fields.Field.TargetLanguageCombo)

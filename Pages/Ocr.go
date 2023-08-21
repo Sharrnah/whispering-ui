@@ -14,6 +14,7 @@ import (
 )
 
 func CreateOcrWindow() fyne.CanvasObject {
+	defer Utilities.PanicLogger()
 
 	Fields.Field.OcrLanguageCombo.OnSubmitted = func(value string) {
 		for i := 0; i < len(Fields.Field.OcrLanguageCombo.Options); i++ {

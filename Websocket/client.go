@@ -15,6 +15,7 @@ import (
 	"time"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Settings"
+	"whispering-tiger-ui/Utilities"
 )
 
 func messageLoader(c interface{}, message []byte) (interface{}, error) {
@@ -50,6 +51,8 @@ func (c *Client) Close() {
 // Websocket Client
 
 func (c *Client) Start() {
+	defer Utilities.PanicLogger()
+
 	previouslyConnected := false
 
 	runBackend := Settings.Config.Run_backend
