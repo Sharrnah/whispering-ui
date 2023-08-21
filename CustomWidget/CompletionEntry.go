@@ -10,6 +10,7 @@ import (
 )
 
 var _ fyne.Tappable = (*CompletionEntry)(nil)
+var _ fyne.DoubleTappable = (*CompletionEntry)(nil)
 
 // CompletionEntry is an Entry with options displayed in a PopUpMenu.
 type CompletionEntry struct {
@@ -116,6 +117,22 @@ func (c *CompletionEntry) Tapped(ev *fyne.PointEvent) {
 
 	// select all text on initial tap
 	c.Entry.TypedShortcut(&fyne.ShortcutSelectAll{})
+}
+
+func (c *CompletionEntry) DoubleTapped(ev *fyne.PointEvent) {
+	c.Entry.DoubleTapped(ev)
+
+	if c.Disabled() {
+		return
+	}
+
+	if c.OnChanged != nil {
+		c.OnChanged(c.Entry.Text)
+	} else {
+		c.ShowCompletion()
+	}
+
+	c.selectCurrentItem()
 }
 
 // Move changes the relative position of the select entry.
