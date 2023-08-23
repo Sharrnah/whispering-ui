@@ -20,11 +20,15 @@ import (
 	"os"
 	"regexp"
 	"strings"
+	"time"
 	"whispering-tiger-ui/CustomWidget"
+	"whispering-tiger-ui/RuntimeBackend"
 	"whispering-tiger-ui/Utilities"
 )
 
 const PLUGIN_DIR = "./Plugins/"
+
+var FreshInstalledPlugins []string
 
 func getVersionAndClassFromReader(pluginCode io.Reader) (string, string, string) {
 	// Read the entire content into a byte slice
@@ -116,6 +120,21 @@ func CreatePluginListWindow(closeFunction func()) {
 		closeFunction()
 		if pluginListWindow != nil && pluginListWindow.Content().Visible() {
 			pluginListWindow.Close()
+		}
+		if len(FreshInstalledPlugins) > 0 {
+			dialog.NewConfirm("New Plugins Installed", "Would you like to restart Whispering Tiger now?\n(Required for new Plugins to load.)", func(response bool) {
+				// close running backend process
+				if len(RuntimeBackend.BackendsList) > 0 && RuntimeBackend.BackendsList[0].IsRunning() {
+					infinityProcessDialog := dialog.NewCustom("Restarting Backend", "OK", container.NewVBox(widget.NewLabel("Restarting backend..."), widget.NewProgressBarInfinite()), fyne.CurrentApp().Driver().AllWindows()[0])
+					infinityProcessDialog.Show()
+					RuntimeBackend.BackendsList[0].Stop()
+					time.Sleep(2 * time.Second)
+					RuntimeBackend.BackendsList[0].Start()
+					infinityProcessDialog.Hide()
+
+					FreshInstalledPlugins = []string{}
+				}
+			}, fyne.CurrentApp().Driver().AllWindows()[0]).Show()
 		}
 	}
 	pluginListWindow.SetCloseIntercept(CloseFunctionCall)
@@ -241,6 +260,9 @@ func CreatePluginListWindow(closeFunction func()) {
 			dialog.ShowInformation("Plugin Installed", class+" has been installed. The Plugin is disabled by default.\n"+
 				"Please restart Whispering Tiger to load the Plugin.\n",
 				pluginListWindow)
+
+			// add to FreshInstalledPlugins list
+			FreshInstalledPlugins = append(FreshInstalledPlugins, class)
 		}
 
 		row.Widgets.UpdateButton = titleButton
