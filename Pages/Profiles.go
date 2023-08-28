@@ -1167,7 +1167,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Speaker_diarization_window_size: 15,
 			Speaker_min_duration:            0.5,
 
-			Denoise_audio:             true,
+			Denoise_audio:             false,
 			Denoise_audio_post_filter: false,
 
 			Whisper_precision:             "float32",
