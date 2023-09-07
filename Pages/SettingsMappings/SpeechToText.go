@@ -123,6 +123,20 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 			},
 		},
 		{
+			SettingsName:         "Repetition penalty",
+			SettingsInternalName: "repetition_penalty",
+			SettingsDescription:  "penalize the score of previously generated tokens (set > 1 to penalize)",
+			_widget: func() fyne.CanvasObject {
+				sliderWidget := widget.NewSlider(0, 2)
+				sliderState := widget.NewLabel(fmt.Sprintf("%.2f", sliderWidget.Min))
+				sliderWidget.Step = 0.01
+				sliderWidget.OnChanged = func(value float64) {
+					sliderState.SetText(fmt.Sprintf("%.2f", value))
+				}
+				return container.NewBorder(nil, nil, nil, sliderState, sliderWidget)
+			},
+		},
+		{
 			SettingsName:         "Apply voice markers to audio",
 			SettingsInternalName: "whisper_apply_voice_markers",
 			SettingsDescription:  "Can reduce A.I. hallucinations.\nMight not work correctly with Speech Language set to \"Auto\".",

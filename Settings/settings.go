@@ -54,6 +54,7 @@ type Conf struct {
 	Current_language              string      `yaml:"current_language" json:"current_language"`
 	Model                         string      `yaml:"model" json:"model"`
 	Condition_on_previous_text    bool        `yaml:"condition_on_previous_text" json:"condition_on_previous_text"`
+	Prompt_reset_on_temperature   float64     `yaml:"prompt_reset_on_temperature" json:"prompt_reset_on_temperature"`
 	Initial_prompt                string      `yaml:"initial_prompt" json:"initial_prompt"`
 	Logprob_threshold             string      `yaml:"logprob_threshold" json:"logprob_threshold"`     // string formatted float or "none" / ""
 	No_speech_threshold           string      `yaml:"no_speech_threshold" json:"no_speech_threshold"` // string formatted float or "none" / ""
@@ -63,6 +64,8 @@ type Conf struct {
 	Beam_size                     int         `yaml:"beam_size" json:"beam_size"`
 	Length_penalty                float64     `yaml:"length_penalty" json:"length_penalty"`
 	Beam_search_patience          float64     `yaml:"beam_search_patience" json:"beam_search_patience"`
+	Repetition_penalty            float64     `yaml:"repetition_penalty" json:"repetition_penalty"`
+	No_repeat_ngram_size          int         `yaml:"no_repeat_ngram_size" json:"no_repeat_ngram_size"`
 	Whisper_cpu_threads           int         `yaml:"whisper_cpu_threads" json:"whisper_cpu_threads"`
 	Whisper_num_workers           int         `yaml:"whisper_num_workers" json:"whisper_num_workers"`
 	Realtime                      bool        `yaml:"realtime" json:"realtime"`
