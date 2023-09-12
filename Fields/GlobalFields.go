@@ -177,6 +177,35 @@ var Field = struct {
 	LogText:           terminal.New(),
 }
 
+func updateCompletionEntryBasedOnValue(completionEntryWidget *CustomWidget.CompletionEntry, value string) string {
+	foundEntry := false
+	for _, option := range completionEntryWidget.Options {
+		if strings.HasPrefix(strings.ToLower(option), strings.ToLower(value)) {
+			completionEntryWidget.SelectItemByValue(option)
+			value = option
+			completionEntryWidget.Text = value
+			completionEntryWidget.Entry.CursorColumn = len(completionEntryWidget.Text)
+			completionEntryWidget.Refresh()
+			foundEntry = true
+			break
+		}
+	}
+	if !foundEntry {
+		for _, option := range completionEntryWidget.Options {
+			if strings.Contains(strings.ToLower(option), strings.ToLower(value)) {
+				completionEntryWidget.SelectItemByValue(option)
+				value = option
+				completionEntryWidget.Text = value
+				completionEntryWidget.Entry.CursorColumn = len(completionEntryWidget.Text)
+				completionEntryWidget.Refresh()
+				foundEntry = true
+				break
+			}
+		}
+	}
+	return value
+}
+
 func init() {
 	defer Utilities.PanicLogger()
 
@@ -198,27 +227,11 @@ func init() {
 			}
 		}
 
-		// no results
-		//if len(filteredValues) == 0 {
-		//	Field.SourceLanguageCombo.HideCompletion()
-		//	return
-		//}
-
 		Field.SourceLanguageCombo.SetOptionsFilter(filteredValues)
 		Field.SourceLanguageCombo.ShowCompletion()
 	}
 	Field.SourceLanguageCombo.OnSubmitted = func(value string) {
-		// check if value is in Field.SourceLanguageCombo.Options
-		for i := 0; i < len(Field.SourceLanguageCombo.Options); i++ {
-			if strings.Contains(strings.ToLower(Field.SourceLanguageCombo.Options[i]), strings.ToLower(value)) {
-				Field.SourceLanguageCombo.SelectItemByValue(Field.SourceLanguageCombo.Options[i])
-				value = Field.SourceLanguageCombo.Options[i]
-				Field.SourceLanguageCombo.Text = value
-				Field.SourceLanguageCombo.Entry.CursorColumn = len(Field.SourceLanguageCombo.Text)
-				Field.SourceLanguageCombo.Refresh()
-				break
-			}
-		}
+		value = updateCompletionEntryBasedOnValue(Field.SourceLanguageCombo, value)
 
 		valueObj := Field.SourceLanguageCombo.GetValueOptionEntryByText(value)
 
@@ -253,16 +266,7 @@ func init() {
 	}
 	Field.TargetLanguageCombo.OnSubmitted = func(value string) {
 		// check if value is not in Field.TargetLanguageCombo.Options
-		for i := 0; i < len(Field.TargetLanguageCombo.Options); i++ {
-			if strings.Contains(strings.ToLower(Field.TargetLanguageCombo.Options[i]), strings.ToLower(value)) {
-				Field.TargetLanguageCombo.SelectItemByValue(Field.TargetLanguageCombo.Options[i])
-				value = Field.TargetLanguageCombo.Options[i]
-				Field.TargetLanguageCombo.Text = value
-				Field.TargetLanguageCombo.Entry.CursorColumn = len(Field.TargetLanguageCombo.Text)
-				Field.TargetLanguageCombo.Refresh()
-				break
-			}
-		}
+		value = updateCompletionEntryBasedOnValue(Field.TargetLanguageCombo, value)
 
 		sendMessage := SendMessageStruct{
 			Type:  "setting_change",
@@ -307,16 +311,7 @@ func init() {
 	}
 	Field.TranscriptionSpeakerLanguageCombo.OnSubmitted = func(value string) {
 		// check if value is not in Field.TranscriptionSpeakerLanguageCombo.Options
-		for i := 0; i < len(Field.TranscriptionSpeakerLanguageCombo.Options); i++ {
-			if strings.Contains(strings.ToLower(Field.TranscriptionSpeakerLanguageCombo.Options[i]), strings.ToLower(value)) {
-				Field.TranscriptionSpeakerLanguageCombo.SelectItemByValue(Field.TranscriptionSpeakerLanguageCombo.Options[i])
-				value = Field.TranscriptionSpeakerLanguageCombo.Options[i]
-				Field.TranscriptionSpeakerLanguageCombo.Text = value
-				Field.TranscriptionSpeakerLanguageCombo.Entry.CursorColumn = len(Field.TranscriptionSpeakerLanguageCombo.Text)
-				Field.TranscriptionSpeakerLanguageCombo.Refresh()
-				break
-			}
-		}
+		value = updateCompletionEntryBasedOnValue(Field.TranscriptionSpeakerLanguageCombo, value)
 
 		sendMessage := SendMessageStruct{
 			Type:  "setting_change",
