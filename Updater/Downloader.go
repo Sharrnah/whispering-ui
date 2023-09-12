@@ -8,6 +8,7 @@ import (
 	"io"
 	"io/ioutil"
 	"math"
+	"math/rand"
 	"net/http"
 	"os"
 	"sync"
@@ -33,21 +34,22 @@ type WriteCounter struct {
 }
 
 type Download struct {
-	Url                 string
-	FallbackUrls        []string
-	Filepath            string
-	ConcurrentDownloads int
-	ChunkSize           int64 // in bytes
-	WriteCounter        WriteCounter
-	isResumed           bool
-	serverResumeSupport bool
-	maxRetries          int
-	urlIndex            int
-	mu                  sync.Mutex
-	cond                *sync.Cond
-	downloaded          map[int64][]byte
-	nextWrite           int64
-	remoteFileSize      int64
+	Url                    string
+	FallbackUrls           []string
+	UseMultiServerDownload bool
+	Filepath               string
+	ConcurrentDownloads    int
+	ChunkSize              int64 // in bytes
+	WriteCounter           WriteCounter
+	isResumed              bool
+	serverResumeSupport    bool
+	maxRetries             int
+	urlIndex               int
+	mu                     sync.Mutex
+	cond                   *sync.Cond
+	downloaded             map[int64][]byte
+	nextWrite              int64
+	remoteFileSize         int64
 }
 
 func (d *Download) getUserAgent() string {
@@ -253,6 +255,13 @@ func (d *Download) downloadFullFile(url string) error {
 }
 
 func (d *Download) downloadFileWithRetry(retries int, progressCtx context.Context, contextCancel context.CancelFunc) error {
+	allUrls := append([]string{d.Url}, d.FallbackUrls...)
+	if !d.UseMultiServerDownload {
+		allUrls = []string{d.getCurrentUrl()}
+	}
+	if len(d.FallbackUrls) > 0 && d.UseMultiServerDownload {
+		rand.Shuffle(len(allUrls), func(i, j int) { allUrls[i], allUrls[j] = allUrls[j], allUrls[i] })
+	}
 	currentUrl := d.getCurrentUrl()
 
 	err := error(nil)
@@ -331,6 +340,14 @@ func (d *Download) downloadFileWithRetry(retries int, progressCtx context.Contex
 						end := start + d.ChunkSize - 1
 						if end >= totalSize {
 							end = totalSize - 1
+						}
+
+						if !d.UseMultiServerDownload {
+							currentUrl = d.getCurrentUrl()
+						} else {
+							// cycle through the servers in allUrls in a round-robin fashion.
+							currentUrl = allUrls[chunkIndex%int64(len(allUrls))]
+							println("Downloading chunk %d of %d from %s", chunkIndex, totalChunks, currentUrl)
 						}
 
 						chunk, downloaded, err := d.downloadChunk(currentUrl, start, end)
