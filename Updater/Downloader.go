@@ -11,6 +11,7 @@ import (
 	"math/rand"
 	"net/http"
 	"os"
+	"strings"
 	"sync"
 	"sync/atomic"
 	"time"
@@ -34,6 +35,9 @@ type WriteCounter struct {
 }
 
 type Download struct {
+	skipServerChan         chan bool
+	cancelFunc             context.CancelFunc
+	progressCtx            context.Context
 	Url                    string
 	FallbackUrls           []string
 	UseMultiServerDownload bool
@@ -135,6 +139,8 @@ func (d *Download) GetTotalDownloadedSize() int64 {
 
 func (d *Download) DownloadFile(retries int) error {
 	progressCtx, progressCancel := context.WithCancel(context.Background())
+	d.cancelFunc = progressCancel
+	d.progressCtx = progressCtx
 	defer progressCancel()
 
 	go func() {
@@ -219,6 +225,32 @@ func (d *Download) retryAction(retries int, err error, progressCtx context.Conte
 	}
 }
 
+func (d *Download) GetDownloadUrlSubdomain() string {
+	// get subdomain from download url
+	downloadUrl := d.getCurrentUrl()
+	return downloadUrl[strings.Index(downloadUrl, "://")+3 : strings.Index(downloadUrl, ".")]
+}
+
+func (d *Download) switchToNextUrl() {
+	d.urlIndex = (d.urlIndex + 1) % (len(d.FallbackUrls) + 1)
+}
+
+func (d *Download) RestartDownloadWithNextServer() error {
+	if d.skipServerChan != nil {
+		d.skipServerChan <- true
+		time.Sleep(100 * time.Millisecond) // Allow goroutines to process the skip signal
+	}
+	if d.cancelFunc != nil {
+		d.cancelFunc()
+	}
+	d.switchToNextUrl()
+
+	// Create a new context for the download
+	d.progressCtx, d.cancelFunc = context.WithCancel(context.Background())
+
+	return d.downloadChunkedFile(d.maxRetries, d.progressCtx, d.cancelFunc)
+}
+
 type Chunk struct {
 	data   []byte
 	offset int64
@@ -254,7 +286,7 @@ func (d *Download) downloadFullFile(url string) error {
 	return nil
 }
 
-func (d *Download) downloadFileWithRetry(retries int, progressCtx context.Context, contextCancel context.CancelFunc) error {
+func (d *Download) downloadChunkedFile(retries int, progressCtx context.Context, contextCancel context.CancelFunc) error {
 	allUrls := append([]string{d.Url}, d.FallbackUrls...)
 	if !d.UseMultiServerDownload {
 		allUrls = []string{d.getCurrentUrl()}
@@ -262,6 +294,152 @@ func (d *Download) downloadFileWithRetry(retries int, progressCtx context.Contex
 	if len(d.FallbackUrls) > 0 && d.UseMultiServerDownload {
 		rand.Shuffle(len(allUrls), func(i, j int) { allUrls[i], allUrls[j] = allUrls[j], allUrls[i] })
 	}
+	currentUrl := d.getCurrentUrl()
+
+	contentLength := d.remoteFileSize
+
+	// Define totalSize variable
+	totalSize := int64(d.WriteCounter.ContentLength)
+
+	// Check if the file already exists and get its size
+	var startBytes int64 = 0
+	if _, err := os.Stat(d.Filepath + ".tmp"); err == nil {
+		startBytes = d.getFileSize(d.Filepath + ".tmp")
+	}
+
+	// Set ResumeSupport to true if the file download is resumed and the server supports resuming
+	d.isResumed = startBytes > 0 && d.serverResumeSupport
+
+	// Create the file without overwriting it
+	out, err := os.OpenFile(d.Filepath+".tmp", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+	if err != nil {
+		return err
+	}
+
+	defer out.Close()
+
+	// Create channels for communication
+	chunksChannel := make(chan Chunk, d.ConcurrentDownloads)
+	errorsChannel := make(chan error, d.ConcurrentDownloads)
+
+	var wg sync.WaitGroup
+
+	totalChunks := int(math.Ceil(float64(contentLength) / float64(d.ChunkSize)))
+	startingChunk := startBytes / d.ChunkSize
+	remainingChunks := int64(totalChunks - int(startBytes/d.ChunkSize))
+
+	// Initialize the WriteCounter values
+	d.WriteCounter.Total = uint64(startBytes)
+	d.WriteCounter.ContentLength = uint64(totalSize)
+
+	// Initialize d.nextWrite
+	d.nextWrite = startBytes
+
+	// Concurrent download loop
+	for i := 0; i < d.ConcurrentDownloads; i++ {
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+
+			for {
+				select {
+				case <-d.skipServerChan:
+					return
+				case <-progressCtx.Done():
+					return
+				default:
+					chunkIndex := atomic.AddInt64(&startingChunk, 1) - 1
+					if chunkIndex >= int64(totalChunks) {
+						break
+					}
+
+					remaining := atomic.AddInt64(&remainingChunks, -1)
+					if remaining < 0 {
+						break
+					}
+
+					start := chunkIndex * d.ChunkSize // Updated start calculation
+					end := start + d.ChunkSize - 1
+					if end >= totalSize {
+						end = totalSize - 1
+					}
+
+					if !d.UseMultiServerDownload {
+						currentUrl = d.getCurrentUrl()
+					} else {
+						// cycle through the servers in allUrls in a round-robin fashion.
+						currentUrl = allUrls[chunkIndex%int64(len(allUrls))]
+					}
+					println("Downloading chunk %d of %d from %s", chunkIndex, totalChunks, currentUrl)
+
+					chunk, downloaded, err := d.downloadChunk(currentUrl, start, end)
+					if err != nil {
+						errorsChannel <- err
+						return
+					}
+
+					if downloaded {
+						chunksChannel <- *chunk
+					}
+				}
+			}
+		}()
+	}
+
+	receivedChunks := 0
+
+loop:
+	for {
+		select {
+		case <-d.skipServerChan:
+			d.mu.Unlock()
+			return nil
+		case err := <-errorsChannel:
+			return d.retryAction(retries, err, progressCtx, contextCancel)
+		case chunk := <-chunksChannel:
+			receivedChunks++ // Increment the counter for received chunks
+
+			d.mu.Lock()
+			d.downloaded[chunk.offset] = chunk.data
+
+			for {
+				data, ok := d.downloaded[d.nextWrite]
+				if !ok {
+					break
+				}
+
+				_, err := out.Write(data)
+				if err != nil {
+					d.mu.Unlock()
+					return err
+				}
+
+				d.addBytes(uint64(len(data)))
+				delete(d.downloaded, d.nextWrite)
+				d.nextWrite += int64(len(data))
+			}
+
+			if d.nextWrite == totalSize {
+				contextCancel() // cancel the progress update goroutine
+				d.addBytes(0)   // force progress update when finished
+				d.mu.Unlock()
+				break loop
+			}
+
+			d.mu.Unlock()
+		}
+	}
+
+	wg.Wait()
+
+	// Close the file without defer so it can happen before Rename()
+	if err := out.Close(); err != nil {
+		return err
+	}
+	return nil
+}
+
+func (d *Download) downloadFileWithRetry(retries int, progressCtx context.Context, contextCancel context.CancelFunc) error {
 	currentUrl := d.getCurrentUrl()
 
 	err := error(nil)
@@ -278,133 +456,8 @@ func (d *Download) downloadFileWithRetry(retries int, progressCtx context.Contex
 			return err
 		}
 	} else {
-		// Define totalSize variable
-		totalSize := int64(d.WriteCounter.ContentLength)
-
-		// Check if the file already exists and get its size
-		var startBytes int64 = 0
-		if _, err := os.Stat(d.Filepath + ".tmp"); err == nil {
-			startBytes = d.getFileSize(d.Filepath + ".tmp")
-		}
-
-		// Set ResumeSupport to true if the file download is resumed and the server supports resuming
-		d.isResumed = startBytes > 0 && d.serverResumeSupport
-
-		// Create the file without overwriting it
-		out, err := os.OpenFile(d.Filepath+".tmp", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+		err = d.downloadChunkedFile(retries, progressCtx, contextCancel)
 		if err != nil {
-			return err
-		}
-
-		defer out.Close()
-
-		// Create channels for communication
-		chunksChannel := make(chan Chunk, d.ConcurrentDownloads)
-		errorsChannel := make(chan error, d.ConcurrentDownloads)
-
-		var wg sync.WaitGroup
-
-		totalChunks := int(math.Ceil(float64(contentLength) / float64(d.ChunkSize)))
-		startingChunk := startBytes / d.ChunkSize
-		remainingChunks := int64(totalChunks - int(startBytes/d.ChunkSize))
-
-		// Initialize the WriteCounter values
-		d.WriteCounter.Total = uint64(startBytes)
-		d.WriteCounter.ContentLength = uint64(totalSize)
-
-		// Initialize d.nextWrite
-		d.nextWrite = startBytes
-
-		// Concurrent download loop
-		for i := 0; i < d.ConcurrentDownloads; i++ {
-			wg.Add(1)
-			go func() {
-				defer wg.Done()
-
-				for {
-					select {
-					case <-progressCtx.Done():
-						return
-					default:
-						chunkIndex := atomic.AddInt64(&startingChunk, 1) - 1
-						if chunkIndex >= int64(totalChunks) {
-							break
-						}
-
-						remaining := atomic.AddInt64(&remainingChunks, -1)
-						if remaining < 0 {
-							break
-						}
-
-						start := chunkIndex * d.ChunkSize // Updated start calculation
-						end := start + d.ChunkSize - 1
-						if end >= totalSize {
-							end = totalSize - 1
-						}
-
-						if !d.UseMultiServerDownload {
-							currentUrl = d.getCurrentUrl()
-						} else {
-							// cycle through the servers in allUrls in a round-robin fashion.
-							currentUrl = allUrls[chunkIndex%int64(len(allUrls))]
-							println("Downloading chunk %d of %d from %s", chunkIndex, totalChunks, currentUrl)
-						}
-
-						chunk, downloaded, err := d.downloadChunk(currentUrl, start, end)
-						if err != nil {
-							errorsChannel <- err
-							return
-						}
-
-						if downloaded {
-							chunksChannel <- *chunk
-						}
-					}
-				}
-			}()
-		}
-
-	loop:
-		for {
-			select {
-			case err := <-errorsChannel:
-				return d.retryAction(retries, err, progressCtx, contextCancel)
-			case chunk := <-chunksChannel:
-				d.mu.Lock()
-				d.downloaded[chunk.offset] = chunk.data
-
-				for {
-					data, ok := d.downloaded[d.nextWrite]
-					if !ok {
-						break
-					}
-
-					_, err := out.Write(data)
-					if err != nil {
-						d.mu.Unlock()
-						return err
-					}
-
-					d.addBytes(uint64(len(data)))
-					delete(d.downloaded, d.nextWrite)
-					d.nextWrite += int64(len(data))
-				}
-
-				if d.nextWrite == totalSize {
-					contextCancel() // cancel the progress update goroutine
-					d.addBytes(0)   // force progress update when finished
-					d.mu.Unlock()
-					break loop
-				}
-
-				d.mu.Unlock()
-			}
-		}
-
-		wg.Wait()
-
-		// Close the file without defer so it can happen before Rename()
-		if err := out.Close(); err != nil {
 			return err
 		}
 	}
@@ -431,6 +484,13 @@ func (d *Download) downloadFileWithRetry(retries int, progressCtx context.Contex
 }
 
 func (d *Download) downloadChunk(url string, start, end int64) (*Chunk, bool, error) {
+	select {
+	case <-d.skipServerChan:
+		return nil, false, fmt.Errorf("download was cancelled")
+	default:
+		// Continue with the download
+	}
+
 	req, err := http.NewRequest("GET", url, nil)
 	if err != nil {
 		return nil, false, err

@@ -37,6 +37,7 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 
 	// create download dialog
 	statusBar := widget.NewProgressBar()
+
 	statusBarContainer := container.NewVBox(statusBar)
 
 	dialogTitlePart := filename
@@ -71,7 +72,7 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 	}
 
 	// get subdomain from download url
-	subdomain := downloadUrl[strings.Index(downloadUrl, "://")+3 : strings.Index(downloadUrl, ".")]
+	//subdomain := downloadUrl[strings.Index(downloadUrl, "://")+3 : strings.Index(downloadUrl, ".")]
 
 	//appExec, _ := os.Executable()
 
@@ -87,6 +88,7 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 		ConcurrentDownloads: 4,
 		ChunkSize:           15 * 1024 * 1024, // 15 MB
 	}
+
 	downloader.WriteCounter.OnProgress = func(progress, total uint64, speed float64) {
 		if int64(total) == -1 {
 			statusBarContainer.Remove(statusBar)
@@ -110,17 +112,28 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 				speedStr = fmt.Sprintf("%.2f MiB/s", speed/(1024*1024))
 			}
 
+			subdomain := downloader.GetDownloadUrlSubdomain()
 			downloadingLabel.SetText("Downloading from " + subdomain + "... " + humanize.Bytes(total) + " (" + speedStr + ") " + resumeStatusText)
 		}
 	}
 
 	statusBarContainer.Add(downloadingLabel)
+
+	skipDownloadServer := widget.NewButton("Skip Download Server", func() {
+		go func() {
+			_ = downloader.RestartDownloadWithNextServer()
+		}()
+	})
+	statusBarContainer.Add(container.NewCenter(skipDownloadServer))
+
 	statusBarContainer.Refresh()
 	err := downloader.DownloadFile(3)
 	if err != nil {
 		dialog.ShowError(err, window)
 		return err
 	}
+
+	statusBarContainer.Remove(skipDownloadServer)
 
 	// check if the file has the correct hash
 	statusBarContainer.Add(widget.NewLabel("Checking checksum..."))
