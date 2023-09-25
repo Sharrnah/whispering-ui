@@ -921,8 +921,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				sttModelSize.Options = originalSeamlessM4TModelList
 				// unselect if not in list
 				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption) {
-					sttModelSize.SetSelectedIndex(0)
+					sttModelSize.SetSelectedIndex(1)
 				}
+
 				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
 					{Text: "float32 precision", Value: "float32"},
 					{Text: "float16 precision", Value: "float16"},
@@ -1119,7 +1120,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			*/
 			if s.Value == "Seamless_M4T" && sttTypeSelect.GetSelected().Value == "seamless_m4t" {
 				modelType = "N"
-				txtTranslatorSizeSelect.SetSelected(sttModelSize.GetSelected().Value)
+				if txtTranslatorSizeSelect.ContainsEntry(sttModelSize.GetSelected()) {
+					txtTranslatorSizeSelect.SetSelected(sttModelSize.GetSelected().Value)
+				}
 				txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
 				txtTranslatorDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
 				txtTranslatorSizeSelect.Disable()

@@ -109,7 +109,7 @@ func (s *TextValueSelect) updateSelected(text string) {
 
 func (s *TextValueSelect) ContainsEntry(entry *TextValueOption) bool {
 	for i := 0; i < len(s.Options); i++ {
-		if s.Options[i].Value == entry.Value {
+		if entry != nil && s.Options[i].Value == entry.Value {
 			return true
 		}
 	}
