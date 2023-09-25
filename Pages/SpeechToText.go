@@ -16,15 +16,22 @@ import (
 func CreateSpeechToTextWindow() fyne.CanvasObject {
 	defer Utilities.PanicLogger()
 
+	speechLanguageLabel := widget.NewLabel("Speech Language:")
 	languageRow := container.New(layout.NewVBoxLayout(),
 		container.New(layout.NewFormLayout(),
-			widget.NewLabel("Speech Language:"),
+			speechLanguageLabel,
 			Fields.Field.TranscriptionSpeakerLanguageCombo,
 
 			widget.NewLabel("Speech Task:"),
 			Fields.Field.TranscriptionTaskCombo,
 		),
 	)
+
+	// disable task for seamless_m4t model, as it always translates to target language (Speech Language)
+	if Settings.Config.Stt_type == "seamless_m4t" {
+		Fields.Field.TranscriptionTaskCombo.Disable()
+		speechLanguageLabel.SetText("Speech Target Language:")
+	}
 
 	transcriptionRow := container.New(
 		layout.NewGridLayout(2),

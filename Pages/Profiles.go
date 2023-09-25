@@ -512,6 +512,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	}
 	GPUInformationLabel := widget.NewLabel("Compute Capability: " + fmt.Sprintf("%.1f", ComputeCapability))
 
+	isLoadingSettingsFile := false
+
 	BuildProfileForm := func() fyne.CanvasObject {
 		profileForm := widget.NewForm()
 		websocketIp := widget.NewEntry()
@@ -671,6 +673,35 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 		appendWidgetToForm(profileForm, "Phrase time limit", container.NewBorder(nil, nil, nil, phraseLimitSliderState, phraseLimitSliderWidget), "The max. time limit in seconds after which the audio processing starts.")
 
+		txtTranslatorSizeSelect := CustomWidget.NewTextValueSelect("txt_translator_size", []CustomWidget.TextValueOption{
+			{Text: "Small", Value: "small"},
+			{Text: "Medium", Value: "medium"},
+			{Text: "Large", Value: "large"},
+		}, func(s CustomWidget.TextValueOption) {}, 0)
+
+		txtTranslatorPrecisionSelect := CustomWidget.NewTextValueSelect("txt_translator_precision", []CustomWidget.TextValueOption{
+			{Text: "float32 precision", Value: "float32"},
+			{Text: "float16 precision", Value: "float16"},
+			{Text: "int16 precision", Value: "int16"},
+			{Text: "int8_float16 precision", Value: "int8_float16"},
+			{Text: "int8 precision", Value: "int8"},
+			{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
+			{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
+		}, func(s CustomWidget.TextValueOption) {}, 0)
+
+		txtTranslatorTypeSelect := CustomWidget.NewTextValueSelect("txt_translator", []CustomWidget.TextValueOption{
+			{Text: "Faster NLLB200 (200 languages)", Value: "NLLB200_CT2"},
+			{Text: "Original NLLB200 (200 languages)", Value: "NLLB200"},
+			{Text: "M2M100 (100 languages)", Value: "M2M100"},
+			{Text: "Seamless M4T (101 languages)", Value: "Seamless_M4T"},
+			{Text: "Disabled", Value: ""},
+		}, func(s CustomWidget.TextValueOption) {}, 0)
+
+		txtTranslatorDeviceSelect := CustomWidget.NewTextValueSelect("txt_translator_device", []CustomWidget.TextValueOption{
+			{Text: "CUDA", Value: "cuda"},
+			{Text: "CPU", Value: "cpu"},
+		}, func(s CustomWidget.TextValueOption) {}, 0)
+
 		sttAiDeviceSelect := CustomWidget.NewTextValueSelect("ai_device", []CustomWidget.TextValueOption{
 			{Text: "CUDA", Value: "cuda"},
 			{Text: "CPU", Value: "cpu"},
@@ -684,6 +715,14 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "int8 precision", Value: "int8"},
 			{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
 			{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
+		}, func(s CustomWidget.TextValueOption) {}, 0)
+
+		sttTypeSelect := CustomWidget.NewTextValueSelect("stt_type", []CustomWidget.TextValueOption{
+			{Text: "Faster Whisper", Value: "faster_whisper"},
+			{Text: "Original Whisper", Value: "original_whisper"},
+			{Text: "Seamless M4T", Value: "seamless_m4t"},
+			{Text: "Speech T5 (English only)", Value: "speech_t5"},
+			{Text: "Disabled", Value: ""},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
 		sttAiDeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {
@@ -702,6 +741,18 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				Device:  s.Value,
 			}
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+
+			/**
+			special case for Seamless M4T since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
+			*/
+			if txtTranslatorTypeSelect.GetSelected().Value == "Seamless_M4T" && sttTypeSelect.GetSelected().Value == "seamless_m4t" {
+				txtTranslatorSizeSelect.SetSelected(s.Value)
+				txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
+				txtTranslatorDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
+				txtTranslatorSizeSelect.Disable()
+				txtTranslatorPrecisionSelect.Disable()
+				txtTranslatorDeviceSelect.Disable()
+			}
 		}
 		sttPrecisionSelect.OnChanged = func(s CustomWidget.TextValueOption) {
 			precisionType := Hardwareinfo.Float32
@@ -789,6 +840,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Large V2 (Chinese finetune)", Value: "large-v2.zh"},
 		}
 
+		originalSeamlessM4TModelList := []CustomWidget.TextValueOption{
+			{Text: "Medium", Value: "medium"},
+			{Text: "Large", Value: "large"},
+		}
+
 		sttModelSize := CustomWidget.NewTextValueSelect("model", fasterWhisperModelList, func(s CustomWidget.TextValueOption) {
 			// remove last suffix starting with a dot
 			sizeName := strings.Split(s.Value, ".")[0]
@@ -801,16 +857,23 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				AIModelSize: sizeName,
 			}
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+
+			/**
+			special case for Seamless M4T since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
+			*/
+			if txtTranslatorTypeSelect.GetSelected().Value == "Seamless_M4T" && sttTypeSelect.GetSelected().Value == "seamless_m4t" {
+				txtTranslatorSizeSelect.SetSelected(s.Value)
+				txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
+				txtTranslatorDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
+				txtTranslatorSizeSelect.Disable()
+				txtTranslatorPrecisionSelect.Disable()
+				txtTranslatorDeviceSelect.Disable()
+			}
 		}, 0)
 
 		profileForm.Append("Speech-to-Text Size", container.NewGridWithColumns(2, sttModelSize, sttPrecisionSelect))
 
-		sttTypeSelect := CustomWidget.NewTextValueSelect("stt_type", []CustomWidget.TextValueOption{
-			{Text: "Faster Whisper", Value: "faster_whisper"},
-			{Text: "Original Whisper", Value: "original_whisper"},
-			{Text: "Speech T5 (English only)", Value: "speech_t5"},
-			{Text: "Disabled", Value: ""},
-		}, func(s CustomWidget.TextValueOption) {
+		sttTypeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
 			sttPrecisionSelectOption := sttPrecisionSelect.GetSelected()
 			selectedPrecision := ""
 			if sttPrecisionSelectOption != nil {
@@ -854,6 +917,27 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					sttPrecisionSelect.SetSelected("float16")
 				}
 				AIModelType = "O"
+			} else if s.Value == "seamless_m4t" {
+				sttModelSize.Options = originalSeamlessM4TModelList
+				// unselect if not in list
+				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption) {
+					sttModelSize.SetSelectedIndex(0)
+				}
+				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
+					{Text: "float32 precision", Value: "float32"},
+					{Text: "float16 precision", Value: "float16"},
+				}
+				sttPrecisionSelect.SetSelected("float32")
+				sttPrecisionSelect.Disable()
+				AIModelType = "m4t"
+
+				if txtTranslatorTypeSelect.GetSelected().Value != "Seamless_M4T" && !isLoadingSettingsFile {
+					dialog.NewConfirm("Usage of Multi-Modal Model.", "Use Multi-Modal model for Text-Translation as well?", func(b bool) {
+						if b {
+							txtTranslatorTypeSelect.SetSelected("Seamless_M4T")
+						}
+					}, fyne.CurrentApp().Driver().AllWindows()[1]).Show()
+				}
 			} else if s.Value == "speech_t5" {
 				sttPrecisionSelect.Disable()
 				sttModelSize.Disable()
@@ -870,28 +954,13 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				AIModelType: AIModelType,
 			}
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
-		}, 0)
+		}
 
 		denoiseCheckbox := widget.NewCheck("A.I. Denoise", func(b bool) {})
 
 		profileForm.Append("Speech-to-Text Type", container.NewGridWithColumns(2, sttTypeSelect, denoiseCheckbox))
 
 		profileForm.Append("", layout.NewSpacer())
-
-		txtTranslatorDeviceSelect := CustomWidget.NewTextValueSelect("txt_translator_device", []CustomWidget.TextValueOption{
-			{Text: "CUDA", Value: "cuda"},
-			{Text: "CPU", Value: "cpu"},
-		}, func(s CustomWidget.TextValueOption) {}, 0)
-
-		txtTranslatorPrecisionSelect := CustomWidget.NewTextValueSelect("txt_translator_precision", []CustomWidget.TextValueOption{
-			{Text: "float32 precision", Value: "float32"},
-			{Text: "float16 precision", Value: "float16"},
-			{Text: "int16 precision", Value: "int16"},
-			{Text: "int8_float16 precision", Value: "int8_float16"},
-			{Text: "int8 precision", Value: "int8"},
-			{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
-			{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
-		}, func(s CustomWidget.TextValueOption) {}, 0)
 
 		txtTranslatorDeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {
 			if !Hardwareinfo.HasNVIDIACard() && s.Value == "cuda" {
@@ -956,27 +1025,18 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		profileForm.Append("A.I. Device for Text-Translation", txtTranslatorDeviceSelect)
 
-		txtTranslatorSizeSelect := CustomWidget.NewTextValueSelect("txt_translator_size", []CustomWidget.TextValueOption{
-			{Text: "Small", Value: "small"},
-			{Text: "Medium", Value: "medium"},
-			{Text: "Large", Value: "large"},
-		}, func(s CustomWidget.TextValueOption) {
+		txtTranslatorSizeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
 			// calculate memory consumption
 			AIModel := ProfileAIModelOption{
 				AIModel:     "TxtTranslator",
 				AIModelSize: s.Value,
 			}
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
-		}, 0)
+		}
 
 		profileForm.Append("Text-Translation Size", container.NewGridWithColumns(2, txtTranslatorSizeSelect, txtTranslatorPrecisionSelect))
 
-		txtTranslatorTypeSelect := CustomWidget.NewTextValueSelect("txt_translator", []CustomWidget.TextValueOption{
-			{Text: "Faster NLLB200 (200 languages)", Value: "NLLB200_CT2"},
-			{Text: "Original NLLB200 (200 languages)", Value: "NLLB200"},
-			{Text: "M2M100 (100 languages)", Value: "M2M100"},
-			{Text: "Disabled", Value: ""},
-		}, func(s CustomWidget.TextValueOption) {
+		txtTranslatorTypeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
 			selectedPrecisionOption := txtTranslatorPrecisionSelect.GetSelected()
 			selectedPrecision := ""
 			if selectedPrecisionOption != nil {
@@ -986,41 +1046,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			selectedSize := ""
 			if selectedSizeOption != nil {
 				selectedSize = selectedSizeOption.Value
-			}
-			if s.Value == "NLLB200" {
-				txtTranslatorPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 precision", Value: "float32"},
-					{Text: "float16 precision", Value: "float16"},
-				}
-				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" {
-					sttPrecisionSelect.SetSelected("float16")
-				}
-			} else {
-				txtTranslatorPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 precision", Value: "float32"},
-					{Text: "float16 precision", Value: "float16"},
-					{Text: "int16 precision", Value: "int16"},
-					{Text: "int8_float16 precision", Value: "int8_float16"},
-					{Text: "int8 precision", Value: "int8"},
-					{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
-					{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
-				}
-			}
-
-			if s.Value == "M2M100" {
-				txtTranslatorSizeSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "Small", Value: "small"},
-					{Text: "Large", Value: "large"},
-				}
-				if selectedSize == "medium" {
-					txtTranslatorSizeSelect.SetSelected("small")
-				}
-			} else {
-				txtTranslatorSizeSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "Small", Value: "small"},
-					{Text: "Medium", Value: "medium"},
-					{Text: "Large", Value: "large"},
-				}
 			}
 
 			if s.Value == "" {
@@ -1033,9 +1058,73 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				txtTranslatorSizeSelect.Enable()
 			}
 
+			if s.Value == "NLLB200" {
+				txtTranslatorPrecisionSelect.Options = []CustomWidget.TextValueOption{
+					{Text: "float32 precision", Value: "float32"},
+					{Text: "float16 precision", Value: "float16"},
+				}
+				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" {
+					txtTranslatorPrecisionSelect.SetSelected("float16")
+				}
+			} else if s.Value == "NLLB200_CT2" || s.Value == "M2M100" {
+				txtTranslatorPrecisionSelect.Options = []CustomWidget.TextValueOption{
+					{Text: "float32 precision", Value: "float32"},
+					{Text: "float16 precision", Value: "float16"},
+					{Text: "int16 precision", Value: "int16"},
+					{Text: "int8_float16 precision", Value: "int8_float16"},
+					{Text: "int8 precision", Value: "int8"},
+					{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
+					{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
+				}
+			} else if s.Value == "Seamless_M4T" {
+				txtTranslatorPrecisionSelect.Options = []CustomWidget.TextValueOption{
+					{Text: "float32 precision", Value: "float32"},
+					{Text: "float16 precision", Value: "float16"},
+				}
+				txtTranslatorPrecisionSelect.SetSelected("float32")
+				txtTranslatorPrecisionSelect.Disable()
+			}
+
+			if s.Value == "M2M100" {
+				txtTranslatorSizeSelect.Options = []CustomWidget.TextValueOption{
+					{Text: "Small", Value: "small"},
+					{Text: "Large", Value: "large"},
+				}
+				if selectedSize == "medium" {
+					txtTranslatorSizeSelect.SetSelected("small")
+				}
+			} else if s.Value == "NLLB200_CT2" || s.Value == "NLLB200" {
+				txtTranslatorSizeSelect.Options = []CustomWidget.TextValueOption{
+					{Text: "Small", Value: "small"},
+					{Text: "Medium", Value: "medium"},
+					{Text: "Large", Value: "large"},
+				}
+			} else if s.Value == "Seamless_M4T" {
+				txtTranslatorSizeSelect.Options = []CustomWidget.TextValueOption{
+					{Text: "Medium", Value: "medium"},
+					{Text: "Large", Value: "large"},
+				}
+				if selectedSize == "small" {
+					txtTranslatorSizeSelect.SetSelected("medium")
+				}
+			}
+
 			modelType := s.Value
 			if s.Value == "" {
 				modelType = "N"
+			}
+
+			/**
+			special case for Seamless M4T since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
+			*/
+			if s.Value == "Seamless_M4T" && sttTypeSelect.GetSelected().Value == "seamless_m4t" {
+				modelType = "N"
+				txtTranslatorSizeSelect.SetSelected(sttModelSize.GetSelected().Value)
+				txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
+				txtTranslatorDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
+				txtTranslatorSizeSelect.Disable()
+				txtTranslatorPrecisionSelect.Disable()
+				txtTranslatorDeviceSelect.Disable()
 			}
 
 			AIModel := ProfileAIModelOption{
@@ -1044,7 +1133,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			}
 
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
-		}, 0)
+		}
 
 		profileForm.Append("Text-Translation Type", container.NewGridWithColumns(2, txtTranslatorTypeSelect))
 
@@ -1112,6 +1201,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	)
 
 	profileList.OnSelected = func(id widget.ListItemID) {
+		isLoadingSettingsFile = true
 		profileHelpTextContent.Hide()
 		profileListContent.Show()
 
@@ -1460,6 +1550,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		if err != nil {
 			dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
 		}
+		isLoadingSettingsFile = false
 	}
 
 	newProfileEntry := widget.NewEntry()

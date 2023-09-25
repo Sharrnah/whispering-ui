@@ -25,6 +25,9 @@ var Models = []AIModel{
 	{"Whispert5_small", 927.0},
 	{"Whispert5_medium", 927.0},
 	{"Whispert5_large", 927.0},
+	// Seamless M4T
+	{"Whisperm4t_medium", 6250.0},
+	{"Whisperm4t_large", 10518.0},
 	// NLLB200CT2 models
 	{"TxtTranslatorNLLB200_CT2_small", 3087.0},
 	{"TxtTranslatorNLLB200_CT2_medium", 6069.0},
@@ -36,6 +39,9 @@ var Models = []AIModel{
 	// M2M100 models
 	{"TxtTranslatorM2M100_small", 2197.0},
 	{"TxtTranslatorM2M100_large", 5211.0},
+	// Seamless M4T models
+	{"TxtTranslatorSeamless_M4T_medium", 6250.0},
+	{"TxtTranslatorSeamless_M4T_large", 10518.0},
 	// Silero TTS
 	{"SileroO_", 1533.0},
 }
