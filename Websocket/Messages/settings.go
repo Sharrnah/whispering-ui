@@ -41,6 +41,15 @@ func (res TranslateSetting) Update() *TranslateSetting {
 			Fields.Field.TranscriptionSpeakerLanguageCombo.Options = append(Fields.Field.TranscriptionSpeakerLanguageCombo.Options, cases.Title(language.English, cases.Compact).String(element.Name))
 		}
 	}
+	// fill combo-box with target languages
+	if len(Fields.Field.TranscriptionTargetLanguageCombo.Options) < len(TranslateSettings.WhisperLanguages) {
+		Fields.Field.TranscriptionTargetLanguageCombo.Options = nil
+		for _, element := range TranslateSettings.WhisperLanguages {
+			if element.Code != "" && strings.ToLower(element.Code) != "auto" {
+				Fields.Field.TranscriptionTargetLanguageCombo.Options = append(Fields.Field.TranscriptionTargetLanguageCombo.Options, cases.Title(language.English, cases.Compact).String(element.Name))
+			}
+		}
+	}
 
 	// Set options to current settings
 	if strings.Contains(res.Whisper_task, "translate") && Fields.Field.TranscriptionTaskCombo.Selected != "translate (to English)" {
@@ -52,6 +61,10 @@ func (res TranslateSetting) Update() *TranslateSetting {
 	if Fields.Field.TranscriptionSpeakerLanguageCombo.Text != TranslateSettings.GetWhisperLanguageNameByCode(res.Current_language) {
 		Fields.Field.TranscriptionSpeakerLanguageCombo.Text = cases.Title(language.English, cases.Compact).String(TranslateSettings.GetWhisperLanguageNameByCode(res.Current_language))
 		Fields.Field.TranscriptionSpeakerLanguageCombo.ResetOptionsFilter()
+	}
+	if Fields.Field.TranscriptionTargetLanguageCombo.Text != TranslateSettings.GetWhisperLanguageNameByCode(res.Target_language) {
+		Fields.Field.TranscriptionTargetLanguageCombo.Text = cases.Title(language.English, cases.Compact).String(TranslateSettings.GetWhisperLanguageNameByCode(res.Target_language))
+		Fields.Field.TranscriptionTargetLanguageCombo.ResetOptionsFilter()
 	}
 
 	// Set SourceLanguageCombo

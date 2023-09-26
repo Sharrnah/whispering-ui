@@ -471,6 +471,8 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 				updateSettings(*SettingsFile, pluginClassName, pluginSettings)
 			}
 			filter := v["accept"].(string)
+			filterArray := strings.Split(filter, ",")
+
 			fileSelectFunc := func() {}
 			dialogSize := fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size()
 			dialogSize.Height = dialogSize.Height - 50
@@ -505,7 +507,7 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 						entry.SetText(reader.URI().Path())
 					}
 				}, fyne.CurrentApp().Driver().AllWindows()[0])
-				fileDialog.SetFilter(storage.NewExtensionFileFilter([]string{filter}))
+				fileDialog.SetFilter(storage.NewExtensionFileFilter(filterArray))
 				fileDialog.Resize(dialogSize)
 				fileSelectFunc = func() {
 					fileDialog.Show()
@@ -518,7 +520,7 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 						entry.SetText(writer.URI().Path())
 					}
 				}, fyne.CurrentApp().Driver().AllWindows()[0])
-				fileDialog.SetFilter(storage.NewExtensionFileFilter([]string{filter}))
+				fileDialog.SetFilter(storage.NewExtensionFileFilter(filterArray))
 				fileDialog.Resize(dialogSize)
 
 				fileSelectFunc = func() {

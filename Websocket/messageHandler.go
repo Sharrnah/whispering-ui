@@ -425,6 +425,17 @@ func HandleSendMessage(sendMessage *Fields.SendMessageStruct) {
 			} else {
 				sendMessage.Value = SkipMessage
 			}
+		case "target_language":
+			langCode := Messages.TranslateSettings.GetWhisperLanguageCodeByName(sendMessage.Value.(string))
+			if Messages.TranslateSettings.Target_language != langCode {
+				sendMessage.Value = langCode
+				if langCode == "" {
+					sendMessage.Value = nil
+				}
+				Messages.TranslateSettings.Target_language = langCode
+			} else {
+				sendMessage.Value = SkipMessage
+			}
 		case "tts_model":
 			selectedModel := sendMessage.Value.(string)
 			var voiceLanguage = ""

@@ -52,6 +52,7 @@ type Conf struct {
 	Ai_device                     interface{} `yaml:"ai_device" json:"ai_device"`
 	Whisper_task                  string      `yaml:"whisper_task" json:"whisper_task"`
 	Current_language              string      `yaml:"current_language" json:"current_language"`
+	Target_language               string      `yaml:"target_language" json:"target_language"`
 	Model                         string      `yaml:"model" json:"model"`
 	Condition_on_previous_text    bool        `yaml:"condition_on_previous_text" json:"condition_on_previous_text"`
 	Prompt_reset_on_temperature   float64     `yaml:"prompt_reset_on_temperature" json:"prompt_reset_on_temperature"`
@@ -346,7 +347,7 @@ func MergeSettings(firstConf Conf, secondConf Conf) Conf {
 
 func BuildSettingsForm(includeConfigFields []string, settingsFile string) fyne.CanvasObject {
 	defer Utilities.PanicLogger()
-	
+
 	settingsForm := widget.NewForm()
 
 	settingsForm.Append("Profile", widget.NewLabel(Config.SettingsFilename))

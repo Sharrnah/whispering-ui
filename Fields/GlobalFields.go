@@ -26,6 +26,7 @@ var Field = struct {
 	WhisperResultList                 *widget.List
 	TranscriptionTaskCombo            *widget.Select
 	TranscriptionSpeakerLanguageCombo *CustomWidget.CompletionEntry
+	TranscriptionTargetLanguageCombo  *CustomWidget.CompletionEntry
 	TranscriptionInput                *CustomWidget.EntryWithPopupMenu
 	TranscriptionInputHint            *canvas.Text
 	TranscriptionTranslationInput     *CustomWidget.EntryWithPopupMenu
@@ -63,6 +64,7 @@ var Field = struct {
 		sendMessage.SendMessage()
 	}),
 	TranscriptionSpeakerLanguageCombo: CustomWidget.NewCompletionEntry([]string{"Auto"}),
+	TranscriptionTargetLanguageCombo:  CustomWidget.NewCompletionEntry([]string{}),
 	TranscriptionInput: func() *CustomWidget.EntryWithPopupMenu {
 		entry := CustomWidget.NewMultiLineEntry()
 		entry.Wrapping = fyne.TextWrapWord
@@ -253,7 +255,7 @@ func init() {
 	Field.TargetLanguageCombo.ShowAllEntryText = "... show all"
 	Field.TargetLanguageCombo.Entry.PlaceHolder = "Select target language"
 	Field.TargetLanguageCombo.OnChanged = func(value string) {
-		// filter out the values of FIeld.TranscriptionSpeakerLanguageCombo.Options that do not contain the value
+		// filter out the values of Options that do not contain the value
 		var filteredValues []string
 		for i := 0; i < len(Field.TargetLanguageCombo.Options); i++ {
 			if strings.Contains(strings.ToLower(Field.TargetLanguageCombo.Options[i]), strings.ToLower(value)) {
@@ -265,7 +267,7 @@ func init() {
 		Field.TargetLanguageCombo.ShowCompletion()
 	}
 	Field.TargetLanguageCombo.OnSubmitted = func(value string) {
-		// check if value is not in Field.TargetLanguageCombo.Options
+		// check if value is not in Options
 		value = updateCompletionEntryBasedOnValue(Field.TargetLanguageCombo, value)
 
 		sendMessage := SendMessageStruct{
@@ -284,7 +286,7 @@ func init() {
 	Field.TargetLanguageTxtTranslateCombo.ShowAllEntryText = "... show all"
 	Field.TargetLanguageTxtTranslateCombo.Entry.PlaceHolder = "Select target language"
 	Field.TargetLanguageTxtTranslateCombo.OnChanged = func(value string) {
-		// filter out the values of Field.TargetLanguageTxtTranslateCombo.Options that do not contain the value
+		// filter out the values of Options that do not contain the value
 		var filteredValues []string
 		for i := 0; i < len(Field.TargetLanguageTxtTranslateCombo.Options); i++ {
 			if strings.Contains(strings.ToLower(Field.TargetLanguageTxtTranslateCombo.Options[i]), strings.ToLower(value)) {
@@ -298,7 +300,7 @@ func init() {
 	Field.TranscriptionSpeakerLanguageCombo.ShowAllEntryText = "... show all"
 	Field.TranscriptionSpeakerLanguageCombo.Entry.PlaceHolder = "Select a language"
 	Field.TranscriptionSpeakerLanguageCombo.OnChanged = func(value string) {
-		// filter out the values of Field.TranscriptionSpeakerLanguageCombo.Options that do not contain the value
+		// filter out the values of Options that do not contain the value
 		var filteredValues []string
 		for i := 0; i < len(Field.TranscriptionSpeakerLanguageCombo.Options); i++ {
 			if strings.Contains(strings.ToLower(Field.TranscriptionSpeakerLanguageCombo.Options[i]), strings.ToLower(value)) {
@@ -310,12 +312,38 @@ func init() {
 		Field.TranscriptionSpeakerLanguageCombo.ShowCompletion()
 	}
 	Field.TranscriptionSpeakerLanguageCombo.OnSubmitted = func(value string) {
-		// check if value is not in Field.TranscriptionSpeakerLanguageCombo.Options
+		// check if value is not in Options
 		value = updateCompletionEntryBasedOnValue(Field.TranscriptionSpeakerLanguageCombo, value)
 
 		sendMessage := SendMessageStruct{
 			Type:  "setting_change",
 			Name:  "current_language",
+			Value: value,
+		}
+		sendMessage.SendMessage()
+	}
+
+	Field.TranscriptionTargetLanguageCombo.ShowAllEntryText = "... show all"
+	Field.TranscriptionTargetLanguageCombo.Entry.PlaceHolder = "Select a language"
+	Field.TranscriptionTargetLanguageCombo.OnChanged = func(value string) {
+		// filter out the values of Options that do not contain the value
+		var filteredValues []string
+		for i := 0; i < len(Field.TranscriptionTargetLanguageCombo.Options); i++ {
+			if strings.Contains(strings.ToLower(Field.TranscriptionTargetLanguageCombo.Options[i]), strings.ToLower(value)) {
+				filteredValues = append(filteredValues, Field.TranscriptionTargetLanguageCombo.Options[i])
+			}
+		}
+
+		Field.TranscriptionTargetLanguageCombo.SetOptionsFilter(filteredValues)
+		Field.TranscriptionTargetLanguageCombo.ShowCompletion()
+	}
+	Field.TranscriptionTargetLanguageCombo.OnSubmitted = func(value string) {
+		// check if value is not in Options
+		value = updateCompletionEntryBasedOnValue(Field.TranscriptionTargetLanguageCombo, value)
+
+		sendMessage := SendMessageStruct{
+			Type:  "setting_change",
+			Name:  "target_language",
 			Value: value,
 		}
 		sendMessage.SendMessage()
