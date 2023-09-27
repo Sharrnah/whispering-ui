@@ -792,6 +792,18 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				Precision: precisionType,
 			}
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+
+			/**
+			special case for Seamless M4T since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
+			*/
+			if txtTranslatorTypeSelect.GetSelected().Value == "Seamless_M4T" && sttTypeSelect.GetSelected().Value == "seamless_m4t" {
+				txtTranslatorSizeSelect.SetSelected(s.Value)
+				txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
+				txtTranslatorDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
+				txtTranslatorSizeSelect.Disable()
+				txtTranslatorPrecisionSelect.Disable()
+				txtTranslatorDeviceSelect.Disable()
+			}
 		}
 
 		profileForm.Append("A.I. Device for Speech-to-Text", sttAiDeviceSelect)
@@ -927,9 +939,14 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
 					{Text: "float32 precision", Value: "float32"},
 					{Text: "float16 precision", Value: "float16"},
+					{Text: "int8_float16 precision", Value: "int8_float16"},
+					{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
+					{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
 				}
-				sttPrecisionSelect.SetSelected("float32")
-				sttPrecisionSelect.Disable()
+				if !sttPrecisionSelect.ContainsEntry(&s) {
+					sttPrecisionSelect.SetSelectedIndex(0)
+				}
+				//sttPrecisionSelect.Disable()
 				AIModelType = "m4t"
 
 				if txtTranslatorTypeSelect.GetSelected().Value != "Seamless_M4T" && !isLoadingSettingsFile {
@@ -1081,8 +1098,13 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				txtTranslatorPrecisionSelect.Options = []CustomWidget.TextValueOption{
 					{Text: "float32 precision", Value: "float32"},
 					{Text: "float16 precision", Value: "float16"},
+					{Text: "int8_float16 precision", Value: "int8_float16"},
+					{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
+					{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
 				}
-				txtTranslatorPrecisionSelect.SetSelected("float32")
+				if !txtTranslatorPrecisionSelect.ContainsEntry(&s) {
+					txtTranslatorPrecisionSelect.SetSelectedIndex(0)
+				}
 				txtTranslatorPrecisionSelect.Disable()
 			}
 
