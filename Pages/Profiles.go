@@ -943,8 +943,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
 					{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
 				}
-				if !sttPrecisionSelect.ContainsEntry(&s) {
-					sttPrecisionSelect.SetSelectedIndex(0)
+				if selectedPrecision == "int8" || selectedPrecision == "int16" {
+					sttPrecisionSelect.SetSelected("float32")
 				}
 				//sttPrecisionSelect.Disable()
 				AIModelType = "m4t"
@@ -1102,9 +1102,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
 					{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
 				}
-				if !txtTranslatorPrecisionSelect.ContainsEntry(&s) {
-					txtTranslatorPrecisionSelect.SetSelectedIndex(0)
-				}
+				//if !txtTranslatorPrecisionSelect.ContainsEntry(&s) {
+				//	txtTranslatorPrecisionSelect.SetSelectedIndex(0)
+				//}
 				txtTranslatorPrecisionSelect.Disable()
 			}
 
