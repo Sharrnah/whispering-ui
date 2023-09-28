@@ -221,11 +221,11 @@ func init() {
 	Field.SourceLanguageCombo.ShowAllEntryText = "... show all"
 	Field.SourceLanguageCombo.Entry.PlaceHolder = "Select source language"
 	Field.SourceLanguageCombo.OnChanged = func(value string) {
-		// filter out the values of Field.TranscriptionSpeakerLanguageCombo.Options that do not contain the value
+		// filter out the values of Options that do not contain the value
 		var filteredValues []string
-		for i := 0; i < len(Field.SourceLanguageCombo.OptionsTextValue); i++ {
-			if strings.Contains(strings.ToLower(Field.SourceLanguageCombo.OptionsTextValue[i].Value), strings.ToLower(value)) {
-				filteredValues = append(filteredValues, Field.SourceLanguageCombo.OptionsTextValue[i].Value)
+		for i := 0; i < len(Field.SourceLanguageCombo.Options); i++ {
+			if len(Field.SourceLanguageCombo.Options) > i && strings.Contains(strings.ToLower(Field.SourceLanguageCombo.Options[i]), strings.ToLower(value)) {
+				filteredValues = append(filteredValues, Field.SourceLanguageCombo.Options[i])
 			}
 		}
 
@@ -258,7 +258,7 @@ func init() {
 		// filter out the values of Options that do not contain the value
 		var filteredValues []string
 		for i := 0; i < len(Field.TargetLanguageCombo.Options); i++ {
-			if strings.Contains(strings.ToLower(Field.TargetLanguageCombo.Options[i]), strings.ToLower(value)) {
+			if len(Field.TargetLanguageCombo.Options) > i && strings.Contains(strings.ToLower(Field.TargetLanguageCombo.Options[i]), strings.ToLower(value)) {
 				filteredValues = append(filteredValues, Field.TargetLanguageCombo.Options[i])
 			}
 		}
@@ -289,7 +289,7 @@ func init() {
 		// filter out the values of Options that do not contain the value
 		var filteredValues []string
 		for i := 0; i < len(Field.TargetLanguageTxtTranslateCombo.Options); i++ {
-			if strings.Contains(strings.ToLower(Field.TargetLanguageTxtTranslateCombo.Options[i]), strings.ToLower(value)) {
+			if len(Field.TargetLanguageTxtTranslateCombo.Options) > i && strings.Contains(strings.ToLower(Field.TargetLanguageTxtTranslateCombo.Options[i]), strings.ToLower(value)) {
 				filteredValues = append(filteredValues, Field.TargetLanguageTxtTranslateCombo.Options[i])
 			}
 		}
@@ -303,7 +303,7 @@ func init() {
 		// filter out the values of Options that do not contain the value
 		var filteredValues []string
 		for i := 0; i < len(Field.TranscriptionSpeakerLanguageCombo.Options); i++ {
-			if strings.Contains(strings.ToLower(Field.TranscriptionSpeakerLanguageCombo.Options[i]), strings.ToLower(value)) {
+			if len(Field.TranscriptionSpeakerLanguageCombo.Options) > i && strings.Contains(strings.ToLower(Field.TranscriptionSpeakerLanguageCombo.Options[i]), strings.ToLower(value)) {
 				filteredValues = append(filteredValues, Field.TranscriptionSpeakerLanguageCombo.Options[i])
 			}
 		}
@@ -329,7 +329,7 @@ func init() {
 		// filter out the values of Options that do not contain the value
 		var filteredValues []string
 		for i := 0; i < len(Field.TranscriptionTargetLanguageCombo.Options); i++ {
-			if strings.Contains(strings.ToLower(Field.TranscriptionTargetLanguageCombo.Options[i]), strings.ToLower(value)) {
+			if len(Field.TranscriptionTargetLanguageCombo.Options) > i && strings.Contains(strings.ToLower(Field.TranscriptionTargetLanguageCombo.Options[i]), strings.ToLower(value)) {
 				filteredValues = append(filteredValues, Field.TranscriptionTargetLanguageCombo.Options[i])
 			}
 		}
@@ -394,7 +394,7 @@ func init() {
 		// filter out the values of Field.TargetLanguageTxtTranslateCombo.Options that do not contain the value
 		var filteredValues []string
 		for i := 0; i < len(Field.OcrLanguageCombo.Options); i++ {
-			if strings.Contains(strings.ToLower(Field.OcrLanguageCombo.Options[i]), strings.ToLower(value)) {
+			if len(Field.OcrLanguageCombo.Options) > i && strings.Contains(strings.ToLower(Field.OcrLanguageCombo.Options[i]), strings.ToLower(value)) {
 				filteredValues = append(filteredValues, Field.OcrLanguageCombo.Options[i])
 			}
 		}
