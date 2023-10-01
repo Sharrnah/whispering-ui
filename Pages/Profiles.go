@@ -752,6 +752,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				txtTranslatorSizeSelect.Disable()
 				txtTranslatorPrecisionSelect.Disable()
 				txtTranslatorDeviceSelect.Disable()
+			} else {
+				txtTranslatorSizeSelect.Enable()
+				txtTranslatorPrecisionSelect.Enable()
+				txtTranslatorDeviceSelect.Enable()
 			}
 		}
 		sttPrecisionSelect.OnChanged = func(s CustomWidget.TextValueOption) {
@@ -803,6 +807,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				txtTranslatorSizeSelect.Disable()
 				txtTranslatorPrecisionSelect.Disable()
 				txtTranslatorDeviceSelect.Disable()
+			} else {
+				txtTranslatorSizeSelect.Enable()
+				txtTranslatorPrecisionSelect.Enable()
+				txtTranslatorDeviceSelect.Enable()
 			}
 		}
 
@@ -880,6 +888,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				txtTranslatorSizeSelect.Disable()
 				txtTranslatorPrecisionSelect.Disable()
 				txtTranslatorDeviceSelect.Disable()
+			} else {
+				txtTranslatorSizeSelect.Enable()
+				txtTranslatorPrecisionSelect.Enable()
+				txtTranslatorDeviceSelect.Enable()
 			}
 		}, 0)
 
@@ -966,12 +978,32 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				sttAiDeviceSelect.Disable()
 				AIModelType = "disabled"
 			}
+
+			/**
+			special case for Seamless M4T since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
+			*/
+			if txtTranslatorTypeSelect.GetSelected().Value == "Seamless_M4T" && s.Value == "seamless_m4t" {
+				if txtTranslatorSizeSelect.ContainsEntry(sttModelSize.GetSelected()) {
+					txtTranslatorSizeSelect.SetSelected(sttModelSize.GetSelected().Value)
+				}
+				txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
+				txtTranslatorDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
+				txtTranslatorSizeSelect.Disable()
+				txtTranslatorPrecisionSelect.Disable()
+				txtTranslatorDeviceSelect.Disable()
+			} else {
+				txtTranslatorSizeSelect.Enable()
+				txtTranslatorPrecisionSelect.Enable()
+				txtTranslatorDeviceSelect.Enable()
+			}
+
 			// calculate memory consumption
 			AIModel := ProfileAIModelOption{
 				AIModel:     "Whisper",
 				AIModelType: AIModelType,
 			}
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+
 		}
 
 		denoiseCheckbox := widget.NewCheck("A.I. Denoise", func(b bool) {})
@@ -1146,6 +1178,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				txtTranslatorSizeSelect.Disable()
 				txtTranslatorPrecisionSelect.Disable()
 				txtTranslatorDeviceSelect.Disable()
+			} else {
+				txtTranslatorSizeSelect.Enable()
+				txtTranslatorPrecisionSelect.Enable()
+				txtTranslatorDeviceSelect.Enable()
 			}
 
 			AIModel := ProfileAIModelOption{
