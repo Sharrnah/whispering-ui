@@ -1102,10 +1102,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
 					{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
 				}
-				//if !txtTranslatorPrecisionSelect.ContainsEntry(&s) {
-				//	txtTranslatorPrecisionSelect.SetSelectedIndex(0)
-				//}
-				txtTranslatorPrecisionSelect.Disable()
 			}
 
 			if s.Value == "M2M100" {
