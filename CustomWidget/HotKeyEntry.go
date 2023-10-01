@@ -9,6 +9,7 @@ import (
 
 var _ fyne.Widget = (*EntryWithPopupMenu)(nil)
 var _ fyne.Tabbable = (*EntryWithPopupMenu)(nil)
+var _ fyne.Focusable = (*EntryWithPopupMenu)(nil)
 
 type HotKeyEntryShortcuts struct {
 	Name    string
@@ -25,6 +26,8 @@ type HotKeyEntry struct {
 	popUp                   *widget.PopUpMenu
 	additionalMenuItems     []*fyne.MenuItem
 	shortcutSubmitFunctions []HotKeyEntryShortcuts
+
+	OnFocusChanged func(bool)
 
 	runeKey     string
 	modifierKey string
@@ -146,4 +149,18 @@ func (e *HotKeyEntry) UpdateHotkeyValue() {
 		entryText.WriteString(e.runeKey)
 	}
 	e.SetText(entryText.String())
+}
+
+func (e *HotKeyEntry) FocusLost() {
+	if e.OnFocusChanged != nil {
+		e.OnFocusChanged(false)
+	}
+	e.Entry.FocusLost()
+}
+
+func (e *HotKeyEntry) FocusGained() {
+	if e.OnFocusChanged != nil {
+		e.OnFocusChanged(true)
+	}
+	e.Entry.FocusGained()
 }

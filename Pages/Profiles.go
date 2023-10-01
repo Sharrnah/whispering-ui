@@ -1193,6 +1193,26 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			}
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
 		}, 0))
+
+		pushToTalkChanged := false
+		PushToTalkInput.OnChanged = func(s string) {
+			if s != "" && !isLoadingSettingsFile {
+				pushToTalkChanged = true
+			}
+		}
+		PushToTalkInput.OnFocusChanged = func(focusGained bool) {
+			if !focusGained && pushToTalkChanged && PushToTalkInput.Text != "" {
+				dialog.NewConfirm("Change speech trigger settings?", "You did set a PushToTalk Button.\nDo you want to set settings to trigger with only a Button press?", func(b bool) {
+					if b {
+						energySliderWidget.SetValue(0)
+						pauseSliderWidget.SetValue(0)
+						phraseLimitSliderWidget.SetValue(0)
+					}
+				}, fyne.CurrentApp().Driver().AllWindows()[1]).Show()
+				pushToTalkChanged = false
+			}
+		}
+
 		return profileForm
 	}
 
