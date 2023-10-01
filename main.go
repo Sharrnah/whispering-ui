@@ -121,7 +121,9 @@ func main() {
 			if !fyne.CurrentApp().Preferences().BoolWithFallback("DisableUiDownloads", false) {
 				RuntimeBackend.BackendsList[0].UiDownload = true
 			}
-			RuntimeBackend.BackendsList[0].Start()
+			if !Settings.Config.Run_backend_reconnect {
+				RuntimeBackend.BackendsList[0].Start()
+			}
 		}
 
 		// initialize main window

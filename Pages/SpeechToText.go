@@ -4,8 +4,12 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/widget"
+	"os"
+	"path/filepath"
 	"time"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Settings"
@@ -162,9 +166,52 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		nil, container.NewVBox(widget.NewSeparator(), widget.NewSeparator()), nil, nil,
 		Fields.Field.RealtimeResultLabel,
 	)
+
+	saveCsvButton := widget.NewButton("Save CSV", func() {
+		dialogSize := fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size()
+		dialogSize.Height = dialogSize.Height - 80
+		dialogSize.Width = dialogSize.Width - 80
+
+		saveStartingPath := fyne.CurrentApp().Preferences().StringWithFallback("LastCSVTranscriptionSavePath", "")
+
+		fileDialog := dialog.NewFileSave(func(writer fyne.URIWriteCloser, err error) {
+			if err == nil && writer != nil {
+				filePath := writer.URI().Path()
+				sendMessage := Fields.SendMessageStruct{
+					Type:  "save_transcription",
+					Value: filePath,
+				}
+				sendMessage.SendMessage()
+				fyne.CurrentApp().Preferences().SetString("LastCSVTranscriptionSavePath", filepath.Dir(filePath))
+			}
+		}, fyne.CurrentApp().Driver().AllWindows()[0])
+
+		fileDialog.SetFilter(storage.NewExtensionFileFilter([]string{".csv"}))
+		fileDialog.Resize(dialogSize)
+
+		if saveStartingPath != "" {
+			// check if folder exists
+			folderExists := false
+			if _, err := os.Stat(saveStartingPath); !os.IsNotExist(err) {
+				folderExists = true
+			}
+			if folderExists {
+				fileURI := storage.NewFileURI(saveStartingPath)
+				fileLister, _ := storage.ListerForURI(fileURI)
+
+				fileDialog.SetLocation(fileLister)
+			}
+		}
+		
+		fileDialog.SetFileName("transcription_" + time.Now().Format("2006-01-02_15-04-05") + ".csv")
+
+		fileDialog.Show()
+	})
+	lastResultLine := container.NewBorder(nil, nil, nil, saveCsvButton, Fields.Field.ProcessingStatus)
+
 	whisperResultContainer := container.NewMax(
 		container.NewBorder(
-			realtimeWhisperResultBlock, Fields.Field.ProcessingStatus, nil, nil,
+			realtimeWhisperResultBlock, lastResultLine, nil, nil,
 			Fields.Field.WhisperResultList,
 		),
 	)

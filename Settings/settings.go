@@ -82,6 +82,8 @@ type Conf struct {
 	Denoise_audio                 bool        `yaml:"denoise_audio" json:"denoise_audio"`                         // if enabled, audio will be de-noised before processing.
 	Denoise_audio_post_filter     bool        `yaml:"denoise_audio_post_filter" json:"denoise_audio_post_filter"` // Enable post filter for some minor, extra noise reduction.
 	Whisper_apply_voice_markers   bool        `yaml:"whisper_apply_voice_markers" json:"whisper_apply_voice_markers"`
+	Max_sentence_repetition       int         `yaml:"max_sentence_repetition" json:"max_sentence_repetition"`
+	Transcription_auto_save_file  string      `yaml:"transcription_auto_save_file" json:"transcription_auto_save_file"`
 
 	Silence_cutting_enabled   bool    `yaml:"silence_cutting_enabled" json:"silence_cutting_enabled"`
 	Silence_offset            float64 `yaml:"silence_offset" json:"silence_offset"`
@@ -104,9 +106,10 @@ type Conf struct {
 	Txt_translate_realtime   bool   `yaml:"txt_translate_realtime" json:"txt_translate_realtime"`
 
 	// websocket settings
-	Websocket_ip   string `yaml:"websocket_ip" json:"websocket_ip"`
-	Websocket_port int    `yaml:"websocket_port" json:"websocket_port"`
-	Run_backend    bool   `yaml:"run_backend" json:"run_backend"`
+	Websocket_ip          string `yaml:"websocket_ip" json:"websocket_ip"`
+	Websocket_port        int    `yaml:"websocket_port" json:"websocket_port"`
+	Run_backend           bool   `yaml:"run_backend" json:"run_backend"`
+	Run_backend_reconnect bool
 
 	// OSC settings
 	Osc_ip                             string  `yaml:"osc_ip" json:"osc_ip"`

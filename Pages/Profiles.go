@@ -1315,6 +1315,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Realtime_whisper_beam_size:    1,
 			Realtime_temperature_fallback: false,
 			Whisper_apply_voice_markers:   false,
+			Max_sentence_repetition:       -1,
+			Transcription_auto_save_file:  "",
 
 			Silence_cutting_enabled:   true,
 			Silence_offset:            -40.0,
@@ -1549,20 +1551,43 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			websocketAddr := profileSettings.Websocket_ip + ":" + strconv.Itoa(profileSettings.Websocket_port)
 			if Utilities.CheckPortInUse(websocketAddr) && profileSettings.Run_backend {
 				backendCheckStateDialog.Hide()
-				dialog.ShowConfirm("Websocket Port in use", "The Websocket Port is already in use. Do you want to quit the running backend?", func(b bool) {
-					if b {
-						err := Utilities.KillProcessById(Settings.Config.Process_id)
-						if err != nil {
-							err = Utilities.SendQuitMessage(websocketAddr)
-						}
-						if err != nil {
-							fmt.Printf("Failed to send quit message: %v\n", err)
-							dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
-						} else {
-							stopAndClose(playBackDevice, onClose)
-						}
+
+				backendCheckDialogContent := container.NewVBox()
+				backendCheckDialog := dialog.NewCustom("Websocket Port in use", "Cancel",
+					backendCheckDialogContent,
+					fyne.CurrentApp().Driver().AllWindows()[1],
+				)
+				buttonList := container.New(layout.NewGridLayout(2))
+				buttonList.Add(widget.NewButtonWithIcon("Reconnect", theme.MediaReplayIcon(), func() {
+					Settings.Config.Run_backend_reconnect = true
+					stopAndClose(playBackDevice, onClose)
+					backendCheckDialog.Hide()
+				}))
+				yesButton := widget.NewButtonWithIcon("Yes", theme.ConfirmIcon(), func() {
+					err := Utilities.KillProcessById(Settings.Config.Process_id)
+					if err != nil {
+						err = Utilities.SendQuitMessage(websocketAddr)
 					}
-				}, fyne.CurrentApp().Driver().AllWindows()[1])
+					if err != nil {
+						fmt.Printf("Failed to send quit message: %v\n", err)
+						dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
+					} else {
+						stopAndClose(playBackDevice, onClose)
+					}
+					backendCheckDialog.Hide()
+				})
+				yesButton.Importance = widget.HighImportance
+				buttonList.Add(yesButton)
+
+				backendCheckDialogContent.Add(
+					widget.NewLabelWithStyle("The Websocket Port is already in use.\nDo you want to quit the running backend or reconnect to it?", fyne.TextAlignCenter, fyne.TextStyle{}),
+				)
+
+				backendCheckDialogContent.Add(
+					container.New(layout.NewCenterLayout(), buttonList),
+				)
+
+				backendCheckDialog.Show()
 			} else {
 				backendCheckStateDialog.Hide()
 				stopAndClose(playBackDevice, onClose)
