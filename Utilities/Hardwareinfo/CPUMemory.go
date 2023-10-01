@@ -21,8 +21,12 @@ func GetCPUMemory() int64 {
 	memory, err := ghw.Memory()
 	if err != nil {
 		fmt.Printf("Error getting memory info: %v", err)
+		return 0
 	}
 
-	fmt.Printf("Memory: %v\n", memory)
-	return memory.TotalUsableBytes / 1024 / 1024
+	if memory != nil {
+		fmt.Printf("Memory: %v\n", memory)
+		return memory.TotalUsableBytes / 1024 / 1024
+	}
+	return 0
 }
