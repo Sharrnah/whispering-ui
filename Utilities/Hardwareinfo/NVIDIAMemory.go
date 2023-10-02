@@ -23,15 +23,17 @@ func HasNVIDIACard() bool {
 	gpu, err := ghw.GPU()
 	if err != nil {
 		fmt.Printf("Error getting GPU info: %v", err)
+		return false
 	}
 
 	fmt.Printf("GPU: %v\n", gpu)
-
-	for _, card := range gpu.GraphicsCards {
-		fmt.Printf(" %v\n", card)
-		if strings.ToLower(card.DeviceInfo.Vendor.Name) == strings.ToLower("NVIDIA") {
-			fmt.Printf("NVIDIA Card found.\n")
-			return true
+	if gpu != nil {
+		for _, card := range gpu.GraphicsCards {
+			fmt.Printf(" %v\n", card)
+			if strings.ToLower(card.DeviceInfo.Vendor.Name) == strings.ToLower("NVIDIA") {
+				fmt.Printf("NVIDIA Card found.\n")
+				return true
+			}
 		}
 	}
 	return false
