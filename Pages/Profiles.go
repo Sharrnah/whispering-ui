@@ -752,7 +752,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				txtTranslatorSizeSelect.Disable()
 				txtTranslatorPrecisionSelect.Disable()
 				txtTranslatorDeviceSelect.Disable()
-			} else {
+			} else if txtTranslatorTypeSelect.GetSelected().Value != "" {
 				txtTranslatorSizeSelect.Enable()
 				txtTranslatorPrecisionSelect.Enable()
 				txtTranslatorDeviceSelect.Enable()
@@ -807,7 +807,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				txtTranslatorSizeSelect.Disable()
 				txtTranslatorPrecisionSelect.Disable()
 				txtTranslatorDeviceSelect.Disable()
-			} else {
+			} else if txtTranslatorTypeSelect.GetSelected().Value != "" {
 				txtTranslatorSizeSelect.Enable()
 				txtTranslatorPrecisionSelect.Enable()
 				txtTranslatorDeviceSelect.Enable()
@@ -888,7 +888,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				txtTranslatorSizeSelect.Disable()
 				txtTranslatorPrecisionSelect.Disable()
 				txtTranslatorDeviceSelect.Disable()
-			} else {
+			} else if txtTranslatorTypeSelect.GetSelected().Value != "" {
 				txtTranslatorSizeSelect.Enable()
 				txtTranslatorPrecisionSelect.Enable()
 				txtTranslatorDeviceSelect.Enable()
@@ -991,7 +991,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				txtTranslatorSizeSelect.Disable()
 				txtTranslatorPrecisionSelect.Disable()
 				txtTranslatorDeviceSelect.Disable()
-			} else {
+			} else if txtTranslatorTypeSelect.GetSelected().Value != "" {
 				txtTranslatorSizeSelect.Enable()
 				txtTranslatorPrecisionSelect.Enable()
 				txtTranslatorDeviceSelect.Enable()
@@ -1098,15 +1098,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				selectedSize = selectedSizeOption.Value
 			}
 
-			if s.Value == "" {
-				txtTranslatorDeviceSelect.Disable()
-				txtTranslatorPrecisionSelect.Disable()
-				txtTranslatorSizeSelect.Disable()
-			} else {
-				txtTranslatorDeviceSelect.Enable()
-				txtTranslatorPrecisionSelect.Enable()
-				txtTranslatorSizeSelect.Enable()
-			}
+			txtTranslatorDeviceSelect.Enable()
+			txtTranslatorPrecisionSelect.Enable()
+			txtTranslatorSizeSelect.Enable()
+
+			modelType := s.Value
 
 			if s.Value == "NLLB200" {
 				txtTranslatorPrecisionSelect.Options = []CustomWidget.TextValueOption{
@@ -1134,6 +1130,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
 					{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
 				}
+			} else if s.Value == "" {
+				txtTranslatorPrecisionSelect.Disable()
+				txtTranslatorSizeSelect.Disable()
+				txtTranslatorDeviceSelect.Disable()
+				modelType = "N"
 			}
 
 			if s.Value == "M2M100" {
@@ -1160,11 +1161,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				}
 			}
 
-			modelType := s.Value
-			if s.Value == "" {
-				modelType = "N"
-			}
-
 			/**
 			special case for Seamless M4T since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
 			*/
@@ -1178,10 +1174,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				txtTranslatorSizeSelect.Disable()
 				txtTranslatorPrecisionSelect.Disable()
 				txtTranslatorDeviceSelect.Disable()
-			} else {
-				txtTranslatorSizeSelect.Enable()
-				txtTranslatorPrecisionSelect.Enable()
-				txtTranslatorDeviceSelect.Enable()
 			}
 
 			AIModel := ProfileAIModelOption{
