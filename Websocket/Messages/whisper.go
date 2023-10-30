@@ -24,7 +24,13 @@ func (res WhisperResult) Update() {
 	//	whisperResultsPart, _ := Fields.DataBindings.WhisperResultsDataBinding.Get()
 	//	Fields.DataBindings.WhisperResultsDataBinding.Set(whisperResultsPart[:199])
 	//}
+
 	Fields.DataBindings.WhisperResultsDataBinding.Prepend(res)
+	//Fields.Field.WhisperResultList.ScrollToTop()
+	//Fields.DataBindings.WhisperResultsDataBinding.Append(res)
+	//Fields.Field.WhisperResultList.ScrollToBottom()
+
+	//Fields.DataBindings.WhisperResultsDataBinding.Reload()
 
 	Fields.Field.WhisperResultList.Refresh()
 

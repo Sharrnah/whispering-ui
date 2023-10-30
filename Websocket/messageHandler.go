@@ -207,7 +207,7 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			TxtTranslationTarget: c.TxtTranslationTarget,
 		}
 
-		whisperResultMessage.Update()
+		go whisperResultMessage.Update()
 
 		// stop processing status
 		Fields.Field.ProcessingStatus.Stop()
@@ -280,7 +280,7 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			TxtTranslationTarget: c.TxtTranslationTarget,
 		}
 
-		whisperResultMessage.Update()
+		go whisperResultMessage.Update()
 
 		// stop processing status
 		Fields.Field.ProcessingStatus.Stop()
