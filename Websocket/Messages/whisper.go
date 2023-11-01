@@ -18,21 +18,32 @@ func (res WhisperResult) Update() {
 	//Fields.Field.TranscriptionInput.SetText(res.Text)
 	//Fields.Field.TranscriptionTranslationInput.SetText(res.TxtTranslation)
 
-	WhisperResults = append([]WhisperResult{res}, WhisperResults...)
-
 	//if Fields.DataBindings.WhisperResultsDataBinding.Length() >= 200 {
 	//	whisperResultsPart, _ := Fields.DataBindings.WhisperResultsDataBinding.Get()
 	//	Fields.DataBindings.WhisperResultsDataBinding.Set(whisperResultsPart[:199])
 	//}
 
 	Fields.DataBindings.WhisperResultsDataBinding.Prepend(res)
+
 	//Fields.Field.WhisperResultList.ScrollToTop()
 	//Fields.DataBindings.WhisperResultsDataBinding.Append(res)
 	//Fields.Field.WhisperResultList.ScrollToBottom()
 
 	//Fields.DataBindings.WhisperResultsDataBinding.Reload()
 
-	Fields.Field.WhisperResultList.Refresh()
+	//Fields.DataBindings.WhisperResultsDataBinding.Reload()
+
+	//Fields.Field.WhisperResultList.Refresh()
+
+	//go func() {
+	//	// wait for 100 milliseconds
+	//	time.Sleep(100 * time.Millisecond)
+	//
+	//	// Force reload of the data binding
+	//	Fields.DataBindings.WhisperResultsDataBinding.Reload()
+	//}()
+
+	WhisperResults = append([]WhisperResult{res}, WhisperResults...)
 
 	// resize new entry
 	//txtTranslationSize := fyne.MeasureText(res.TxtTranslation, 12, fyne.TextStyle{Bold: true})

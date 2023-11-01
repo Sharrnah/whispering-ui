@@ -3,7 +3,6 @@ package Websocket
 import (
 	"encoding/json"
 	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"log"
 	"strings"
@@ -58,7 +57,8 @@ func realtimeLabelHideTimer() {
 			}
 			realtimeLabelTimer = time.AfterFunc(5*time.Second, func() {
 				//Fields.Field.RealtimeResultLabel.Hide()
-				Fields.Field.RealtimeResultLabel.SetText("")
+				//Fields.Field.RealtimeResultLabel.SetText("")
+				Fields.DataBindings.WhisperResultIntermediateResult.Set("")
 			})
 			realtimeLabelTimerMutex.Unlock()
 		}
@@ -207,22 +207,28 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			TxtTranslationTarget: c.TxtTranslationTarget,
 		}
 
-		go whisperResultMessage.Update()
+		//go func() {
+		println("Whisper Result processing update call.")
 
-		// stop processing status
-		Fields.Field.ProcessingStatus.Stop()
-		Fields.Field.ProcessingStatus.Refresh()
+		go func(resultMsg_ Messages.WhisperResult) {
+			resultMsg_.Update()
 
-		Fields.Field.RealtimeResultLabel.SetText(c.Text)
-		Fields.Field.RealtimeResultLabel.Refresh()
+			// stop processing status
+			Fields.Field.ProcessingStatus.Stop()
+			//Fields.Field.ProcessingStatus.Refresh()
+
+			//Fields.Field.RealtimeResultLabel.SetText(whisperResultMessage.Text)
+			Fields.DataBindings.WhisperResultIntermediateResult.Set(resultMsg_.Text)
+		}(whisperResultMessage)
 
 		// force refresh of speech-to-text tab
-		if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
-			appTabs := fyne.CurrentApp().Driver().AllWindows()[0].Content().(*container.AppTabs)
-			if appTabs.Selected().Text == "Speech-to-Text" {
-				appTabs.Selected().Content.Refresh()
-			}
-		}
+		//if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
+		//	appTabs := fyne.CurrentApp().Driver().AllWindows()[0].Content().(*container.AppTabs)
+		//	if appTabs.Selected().Text == "Speech-to-Text" {
+		//		appTabs.Selected().Content.Refresh()
+		//	}
+		//}
+		//}()
 
 		select {
 		// reset processing status timer
@@ -267,7 +273,10 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			log.Println(err)
 			return
 		}
-		Messages.OcrResult.Update()
+
+		go func(ocrResult_ Messages.OcrResultData) {
+			ocrResult_.Update()
+		}(Messages.OcrResult)
 
 	// special case for LLM plugin
 	case "llm_answer":
@@ -280,11 +289,16 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			TxtTranslationTarget: c.TxtTranslationTarget,
 		}
 
-		go whisperResultMessage.Update()
+		go func(resultMsg_ Messages.WhisperResult) {
+			resultMsg_.Update()
+
+			// stop processing status
+			Fields.Field.ProcessingStatus.Stop()
+		}(whisperResultMessage)
 
 		// stop processing status
-		Fields.Field.ProcessingStatus.Stop()
-		Fields.Field.ProcessingStatus.Refresh()
+		//Fields.Field.ProcessingStatus.Stop()
+		//Fields.Field.ProcessingStatus.Refresh()
 
 	case "processing_start":
 		var processingStarted = false
@@ -293,18 +307,20 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			log.Println(err)
 			return
 		}
-		if processingStarted {
-			Fields.Field.ProcessingStatus.Start()
-			Fields.Field.ProcessingStatus.Refresh()
-			select {
-			// reset processing status timer
-			case resetProcessingStopTimer <- true:
-			default:
+		go func(processStarted_ bool) {
+			if processStarted_ {
+				Fields.Field.ProcessingStatus.Start()
+				Fields.Field.ProcessingStatus.Refresh()
+				select {
+				// reset processing status timer
+				case resetProcessingStopTimer <- true:
+				default:
+				}
+			} else {
+				Fields.Field.ProcessingStatus.Stop()
+				Fields.Field.ProcessingStatus.Refresh()
 			}
-		} else {
-			Fields.Field.ProcessingStatus.Stop()
-			Fields.Field.ProcessingStatus.Refresh()
-		}
+		}(processingStarted)
 	case "processing_data":
 		var processingData = ""
 		err = json.Unmarshal(c.Data, &processingData)
@@ -312,12 +328,17 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			log.Println(err)
 			return
 		}
+
 		if processingData != "" {
+			go func(procData_ string) {
+				Fields.DataBindings.WhisperResultIntermediateResult.Set(procData_)
+			}(processingData)
+
 			Fields.Field.ProcessingStatus.Start()
-			Fields.Field.ProcessingStatus.Refresh()
+			//Fields.Field.ProcessingStatus.Refresh()
 			Fields.Field.RealtimeResultLabel.Show()
-			Fields.Field.RealtimeResultLabel.SetText(processingData)
-			Fields.Field.RealtimeResultLabel.Refresh()
+			//Fields.Field.RealtimeResultLabel.SetText(processingData)
+			//Fields.Field.RealtimeResultLabel.Refresh()
 			select {
 			// reset hide realtime label timer
 			case resetRealtimeLabelHideTimer <- true:
@@ -360,8 +381,8 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			}
 			return
 		}
-		go func() {
-			err = download.StartDownload()
+		go func(dl_ Messages.DownloadMessage) {
+			err = dl_.StartDownload()
 			if err != nil {
 				if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
 					dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[0])
@@ -371,7 +392,7 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
 				fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Content().Refresh()
 			}
-		}()
+		}(download)
 	}
 
 	// set focus to main window

@@ -2,12 +2,14 @@ package Pages
 
 import (
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/widget"
+	"image/color"
 	"os"
 	"path/filepath"
 	"time"
@@ -46,10 +48,14 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		container.NewBorder(nil, Fields.Field.TranscriptionTranslationInputHint, nil, nil, Fields.Field.TranscriptionTranslationInput),
 	)
 
+	beginLine := canvas.NewHorizontalGradient(&color.NRGBA{R: 198, G: 123, B: 0, A: 255}, &color.NRGBA{R: 198, G: 123, B: 0, A: 0})
+	beginLine.Resize(fyne.NewSize(Fields.Field.SttEnabled.Size().Width, 2))
+
 	// quick options row
 	quickOptionsRow := container.New(
 		layout.NewVBoxLayout(),
 		Fields.Field.SttEnabled,
+		container.NewGridWithColumns(2, beginLine),
 		Fields.Field.TextTranslateEnabled,
 		Fields.Field.TtsEnabled,
 		container.NewHBox(
@@ -202,12 +208,12 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 				fileDialog.SetLocation(fileLister)
 			}
 		}
-		
+
 		fileDialog.SetFileName("transcription_" + time.Now().Format("2006-01-02_15-04-05") + ".csv")
 
 		fileDialog.Show()
 	})
-	lastResultLine := container.NewBorder(nil, nil, nil, saveCsvButton, Fields.Field.ProcessingStatus)
+	lastResultLine := container.NewBorder(nil, nil, saveCsvButton, nil, Fields.Field.ProcessingStatus)
 
 	whisperResultContainer := container.NewMax(
 		container.NewBorder(

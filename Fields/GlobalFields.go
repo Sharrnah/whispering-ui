@@ -46,7 +46,7 @@ var Field = struct {
 	OcrImageContainer                 *fyne.Container
 	LogText                           *terminal.Terminal
 }{
-	RealtimeResultLabel: widget.NewLabel(""),
+	RealtimeResultLabel: widget.NewLabelWithData(DataBindings.WhisperResultIntermediateResult),
 	ProcessingStatus:    nil,
 	WhisperResultList:   nil,
 	TranscriptionTaskCombo: widget.NewSelect([]string{"transcribe", "translate (to English)"}, func(value string) {

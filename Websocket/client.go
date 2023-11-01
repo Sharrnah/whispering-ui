@@ -8,6 +8,7 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
 	"github.com/gorilla/websocket"
+	"io"
 	"log"
 	"net/url"
 	"os"
@@ -16,6 +17,10 @@ import (
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
+)
+
+const (
+	maxMessageSize = 8192
 )
 
 func messageLoader(c interface{}, message []byte) (interface{}, error) {
@@ -95,6 +100,7 @@ func (c *Client) Start() {
 	previouslyConnected = true
 
 	defer c.Conn.Close()
+	//c.Conn.SetReadLimit(maxMessageSize)
 
 	done := make(chan struct{})
 
@@ -116,7 +122,7 @@ func (c *Client) Start() {
 
 		defer close(done)
 		for {
-			_, message, err := c.Conn.ReadMessage()
+			messageType, r, err := c.Conn.NextReader()
 			if err != nil {
 				log.Println("read:", err)
 				// retry
@@ -127,7 +133,7 @@ func (c *Client) Start() {
 						previouslyConnected = false
 					}
 					c.Conn, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
-					time.Sleep(500)
+					time.Sleep(500 * time.Millisecond) // make sure to multiply by time.Millisecond
 					connectingStateDialog.Hide()
 				}
 				if runBackend {
@@ -140,20 +146,45 @@ func (c *Client) Start() {
 					sendMessage.SendMessage()
 				}
 				continue
-				//return
 			}
 
 			previouslyConnected = true
 
-			var msg MessageStruct
-			if message != nil && len(message) > 0 {
-				messageStruct := msg.GetMessage(message)
-				if messageStruct != nil {
-					msg.HandleReceiveMessage()
+			// Read the message using io.Reader
+			// buf := make([]byte, 1024)
+			buf := make([]byte, 4096)
+			var fullMessage []byte
+			for {
+				n, err := r.Read(buf)
+				if err == io.EOF {
+					break
 				}
+				if err != nil {
+					log.Println("Error reading message:", err)
+					return
+				}
+				fullMessage = append(fullMessage, buf[:n]...)
 			}
 
-			//log.Printf("recv: %s", msg)
+			if messageType == websocket.TextMessage {
+				log.Println("Received text message")
+			} else if messageType == websocket.BinaryMessage {
+				log.Println("Received binary message")
+			} else {
+				log.Println("Received unknown message type:", messageType)
+			}
+
+			if messageType == websocket.TextMessage || messageType == websocket.BinaryMessage {
+				if fullMessage != nil && len(fullMessage) > 0 {
+					go func(data []byte) { // Concurrent message handling
+						var msg MessageStruct
+						messageStruct := msg.GetMessage(data)
+						if messageStruct != nil {
+							msg.HandleReceiveMessage()
+						}
+					}(fullMessage)
+				}
+			}
 		}
 	}()
 
