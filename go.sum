@@ -38,9 +38,9 @@ cloud.google.com/go/storage v1.8.0/go.mod h1:Wv1Oy7z6Yz3DshWRJFhqM/UCfaWIRTdp0RX
 cloud.google.com/go/storage v1.10.0/go.mod h1:FLPqc6j+Ki4BU591ie1oL6qBQGu2Bl/tZ9ullr3+Kg0=
 dmitri.shuralyov.com/gpu/mtl v0.0.0-20190408044501-666a987793e9/go.mod h1:H6x//7gZCb22OMCxBHrMx7a5I7Hp++hsVxbQ4BYO7hU=
 fyne.io/fyne v1.4.2/go.mod h1:xL4c3WmpE/Tvz5CEm5vqsaizU/EeOCm9DYlL2GtTSiM=
-fyne.io/fyne/v2 v2.2.0 h1:7LoUyChpADjki8mxcb5Xm/ykZdBX9PHAKeymAkthEtk=
-fyne.io/fyne/v2 v2.2.0/go.mod h1:Jl/dcptOV4NZWSK1PlxDbO+jFeQBHzUqDUUsKiP0EQ0=
-fyne.io/systray v1.9.1-0.20220523202515-bb6f1d955cff/go.mod h1:N4ZU0i34X+n8soFRlBNkmJTunw9wD+9jIP19fSZpjSI=
+fyne.io/fyne/v2 v2.2.4 h1:izyiDUjJYAB7B/MST7M9GDs+mQ0CwDgRZTiVJZQoEe4=
+fyne.io/fyne/v2 v2.2.4/go.mod h1:MBoGuHzLLSXdQOWFAwWhIhYTEMp33zqtGCReSWhaQTA=
+fyne.io/systray v1.10.1-0.20220621085403-9a2652634e93/go.mod h1:oM2AQqGJ1AMo4nNqZFYU8xYygSBZkW2hmdJ7n4yjedE=
 fyne.io/systray v1.10.1-0.20230722100817-88df1e0ffa9a h1:6Xf9fP3/mt72NrqlQhJWhQGcNf6GoG9X96NTaXr+K6A=
 fyne.io/systray v1.10.1-0.20230722100817-88df1e0ffa9a/go.mod h1:oM2AQqGJ1AMo4nNqZFYU8xYygSBZkW2hmdJ7n4yjedE=
 github.com/ActiveState/termtest/conpty v0.5.0 h1:JLUe6YDs4Jw4xNPCU+8VwTpniYOGeKzQg4SM2YHQNA8=
@@ -325,6 +325,7 @@ github.com/stretchr/testify v1.5.1/go.mod h1:5W2xD1RspED5o8YsWQXVCued0rvSQ+mT+I5
 github.com/stretchr/testify v1.6.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.7.0/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
 github.com/stretchr/testify v1.7.1/go.mod h1:6Fq8oRcR53rry900zMqJjRRixrwX3KX962/h/Wwjteg=
+github.com/stretchr/testify v1.7.2/go.mod h1:R6va5+xMeoiuVRoj+gSkQ7d3FALtqAAGI1FQKckRals=
 github.com/stretchr/testify v1.8.0/go.mod h1:yNjHg4UonilssWZ8iaSj1OCr/vHnekPRkoO+kdMU+MU=
 github.com/stretchr/testify v1.8.4 h1:CcVxjf3Q8PM0mHUKJCdn+eZZtm5yQwehR5yeSVQQcUk=
 github.com/stretchr/testify v1.8.4/go.mod h1:sz/lmYIOXD/1dqDmKjjqLyZ2RngseejIcXlSw2iwfAo=

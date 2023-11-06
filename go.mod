@@ -5,7 +5,7 @@ go 1.20
 replace github.com/fyne-io/terminal => github.com/Sharrnah/terminal v0.0.0-20231009095144-0814cfd3013e
 
 require (
-	fyne.io/fyne/v2 v2.2.0
+	fyne.io/fyne/v2 v2.2.4
 	github.com/dustin/go-humanize v1.0.0
 	github.com/fyne-io/terminal v0.0.0-20231009085607-0814cfd3013e
 	github.com/gen2brain/malgo v0.11.10
