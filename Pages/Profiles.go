@@ -825,9 +825,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Small (English only)", Value: "small.en"},
 			{Text: "Medium", Value: "medium"},
 			{Text: "Medium (English only)", Value: "medium.en"},
-			{Text: "Large (Defaults to V2)", Value: "large-v2"},
 			{Text: "Large V1", Value: "large-v1"},
 			{Text: "Large V2", Value: "large-v2"},
+			{Text: "Large V3", Value: "large-v3"},
 		}
 
 		fasterWhisperModelList := []CustomWidget.TextValueOption{
@@ -870,6 +870,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			sizeName := strings.Split(s.Value, ".")[0]
 			sizeName, _ = strings.CutSuffix(sizeName, "-v1")
 			sizeName, _ = strings.CutSuffix(sizeName, "-v2")
+			sizeName, _ = strings.CutSuffix(sizeName, "-v3")
 
 			// calculate memory consumption
 			AIModel := ProfileAIModelOption{
