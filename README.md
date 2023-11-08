@@ -30,10 +30,18 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
    - Text-to-Speech
    - Recognition and Translation of in-game images
    - Displaying the results in a web browser or VRChat, using Websockets or OSC
+- **Loopback audio device** support to capture PC audio without additional tools
 - **Save** and **load** configurations
 - **Preview** if your selected Audio devices are working
-- **Plugin** support for **additional features** (e.g. **Large Language Models**, **Emotion Prediction** or **Currently Playing Song** Plugins)
-  - [Find a list of Plugins here.](https://github.com/Sharrnah/whispering/blob/main/documentation/plugins.md) 
+- **Plugin** support for **additional features** ([Find a list of Plugins here](https://github.com/Sharrnah/whispering/blob/main/documentation/plugins.md))
+  - *Realtime Subtitles Plugin*
+  - *Many Text2Speech Plugins*
+  - *Emotion Prediction Plugin*
+  - *Currently Playing Song Plugin*
+  - *Subtitle Export Plugin*
+  - *Retrieval-based Voice Conversion (RVC) Plugin*
+  - *Large Language Models Plugin*
+  - *and more...*
 - **Auto-Update** to the latest version of **Whispering Tiger**.
 
 ## Download
@@ -103,10 +111,12 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 > - Enable **Write log to file** to save the log to a file.
 
 ### Plugins Setup
-- Select your desired Plugin from the [list of Plugins here.](https://github.com/Sharrnah/whispering/blob/main/documentation/plugins.md)
-- Download the `*.py` file and place it in the **Plugins** folder.
-- Restart the application.
-- The Plugin should now be available in the **Advanced** -> **Plugins** tab.
+- Install Plugins using the UI directly, or..
+- Install Plugins manually.
+   - Select your desired Plugin from the [list of Plugins here.](https://github.com/Sharrnah/whispering/blob/main/documentation/plugins.md)
+   - Download the `*.py` file and place it in the **Plugins** folder.
+   - Restart the application.
+   - The Plugin should now be available in the **Plugins** tab.
 
 > **Note:**
 > <br>
