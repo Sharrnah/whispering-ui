@@ -21,14 +21,23 @@ func (res InstalledLanguagesListing) Update() *InstalledLanguagesListing {
 	Fields.Field.TargetLanguageTxtTranslateCombo.Options = nil
 	Fields.Field.SourceLanguageCombo.Options = nil
 	Fields.Field.SourceLanguageCombo.OptionsTextValue = nil
+	Fields.Field.SourceLanguageTxtTranslateCombo.Options = nil
 
 	// fill language text translate target combo-boxes (without None value)
 	for _, element := range InstalledLanguages.Languages {
-		Fields.Field.TargetLanguageTxtTranslateCombo.Options = append(Fields.Field.TargetLanguageTxtTranslateCombo.Options, element.Name)
 		Fields.Field.TargetLanguageCombo.Options = append(Fields.Field.TargetLanguageCombo.Options, element.Name)
+		Fields.Field.TargetLanguageCombo.OptionsTextValue = append(Fields.Field.TargetLanguageCombo.OptionsTextValue, CustomWidget.TextValueOption{
+			Text:  element.Name,
+			Value: element.Name,
+		})
+		Fields.Field.TargetLanguageTxtTranslateCombo.Options = append(Fields.Field.TargetLanguageTxtTranslateCombo.Options, element.Name)
+		Fields.Field.TargetLanguageTxtTranslateCombo.OptionsTextValue = append(Fields.Field.TargetLanguageTxtTranslateCombo.OptionsTextValue, CustomWidget.TextValueOption{
+			Text:  element.Name,
+			Value: element.Name,
+		})
 	}
-	Fields.Field.TargetLanguageTxtTranslateCombo.ResetOptionsFilter()
 	Fields.Field.TargetLanguageCombo.ResetOptionsFilter()
+	Fields.Field.TargetLanguageTxtTranslateCombo.ResetOptionsFilter()
 
 	// Add None entry
 	InstalledLanguages.Languages = append([]InstalledLanguage{
@@ -50,7 +59,13 @@ func (res InstalledLanguagesListing) Update() *InstalledLanguagesListing {
 			Text:  elementName,
 			Value: elementName,
 		})
+		Fields.Field.SourceLanguageTxtTranslateCombo.Options = append(Fields.Field.SourceLanguageTxtTranslateCombo.Options, elementName)
+		Fields.Field.SourceLanguageTxtTranslateCombo.OptionsTextValue = append(Fields.Field.SourceLanguageTxtTranslateCombo.OptionsTextValue, CustomWidget.TextValueOption{
+			Text:  elementName,
+			Value: elementName,
+		})
 		Fields.Field.SourceLanguageCombo.ResetOptionsFilter()
+		Fields.Field.SourceLanguageTxtTranslateCombo.ResetOptionsFilter()
 	}
 
 	return &res

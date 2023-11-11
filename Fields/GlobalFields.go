@@ -33,7 +33,8 @@ var Field = struct {
 	TranscriptionTranslationInputHint *canvas.Text
 	SourceLanguageCombo               *CustomWidget.CompletionEntry
 	TargetLanguageCombo               *CustomWidget.CompletionEntry
-	TargetLanguageTxtTranslateCombo   *CustomWidget.CompletionEntry
+	SourceLanguageTxtTranslateCombo   *CustomWidget.CompletionEntry // used in OCR tab
+	TargetLanguageTxtTranslateCombo   *CustomWidget.CompletionEntry // used in OCR tab
 	TtsModelCombo                     *widget.Select
 	TtsVoiceCombo                     *widget.Select
 	TextTranslateEnabled              *widget.Check
@@ -138,6 +139,7 @@ var Field = struct {
 	TranscriptionTranslationInputHint: canvas.NewText("0", color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}),
 	SourceLanguageCombo:               CustomWidget.NewCompletionEntry([]string{"Auto"}),
 	TargetLanguageCombo:               CustomWidget.NewCompletionEntry([]string{"None"}),
+	SourceLanguageTxtTranslateCombo:   CustomWidget.NewCompletionEntry([]string{"Auto"}),
 	TargetLanguageTxtTranslateCombo:   CustomWidget.NewCompletionEntry([]string{"None"}),
 	TtsModelCombo: widget.NewSelect([]string{}, func(value string) {
 		sendMessage := SendMessageStruct{
@@ -281,6 +283,21 @@ func init() {
 		Field.TextTranslateEnabled.Refresh()
 
 		log.Println("Select set to", value)
+	}
+
+	Field.SourceLanguageTxtTranslateCombo.ShowAllEntryText = "... show all"
+	Field.SourceLanguageTxtTranslateCombo.Entry.PlaceHolder = "Select source language"
+	Field.SourceLanguageTxtTranslateCombo.OnChanged = func(value string) {
+		// filter out the values of Options that do not contain the value
+		var filteredValues []string
+		for i := 0; i < len(Field.SourceLanguageTxtTranslateCombo.Options); i++ {
+			if len(Field.SourceLanguageTxtTranslateCombo.Options) > i && strings.Contains(strings.ToLower(Field.SourceLanguageTxtTranslateCombo.Options[i]), strings.ToLower(value)) {
+				filteredValues = append(filteredValues, Field.SourceLanguageTxtTranslateCombo.Options[i])
+			}
+		}
+
+		Field.SourceLanguageTxtTranslateCombo.SetOptionsFilter(filteredValues)
+		Field.SourceLanguageTxtTranslateCombo.ShowCompletion()
 	}
 
 	Field.TargetLanguageTxtTranslateCombo.ShowAllEntryText = "... show all"

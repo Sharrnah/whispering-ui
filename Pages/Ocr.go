@@ -30,7 +30,7 @@ func CreateOcrWindow() fyne.CanvasObject {
 
 		valueIso := Messages.OcrLanguagesList.GetCodeByName(value)
 		if valueIso == "" {
-			valueObj := Fields.Field.SourceLanguageCombo.GetValueOptionEntryByText(value)
+			valueObj := Fields.Field.SourceLanguageTxtTranslateCombo.GetValueOptionEntryByText(value)
 			value = valueObj.Value
 
 			valueIso = Messages.OcrLanguagesList.GetCodeByName(value)
@@ -56,10 +56,10 @@ func CreateOcrWindow() fyne.CanvasObject {
 		ocrLanguageCode := Messages.OcrLanguagesList.GetCodeByName(Fields.Field.OcrLanguageCombo.Text)
 
 		fromLang := ""
-		if len(Fields.Field.SourceLanguageCombo.OptionsTextValue) > 0 {
-			fromLang = Messages.InstalledLanguages.GetCodeByName(Fields.Field.SourceLanguageCombo.GetValueOptionEntryByText(Fields.Field.SourceLanguageCombo.Text).Value)
+		if len(Fields.Field.SourceLanguageTxtTranslateCombo.OptionsTextValue) > 0 {
+			fromLang = Messages.InstalledLanguages.GetCodeByName(Fields.Field.SourceLanguageTxtTranslateCombo.GetValueOptionEntryByText(Fields.Field.SourceLanguageTxtTranslateCombo.Text).Value)
 		} else {
-			fromLang = Messages.InstalledLanguages.GetCodeByName(Fields.Field.SourceLanguageCombo.Text)
+			fromLang = Messages.InstalledLanguages.GetCodeByName(Fields.Field.SourceLanguageTxtTranslateCombo.Text)
 		}
 		if fromLang == "" || fromLang == "Auto" {
 			fromLang = "auto"
@@ -101,7 +101,7 @@ func CreateOcrWindow() fyne.CanvasObject {
 		ocrButton,
 	)
 
-	sourceLanguageForm := container.New(layout.NewFormLayout(), widget.NewLabel("Source Language:"), Fields.Field.SourceLanguageCombo)
+	sourceLanguageForm := container.New(layout.NewFormLayout(), widget.NewLabel("Source Language:"), Fields.Field.SourceLanguageTxtTranslateCombo)
 	targetLanguageForm := container.New(layout.NewFormLayout(), widget.NewLabel("Target Language:"), Fields.Field.TargetLanguageTxtTranslateCombo)
 	languageRow := container.New(layout.NewGridLayout(2), sourceLanguageForm, targetLanguageForm)
 
