@@ -72,12 +72,15 @@ func (res TranslateSetting) Update() *TranslateSetting {
 		Fields.Field.SourceLanguageCombo.Text = cases.Title(language.English, cases.Compact).String(InstalledLanguages.GetNameByCode(res.Src_lang))
 		if Fields.Field.SourceLanguageTxtTranslateCombo.Text == "" {
 			Fields.Field.SourceLanguageTxtTranslateCombo.Text = cases.Title(language.English, cases.Compact).String(InstalledLanguages.GetNameByCode(res.Src_lang))
-			Fields.Field.SourceLanguageTxtTranslateCombo.ResetOptionsFilter()
 		}
 	} else if Fields.Field.SourceLanguageCombo.Text == "" && strings.ToLower(res.Src_lang) == "auto" {
 		Fields.Field.SourceLanguageCombo.Text = cases.Title(language.English, cases.Compact).String(res.Src_lang)
+		if Fields.Field.SourceLanguageTxtTranslateCombo.Text == "" {
+			Fields.Field.SourceLanguageTxtTranslateCombo.Text = cases.Title(language.English, cases.Compact).String(res.Src_lang)
+		}
 	}
 	Fields.Field.SourceLanguageCombo.ResetOptionsFilter()
+	Fields.Field.SourceLanguageTxtTranslateCombo.ResetOptionsFilter()
 
 	// Set TargetLanguageCombo
 	if strings.ToLower(Fields.Field.TargetLanguageCombo.Text) != strings.ToLower(InstalledLanguages.GetNameByCode(res.Trg_lang)) {

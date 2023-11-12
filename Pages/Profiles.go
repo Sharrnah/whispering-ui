@@ -843,6 +843,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Large V1", Value: "large-v1"},
 			{Text: "Large V2", Value: "large-v2"},
 			{Text: "Large V3", Value: "large-v3"},
+			{Text: "Medium Distilled (English)", Value: "medium-distilled.en"},
+			{Text: "Large V2 Distilled (English)", Value: "large-distilled-v2.en"},
 			{Text: "Small (European finetune)", Value: "small.eu"},
 			{Text: "Medium (European finetune)", Value: "medium.eu"},
 			{Text: "Small (German finetune)", Value: "small.de"},

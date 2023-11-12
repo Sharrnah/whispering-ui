@@ -19,6 +19,8 @@ var Models = []AIModel{
 	{"WhisperCT2_small", 1873.0},
 	{"WhisperCT2_medium", 3905.0},
 	{"WhisperCT2_large", 6985.0},
+	{"WhisperCT2_medium-distilled", 1898.0},
+	{"WhisperCT2_large-distilled", 3339.0},
 	// Speech T5
 	{"Whispert5_tiny", 927.0},
 	{"Whispert5_base", 927.0},
