@@ -132,7 +132,8 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 - [**Larger UI Scaling (VR-Mode)**](doc/advanced.md#larger-ui-scaling--vr-mode-)
 
 ## Additional Help
-- For additional Help, you can join the Discord Server: [**Whispering Tiger**](https://discord.gg/V7X6xa2B2v)
+For additional Help, you can join
+- [<img src="doc/images/discord-logo.png" width=50 alt="Discord Server - Whispering Tiger"> **Whispering Tiger on Discord**](https://discord.gg/V7X6xa2B2v)
 
 ## Screenshots
 <img src=doc/images/profile-selection.png width=845 alt="profile selection">
