@@ -109,6 +109,7 @@ func main() {
 			RuntimeBackend.BackendsList[0].AttachEnvironment("PYTHONIOENCODING", "UTF-8")
 			RuntimeBackend.BackendsList[0].AttachEnvironment("PYTHONLEGACYWINDOWSSTDIO", "UTF-8")
 			RuntimeBackend.BackendsList[0].AttachEnvironment("PYTHONUTF8", "1")
+			RuntimeBackend.BackendsList[0].AttachEnvironment("CT2_CUDA_ALLOW_FP16", "1")
 		}
 		// RuntimeBackend.BackendsList[0].AttachEnvironment("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
 		if Utilities.FileExists("ffmpeg/bin/ffmpeg.exe") {

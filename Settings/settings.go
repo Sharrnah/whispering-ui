@@ -83,7 +83,10 @@ type Conf struct {
 	Denoise_audio_post_filter     bool        `yaml:"denoise_audio_post_filter" json:"denoise_audio_post_filter"` // Enable post filter for some minor, extra noise reduction.
 	Whisper_apply_voice_markers   bool        `yaml:"whisper_apply_voice_markers" json:"whisper_apply_voice_markers"`
 	Max_sentence_repetition       int         `yaml:"max_sentence_repetition" json:"max_sentence_repetition"`
-	Transcription_auto_save_file  string      `yaml:"transcription_auto_save_file" json:"transcription_auto_save_file"`
+
+	Transcription_auto_save_file           string `yaml:"transcription_auto_save_file" json:"transcription_auto_save_file"`
+	Transcription_auto_save_continous_text bool   `yaml:"transcription_auto_save_continous_text" json:"transcription_auto_save_continous_text"`
+	Transcription_save_audio_dir           string `yaml:"transcription_save_audio_dir" json:"transcription_save_audio_dir"`
 
 	Silence_cutting_enabled   bool    `yaml:"silence_cutting_enabled" json:"silence_cutting_enabled"`
 	Silence_offset            float64 `yaml:"silence_offset" json:"silence_offset"`
