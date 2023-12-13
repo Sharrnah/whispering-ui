@@ -1,6 +1,7 @@
 package Messages
 
 import (
+	"strings"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
 )
@@ -73,7 +74,7 @@ func (res InstalledLanguagesListing) Update() *InstalledLanguagesListing {
 
 func (res InstalledLanguagesListing) GetCodeByName(name string) string {
 	for _, entry := range res.Languages {
-		if entry.Name == name {
+		if strings.ToLower(entry.Name) == strings.ToLower(name) {
 			return entry.Code
 		}
 	}
@@ -82,7 +83,7 @@ func (res InstalledLanguagesListing) GetCodeByName(name string) string {
 
 func (res InstalledLanguagesListing) GetNameByCode(code string) string {
 	for _, entry := range res.Languages {
-		if entry.Code == code {
+		if strings.ToLower(entry.Code) == strings.ToLower(code) {
 			return entry.Name
 		}
 	}
