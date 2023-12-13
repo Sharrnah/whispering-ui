@@ -85,14 +85,19 @@ func (c *Client) Start() {
 	connectingStateContainer.Add(widget.NewLabel("Connecting to " + u.String()))
 	connectingStateDialog.Show()
 
+	// create websocket dialer
+	dialer := websocket.DefaultDialer
+	dialer.EnableCompression = true
+	dialer.HandshakeTimeout = 120 * time.Second
+
 	var err error = nil
-	c.Conn, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
+	c.Conn, _, err = dialer.Dial(u.String(), nil)
 	// retry
 	for err != nil {
 		log.Println("dial:", err)
 		time.Sleep(500)
 		log.Println("retrying... ")
-		c.Conn, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
+		c.Conn, _, err = dialer.Dial(u.String(), nil)
 	}
 	time.Sleep(100)
 
@@ -106,16 +111,16 @@ func (c *Client) Start() {
 
 	go func() {
 		// send remote settings request if running remote backend
-		if !runBackend {
-			sendMessage := Fields.SendMessageStruct{
-				Type: "setting_update_req",
-			}
-			sendMessage.SendMessage()
-		} else {
+		if runBackend {
 			// send info that backend is running locally
 			sendMessage := Fields.SendMessageStruct{
 				Type:  "ui_connected",
 				Value: true,
+			}
+			sendMessage.SendMessage()
+		} else {
+			sendMessage := Fields.SendMessageStruct{
+				Type: "setting_update_req",
 			}
 			sendMessage.SendMessage()
 		}
@@ -132,7 +137,7 @@ func (c *Client) Start() {
 						connectingStateDialog.Show()
 						previouslyConnected = false
 					}
-					c.Conn, _, err = websocket.DefaultDialer.Dial(u.String(), nil)
+					c.Conn, _, err = dialer.Dial(u.String(), nil)
 					time.Sleep(500 * time.Millisecond) // make sure to multiply by time.Millisecond
 					connectingStateDialog.Hide()
 				}
@@ -142,6 +147,11 @@ func (c *Client) Start() {
 					sendMessage := Fields.SendMessageStruct{
 						Type:  "ui_connected",
 						Value: true,
+					}
+					sendMessage.SendMessage()
+				} else {
+					sendMessage := Fields.SendMessageStruct{
+						Type: "setting_update_req",
 					}
 					sendMessage.SendMessage()
 				}

@@ -477,6 +477,22 @@ func HandleSendMessage(sendMessage *Fields.SendMessageStruct) {
 			} else {
 				sendMessage.Value = SkipMessage
 			}
+		case "txt_translate":
+			val := sendMessage.Value.(bool)
+			Settings.Config.Txt_translate = val
+			Fields.DataBindings.TextTranslateEnabledDataBinding.Set(val)
+		case "stt_enabled":
+			val := sendMessage.Value.(bool)
+			Settings.Config.Stt_enabled = val
+			Fields.DataBindings.SpeechToTextEnabledDataBinding.Set(val)
+		case "tts_answer":
+			val := sendMessage.Value.(bool)
+			Settings.Config.Tts_answer = val
+			Fields.DataBindings.TextToSpeechEnabledDataBinding.Set(val)
+		case "osc_auto_processing_enabled":
+			val := sendMessage.Value.(bool)
+			Settings.Config.Osc_auto_processing_enabled = val
+			Fields.DataBindings.OSCEnabledDataBinding.Set(val)
 		}
 	}
 }
