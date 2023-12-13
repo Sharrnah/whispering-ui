@@ -92,6 +92,33 @@ func getPluginStatusString(pluginClassName string) string {
 	return pluginStatusString
 }
 
+func _getFilePathDialogInitPath(v map[string]interface{}, entry *widget.Entry) (fyne.ListableURI, string) {
+	// get file dialog start folder
+	appExec, _ := os.Executable()
+	currentFolder := filepath.Dir(appExec)
+	currentFilename := ""
+
+	if entry.Text != "" {
+		entryTextPath := entry.Text
+		if v["type"] != "folder_open" && v["type"] != "dir_open" {
+			entryTextPath = filepath.Dir(entryTextPath)
+		}
+		// check if folder exists
+		folderExists := false
+		if _, err := os.Stat(entryTextPath); !os.IsNotExist(err) {
+			folderExists = true
+		}
+		if folderExists {
+			currentFolder = entryTextPath
+			currentFilename = filepath.Base(entry.Text)
+		}
+	}
+	fileURI := storage.NewFileURI(currentFolder)
+	fileLister, _ := storage.ListerForURI(fileURI)
+
+	return fileLister, currentFilename
+}
+
 var onlyShowEnabledPlugins bool
 
 func BuildPluginSettingsAccordion() (fyne.CanvasObject, int) {
@@ -465,41 +492,22 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 			selectButtonLabel := "Select File"
 			entry := widget.NewEntry()
 			entry.SetText(v["value"].(string))
+
+			// get file dialog start folder
+			fileLister, currentFilename := _getFilePathDialogInitPath(v, entry)
+
 			entry.OnChanged = func(text string) {
 				v["value"] = text
 				pluginSettings[settingName] = v
 				updateSettings(*SettingsFile, pluginClassName, pluginSettings)
+
+				// update dialog initpath on change
+				fileLister, currentFilename = _getFilePathDialogInitPath(v, entry)
 			}
 			filter := v["accept"].(string)
 			filterArray := strings.Split(filter, ",")
 
 			fileSelectFunc := func() {}
-			dialogSize := fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size()
-			dialogSize.Height = dialogSize.Height - 50
-			dialogSize.Width = dialogSize.Width - 50
-
-			// get file dialog start folder
-			appExec, _ := os.Executable()
-			currentFolder := filepath.Dir(appExec)
-			currentFilename := ""
-
-			if entry.Text != "" {
-				entryTextPath := entry.Text
-				if v["type"] != "folder_open" && v["type"] != "dir_open" {
-					entryTextPath = filepath.Dir(entryTextPath)
-				}
-				// check if folder exists
-				folderExists := false
-				if _, err := os.Stat(entryTextPath); !os.IsNotExist(err) {
-					folderExists = true
-				}
-				if folderExists {
-					currentFolder = entryTextPath
-					currentFilename = filepath.Base(entry.Text)
-				}
-			}
-			fileURI := storage.NewFileURI(currentFolder)
-			fileLister, _ := storage.ListerForURI(fileURI)
 
 			if v["type"] == "file_open" {
 				fileDialog := dialog.NewFileOpen(func(reader fyne.URIReadCloser, err error) {
@@ -508,12 +516,22 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 					}
 				}, fyne.CurrentApp().Driver().AllWindows()[0])
 				fileDialog.SetFilter(storage.NewExtensionFileFilter(filterArray))
-				fileDialog.Resize(dialogSize)
 				fileSelectFunc = func() {
+					// resize dialog
+					if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
+						dialogSize := fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size()
+						dialogSize.Height = dialogSize.Height - 50
+						dialogSize.Width = dialogSize.Width - 50
+						fileDialog.Resize(dialogSize)
+					}
+
+					// update dialog initpath on change
+					fileLister, currentFilename = _getFilePathDialogInitPath(v, entry)
+					fileDialog.SetLocation(fileLister)
+					fileDialog.SetFileName(currentFilename)
+
 					fileDialog.Show()
 				}
-				fileDialog.SetLocation(fileLister)
-				fileDialog.SetFileName(currentFilename)
 			} else if v["type"] == "file_save" {
 				fileDialog := dialog.NewFileSave(func(writer fyne.URIWriteCloser, err error) {
 					if err == nil && writer != nil {
@@ -521,13 +539,23 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 					}
 				}, fyne.CurrentApp().Driver().AllWindows()[0])
 				fileDialog.SetFilter(storage.NewExtensionFileFilter(filterArray))
-				fileDialog.Resize(dialogSize)
 
 				fileSelectFunc = func() {
+					// resize dialog
+					if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
+						dialogSize := fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size()
+						dialogSize.Height = dialogSize.Height - 50
+						dialogSize.Width = dialogSize.Width - 50
+						fileDialog.Resize(dialogSize)
+					}
+
+					// update dialog initpath on change
+					fileLister, currentFilename = _getFilePathDialogInitPath(v, entry)
+					fileDialog.SetLocation(fileLister)
+					fileDialog.SetFileName(currentFilename)
+
 					fileDialog.Show()
 				}
-				fileDialog.SetLocation(fileLister)
-				fileDialog.SetFileName(currentFilename)
 			} else if v["type"] == "folder_open" || v["type"] == "dir_open" {
 				selectButtonLabel = "Select Folder"
 				fileDialog := dialog.NewFolderOpen(func(uri fyne.ListableURI, err error) {
@@ -535,11 +563,21 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 						entry.SetText(uri.Path())
 					}
 				}, fyne.CurrentApp().Driver().AllWindows()[0])
-				fileDialog.Resize(dialogSize)
 				fileSelectFunc = func() {
+					// resize dialog
+					if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
+						dialogSize := fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size()
+						dialogSize.Height = dialogSize.Height - 50
+						dialogSize.Width = dialogSize.Width - 50
+						fileDialog.Resize(dialogSize)
+					}
+
+					// update dialog initpath on change
+					fileLister, currentFilename = _getFilePathDialogInitPath(v, entry)
+					fileDialog.SetLocation(fileLister)
+
 					fileDialog.Show()
 				}
-				fileDialog.SetLocation(fileLister)
 			}
 
 			fileSelectButton := widget.NewButton(selectButtonLabel, fileSelectFunc)
