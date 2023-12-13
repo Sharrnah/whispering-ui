@@ -1,6 +1,6 @@
 module whispering-tiger-ui
 
-go 1.20
+go 1.21
 
 replace github.com/fyne-io/terminal => github.com/Sharrnah/terminal v0.0.0-20231009095144-0814cfd3013e
 
