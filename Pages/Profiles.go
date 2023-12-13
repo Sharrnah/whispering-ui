@@ -839,7 +839,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Small (English only)", Value: "small.en"},
 			{Text: "Medium", Value: "medium"},
 			{Text: "Medium (English only)", Value: "medium.en"},
-			{Text: "Large (Defaults to V2)", Value: "large-v2"},
+			//{Text: "Large (Defaults to V3)", Value: "large-v3"},
 			{Text: "Large V1", Value: "large-v1"},
 			{Text: "Large V2", Value: "large-v2"},
 			{Text: "Large V3", Value: "large-v3"},
@@ -866,6 +866,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		originalSeamlessM4TModelList := []CustomWidget.TextValueOption{
 			{Text: "Medium", Value: "medium"},
 			{Text: "Large", Value: "large"},
+			{Text: "Large V2", Value: "large-v2"},
 		}
 
 		sttModelSize := CustomWidget.NewTextValueSelect("model", fasterWhisperModelList, func(s CustomWidget.TextValueOption) {
@@ -1159,6 +1160,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				txtTranslatorSizeSelect.Options = []CustomWidget.TextValueOption{
 					{Text: "Medium", Value: "medium"},
 					{Text: "Large", Value: "large"},
+					{Text: "Large V2", Value: "large-v2"},
 				}
 				if selectedSize == "small" {
 					txtTranslatorSizeSelect.SetSelected("medium")
@@ -1295,9 +1297,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Txt_translator_device:    "cpu",
 			Txt_translator_precision: "float32",
 			Txt_translate_realtime:   false,
-			Tts_enabled:              true,
-			Tts_ai_device:            "cpu",
-			Current_language:         "",
+
+			Tts_enabled:      true,
+			Tts_ai_device:    "cpu",
+			Current_language: "",
 
 			Osc_ip:                             "127.0.0.1",
 			Osc_port:                           9000,
