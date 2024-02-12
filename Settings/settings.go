@@ -11,12 +11,17 @@ import (
 	"gopkg.in/yaml.v3"
 	"log"
 	"os"
+	"path/filepath"
 	"reflect"
 	"strconv"
 	"strings"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Utilities"
 )
+
+func GetConfProfileDir() string {
+	return filepath.Join(".", "Profiles")
+}
 
 //goland:noinspection GoSnakeCaseUsage
 type Conf struct {
@@ -137,8 +142,10 @@ type Conf struct {
 	Osc_delay_timeout                  float64 `yaml:"osc_delay_timeout" json:"osc_delay_timeout"`
 
 	// OCR settings
-	Ocr_lang        string `yaml:"ocr_lang" json:"ocr_lang"`
-	Ocr_window_name string `yaml:"ocr_window_name" json:"ocr_window_name"`
+	Ocr_txt_src_lang string `yaml:"ocr_txt_src_lang" json:"ocr_txt_src_lang"`
+	Ocr_txt_trg_lang string `yaml:"ocr_txt_trg_lang" json:"ocr_txt_trg_lang"`
+	Ocr_lang         string `yaml:"ocr_lang" json:"ocr_lang"`
+	Ocr_window_name  string `yaml:"ocr_window_name" json:"ocr_window_name"`
 
 	// TTS settings
 	Tts_enabled                   bool     `yaml:"tts_enabled" json:"tts_enabled"`
@@ -184,6 +191,8 @@ var ExcludeConfigFields = []string{
 	"audio_output_device",
 	"last_auto_txt_translate_lang",
 	"stt_enabled",
+	"ocr_txt_src_lang",
+	"ocr_txt_trg_lang",
 }
 
 var Config Conf

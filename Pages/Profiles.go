@@ -16,6 +16,7 @@ import (
 	"math"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"regexp"
 	"strconv"
 	"strings"
@@ -722,6 +723,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Original Whisper", Value: "original_whisper"},
 			{Text: "Seamless M4T", Value: "seamless_m4t"},
 			{Text: "Speech T5 (English only)", Value: "speech_t5"},
+			{Text: "Wav2Vec Bert 2.0", Value: "wav2vec_bert"},
 			{Text: "Disabled", Value: ""},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
@@ -977,6 +979,16 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				sttPrecisionSelect.Disable()
 				sttModelSize.Disable()
 				AIModelType = "t5"
+			} else if s.Value == "wav2vec_bert" {
+				sttModelSize.Disable()
+				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
+					{Text: "float32 precision", Value: "float32"},
+					{Text: "float16 precision", Value: "float16"},
+				}
+				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "bfloat16" || selectedPrecision == "int8_bfloat16" {
+					sttPrecisionSelect.SetSelected("float16")
+				}
+				AIModelType = "wav2vec_bert"
 			} else {
 				sttPrecisionSelect.Disable()
 				sttModelSize.Disable()
@@ -1251,9 +1263,12 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 	profileHelpTextContent := container.NewVScroll(widget.NewLabel("Select an existing Profile or create a new one.\n\nClick Save and Load Profile."))
 
+	Utilities.MigrateProfileSettingsLocation1704429446()
+
 	// build profile list
+	profilesDir := Settings.GetConfProfileDir()
 	var settingsFiles []string
-	files, err := os.ReadDir("./")
+	files, err := os.ReadDir(profilesDir)
 	if err != nil {
 		println(err)
 	}
@@ -1378,8 +1393,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Normalize_upper_threshold: -16.0,
 			Normalize_gain_factor:     2.0,
 		}
-		if Utilities.FileExists(settingsFiles[id]) {
-			err = profileSettings.LoadYamlSettings(settingsFiles[id])
+		if Utilities.FileExists(filepath.Join(profilesDir, settingsFiles[id])) {
+			err = profileSettings.LoadYamlSettings(filepath.Join(profilesDir, settingsFiles[id]))
 			if err != nil {
 				dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
 			}
@@ -1542,8 +1557,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			profileSettings.Tts_ai_device = profileForm.Items[21].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
 
 			// update existing settings or create new one if it does not exist yet
-			if Utilities.FileExists(settingsFiles[id]) {
-				profileSettings.WriteYamlSettings(settingsFiles[id])
+			if Utilities.FileExists(filepath.Join(profilesDir, settingsFiles[id])) {
+				profileSettings.WriteYamlSettings(filepath.Join(profilesDir, settingsFiles[id]))
 			} else {
 				newProfileEntry := Profiles.Profile{
 					SettingsFilename: settingsFiles[id],
@@ -1583,7 +1598,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					Osc_ip:   profileSettings.Osc_ip,
 					Osc_port: profileSettings.Osc_port,
 				}
-				newProfileEntry.Save(settingsFiles[id])
+				newProfileEntry.Save(filepath.Join(profilesDir, settingsFiles[id]))
 			}
 			Settings.Config = profileSettings
 

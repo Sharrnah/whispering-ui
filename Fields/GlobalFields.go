@@ -299,6 +299,19 @@ func init() {
 		Field.SourceLanguageTxtTranslateCombo.SetOptionsFilter(filteredValues)
 		Field.SourceLanguageTxtTranslateCombo.ShowCompletion()
 	}
+	Field.SourceLanguageTxtTranslateCombo.OnSubmitted = func(value string) {
+		// check if value is not in Options
+		value = updateCompletionEntryBasedOnValue(Field.SourceLanguageTxtTranslateCombo, value)
+
+		sendMessage := SendMessageStruct{
+			Type:  "setting_change",
+			Name:  "ocr_txt_src_lang",
+			Value: value,
+		}
+		sendMessage.SendMessage()
+
+		log.Println("Select set to", value)
+	}
 
 	Field.TargetLanguageTxtTranslateCombo.ShowAllEntryText = "... show all"
 	Field.TargetLanguageTxtTranslateCombo.Entry.PlaceHolder = "Select target language"
@@ -312,6 +325,19 @@ func init() {
 		}
 		Field.TargetLanguageTxtTranslateCombo.SetOptionsFilter(filteredValues)
 		Field.TargetLanguageTxtTranslateCombo.ShowCompletion()
+	}
+	Field.TargetLanguageTxtTranslateCombo.OnSubmitted = func(value string) {
+		// check if value is not in Options
+		value = updateCompletionEntryBasedOnValue(Field.TargetLanguageTxtTranslateCombo, value)
+
+		sendMessage := SendMessageStruct{
+			Type:  "setting_change",
+			Name:  "ocr_txt_trg_lang",
+			Value: value,
+		}
+		sendMessage.SendMessage()
+
+		log.Println("Select set to", value)
 	}
 
 	Field.TranscriptionSpeakerLanguageCombo.ShowAllEntryText = "... show all"

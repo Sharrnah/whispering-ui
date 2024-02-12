@@ -123,12 +123,14 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 	}
 
 	// check if the file has the correct hash
-	statusBarContainer.Add(widget.NewLabel("Checking checksum..."))
-	if err := Updater.CheckFileHash(targetDir, checksum); err != nil {
-		fmt.Printf("Error: %s\n", err.Error())
-		dialog.ShowError(err, window)
-		statusBarContainer.Add(widget.NewLabel("Checksum check failed. Please delete temporary file and download again. If it still fails, please contact support."))
-		return err
+	if checksum != "" {
+		statusBarContainer.Add(widget.NewLabel("Checking checksum..."))
+		if err := Updater.CheckFileHash(targetDir, checksum); err != nil {
+			fmt.Printf("Error: %s\n", err.Error())
+			dialog.ShowError(err, window)
+			statusBarContainer.Add(widget.NewLabel("Checksum check failed. Please delete temporary file and download again. If it still fails, please contact support."))
+			return err
+		}
 	}
 
 	// wait a bit before trying to extract

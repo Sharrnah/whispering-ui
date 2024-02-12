@@ -11,6 +11,7 @@ import (
 	"log"
 	"os"
 	"os/exec"
+	"path/filepath"
 	"strings"
 	"syscall"
 	"time"
@@ -79,7 +80,7 @@ func NewWhisperProcess() WhisperProcessConfig {
 	return WhisperProcessConfig{
 		DeviceIndex:    "-1",
 		DeviceOutIndex: "-1",
-		SettingsFile:   "settings.yaml",
+		SettingsFile:   filepath.Join(".", "Profiles", "settings.yaml"),
 		ReaderBackend:  ReaderBackend,
 		WriterBackend:  WriterBackend,
 	}

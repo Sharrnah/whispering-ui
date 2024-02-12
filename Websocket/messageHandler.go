@@ -417,7 +417,7 @@ func HandleSendMessage(sendMessage *Fields.SendMessageStruct) {
 	switch sendMessage.Type {
 	case "setting_change":
 		switch sendMessage.Name {
-		case "src_lang":
+		case "src_lang", "ocr_txt_src_lang":
 			langCode := Messages.InstalledLanguages.GetCodeByName(sendMessage.Value.(string))
 			if langCode == "" {
 				langCode = "auto"
@@ -427,7 +427,7 @@ func HandleSendMessage(sendMessage *Fields.SendMessageStruct) {
 			} else {
 				sendMessage.Value = SkipMessage
 			}
-		case "trg_lang":
+		case "trg_lang", "ocr_txt_trg_lang":
 			langCode := Messages.InstalledLanguages.GetCodeByName(sendMessage.Value.(string))
 			if langCode != "" {
 				sendMessage.Value = langCode

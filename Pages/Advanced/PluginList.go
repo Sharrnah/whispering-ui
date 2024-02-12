@@ -80,8 +80,21 @@ func getVersionAndClassFromReader(pluginCode io.Reader) (string, string, string)
 
 // fetchAndAnalyzeGist fetches the gist at the given URL and analyzes it for version and class information
 // returns the version, class, hash and binary of the gist
-func fetchAndAnalyzeGist(gistURL string) (string, string, string, []byte) {
-	resp, err := http.Get(gistURL)
+func fetchAndAnalyzeGist(url string) (string, string, string, []byte) {
+	// Check for GitHub domain in the URL
+	if strings.Contains(url, "github.com") {
+		// Handle GitHub URLs
+		if strings.Contains(url, "/blob/") {
+			// Replace "/blob/" with "/raw/" for regular GitHub files
+			url = strings.Replace(url, "/blob/", "/raw/", 1)
+		} else if strings.Contains(url, "gist.") {
+			// For Gist links, append "/raw" at the end of the URL
+			url += "/raw"
+		}
+	}
+	// Future extension: Add else if conditions for other domains like GitLab
+
+	resp, err := http.Get(url)
 	if err != nil {
 		fmt.Printf("Error fetching gist: %v\n", err)
 		return "err", "err", "", nil
@@ -163,7 +176,7 @@ func CreatePluginListWindow(closeFunction func()) {
 			titleLink := row.TitleLink
 			fmt.Println("Checking update for: " + titleLink)
 			if row.Widgets.RemoteVersion != nil {
-				remoteVersion, class, hash, _ := fetchAndAnalyzeGist(titleLink + "/raw")
+				remoteVersion, class, hash, _ := fetchAndAnalyzeGist(titleLink)
 
 				localPluginFile := findLocalPluginFileByClass(localPluginFilesData, class)
 
@@ -233,7 +246,7 @@ func CreatePluginListWindow(closeFunction func()) {
 
 		titleButton := widget.NewButtonWithIcon("Update / Install", theme.DownloadIcon(), nil)
 		titleButton.OnTapped = func() {
-			version, class, _, fileContent := fetchAndAnalyzeGist(titleLink + "/raw")
+			version, class, _, fileContent := fetchAndAnalyzeGist(titleLink)
 
 			pluginFileName := PLUGIN_DIR + Utilities.CamelToSnake(class) + ".py"
 

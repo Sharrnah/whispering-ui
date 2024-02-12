@@ -5,6 +5,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
+	"path/filepath"
 	"strings"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Settings"
@@ -26,7 +27,7 @@ var TranslateSettings TranslateSetting
 
 func (res TranslateSetting) Update() *TranslateSetting {
 
-	Settings.Form = Settings.BuildSettingsForm(nil, Settings.Config.SettingsFilename).(*widget.Form)
+	Settings.Form = Settings.BuildSettingsForm(nil, filepath.Join(Settings.GetConfProfileDir(), Settings.Config.SettingsFilename)).(*widget.Form)
 	Settings.Form.Refresh()
 
 	// fill combo-box with whisper languages
@@ -67,29 +68,37 @@ func (res TranslateSetting) Update() *TranslateSetting {
 		if Fields.Field.SourceLanguageCombo.Text == "" {
 			Fields.Field.SourceLanguageCombo.Text = cases.Title(language.English, cases.Compact).String(InstalledLanguages.GetNameByCode(res.Src_lang))
 		}
-		if Fields.Field.SourceLanguageTxtTranslateCombo.Text == "" {
-			Fields.Field.SourceLanguageTxtTranslateCombo.Text = cases.Title(language.English, cases.Compact).String(InstalledLanguages.GetNameByCode(res.Src_lang))
-		}
 	} else if Fields.Field.SourceLanguageCombo.Text == "" && strings.ToLower(res.Src_lang) == "auto" {
 		if Fields.Field.SourceLanguageCombo.Text == "" {
 			Fields.Field.SourceLanguageCombo.Text = cases.Title(language.English, cases.Compact).String(res.Src_lang)
 		}
-		if Fields.Field.SourceLanguageTxtTranslateCombo.Text == "" {
-			Fields.Field.SourceLanguageTxtTranslateCombo.Text = cases.Title(language.English, cases.Compact).String(res.Src_lang)
-		}
 	}
 	Fields.Field.SourceLanguageCombo.ResetOptionsFilter()
+
+	// ocr text translation combo fields
+	if strings.ToLower(Fields.Field.SourceLanguageTxtTranslateCombo.Text) != strings.ToLower(InstalledLanguages.GetNameByCode(res.Ocr_txt_src_lang)) {
+		if Fields.Field.SourceLanguageTxtTranslateCombo.Text == "" {
+			Fields.Field.SourceLanguageTxtTranslateCombo.Text = cases.Title(language.English, cases.Compact).String(InstalledLanguages.GetNameByCode(res.Ocr_txt_src_lang))
+		}
+	} else if Fields.Field.SourceLanguageTxtTranslateCombo.Text == "" && strings.ToLower(res.Ocr_txt_src_lang) == "auto" {
+		if Fields.Field.SourceLanguageTxtTranslateCombo.Text == "" {
+			Fields.Field.SourceLanguageTxtTranslateCombo.Text = cases.Title(language.English, cases.Compact).String(res.Ocr_txt_src_lang)
+		}
+	}
 	Fields.Field.SourceLanguageTxtTranslateCombo.ResetOptionsFilter()
 
 	// Set TargetLanguageCombo
 	if strings.ToLower(Fields.Field.TargetLanguageCombo.Text) != strings.ToLower(InstalledLanguages.GetNameByCode(res.Trg_lang)) {
 		Fields.Field.TargetLanguageCombo.Text = cases.Title(language.English, cases.Compact).String(InstalledLanguages.GetNameByCode(res.Trg_lang))
 		Fields.Field.TargetLanguageCombo.ResetOptionsFilter()
-		// Set TargetLanguageTxtTranslateCombo if it is not set
-		if Fields.Field.TargetLanguageTxtTranslateCombo.Text == "" {
-			Fields.Field.TargetLanguageTxtTranslateCombo.Text = cases.Title(language.English, cases.Compact).String(InstalledLanguages.GetNameByCode(res.Trg_lang))
-			Fields.Field.TargetLanguageTxtTranslateCombo.ResetOptionsFilter()
-		}
+	}
+
+	// ocr text translation combo fields
+	if strings.ToLower(Fields.Field.TargetLanguageTxtTranslateCombo.Text) != strings.ToLower(InstalledLanguages.GetNameByCode(res.Ocr_txt_trg_lang)) {
+		//if Fields.Field.TargetLanguageTxtTranslateCombo.Text == "" {
+		Fields.Field.TargetLanguageTxtTranslateCombo.Text = cases.Title(language.English, cases.Compact).String(InstalledLanguages.GetNameByCode(res.Ocr_txt_trg_lang))
+		//}
+		Fields.Field.TargetLanguageTxtTranslateCombo.ResetOptionsFilter()
 	}
 
 	Fields.Field.TextTranslateEnabled.Text = fmt.Sprintf(Fields.SttTextTranslateLabelConst, Fields.Field.SourceLanguageCombo.GetValueOptionEntryByText(Fields.Field.SourceLanguageCombo.Text).Value, Fields.Field.TargetLanguageCombo.Text)

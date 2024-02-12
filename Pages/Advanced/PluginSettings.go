@@ -124,14 +124,14 @@ var onlyShowEnabledPlugins bool
 func BuildPluginSettingsAccordion() (fyne.CanvasObject, int) {
 	// load settings file for plugin settings
 	SettingsFile := Settings.Conf{}
-	err := SettingsFile.LoadYamlSettings(Settings.Config.SettingsFilename)
+	err := SettingsFile.LoadYamlSettings(filepath.Join(Settings.GetConfProfileDir(), Settings.Config.SettingsFilename))
 	if err != nil {
 		SettingsFile = Settings.Config
 	}
 
 	// build plugins list
 	var pluginFiles []string
-	files, err := os.ReadDir("./Plugins")
+	files, err := os.ReadDir(filepath.Join(".", "Plugins"))
 	if err != nil {
 		println(err)
 	}
@@ -140,7 +140,7 @@ func BuildPluginSettingsAccordion() (fyne.CanvasObject, int) {
 	for _, file := range files {
 		if !file.IsDir() && !strings.HasPrefix(file.Name(), ".") && !strings.HasPrefix(file.Name(), "__init__") && (strings.HasSuffix(file.Name(), ".py")) {
 			pluginFiles = append(pluginFiles, file.Name())
-			pluginClassName := GetClassNameOfPlugin("./Plugins/" + file.Name())
+			pluginClassName := GetClassNameOfPlugin(filepath.Join(".", "Plugins", file.Name()))
 
 			// only display enabled plugins if onlyShowEnabledPlugins is true
 			if onlyShowEnabledPlugins && !Settings.Config.Plugins[pluginClassName] {
@@ -465,7 +465,13 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 				pluginSettings[settingName] = v
 				updateSettings(*SettingsFile, pluginClassName, pluginSettings)
 			}
-			entry.SetMinRowsVisible(v["rows"].(int))
+			if rows, ok := v["rows"].(int); ok {
+				entry.SetMinRowsVisible(rows)
+			} else if rows, ok := v["rows"].(float64); ok {
+				entry.SetMinRowsVisible(int(rows))
+			} else {
+				entry.SetMinRowsVisible(5)
+			}
 			settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, entry))
 		} else if v["type"] == "hyperlink" {
 			link := v["value"].(string)
@@ -602,6 +608,24 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 			entry.SetMinRowsVisible(lines + 1)
 			settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, entry))
 		}
+	case []interface{}:
+		yamlBytes, _ := yaml.Marshal(v)
+		entry := widget.NewMultiLineEntry()
+		entry.SetText(string(yamlBytes))
+		entry.OnChanged = func(text string) {
+			var newValue []interface{}
+			if err := yaml.Unmarshal([]byte(text), &newValue); err == nil {
+				pluginSettings[settingName] = newValue
+				updateSettings(*SettingsFile, pluginClassName, pluginSettings)
+			}
+		}
+		// count number of lines in pluginSettingsForm and set minRowsVisible
+		lines := strings.Count(entry.Text, "\n")
+		if lines < 5 {
+			lines = 5
+		}
+		entry.SetMinRowsVisible(lines + 1)
+		settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, entry))
 	}
 
 	return settingsFields

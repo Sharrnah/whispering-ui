@@ -102,7 +102,7 @@ func main() {
 		RuntimeBackend.BackendsList = append(RuntimeBackend.BackendsList, RuntimeBackend.NewWhisperProcess())
 		RuntimeBackend.BackendsList[0].DeviceIndex = strconv.Itoa(Settings.Config.Device_index.(int))
 		RuntimeBackend.BackendsList[0].DeviceOutIndex = strconv.Itoa(Settings.Config.Device_out_index.(int))
-		RuntimeBackend.BackendsList[0].SettingsFile = Settings.Config.SettingsFilename
+		RuntimeBackend.BackendsList[0].SettingsFile = filepath.Join(Settings.GetConfProfileDir(), Settings.Config.SettingsFilename)
 		// Setting this to use UTF-8 encoding for Python does not work when build using PyInstaller
 		if fyne.CurrentApp().Preferences().BoolWithFallback("RunWithUTF8", true) {
 			log.Printf("Running with UTF-8 encoding")

@@ -9,6 +9,7 @@ import (
 	"log"
 	"strings"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
 	"whispering-tiger-ui/Websocket/Messages"
 )
@@ -101,11 +102,59 @@ func CreateOcrWindow() fyne.CanvasObject {
 		ocrButton,
 	)
 
+	switchButton := container.NewCenter(widget.NewButton("<==>", func() {
+		sourceLanguage := Fields.Field.SourceLanguageTxtTranslateCombo.Text
+		// use last detected language when switching between source and target language
+		if strings.HasPrefix(strings.ToLower(sourceLanguage), "auto") && Settings.Config.Last_auto_txt_translate_lang != "" {
+			sourceLanguage = Utilities.LanguageMapList.GetName(Settings.Config.Last_auto_txt_translate_lang)
+		}
+
+		targetLanguage := Fields.Field.TargetLanguageTxtTranslateCombo.Text
+		if targetLanguage == "None" {
+			targetLanguage = "Auto"
+		}
+
+		Fields.Field.SourceLanguageTxtTranslateCombo.Text = targetLanguage
+		Fields.Field.SourceLanguageTxtTranslateCombo.Refresh()
+		Fields.Field.TargetLanguageTxtTranslateCombo.Text = sourceLanguage
+		Fields.Field.TargetLanguageTxtTranslateCombo.Refresh()
+
+		sourceField := Fields.Field.TranscriptionInput.Text
+		targetField := Fields.Field.TranscriptionTranslationInput.Text
+		Fields.Field.TranscriptionInput.SetText(targetField)
+		Fields.Field.TranscriptionTranslationInput.SetText(sourceField)
+	}))
+
 	sourceLanguageForm := container.New(layout.NewFormLayout(), widget.NewLabel("Source Language:"), Fields.Field.SourceLanguageTxtTranslateCombo)
 	targetLanguageForm := container.New(layout.NewFormLayout(), widget.NewLabel("Target Language:"), Fields.Field.TargetLanguageTxtTranslateCombo)
 	languageRow := container.New(layout.NewGridLayout(2), sourceLanguageForm, targetLanguageForm)
 
 	transcriptionRow := container.New(layout.NewGridLayout(2), Fields.Field.TranscriptionInput, Fields.Field.TranscriptionTranslationInput)
+
+	translateOnlyFunction := func() {
+		fromLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.SourceLanguageTxtTranslateCombo.Text)
+		if fromLang == "" {
+			fromLang = "auto"
+		}
+		toLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.TargetLanguageTxtTranslateCombo.Text)
+		//goland:noinspection GoSnakeCaseUsage
+		sendMessage := Fields.SendMessageStruct{
+			Type: "translate_req",
+			Value: struct {
+				Text                string `json:"text"`
+				From_lang           string `json:"from_lang"`
+				To_lang             string `json:"to_lang"`
+				Ignore_send_options bool   `json:"ignore_send_options"`
+			}{
+				Text:                Fields.Field.TranscriptionInput.Text,
+				From_lang:           fromLang,
+				To_lang:             toLang,
+				Ignore_send_options: true,
+			},
+		}
+		sendMessage.SendMessage()
+	}
+	translateOnlyButton := widget.NewButtonWithIcon("Translate Only", theme.MenuExpandIcon(), translateOnlyFunction)
 
 	ocrContent := container.New(layout.NewVBoxLayout(),
 		ocrSettingsRow,
@@ -113,6 +162,7 @@ func CreateOcrWindow() fyne.CanvasObject {
 		widget.NewSeparator(),
 		widget.NewLabel("Text-Translation of OCR Result:"),
 		languageRow,
+		switchButton,
 	)
 
 	mainContent := container.NewBorder(
@@ -122,7 +172,12 @@ func CreateOcrWindow() fyne.CanvasObject {
 		nil, nil, nil,
 		container.NewVSplit(
 			transcriptionRow,
-			Fields.Field.OcrImageContainer,
+			container.NewBorder(
+				container.NewBorder(
+					nil, nil, nil, translateOnlyButton,
+				),
+				nil, nil, nil, Fields.Field.OcrImageContainer,
+			),
 		),
 	)
 

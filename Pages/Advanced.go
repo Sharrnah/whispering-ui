@@ -9,6 +9,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 	"io"
 	"net/url"
+	"path/filepath"
 	"strconv"
 	"strings"
 	"time"
@@ -74,7 +75,7 @@ func buildAboutInfo() *fyne.Container {
 func CreateAdvancedWindow() fyne.CanvasObject {
 	defer Utilities.PanicLogger()
 
-	Settings.Form = Settings.BuildSettingsForm(nil, Settings.Config.SettingsFilename).(*widget.Form)
+	Settings.Form = Settings.BuildSettingsForm(nil, filepath.Join(Settings.GetConfProfileDir(), Settings.Config.SettingsFilename)).(*widget.Form)
 
 	settingsTabContent := container.NewVScroll(Settings.Form)
 
@@ -113,7 +114,7 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 
 	tabs.OnSelected = func(tab *container.TabItem) {
 		if tab.Text == "Advanced Settings" {
-			Settings.Form = Settings.BuildSettingsForm(nil, Settings.Config.SettingsFilename).(*widget.Form)
+			Settings.Form = Settings.BuildSettingsForm(nil, filepath.Join(Settings.GetConfProfileDir(), Settings.Config.SettingsFilename)).(*widget.Form)
 			tab.Content.(*container.Scroll).Content = Settings.Form
 			tab.Content.(*container.Scroll).Content.Refresh()
 			tab.Content.(*container.Scroll).Refresh()
