@@ -716,6 +716,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "int8 precision", Value: "int8"},
 			{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
 			{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
+			{Text: "8bit precision", Value: "8bit"},
+			{Text: "4bit precision", Value: "4bit"},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
 		sttTypeSelect := CustomWidget.NewTextValueSelect("stt_type", []CustomWidget.TextValueOption{
@@ -984,6 +986,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
 					{Text: "float32 precision", Value: "float32"},
 					{Text: "float16 precision", Value: "float16"},
+					{Text: "8bit precision", Value: "8bit"},
+					{Text: "4bit precision", Value: "4bit"},
 				}
 				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "bfloat16" || selectedPrecision == "int8_bfloat16" {
 					sttPrecisionSelect.SetSelected("float16")
