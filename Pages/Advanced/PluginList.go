@@ -228,11 +228,11 @@ func CreatePluginListWindow(closeFunction func()) {
 	for _, row := range tableData {
 
 		title := row.Title
+
 		titleLabel := widget.NewLabel(title)
 		titleLabel.Wrapping = fyne.TextWrapWord
 
 		remoteVersionLabel := widget.NewLabel("Newest V: ")
-		// currentVersionLabel := widget.NewLabel("Current V: ")
 		currentVersionLabel := canvas.NewText("  Current V: ", color.RGBA{255, 255, 255, 255})
 		currentVersionLabel.Move(fyne.NewPos(10, 0))
 
@@ -303,32 +303,39 @@ func CreatePluginListWindow(closeFunction func()) {
 
 		rightColumn := container.NewBorder(authorLabel, nil, nil, nil, openPageButton)
 
-		previewBorder := container.NewBorder(nil, nil, nil, nil, descriptionScroller)
-
 		previewLink := row.PreviewLink
-		if previewLink != "" {
-			previewFileUri, err := storage.ParseURI(previewLink)
-			if err == nil {
-				// is preview an image?
-				if previewFileUri.Extension() == ".png" || previewFileUri.Extension() == ".jpg" || previewFileUri.Extension() == ".jpeg" {
-					var previewImage *canvas.Image = nil
-					previewImage = canvas.NewImageFromURI(previewFileUri)
-					previewImage.ScaleMode = canvas.ImageScaleFastest
-					previewImage.FillMode = canvas.ImageFillContain
-					previewImage.SetMinSize(fyne.NewSize(220, 120))
 
-					previewBorder = container.NewBorder(nil, nil, nil, previewImage, descriptionScroller)
-				}
-				if previewFileUri.Extension() == ".gif" {
-					gif, err := CustomWidget.NewAnimatedGif(previewFileUri)
-					if err == nil {
-						gif.SetMinSize(fyne.NewSize(220, 120))
-						previewBorder = container.NewBorder(nil, nil, nil, gif, descriptionScroller)
-						gif.Start()
+		previewImageContainer := container.NewMax()
+		previewBorder := container.NewBorder(nil, nil, nil, previewImageContainer, descriptionScroller)
+
+		go func() {
+			if previewLink != "" {
+				previewFileUri, err := storage.ParseURI(previewLink)
+				if err == nil {
+					// is preview an image?
+					if previewFileUri.Extension() == ".png" || previewFileUri.Extension() == ".jpg" || previewFileUri.Extension() == ".jpeg" {
+						var previewImageStatic *canvas.Image = nil
+						previewImageStatic = canvas.NewImageFromURI(previewFileUri)
+						if previewImageContainer != nil && previewImageStatic != nil {
+							previewImageStatic.ScaleMode = canvas.ImageScaleFastest
+							previewImageStatic.FillMode = canvas.ImageFillContain
+							previewImageStatic.SetMinSize(fyne.NewSize(220, 120))
+							previewImageContainer.Add(previewImageStatic)
+						}
+					}
+					if previewFileUri.Extension() == ".gif" {
+						previewImageAni, err := CustomWidget.NewAnimatedGif(previewFileUri)
+						if err == nil {
+							if previewImageContainer != nil {
+								previewImageAni.SetMinSize(fyne.NewSize(230, 130))
+								previewImageContainer.Add(previewImageAni)
+								previewImageAni.Start()
+							}
+						}
 					}
 				}
 			}
-		}
+		}()
 
 		descriptionBorder := container.NewBorder(nil, nil, nil, rightColumn, previewBorder)
 
