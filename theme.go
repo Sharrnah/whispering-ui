@@ -36,7 +36,7 @@ func (m AppTheme) Font(style fyne.TextStyle) fyne.Resource {
 	if style.Monospace {
 		return theme.DefaultTheme().Font(style)
 	}
-	return Resources.ResourceGoNotoTtf
+	return Resources.ResourceGoNotoKurrentRegularTtf
 }
 
 func (m AppTheme) Size(name fyne.ThemeSizeName) float32 {
