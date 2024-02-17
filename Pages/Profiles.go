@@ -723,6 +723,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		sttTypeSelect := CustomWidget.NewTextValueSelect("stt_type", []CustomWidget.TextValueOption{
 			{Text: "Faster Whisper", Value: "faster_whisper"},
 			{Text: "Original Whisper", Value: "original_whisper"},
+			{Text: "Transformer Whisper", Value: "transformer_whisper"},
 			{Text: "Seamless M4T", Value: "seamless_m4t"},
 			{Text: "Speech T5 (English only)", Value: "speech_t5"},
 			{Text: "Wav2Vec Bert 2.0", Value: "wav2vec_bert"},
@@ -945,6 +946,23 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
 					{Text: "float32 precision", Value: "float32"},
 					{Text: "float16 precision", Value: "float16"},
+				}
+				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "bfloat16" || selectedPrecision == "int8_bfloat16" {
+					sttPrecisionSelect.SetSelected("float16")
+				}
+				AIModelType = "O"
+			} else if s.Value == "transformer_whisper" {
+				sttModelSize.Options = originalWhisperModelList
+				// unselect if not in list
+				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption) {
+					sttModelSize.SetSelectedIndex(0)
+				}
+
+				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
+					{Text: "float32 precision", Value: "float32"},
+					{Text: "float16 precision", Value: "float16"},
+					{Text: "8bit precision", Value: "8bit"},
+					{Text: "4bit precision", Value: "4bit"},
 				}
 				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "bfloat16" || selectedPrecision == "int8_bfloat16" {
 					sttPrecisionSelect.SetSelected("float16")
