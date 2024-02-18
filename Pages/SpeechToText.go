@@ -31,6 +31,10 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		speechTaskWidgetLabel.SetText("Target Language:")
 		speechTaskWidget = Fields.Field.TranscriptionTargetLanguageCombo
 	}
+	if Settings.Config.Stt_type == "wav2vec_bert" {
+		speechTaskWidgetLabel.SetText("")
+		speechTaskWidget.(*widget.Select).Hide()
+	}
 
 	languageRow := container.New(layout.NewVBoxLayout(),
 		container.New(layout.NewFormLayout(),

@@ -1091,6 +1091,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				precisionType = Hardwareinfo.Float16
 			case "int8_bfloat16":
 				precisionType = Hardwareinfo.Int8
+			case "8bit":
+				precisionType = Hardwareinfo.Bit8
+			case "4bit":
+				precisionType = Hardwareinfo.Bit4
 			}
 			if txtTranslatorDeviceSelect.GetSelected() != nil && txtTranslatorDeviceSelect.GetSelected().Value == "cpu" && (s.Value == "float16" || s.Value == "int8_float16") {
 				dialog.ShowInformation("Information", "Most CPU's do not support float16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
