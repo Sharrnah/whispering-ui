@@ -49,13 +49,16 @@ var Models = []AIModel{
 }
 
 const (
-	Float32 = 4
-	Float16 = 2
-	Int32   = 4
-	Int16   = 2
-	Int8    = 1
+	Float32 = 4.0
+	Float16 = 2.0
+	Int32   = 4.0
+	Int16   = 2.0
+	Int8    = 1.0
+
+	Bit8 = 1.0
+	Bit4 = 0.5
 )
 
-func EstimateMemoryUsage(float32MemoryUsage float64, targetType int) float64 {
+func EstimateMemoryUsage(float32MemoryUsage float64, targetType float64) float64 {
 	return (float32MemoryUsage / float64(Float32)) * float64(targetType)
 }
