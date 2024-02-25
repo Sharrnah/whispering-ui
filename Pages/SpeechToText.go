@@ -27,7 +27,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 	speechTaskWidgetLabel := widget.NewLabel("Speech Task:")
 	var speechTaskWidget fyne.CanvasObject = Fields.Field.TranscriptionTaskCombo
 	// disable task for seamless_m4t model, as it always translates to target language (Speech Language)
-	if Settings.Config.Stt_type == "seamless_m4t" {
+	if Settings.Config.Stt_type == "seamless_m4t" || Settings.Config.Stt_type == "nemo_canary" {
 		speechTaskWidgetLabel.SetText("Target Language:")
 		speechTaskWidget = Fields.Field.TranscriptionTargetLanguageCombo
 	}

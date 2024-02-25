@@ -30,6 +30,18 @@ var Models = []AIModel{
 	// Seamless M4T
 	{"Whisperm4t_medium", 6250.0},
 	{"Whisperm4t_large", 10518.0},
+	// wav2vec bert2.0 models
+	{"Whisperwav2vec-bert_tiny", 2989.0},
+	{"Whisperwav2vec-bert_base", 2989.0},
+	{"Whisperwav2vec-bert_small", 2989.0},
+	{"Whisperwav2vec-bert_medium", 2989.0},
+	{"Whisperwav2vec-bert_large", 2989.0},
+	// NeMo Canary models
+	{"Whispernemo-canary_tiny", 4509.0},
+	{"Whispernemo-canary_base", 4509.0},
+	{"Whispernemo-canary_small", 4509.0},
+	{"Whispernemo-canary_medium", 4509.0},
+	{"Whispernemo-canary_large", 4509.0},
 	// NLLB200CT2 models
 	{"TxtTranslatorNLLB200_CT2_small", 3087.0},
 	{"TxtTranslatorNLLB200_CT2_medium", 6069.0},

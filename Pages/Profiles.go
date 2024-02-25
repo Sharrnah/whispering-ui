@@ -656,7 +656,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			}
 			energySliderState.SetText(fmt.Sprintf("%.0f", value))
 		}
-		appendWidgetToForm(profileForm, "Speech volume Level", container.NewBorder(nil, nil, nil, container.NewHBox(energySliderState, energyHelpBtn), energySliderWidget), "The volume level at which the speech detection will trigger.")
+		appendWidgetToForm(profileForm, "Speech volume Level", container.NewBorder(nil, nil, nil, container.NewHBox(energySliderState, energyHelpBtn), energySliderWidget), "The volume level at which the speech detection will trigger. (0 = Disabled, useful for Push2Talk)")
 
 		pauseSliderState := widget.NewLabel("0.0")
 		pauseSliderWidget := widget.NewSlider(0, 5)
@@ -727,6 +727,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Seamless M4T", Value: "seamless_m4t"},
 			{Text: "Speech T5 (English only)", Value: "speech_t5"},
 			{Text: "Wav2Vec Bert 2.0", Value: "wav2vec_bert"},
+			{Text: "NeMo Canary", Value: "nemo_canary"},
 			{Text: "Disabled", Value: ""},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
@@ -1014,7 +1015,12 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "bfloat16" || selectedPrecision == "int8_bfloat16" {
 					sttPrecisionSelect.SetSelected("float16")
 				}
-				AIModelType = "wav2vec_bert"
+				AIModelType = "wav2vec-bert"
+			} else if s.Value == "nemo_canary" {
+				sttPrecisionSelect.Disable()
+				sttPrecisionSelect.SetSelected("float32") // only available in float32
+				sttModelSize.Disable()
+				AIModelType = "nemo-canary"
 			} else {
 				sttPrecisionSelect.Disable()
 				sttModelSize.Disable()
@@ -1413,6 +1419,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Whisper_apply_voice_markers:   false,
 			Max_sentence_repetition:       -1,
 			Transcription_auto_save_file:  "",
+			Thread_per_transcription:      false,
 
 			Silence_cutting_enabled:   true,
 			Silence_offset:            -40.0,

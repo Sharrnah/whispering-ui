@@ -69,6 +69,14 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 			},
 		},
 		{
+			SettingsName:         "Run each transcription in a separate thread",
+			SettingsInternalName: "thread_per_transcription",
+			SettingsDescription:  "If enabled, each transcription will run in a separate thread.",
+			_widget: func() fyne.CanvasObject {
+				return widget.NewCheck("", func(b bool) {})
+			},
+		},
+		{
 			SettingsName:         "A.I. denoise audio",
 			SettingsInternalName: "denoise_audio",
 			SettingsDescription:  "",
