@@ -1381,7 +1381,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Vad_enabled:              true,
 			Vad_on_full_clip:         false,
 			Vad_confidence_threshold: 0.4,
-			Vad_frames_per_buffer:    2000,
+			Vad_frames_per_buffer:    1536,
 			Vad_thread_num:           1,
 			Push_to_talk_key:         "",
 
