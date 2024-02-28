@@ -237,6 +237,10 @@ func (c *WhisperProcessConfig) Start() {
 			err = c.RunWithStreams("python", cmdArguments, tmpReader, c.WriterBackend, c.WriterBackend)
 		} else if Utilities.FileExists("audioWhisper/audioWhisper.exe") {
 			err = c.RunWithStreams("audioWhisper/audioWhisper.exe", cmdArguments, tmpReader, c.WriterBackend, c.WriterBackend)
+		} else if Utilities.FileExists("audioWhisper/audioWhisper.py") && Utilities.FileExists("audioWhisper/venv/Scripts/python.exe") {
+			c.AttachEnvironment("VIRTUAL_ENV", "audioWhisper/venv/")
+			cmdArguments = append([]string{"-u", "audioWhisper.py"}, cmdArguments...)
+			err = c.RunWithStreams("audioWhisper/venv/Scripts/python.exe", cmdArguments, tmpReader, c.WriterBackend, c.WriterBackend)
 		} else {
 			err = errors.New("could not start audioWhisper")
 		}
