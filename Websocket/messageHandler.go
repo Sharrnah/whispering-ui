@@ -358,9 +358,6 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			return
 		}
 		Messages.CurrentLoadingState.Update()
-		if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
-			fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Content().Refresh()
-		}
 	case "tts_save":
 		ttsSpeechAudio := Messages.TtsSpeechAudio{}
 		err = json.Unmarshal(c.Raw, &ttsSpeechAudio)

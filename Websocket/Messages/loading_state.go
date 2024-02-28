@@ -35,7 +35,7 @@ func (res LoadingState) Update() *LoadingState {
 	}
 	if allFalse {
 		LoadingStateDialog.Hide()
-        return &res
+		return &res
 	}
 
 	LoadingStateContainer.RemoveAll()
@@ -66,9 +66,11 @@ func (res LoadingState) SetState(name string, state bool) {
 }
 
 func (res *LoadingState) InitStateWindow() {
+	if fyne.CurrentApp().Driver().AllWindows() == nil || len(fyne.CurrentApp().Driver().AllWindows()) == 0 {
+		return
+	}
 	statusBar := widget.NewProgressBarInfinite()
 	LoadingStateContainer = container.NewVBox()
-
 	LoadingStateDialog = dialog.NewCustom(
 		"Loading...",
 		"Hide",
