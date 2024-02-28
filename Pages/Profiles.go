@@ -5,6 +5,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
@@ -14,6 +15,7 @@ import (
 	"github.com/youpy/go-wav"
 	"io"
 	"math"
+	"net/url"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -1297,7 +1299,29 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	profileListContent := container.NewVScroll(BuildProfileForm())
 	profileListContent.Hide()
 
-	profileHelpTextContent := container.NewVScroll(widget.NewLabel("Select an existing Profile or create a new one.\n\nClick Save and Load Profile."))
+	heartImage := canvas.NewImageFromResource(Resources.ResourceHeartPng)
+	heartImage.FillMode = canvas.ImageFillContain
+	heartImage.ScaleMode = canvas.ImageScaleFastest
+	heartImage.SetMinSize(fyne.NewSize(128, 128))
+	heartButton := widget.NewButtonWithIcon("Support me on https://ko-fi.com/sharrnah", Resources.ResourceHeartPng, func() {
+		u, err := url.Parse("https://ko-fi.com/sharrnah")
+		if err != nil {
+			return
+		}
+		if u != nil {
+			err := fyne.CurrentApp().OpenURL(u)
+			if err != nil {
+				fyne.LogError("Failed to open url", err)
+			}
+		}
+	})
+
+	profileHelpTextContent := container.NewVScroll(
+		container.NewVBox(
+			widget.NewLabel("Select an existing Profile or create a new one.\n\nClick Save and Load Profile.\n\n"),
+			heartButton,
+		),
+	)
 
 	Utilities.MigrateProfileSettingsLocation1704429446()
 

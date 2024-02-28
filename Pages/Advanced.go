@@ -36,11 +36,34 @@ func buildAboutInfo() *fyne.Container {
 	aboutImage.ScaleMode = canvas.ImageScaleFastest
 	aboutImage.SetMinSize(fyne.NewSize(128, 128))
 
+	heartImage := canvas.NewImageFromResource(Resources.ResourceHeartPng)
+	heartImage.FillMode = canvas.ImageFillContain
+	heartImage.ScaleMode = canvas.ImageScaleFastest
+	heartImage.SetMinSize(fyne.NewSize(128, 128))
+	heartButton := widget.NewButtonWithIcon("Support me on https://ko-fi.com/sharrnah", Resources.ResourceHeartPng, func() {
+		u, err := url.Parse("https://ko-fi.com/sharrnah")
+		if err != nil {
+			return
+		}
+		if u != nil {
+			err := fyne.CurrentApp().OpenURL(u)
+			if err != nil {
+				fyne.LogError("Failed to open url", err)
+			}
+		}
+	})
+	supportLabel := widget.NewLabel("If you want to support the development of Whispering Tiger,\nyou can do so by supporting me on Ko-fi.")
+	supportLabel.Alignment = fyne.TextAlignCenter
+
 	aboutCard := widget.NewCard("Whispering Tiger UI",
 		"Version: "+fyne.CurrentApp().Metadata().Version+" Build: "+strconv.Itoa(fyne.CurrentApp().Metadata().Build),
 		container.NewVBox(
 			widget.NewHyperlink("https://github.com/Sharrnah/whispering-ui", parseURL("https://github.com/Sharrnah/whispering-ui")),
 			widget.NewHyperlink("https://github.com/Sharrnah/whispering", parseURL("https://github.com/Sharrnah/whispering")),
+			widget.NewSeparator(),
+			supportLabel,
+			heartButton,
+			widget.NewSeparator(),
 		),
 	)
 	aboutCard.SetImage(aboutImage)
