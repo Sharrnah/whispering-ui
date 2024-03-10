@@ -5,6 +5,8 @@ Whispering Tiger UI is a **Native-UI** that can be used to control the **Whisper
 [Whispering Tiger](https://github.com/Sharrnah/whispering) is a free and Open-Source tool that can listen/watch to any **audio stream** or **in-game image** on your machine and prints out the transcription or translation
 to a web browser using Websockets or over OSC (examples are **Streaming-overlays** or **VRChat**).
 
+[![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/sharrnah)
+
 <img src=doc/images/speech2text.png width=550 alt="Speech-to-Text Tab">
 
 ## Content
