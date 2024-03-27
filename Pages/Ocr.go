@@ -144,11 +144,13 @@ func CreateOcrWindow() fyne.CanvasObject {
 				Text                string `json:"text"`
 				From_lang           string `json:"from_lang"`
 				To_lang             string `json:"to_lang"`
+				To_romaji           bool   `json:"to_romaji"`
 				Ignore_send_options bool   `json:"ignore_send_options"`
 			}{
 				Text:                Fields.Field.TranscriptionInput.Text,
 				From_lang:           fromLang,
 				To_lang:             toLang,
+				To_romaji:           Settings.Config.Txt_romaji,
 				Ignore_send_options: true,
 			},
 		}
