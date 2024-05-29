@@ -14,6 +14,7 @@ import (
 	"log"
 	"os"
 	"reflect"
+	"regexp"
 	"runtime/debug"
 	"strconv"
 	"strings"
@@ -254,4 +255,30 @@ func Capitalize(str string) string {
 	runes := []rune(str)
 	runes[0] = unicode.ToUpper(runes[0])
 	return string(runes)
+}
+
+// ParseProgressFromString parses a progress percentage from a given string and returns it as a float64 between 0 and 1.
+func ParseProgressFromString(s string) (float64, error) {
+	// Define a regular expression to match progress formats.
+	// It matches a number followed by optional whitespace and a percentage sign.
+	pattern := `(?mi)(\d{1,3}(?:,\d{3})*(\.\d+)?)(\s*%)`
+
+	re := regexp.MustCompile(pattern)
+	allMatches := re.FindAllStringSubmatch(s, -1)
+	if len(allMatches) > 0 {
+		// Log to check if we found matches
+		log.Printf("Found percentage matches in string \"%v\": %v", s, allMatches)
+		// Take the last match
+		lastMatch := allMatches[len(allMatches)-1]
+		progressStr := lastMatch[1]
+		// Remove commas if present
+		progressStr = strings.ReplaceAll(progressStr, ",", "")
+		progress, err := strconv.ParseFloat(progressStr, 64)
+		if err != nil {
+			return 0, fmt.Errorf("failed to parse progress: %v", err)
+		}
+		return progress / 100, nil
+	}
+
+	return 0, fmt.Errorf("no progress percentage found in the string")
 }

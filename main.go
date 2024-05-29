@@ -6,11 +6,13 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/theme"
+	"fyne.io/fyne/v2/widget"
 	"log"
 	"os"
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Pages"
 	"whispering-tiger-ui/Pages/Advanced"
 	"whispering-tiger-ui/Resources"
@@ -130,6 +132,14 @@ func main() {
 			}
 		}
 
+		// initialize status bar
+		Fields.Field.StatusBar = widget.NewProgressBar()
+		Fields.Field.StatusBar.TextFormatter = func() string {
+			return ""
+		}
+
+		Fields.Field.StatusRow = container.NewMax(Fields.Field.StatusBar, Fields.Field.StatusText)
+
 		// initialize main window
 		appTabs := container.NewAppTabs(
 			container.NewTabItemWithIcon("Speech-to-Text", theme.NewThemedResource(Resources.ResourceSpeechToTextIconSvg), Pages.CreateSpeechToTextWindow()),
@@ -163,7 +173,8 @@ func main() {
 			}
 		}
 
-		w.SetContent(appTabs)
+		Fields.Field.StatusText.Wrapping = fyne.TextTruncate
+		w.SetContent(container.NewBorder(nil, Fields.Field.StatusRow, nil, nil, appTabs))
 
 		// set main window size
 		mainWindowWidth := fyne.CurrentApp().Preferences().FloatWithFallback("MainWindowWidth", 1200)

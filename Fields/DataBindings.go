@@ -11,6 +11,7 @@ var DataBindings = struct {
 	TextTranslateEnabledDataBinding binding.Bool
 	TextToSpeechEnabledDataBinding  binding.Bool
 	OSCEnabledDataBinding           binding.Bool
+	StatusTextBinding               binding.String
 }{
 	WhisperResultsDataBinding: binding.BindUntypedList(
 		&[]interface{}{},
@@ -20,4 +21,5 @@ var DataBindings = struct {
 	TextTranslateEnabledDataBinding: binding.NewBool(),
 	TextToSpeechEnabledDataBinding:  binding.NewBool(),
 	OSCEnabledDataBinding:           binding.NewBool(),
+	StatusTextBinding:               binding.NewString(),
 }

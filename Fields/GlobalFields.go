@@ -46,6 +46,9 @@ var Field = struct {
 	OcrWindowCombo                    *CustomWidget.TappableSelect
 	OcrImageContainer                 *fyne.Container
 	LogText                           *terminal.Terminal
+	StatusBar                         *widget.ProgressBar
+	StatusText                        *widget.Label
+	StatusRow                         *fyne.Container
 }{
 	RealtimeResultLabel: widget.NewLabelWithData(DataBindings.WhisperResultIntermediateResult),
 	ProcessingStatus:    nil,
@@ -179,6 +182,10 @@ var Field = struct {
 	}),
 	OcrImageContainer: container.NewMax(),
 	LogText:           terminal.New(),
+	// Status Bar
+	StatusBar:  nil,
+	StatusText: widget.NewLabelWithData(DataBindings.StatusTextBinding),
+	StatusRow:  nil,
 }
 
 func updateCompletionEntryBasedOnValue(completionEntryWidget *CustomWidget.CompletionEntry, value string) string {

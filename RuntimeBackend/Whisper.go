@@ -1,7 +1,6 @@
 package RuntimeBackend
 
 import (
-	"bufio"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -55,9 +54,9 @@ func (c *WhisperProcessConfig) RunWithStreams(name string, arguments []string, s
 	c.Program = proc
 
 	// parse for errors coming from the backend process and printed to stderr
-	go c.SetErrorOutputHandling(stdErrPipeReader)
+	go c.SetOutputHandling(stdErrPipeReader, c.processErrorOutputLine)
 
-	go c.SetLogOutputHandling(stdOutPipeReader)
+	go c.SetOutputHandling(stdOutPipeReader, c.processLogOutputLine)
 
 	return proc.Run()
 }
@@ -148,11 +147,19 @@ func (c *WhisperProcessConfig) AttachEnvironment(envName, envValue string) {
 	}
 }
 
-func (c *WhisperProcessConfig) SetLogOutputHandling(stdout io.Reader) {
-	scanner := bufio.NewScanner(stdout)
-	for scanner.Scan() {
-		line := scanner.Text()
+func (c *WhisperProcessConfig) processLogOutputLine(line string, isUpdating bool) {
+	// set last log line to status bar text.
+	Fields.DataBindings.StatusTextBinding.Set(line)
 
+	// Try to decode if the line contains a progress percentage
+	progress, err := Utilities.ParseProgressFromString(line)
+	if err == nil {
+		Fields.Field.StatusBar.SetValue(progress)
+	} else {
+		Fields.Field.StatusBar.SetValue(0)
+	}
+
+	if !isUpdating {
 		// write to c.RecentLog
 		c.RecentLog = append(c.RecentLog, line)
 		// remove first element if length is greater than 2000
@@ -162,10 +169,19 @@ func (c *WhisperProcessConfig) SetLogOutputHandling(stdout io.Reader) {
 	}
 }
 
-func (c *WhisperProcessConfig) SetErrorOutputHandling(stdout io.Reader) {
-	scanner := bufio.NewScanner(stdout)
-	for scanner.Scan() {
-		line := scanner.Text()
+func (c *WhisperProcessConfig) processErrorOutputLine(line string, isUpdating bool) {
+	// set last log line to status bar text.
+	Fields.DataBindings.StatusTextBinding.Set(line)
+
+	// Try to decode if the line contains a progress percentage
+	progress, err := Utilities.ParseProgressFromString(line)
+	if err == nil {
+		Fields.Field.StatusBar.SetValue(progress)
+	} else {
+		Fields.Field.StatusBar.SetValue(0)
+	}
+
+	if !isUpdating {
 		// write to log.txt file if WriteLogFile is enabled
 		if fyne.CurrentApp().Preferences().BoolWithFallback("WriteLogfile", false) {
 			Utilities.WriteLog("log.txt", line)
@@ -199,8 +215,74 @@ func (c *WhisperProcessConfig) SetErrorOutputHandling(stdout io.Reader) {
 			c.RecentLog = c.RecentLog[1:]
 		}
 	}
-	if err := scanner.Err(); err != nil {
-		log.Print(err)
+}
+
+func (c *WhisperProcessConfig) SetOutputHandling(stderr io.Reader, processLineFunc func(string, bool)) {
+	bufLen := 4096
+	buf := make([]byte, bufLen)
+	var incompleteLine string
+
+	for {
+		num, err := stderr.Read(buf)
+		if err != nil {
+			if err.Error() == "EOF" {
+				if len(incompleteLine) > 0 {
+					processLineFunc(incompleteLine, false)
+				}
+				break
+			} else if err, ok := err.(*os.PathError); ok && err.Err.Error() == "input/output error" {
+				log.Printf("read error: %v", err)
+				break
+			}
+		}
+
+		output := string(buf[:num])
+		lines := strings.Split(output, "\n")
+
+		if len(incompleteLine) > 0 {
+			lines[0] = incompleteLine + lines[0]
+			incompleteLine = ""
+		}
+
+		for i, line := range lines {
+			// Handle carriage return (updating lines)
+			if strings.Contains(line, "\r") {
+				parts := strings.Split(line, "\r")
+				for j, part := range parts {
+					if j > 0 {
+						if i == len(lines)-1 && j == len(parts)-1 {
+							incompleteLine = part
+						}
+						if strings.TrimSpace(part) != "" {
+							processLineFunc(part, true) // Treat as updated line
+						}
+					} else {
+						if i == len(lines)-1 && output[len(output)-1] != '\n' {
+							incompleteLine = part
+						}
+						if strings.TrimSpace(part) != "" {
+							processLineFunc(part, false)
+						}
+					}
+				}
+			} else if i == len(lines)-1 && output[len(output)-1] != '\n' {
+				incompleteLine = line
+				if strings.TrimSpace(line) != "" {
+					processLineFunc(line, true) // line might be updated
+				}
+			} else {
+				if strings.TrimSpace(line) != "" {
+					processLineFunc(line, false)
+				}
+			}
+		}
+	}
+
+	// Ensure any remaining incomplete line is processed after the loop
+	if len(incompleteLine) > 0 {
+		if strings.TrimSpace(incompleteLine) != "" {
+			processLineFunc(incompleteLine, false)
+		}
 	}
 }
 
