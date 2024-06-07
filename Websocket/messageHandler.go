@@ -47,6 +47,22 @@ var (
 	realtimeLabelTimerMutex     sync.Mutex
 )
 
+var ReceiveMessageChannelBufferSize = 100
+var ReceiveMessageChannel = make(chan []byte, ReceiveMessageChannelBufferSize)
+
+func ProcessReceiveMessageChannel() {
+	for {
+		select {
+		case messageBytes := <-ReceiveMessageChannel:
+			var msg MessageStruct
+			messageStruct := msg.GetMessage(messageBytes)
+			if messageStruct != nil {
+				msg.HandleReceiveMessage()
+			}
+		}
+	}
+}
+
 func realtimeLabelHideTimer() {
 	for {
 		select {

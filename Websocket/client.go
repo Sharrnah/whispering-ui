@@ -1,6 +1,7 @@
 package Websocket
 
 import (
+	"bytes"
 	"encoding/json"
 	"flag"
 	"fyne.io/fyne/v2"
@@ -73,6 +74,7 @@ func (c *Client) Start() {
 
 	go processingStopTimer()
 	go realtimeLabelHideTimer()
+	go ProcessReceiveMessageChannel()
 
 	flag.Parse()
 	log.SetFlags(0)
@@ -92,6 +94,7 @@ func (c *Client) Start() {
 
 	var err error = nil
 	c.Conn, _, err = dialer.Dial(u.String(), nil)
+	//c.Conn.SetReadDeadline(time.Now().Add(5 * time.Second))
 	// retry
 	for err != nil {
 		log.Println("dial:", err)
@@ -127,7 +130,7 @@ func (c *Client) Start() {
 
 		defer close(done)
 		for {
-			messageType, r, err := c.Conn.NextReader()
+			_, r, err := c.Conn.NextReader()
 			if err != nil {
 				log.Println("read:", err)
 				// retry
@@ -163,42 +166,60 @@ func (c *Client) Start() {
 			// Read the message using io.Reader
 			// buf := make([]byte, 1024)
 			buf := make([]byte, 4096)
-			var fullMessage []byte
+			var buffer []byte // Holds incoming data
 			for {
+				// Read data into buf as before
 				n, err := r.Read(buf)
-				if err == io.EOF {
+				if err != nil {
+					if err != io.EOF {
+						log.Println("Error reading message:", err)
+					}
 					break
 				}
-				if err != nil {
-					log.Println("Error reading message:", err)
-					return
+				buffer = append(buffer, buf[:n]...)
+
+				// Create a new reader and decoder for the current state of buffer
+				reader := bytes.NewReader(buffer)
+				decoder := json.NewDecoder(reader)
+
+				for decoder.More() {
+					var msgStruct interface{} // Use the specific struct you expect to decode, or interface{} for generic JSON objects
+					err := decoder.Decode(&msgStruct)
+
+					if err != nil {
+						log.Println("Error decoding JSON:", err)
+						// If an error occurs, break out of the loop. You'll need to handle partial messages
+						break
+					}
+
+					// Successfully decoded a message, now send it to ReceiveMessageChannel
+					// Since decoder doesn't provide directly the raw message, you might need to re-marshal if you need the exact JSON
+					processedJSON, err := json.Marshal(msgStruct)
+					if err != nil {
+						log.Println("Error marshaling decoded JSON:", err)
+						break
+					}
+					ReceiveMessageChannel <- processedJSON
+
+					// Update buffer to remove processed message
+					// This is a bit tricky since decoder does not tell us directly how much of the input it consumed
+					// We'll have to rely on re-marshaling and knowing the structure of our JSON to get the byte length, or
+					// we assume the decoder consumed exactly what was needed for the message it decoded.
+					newPos := reader.Size() - int64(reader.Len()) // Calculate how much of the buffer we've processed
+					buffer = buffer[newPos:]                      // This assumes all data before newPos is processed, which might not always be accurate
 				}
-				fullMessage = append(fullMessage, buf[:n]...)
-			}
 
-			if messageType == websocket.TextMessage {
-				log.Println("Received text message")
-			} else if messageType == websocket.BinaryMessage {
-				log.Println("Received binary message")
-			} else {
-				log.Println("Received unknown message type:", messageType)
-			}
-
-			if messageType == websocket.TextMessage || messageType == websocket.BinaryMessage {
-				if fullMessage != nil && len(fullMessage) > 0 {
-					go func(data []byte) { // Concurrent message handling
-						var msg MessageStruct
-						messageStruct := msg.GetMessage(data)
-						if messageStruct != nil {
-							msg.HandleReceiveMessage()
-						}
-					}(fullMessage)
+				// Handle case where buffer might be empty or contain partial data
+				if len(buffer) == 0 || !decoder.More() {
+					// Clear the buffer or handle partial data
+					buffer = nil // Reset the buffer if we think we've processed all messages
 				}
 			}
 		}
 	}()
 
 	go func() {
+		defer Utilities.PanicLogger()
 		for {
 			select {
 			//case <-done:
@@ -206,12 +227,17 @@ func (c *Client) Start() {
 			case message := <-c.sendMessageChan:
 				HandleSendMessage(&message)
 				if message.Value != SkipMessage {
-					sendMessage, _ := json.Marshal(message)
-					if c.Conn != nil { // make sure connection is not closed before sending message
-						err := c.Conn.WriteMessage(websocket.TextMessage, sendMessage)
-						if err != nil {
-							log.Println("write:", err)
-							//return
+					sendMessage, err := json.Marshal(message)
+					if err != nil {
+						log.Println("Error marshaling message:", err)
+						//return
+					} else {
+						if c.Conn != nil { // make sure connection is not closed before sending message
+							err := c.Conn.WriteMessage(websocket.TextMessage, sendMessage)
+							if err != nil {
+								log.Println("write:", err)
+								//return
+							}
 						}
 					}
 				}

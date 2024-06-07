@@ -148,18 +148,26 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 			dialog.ShowError(err, window)
 			return err
 		}
-		err = os.Rename(targetDir, targetDir+".finished")
+		err = downloader.CreateFinishedFile(".finished", 5, 1*time.Second)
 		if err != nil {
 			dialog.ShowError(err, window)
 			return err
 		}
+
+		//err = os.Rename(targetDir, targetDir+".finished")
+		//if err != nil {
+		//	dialog.ShowError(err, window)
+		//	return err
+		//}
+
 		//err = os.Remove(downloadTargetFile)
 		//if err != nil {
 		//	dialog.ShowError(err, window)
 		//	return err
 		//}
 	} else {
-		err = os.Rename(targetDir, targetDir+".finished")
+		//err = os.Rename(targetDir, targetDir+".finished")
+		err = downloader.CreateFinishedFile(".finished", 5, 1*time.Second)
 		if err != nil {
 			dialog.ShowError(err, window)
 			return err

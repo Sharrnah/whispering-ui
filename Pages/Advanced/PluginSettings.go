@@ -25,6 +25,16 @@ import (
 	"whispering-tiger-ui/Utilities"
 )
 
+type Type int
+
+const (
+	TypeAuto Type = iota // Auto-detection type
+	TypeFloat
+	TypeInt
+	TypeString
+	TypeNone
+)
+
 func parseURL(urlStr string) *url.URL {
 	link, err := url.Parse(urlStr)
 	if err != nil {
@@ -120,6 +130,7 @@ func _getFilePathDialogInitPath(v map[string]interface{}, entry *widget.Entry) (
 }
 
 var onlyShowEnabledPlugins bool
+var openPluginItem = -1
 
 func BuildPluginSettingsAccordion() (fyne.CanvasObject, int) {
 	// load settings file for plugin settings
@@ -262,10 +273,13 @@ func BuildPluginSettingsAccordion() (fyne.CanvasObject, int) {
 
 				pluginAccordionItem.Detail = pluginSettingsContainer
 			}
-
 			pluginAccordion.Append(pluginAccordionItem)
 		}
 	}
+
+	//if openPluginItem >= 0 {
+	//	pluginAccordion.Open(openPluginItem)
+	//}
 
 	return pluginAccordion, len(pluginFiles)
 }
@@ -348,7 +362,7 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 	}
 
 	// widget Entry OnChange function
-	entryOnChange := func(text string) {
+	_entryOnChange := func(text string) {
 		if val, err := strconv.ParseFloat(text, 64); err == nil {
 			pluginSettings[settingName] = val
 		} else if val, err := strconv.ParseInt(text, 10, 64); err == nil {
@@ -359,6 +373,34 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 			pluginSettings[settingName] = text
 		}
 		updateSettings(*SettingsFile, pluginClassName, pluginSettings)
+	}
+	_entryOnChangeWithForceType := func(text string, forceType Type) {
+		switch forceType {
+		case TypeFloat:
+			if val, err := strconv.ParseFloat(text, 64); err == nil {
+				pluginSettings[settingName] = val
+			}
+		case TypeInt:
+			if val, err := strconv.ParseInt(text, 10, 64); err == nil {
+				pluginSettings[settingName] = val
+			}
+		case TypeString:
+			pluginSettings[settingName] = text
+		case TypeNone:
+			pluginSettings[settingName] = nil
+		case TypeAuto:
+			// Fall back to the default auto detection
+			_entryOnChange(text)
+		default:
+			// Handle unexpected type by using default behavior
+			_entryOnChange(text)
+		}
+		updateSettings(*SettingsFile, pluginClassName, pluginSettings)
+	}
+	makeEntryOnChange := func(forceType Type) func(text string) {
+		return func(text string) {
+			_entryOnChangeWithForceType(text, forceType)
+		}
 	}
 
 	switch v := pluginSettings[settingName].(type) {
@@ -372,7 +414,7 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 	case int, float64:
 		entry := widget.NewEntry()
 		entry.SetText(fmt.Sprintf("%v", v))
-		entry.OnChanged = entryOnChange
+		entry.OnChanged = makeEntryOnChange(TypeAuto)
 		settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, entry))
 	case string:
 		if strings.Contains(v, "\n") {
@@ -392,13 +434,13 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 		} else {
 			entry := widget.NewEntry()
 			entry.SetText(v)
-			entry.OnChanged = entryOnChange
+			entry.OnChanged = makeEntryOnChange(TypeAuto)
 			settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, entry))
 		}
 	case nil:
 		entry := widget.NewEntry()
 		entry.SetText("None")
-		entry.OnChanged = entryOnChange
+		entry.OnChanged = makeEntryOnChange(TypeAuto)
 		settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, entry))
 	case map[string]interface{}:
 		// if 'type' field is set to 'button', create a button
@@ -471,6 +513,15 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 				entry.SetMinRowsVisible(int(rows))
 			} else {
 				entry.SetMinRowsVisible(5)
+			}
+			settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, entry))
+		} else if v["type"] == "textfield" {
+			entry := widget.NewEntry()
+			entry.SetText(v["value"].(string))
+			entry.OnChanged = func(text string) {
+				v["value"] = text
+				pluginSettings[settingName] = v
+				updateSettings(*SettingsFile, pluginClassName, pluginSettings)
 			}
 			settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, entry))
 		} else if v["type"] == "hyperlink" {

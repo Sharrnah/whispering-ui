@@ -543,7 +543,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		runBackendCheckbox := widget.NewCheck("Run Backend", func(b bool) {
 			if !b {
-				dialog.ShowInformation("Info", "The backend will not be started. You will have to start it manually. Without it, the UI will have no function.", fyne.CurrentApp().Driver().AllWindows()[1])
+				dialog.ShowInformation("Info", "The backend will not be started. You will have to start it manually or remotely. Without it, the UI will have no function.", fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 		})
 
@@ -652,19 +652,31 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			autoDetectEnergyDialog.Show()
 		})
 		energySliderState := widget.NewLabel("0.0")
+		energySliderWidgetZeroValueInfo := dialog.NewError(fmt.Errorf("You did set Speech volume detection to 0 and have no PushToTalk Button set.\nThis would prevent the app from recording anything."), fyne.CurrentApp().Driver().AllWindows()[1])
 		energySliderWidget.OnChanged = func(value float64) {
 			if value >= energySliderWidget.Max {
 				energySliderWidget.Max += 10
 			}
 			energySliderState.SetText(fmt.Sprintf("%.0f", value))
+
+			if PushToTalkInput.Text == "" && value == 0 {
+				energySliderWidget.SetValue(1)
+				energySliderWidgetZeroValueInfo.Show()
+			}
 		}
 		appendWidgetToForm(profileForm, "Speech volume Level", container.NewBorder(nil, nil, nil, container.NewHBox(energySliderState, energyHelpBtn), energySliderWidget), "The volume level at which the speech detection will trigger. (0 = Disabled, useful for Push2Talk)")
 
 		pauseSliderState := widget.NewLabel("0.0")
 		pauseSliderWidget := widget.NewSlider(0, 5)
 		pauseSliderWidget.Step = 0.1
+		pauseSliderWidgetZeroValueInfo := dialog.NewError(fmt.Errorf("You did set Speech pause detection to 0 and have no PushToTalk Button set.\nThis would prevent the app from stopping recording automatically."), fyne.CurrentApp().Driver().AllWindows()[1])
 		pauseSliderWidget.OnChanged = func(value float64) {
 			pauseSliderState.SetText(fmt.Sprintf("%.1f", value))
+
+			if PushToTalkInput.Text == "" && value == 0 {
+				pauseSliderWidget.SetValue(0.5)
+				pauseSliderWidgetZeroValueInfo.Show()
+			}
 		}
 		appendWidgetToForm(profileForm, "Speech pause detection", container.NewBorder(nil, nil, nil, pauseSliderState, pauseSliderWidget), "The pause time in seconds after which the speech detection will stop and A.I. processing starts.")
 
@@ -727,6 +739,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Original Whisper", Value: "original_whisper"},
 			{Text: "Transformer Whisper", Value: "transformer_whisper"},
 			{Text: "Seamless M4T", Value: "seamless_m4t"},
+			{Text: "MMS", Value: "mms"},
 			{Text: "Speech T5 (English only)", Value: "speech_t5"},
 			{Text: "Wav2Vec Bert 2.0", Value: "wav2vec_bert"},
 			{Text: "NeMo Canary", Value: "nemo_canary"},
@@ -857,11 +870,13 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Large V3", Value: "large-v3"},
 			{Text: "Medium Distilled (English)", Value: "medium-distilled.en"},
 			{Text: "Large V2 Distilled (English)", Value: "large-distilled-v2.en"},
+			{Text: "Large V3 Distilled (English)", Value: "large-distilled-v3.en"},
 			{Text: "Small (European finetune)", Value: "small.eu"},
 			{Text: "Medium (European finetune)", Value: "medium.eu"},
 			{Text: "Small (German finetune)", Value: "small.de"},
 			{Text: "Medium (German finetune)", Value: "medium.de"},
 			{Text: "Large V2 (German finetune)", Value: "large-v2.de2"},
+			{Text: "Large V3 Distilled (German finetune)", Value: "large-distilled-v3.de"},
 			{Text: "Small (German-Swiss finetune)", Value: "small.de-swiss"},
 			{Text: "Medium (Mix-Japanese-v2 finetune)", Value: "medium.mix-jpv2"},
 			{Text: "Large V2 (Mix-Japanese finetune)", Value: "large-v2.mix-jp"},
@@ -879,6 +894,12 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Medium", Value: "medium"},
 			{Text: "Large", Value: "large"},
 			{Text: "Large V2", Value: "large-v2"},
+		}
+
+		originalMmsModelList := []CustomWidget.TextValueOption{
+			{Text: "1b-fl102 (102 languages)", Value: "mms-1b-fl102"},
+			{Text: "1b-l1107 (1107 languages)", Value: "mms-1b-l1107"},
+			{Text: "1b-all (1162 languages)", Value: "1b-all"},
 		}
 
 		sttModelSize := CustomWidget.NewTextValueSelect("model", fasterWhisperModelList, func(s CustomWidget.TextValueOption) {
@@ -1018,6 +1039,22 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					sttPrecisionSelect.SetSelected("float16")
 				}
 				AIModelType = "wav2vec-bert"
+			} else if s.Value == "mms" {
+				sttModelSize.Options = originalMmsModelList
+				// unselect if not in list
+				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption) {
+					sttModelSize.SetSelectedIndex(1)
+				}
+				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
+					{Text: "float32 precision", Value: "float32"},
+					{Text: "float16 precision", Value: "float16"},
+					{Text: "8bit precision", Value: "8bit"},
+					{Text: "4bit precision", Value: "4bit"},
+				}
+				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "bfloat16" || selectedPrecision == "int8_bfloat16" {
+					sttPrecisionSelect.SetSelected("float16")
+				}
+				AIModelType = "mms"
 			} else if s.Value == "nemo_canary" {
 				sttPrecisionSelect.Disable()
 				sttPrecisionSelect.SetSelected("float32") // only available in float32
@@ -1244,7 +1281,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		profileForm.Append("", layout.NewSpacer())
 
-		profileForm.Append("Text-to-Speech Enable", widget.NewCheck("", func(b bool) {
+		profileForm.Append("Integrated Text-to-Speech Enabled", widget.NewCheck("", func(b bool) {
 			enabledType := "N"
 			if b {
 				enabledType = "O"

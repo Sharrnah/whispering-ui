@@ -35,6 +35,10 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		speechTaskWidgetLabel.SetText("")
 		speechTaskWidget.(*widget.Select).Hide()
 	}
+	if Settings.Config.Stt_type == "mms" {
+		speechTaskWidgetLabel.SetText("")
+		speechTaskWidget.(*widget.Select).Hide()
+	}
 
 	languageRow := container.New(layout.NewVBoxLayout(),
 		container.New(layout.NewFormLayout(),
