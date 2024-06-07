@@ -130,7 +130,7 @@ func (d *Download) GetTotalDownloadedSize() int64 {
 	}
 
 	// Calculate the total downloaded size as the sum of the size of the temporary file and the total size of the chunks in memory
-	return d.getFileSize(d.Filepath+".tmp") + int64(totalSizeInMemory)
+	return d.getFileSize(d.Filepath) + int64(totalSizeInMemory)
 }
 
 func (d *Download) DownloadFile(retries int) error {
@@ -171,18 +171,18 @@ func (d *Download) DownloadFile(retries int) error {
 	if d.remoteFileSize == -1 {
 		d.ChunkSize = math.MaxInt64                   // set the chunk size to maximum value
 		d.WriteCounter.ContentLength = math.MaxUint64 // set the content length to maximum value
-		if Utilities.FileExists(d.Filepath + ".tmp") {
-			err := os.Remove(d.Filepath + ".tmp")
+		if Utilities.FileExists(d.Filepath) {
+			err := os.Remove(d.Filepath)
 			if err != nil {
 				return err
 			}
 		}
 	} else {
 		// Check if the local file exists and if it's larger than the remote file
-		localFileSize := d.getFileSize(d.Filepath + ".tmp")
-		if Utilities.FileExists(d.Filepath+".tmp") && localFileSize > d.remoteFileSize {
+		localFileSize := d.getFileSize(d.Filepath)
+		if Utilities.FileExists(d.Filepath) && localFileSize > d.remoteFileSize {
 			// If the local file is larger than the remote file, delete the local file
-			err := os.Remove(d.Filepath + ".tmp")
+			err := os.Remove(d.Filepath)
 			if err != nil {
 				return err
 			}
@@ -229,7 +229,7 @@ func (d *Download) IsResuming() bool {
 }
 
 func (d *Download) downloadFullFile(url string) error {
-	out, err := os.Create(d.Filepath + ".tmp")
+	out, err := os.Create(d.Filepath)
 	if err != nil {
 		return err
 	}
@@ -283,15 +283,15 @@ func (d *Download) downloadFileWithRetry(retries int, progressCtx context.Contex
 
 		// Check if the file already exists and get its size
 		var startBytes int64 = 0
-		if _, err := os.Stat(d.Filepath + ".tmp"); err == nil {
-			startBytes = d.getFileSize(d.Filepath + ".tmp")
+		if _, err := os.Stat(d.Filepath); err == nil {
+			startBytes = d.getFileSize(d.Filepath)
 		}
 
 		// Set ResumeSupport to true if the file download is resumed and the server supports resuming
 		d.isResumed = startBytes > 0 && d.serverResumeSupport
 
 		// Create the file without overwriting it
-		out, err := os.OpenFile(d.Filepath+".tmp", os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
+		out, err := os.OpenFile(d.Filepath, os.O_WRONLY|os.O_CREATE|os.O_APPEND, 0644)
 		if err != nil {
 			return err
 		}
@@ -409,23 +409,60 @@ func (d *Download) downloadFileWithRetry(retries int, progressCtx context.Contex
 		}
 	}
 
-	// Maximum number of retries for rename
-	maxRetries := 5
+	// create a textfile with the same name as the downloaded file, but with a .dl_finished extension.
+	// This file will be used to check if the download was successful.
+	//finishedErr := d.CreateFinishedFile(".dl_finished", 5, 1*time.Second)
+	//if finishedErr != nil {
+	//	return finishedErr
+	//}
+	/*
+		// Maximum number of retries for rename
+		maxRetries := 5
 
-	// Time to wait between rename retries
-	retryWait := time.Second
+		// Time to wait between rename retries
+		retryWait := time.Second
 
-	var renameErr error
+		var renameErr error
+		for i := 0; i < maxRetries; i++ {
+			renameErr = os.Rename(d.Filepath+".tmp", d.Filepath)
+			if renameErr == nil {
+				break
+			}
+			// The error occurred, wait for a bit before trying again
+			time.Sleep(retryWait)
+		}
+		if renameErr != nil {
+			return renameErr
+		}
+	*/
+
+	return nil
+}
+
+func (d *Download) CreateFinishedFile(fileExtension string, maxRetries int, retryWait time.Duration) error {
+	// create a text file with the same name as the downloaded file, but with a ".dl_finished" or by fileExtension defined extension.
+	// This file will be used to check if the download was successful.
+
+	if fileExtension == "" {
+		fileExtension = ".dl_finished"
+	}
+
+	var finishedErr, closeFileErr error
 	for i := 0; i < maxRetries; i++ {
-		renameErr = os.Rename(d.Filepath+".tmp", d.Filepath)
-		if renameErr == nil {
+		finishedFile, finishedErr := os.Create(d.Filepath + fileExtension)
+		closeFileErr := finishedFile.Close()
+
+		if closeFileErr == nil && finishedErr == nil {
 			break
 		}
 		// The error occurred, wait for a bit before trying again
 		time.Sleep(retryWait)
 	}
-	if renameErr != nil {
-		return renameErr
+	if finishedErr != nil {
+		return finishedErr
+	}
+	if closeFileErr != nil {
+		return closeFileErr
 	}
 	return nil
 }
