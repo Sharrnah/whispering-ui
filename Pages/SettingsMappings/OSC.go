@@ -55,7 +55,7 @@ var OSCSettingsMapping = SettingsMapping{
 		{
 			SettingsName:         "OSC chat prefix",
 			SettingsInternalName: "osc_chat_prefix",
-			SettingsDescription:  "Adds a prefix to the chat messages.",
+			SettingsDescription:  "Adds a prefix to the chat messages.\n\"{src}\" is replaced with the source language,\n\"{trg}\" replaced with the target language.",
 			_widget: func() fyne.CanvasObject {
 				settingWidget := widget.NewEntry()
 				settingWidget.OnChanged = func(value string) {}
@@ -123,7 +123,7 @@ var OSCSettingsMapping = SettingsMapping{
 		{
 			SettingsName:         "OSC transfer split",
 			SettingsInternalName: "osc_type_transfer_split",
-			SettingsDescription:  "Text that is added between Source and Translation in the OSC message.\n(Only used if OSC Transfer Type is set to 'Both')",
+			SettingsDescription:  "Text that is added between Source and Translation in the OSC message.\n(Only used if OSC Transfer Type is set to 'Both')\n\"{src}\" is replaced with the source language,\n\"{trg}\" replaced with the target language.",
 			_widget: func() fyne.CanvasObject {
 				settingWidget := widget.NewEntry()
 				settingWidget.OnChanged = func(value string) {}

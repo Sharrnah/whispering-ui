@@ -10,7 +10,7 @@ var TextTranslateSettingsMapping = SettingsMapping{
 		{
 			SettingsName:         "Translate text in real-time",
 			SettingsInternalName: "txt_translate_realtime",
-			SettingsDescription:  "",
+			SettingsDescription:  "Translate the intermediate text in Speech-to-text real-time mode.",
 			_widget: func() fyne.CanvasObject {
 				return widget.NewCheck("", func(b bool) {})
 			},

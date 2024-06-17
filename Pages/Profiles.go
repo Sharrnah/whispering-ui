@@ -779,6 +779,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				txtTranslatorDeviceSelect.Enable()
 			}
 		}
+
 		sttPrecisionSelect.OnChanged = func(s CustomWidget.TextValueOption) {
 			precisionType := Hardwareinfo.Float32
 			switch s.Value {
@@ -838,8 +839,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				txtTranslatorDeviceSelect.Enable()
 			}
 		}
-
-		profileForm.Append("A.I. Device for Speech-to-Text", sttAiDeviceSelect)
 
 		originalWhisperModelList := []CustomWidget.TextValueOption{
 			{Text: "Tiny", Value: "tiny"},
@@ -932,8 +931,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				txtTranslatorDeviceSelect.Enable()
 			}
 		}, 0)
-
-		profileForm.Append("Speech-to-Text Size", container.NewGridWithColumns(2, sttModelSize, sttPrecisionSelect))
 
 		sttTypeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
 			sttPrecisionSelectOption := sttPrecisionSelect.GetSelected()
@@ -1095,10 +1092,15 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 
 		denoiseCheckbox := widget.NewCheck("A.I. Denoise", func(b bool) {})
-
 		profileForm.Append("Speech-to-Text Type", container.NewGridWithColumns(2, sttTypeSelect, denoiseCheckbox))
 
+		profileForm.Append("A.I. Device for Speech-to-Text", sttAiDeviceSelect)
+
+		profileForm.Append("Speech-to-Text Size", container.NewGridWithColumns(2, sttModelSize, sttPrecisionSelect))
+
 		profileForm.Append("", layout.NewSpacer())
+
+		profileForm.Append("Text-Translation Type", container.NewGridWithColumns(2, txtTranslatorTypeSelect))
 
 		txtTranslatorDeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {
 			if !Hardwareinfo.HasNVIDIACard() && s.Value == "cuda" {
@@ -1175,8 +1177,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			}
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
 		}
-
-		profileForm.Append("Text-Translation Size", container.NewGridWithColumns(2, txtTranslatorSizeSelect, txtTranslatorPrecisionSelect))
 
 		txtTranslatorTypeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
 			selectedPrecisionOption := txtTranslatorPrecisionSelect.GetSelected()
@@ -1277,7 +1277,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
 		}
 
-		profileForm.Append("Text-Translation Type", container.NewGridWithColumns(2, txtTranslatorTypeSelect))
+		profileForm.Append("Text-Translation Size", container.NewGridWithColumns(2, txtTranslatorSizeSelect, txtTranslatorPrecisionSelect))
 
 		profileForm.Append("", layout.NewSpacer())
 
@@ -1446,10 +1446,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Vad_thread_num:           1,
 			Push_to_talk_key:         "",
 
-			Speaker_change_check:            false,
-			Speaker_similarity_threshold:    0.7,
-			Speaker_diarization_window_size: 15,
-			Speaker_min_duration:            0.5,
+			Speaker_diarization:  false,
+			Speaker_change_split: true,
+			Min_speaker_length:   0.5,
+			Min_speakers:         1,
+			Max_speakers:         3,
 
 			Denoise_audio:             false,
 			Denoise_audio_post_filter: false,
@@ -1576,19 +1577,22 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileForm.Items[10].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Pause))
 		profileForm.Items[11].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Phrase_time_limit))
 
+		profileForm.Items[12].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Stt_type)
+		profileForm.Items[12].Widget.(*fyne.Container).Objects[1].(*widget.Check).SetChecked(profileSettings.Denoise_audio)
+
 		if profileSettings.Ai_device != nil {
-			profileForm.Items[12].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Ai_device.(string))
+			profileForm.Items[13].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Ai_device.(string))
 		}
-		profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Model)
-		profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Whisper_precision)
+		profileForm.Items[14].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Model)
+		profileForm.Items[14].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Whisper_precision)
 		// show only available precision options depending on whisper project
-		selectedPrecisionOption := profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected()
+		selectedPrecisionOption := profileForm.Items[14].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected()
 		selectedPrecision := ""
 		if selectedPrecisionOption != nil {
 			selectedPrecision = selectedPrecisionOption.Value
 		}
 		if profileSettings.Stt_type == "faster_whisper" {
-			profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
+			profileForm.Items[14].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
 				{Text: "float32 precision", Value: "float32"},
 				{Text: "float16 precision", Value: "float16"},
 				{Text: "int16 precision", Value: "int16"},
@@ -1598,23 +1602,21 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
 			}
 		} else if profileSettings.Stt_type == "original_whisper" {
-			profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
+			profileForm.Items[14].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
 				{Text: "float32 precision", Value: "float32"},
 				{Text: "float16 precision", Value: "float16"},
 			}
 			if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" {
-				profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected("float16")
+				profileForm.Items[14].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected("float16")
 			}
 		}
-		profileForm.Items[14].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Stt_type)
-		profileForm.Items[14].Widget.(*fyne.Container).Objects[1].(*widget.Check).SetChecked(profileSettings.Denoise_audio)
 
-		// spacer
-		profileForm.Items[16].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_device)
-		profileForm.Items[17].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_size)
-		profileForm.Items[17].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_precision)
-		profileForm.Items[18].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator)
-
+		// spacer (15)
+		profileForm.Items[16].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator)
+		profileForm.Items[17].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_device)
+		profileForm.Items[18].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_size)
+		profileForm.Items[18].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_precision)
+		// spacer (19)
 		profileForm.Items[20].Widget.(*widget.Check).SetChecked(profileSettings.Tts_enabled)
 		profileForm.Items[21].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Tts_ai_device)
 
@@ -1640,16 +1642,16 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			profileSettings.Pause = profileForm.Items[10].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value
 			profileSettings.Phrase_time_limit = profileForm.Items[11].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value
 
-			profileSettings.Ai_device = profileForm.Items[12].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Model = profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Whisper_precision = profileForm.Items[13].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Stt_type = profileForm.Items[14].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Denoise_audio = profileForm.Items[14].Widget.(*fyne.Container).Objects[1].(*widget.Check).Checked
+			profileSettings.Stt_type = profileForm.Items[12].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Denoise_audio = profileForm.Items[12].Widget.(*fyne.Container).Objects[1].(*widget.Check).Checked
+			profileSettings.Ai_device = profileForm.Items[13].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Model = profileForm.Items[14].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Whisper_precision = profileForm.Items[14].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected().Value
 
-			profileSettings.Txt_translator_device = profileForm.Items[16].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Txt_translator_size = profileForm.Items[17].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Txt_translator_precision = profileForm.Items[17].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Txt_translator = profileForm.Items[18].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Txt_translator = profileForm.Items[16].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Txt_translator_device = profileForm.Items[17].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Txt_translator_size = profileForm.Items[18].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Txt_translator_precision = profileForm.Items[18].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected().Value
 
 			profileSettings.Tts_enabled = profileForm.Items[20].Widget.(*widget.Check).Checked
 			profileSettings.Tts_ai_device = profileForm.Items[21].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value

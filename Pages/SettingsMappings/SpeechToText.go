@@ -155,7 +155,7 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 		{
 			SettingsName:         "Real-time mode",
 			SettingsInternalName: "realtime",
-			SettingsDescription:  "",
+			SettingsDescription:  "Transcribes and processes speech while it is recorded.",
 			_widget: func() fyne.CanvasObject {
 				return widget.NewCheck("", func(b bool) {})
 			},
