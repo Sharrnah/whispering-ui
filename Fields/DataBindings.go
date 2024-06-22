@@ -4,8 +4,15 @@ import (
 	"fyne.io/fyne/v2/data/binding"
 )
 
+type WhisperResult struct {
+	Text                 string `json:"text"`
+	Language             string `json:"language"`
+	TxtTranslation       string `json:"txt_translation,omitempty"`
+	TxtTranslationTarget string `json:"txt_translation_target,omitempty"`
+}
+
 var DataBindings = struct {
-	WhisperResultsDataBinding       binding.ExternalUntypedList
+	WhisperResultsData              []WhisperResult
 	WhisperResultIntermediateResult binding.String
 	SpeechToTextEnabledDataBinding  binding.Bool
 	TextTranslateEnabledDataBinding binding.Bool
@@ -13,9 +20,6 @@ var DataBindings = struct {
 	OSCEnabledDataBinding           binding.Bool
 	StatusTextBinding               binding.String
 }{
-	WhisperResultsDataBinding: binding.BindUntypedList(
-		&[]interface{}{},
-	),
 	WhisperResultIntermediateResult: binding.NewString(),
 	SpeechToTextEnabledDataBinding:  binding.NewBool(),
 	TextTranslateEnabledDataBinding: binding.NewBool(),

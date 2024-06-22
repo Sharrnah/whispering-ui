@@ -4,7 +4,6 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/theme"
 	"image/color"
-	"whispering-tiger-ui/Resources"
 )
 
 var (
@@ -36,7 +35,8 @@ func (m AppTheme) Font(style fyne.TextStyle) fyne.Resource {
 	if style.Monospace {
 		return theme.DefaultTheme().Font(style)
 	}
-	return Resources.ResourceGoNotoKurrentRegularTtf
+	return theme.DefaultTheme().Font(style)
+	//return Resources.ResourceGoNotoKurrentRegularTtf
 }
 
 func (m AppTheme) Size(name fyne.ThemeSizeName) float32 {

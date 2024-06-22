@@ -22,6 +22,14 @@ import (
 	"unicode"
 )
 
+const (
+	_ = 1 << (10 * iota)
+	KiB
+	MiB
+	GiB
+	TiB
+)
+
 func PanicLogger() {
 	if r := recover(); r != nil {
 		// 2. Create a log file when a crash occurs

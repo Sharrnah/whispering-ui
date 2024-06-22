@@ -103,6 +103,15 @@ func processingStopTimer() {
 	}
 }
 
+func messageLoader(c interface{}, message []byte) (interface{}, error) {
+	err := json.Unmarshal(message, c)
+	if err != nil {
+		log.Fatalf("Unmarshal: %v", err)
+		return nil, err
+	}
+	return c, nil
+}
+
 func (c *MessageStruct) GetMessage(messageData []byte) *MessageStruct {
 	// no message data
 	if messageData == nil {
@@ -235,6 +244,8 @@ func (c *MessageStruct) HandleReceiveMessage() {
 
 			//Fields.Field.RealtimeResultLabel.SetText(whisperResultMessage.Text)
 			Fields.DataBindings.WhisperResultIntermediateResult.Set(resultMsg_.Text)
+
+			//Fields.Field.WhisperResultList.
 		}(whisperResultMessage)
 
 		// force refresh of speech-to-text tab
@@ -252,7 +263,7 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		default:
 		}
 	case "translate_result":
-		Messages.LastTranslationResult = c.TranslateResult
+		//Messages.LastTranslationResult = c.TranslateResult
 		Fields.Field.TranscriptionTranslationInput.SetText(c.TranslateResult)
 		if c.OriginalText != "" {
 			Fields.Field.TranscriptionInput.SetText(c.OriginalText)

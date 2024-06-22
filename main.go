@@ -216,12 +216,14 @@ func main() {
 		}()
 	}
 
-	a.Run()
+	a.Lifecycle().SetOnStopped(func() {
+		// after run (app exit), send whisper process signal to stop
+		if len(RuntimeBackend.BackendsList) > 0 {
+			RuntimeBackend.BackendsList[0].Stop()
+			RuntimeBackend.BackendsList[0].WriterBackend.Close()
+			RuntimeBackend.BackendsList[0].ReaderBackend.Close()
+		}
+	})
 
-	// after run (app exit), send whisper process signal to stop
-	if len(RuntimeBackend.BackendsList) > 0 {
-		RuntimeBackend.BackendsList[0].Stop()
-		RuntimeBackend.BackendsList[0].WriterBackend.Close()
-		RuntimeBackend.BackendsList[0].ReaderBackend.Close()
-	}
+	a.Run()
 }

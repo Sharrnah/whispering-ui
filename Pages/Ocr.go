@@ -9,6 +9,7 @@ import (
 	"log"
 	"strings"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/Resources"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
 	"whispering-tiger-ui/Websocket/Messages"
@@ -102,7 +103,7 @@ func CreateOcrWindow() fyne.CanvasObject {
 		ocrButton,
 	)
 
-	switchButton := container.NewCenter(widget.NewButton("<==>", func() {
+	switchButton := widget.NewButtonWithIcon("Swap languages", theme.NewThemedResource(Resources.ResourceSwapHorizontalSvg), func() {
 		sourceLanguage := Fields.Field.SourceLanguageTxtTranslateCombo.Text
 		// use last detected language when switching between source and target language
 		if strings.HasPrefix(strings.ToLower(sourceLanguage), "auto") && Settings.Config.Last_auto_txt_translate_lang != "" {
@@ -123,7 +124,11 @@ func CreateOcrWindow() fyne.CanvasObject {
 		targetField := Fields.Field.TranscriptionTranslationInput.Text
 		Fields.Field.TranscriptionInput.SetText(targetField)
 		Fields.Field.TranscriptionTranslationInput.SetText(sourceField)
-	}))
+	})
+	switchButton.Importance = widget.LowImportance
+	switchButton.Alignment = widget.ButtonAlignCenter
+	switchButton.IconPlacement = widget.ButtonIconLeadingText
+	switchButtonAligner := container.NewCenter(switchButton)
 
 	sourceLanguageForm := container.New(layout.NewFormLayout(), widget.NewLabel("Source Language:"), Fields.Field.SourceLanguageTxtTranslateCombo)
 	targetLanguageForm := container.New(layout.NewFormLayout(), widget.NewLabel("Target Language:"), Fields.Field.TargetLanguageTxtTranslateCombo)
@@ -164,7 +169,7 @@ func CreateOcrWindow() fyne.CanvasObject {
 		widget.NewSeparator(),
 		widget.NewLabel("Text-Translation of OCR Result:"),
 		languageRow,
-		switchButton,
+		switchButtonAligner,
 	)
 
 	mainContent := container.NewBorder(

@@ -24,15 +24,6 @@ const (
 	maxMessageSize = 8192
 )
 
-func messageLoader(c interface{}, message []byte) (interface{}, error) {
-	err := json.Unmarshal(message, c)
-	if err != nil {
-		log.Fatalf("Unmarshal: %v", err)
-		return nil, err
-	}
-	return c, nil
-}
-
 type Client struct {
 	Addr            string
 	Conn            *websocket.Conn

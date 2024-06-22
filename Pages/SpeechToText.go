@@ -85,8 +85,10 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 
 	Fields.Field.ProcessingStatus = widget.NewProgressBarInfinite()
 
-	// whisper Result list
-	Fields.Field.WhisperResultList = widget.NewListWithData(Fields.DataBindings.WhisperResultsDataBinding,
+	Fields.Field.WhisperResultList = widget.NewList(
+		func() int {
+			return len(Fields.DataBindings.WhisperResultsData)
+		},
 		func() fyne.CanvasObject {
 			return container.New(layout.NewGridLayout(1),
 				container.NewBorder(
@@ -105,23 +107,8 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 				),
 			)
 		},
-		func(i binding.DataItem, o fyne.CanvasObject) {
-			value := i.(binding.Untyped)
-			whisperMessage, _ := value.Get()
-
-			result := whisperMessage.(Messages.WhisperResult)
-
-			translateResultBind := binding.NewString()
-			translateResultBind.Set(result.TxtTranslation)
-
-			translateResultLanguageBind := binding.NewString()
-			translateResultLanguageBind.Set("[" + result.TxtTranslationTarget + "]")
-
-			originalTranscriptBind := binding.NewString()
-			originalTranscriptBind.Set(result.Text)
-
-			originalTranscriptLanguageBind := binding.NewString()
-			originalTranscriptLanguageBind.Set("[" + result.Language + "]")
+		func(i widget.ListItemID, o fyne.CanvasObject) {
+			whisperMessage := Fields.DataBindings.WhisperResultsData[i]
 
 			// get all template elements
 			mainContainer := o.(*fyne.Container)
@@ -137,34 +124,34 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 			originalTranscriptionLanguageLabel := originalTranscriptionContainer.Objects[1].(*widget.Label)
 
 			// bind data to elements if no translation is generated (sets transcription to top label)
-			if result.TxtTranslation == "" {
-				translateResultLabel.Bind(originalTranscriptBind)
-				translateResultLanguageLabel.Bind(originalTranscriptLanguageBind)
+			if whisperMessage.TxtTranslation == "" {
+				translateResultLabel.SetText(whisperMessage.Text)
+				translateResultLanguageLabel.SetText("[" + whisperMessage.Language + "]")
 
 				originalTranscriptionLabel.SetText("")
 				originalTranscriptionLanguageLabel.SetText("")
 			} else { // bind data to elements if translation was generated
-				translateResultLabel.Bind(translateResultBind)
-				translateResultLanguageLabel.Bind(translateResultLanguageBind)
+				translateResultLabel.SetText(whisperMessage.TxtTranslation)
+				translateResultLanguageLabel.SetText("[" + whisperMessage.TxtTranslationTarget + "]")
 
-				originalTranscriptionLabel.Bind(originalTranscriptBind)
-				originalTranscriptionLanguageLabel.Bind(originalTranscriptLanguageBind)
+				originalTranscriptionLabel.SetText(whisperMessage.Text)
+				originalTranscriptionLanguageLabel.SetText("[" + whisperMessage.Language + "]")
 			}
 
 			// resize
-			//mainContainer.Resize(fyne.NewSize(mainContainer.Size().Width, translateResultLabel.Size().Height+originalTranscriptionLabel.Size().Height+10))
-		})
+			Fields.Field.WhisperResultList.SetItemHeight(i, translateResultLabel.MinSize().Height+originalTranscriptionLabel.MinSize().Height+15)
+		},
+	)
 
 	Fields.Field.WhisperResultList.OnSelected = func(id widget.ListItemID) {
-		whisperMessage, _ := Fields.DataBindings.WhisperResultsDataBinding.GetValue(id)
+		//whisperMessage, _ := Fields.DataBindings.WhisperResultsDataBinding.GetValue(id)
+		whisperMessage := Fields.DataBindings.WhisperResultsData[id]
 
-		result := whisperMessage.(Messages.WhisperResult)
-
-		Fields.Field.TranscriptionInput.SetText(result.Text)
-		if result.TxtTranslation != "" {
-			Fields.Field.TranscriptionTranslationInput.SetText(result.TxtTranslation)
+		Fields.Field.TranscriptionInput.SetText(whisperMessage.Text)
+		if whisperMessage.TxtTranslation != "" {
+			Fields.Field.TranscriptionTranslationInput.SetText(whisperMessage.TxtTranslation)
 		} else {
-			Fields.Field.TranscriptionTranslationInput.SetText(result.Text)
+			Fields.Field.TranscriptionTranslationInput.SetText(whisperMessage.Text)
 		}
 
 		go func() {

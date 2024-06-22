@@ -9,6 +9,7 @@ import (
 	"strings"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/Resources"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
 	"whispering-tiger-ui/Websocket/Messages"
@@ -20,7 +21,7 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 	sourceLanguageRow := container.New(layout.NewFormLayout(), widget.NewLabel("Source Language:"), Fields.Field.SourceLanguageCombo)
 	targetLanguageRow := container.New(layout.NewFormLayout(), widget.NewLabel("Target Language:"), Fields.Field.TargetLanguageCombo)
 
-	switchButton := container.NewCenter(widget.NewButton("<==>", func() {
+	switchButton := widget.NewButtonWithIcon("Swap languages", theme.NewThemedResource(Resources.ResourceSwapHorizontalSvg), func() {
 		sourceLanguage := Fields.Field.SourceLanguageCombo.Text
 		// use last detected language when switching between source and target language
 		if strings.HasPrefix(strings.ToLower(sourceLanguage), "auto") && Settings.Config.Last_auto_txt_translate_lang != "" {
@@ -41,7 +42,11 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 		targetField := Fields.Field.TranscriptionTranslationInput.Text
 		Fields.Field.TranscriptionInput.SetText(targetField)
 		Fields.Field.TranscriptionTranslationInput.SetText(sourceField)
-	}))
+	})
+	switchButton.Importance = widget.LowImportance
+	switchButton.Alignment = widget.ButtonAlignCenter
+	switchButton.IconPlacement = widget.ButtonIconLeadingText
+	switchButtonAligner := container.NewCenter(switchButton)
 
 	languageRow := container.New(layout.NewGridLayout(2), sourceLanguageRow, targetLanguageRow)
 
@@ -120,7 +125,7 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 	mainContent := container.NewBorder(
 		container.New(layout.NewVBoxLayout(),
 			languageRow,
-			switchButton,
+			switchButtonAligner,
 		),
 		nil, nil, nil,
 		container.NewVSplit(
