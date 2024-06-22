@@ -153,6 +153,11 @@ func main() {
 		appTabs.SetTabLocation(container.TabLocationTop)
 
 		appTabs.OnSelected = func(tab *container.TabItem) {
+			if tab.Text == "Text-to-Speech" {
+				Pages.OnOpenTextToSpeechWindow(tab.Content)
+			} else {
+				Pages.OnCloseTextToSpeechWindow(tab.Content)
+			}
 			if tab.Text == "Settings" {
 				tab.Content = Pages.CreateSettingsWindow()
 				tab.Content.Refresh()

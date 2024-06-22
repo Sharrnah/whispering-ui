@@ -6,10 +6,94 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"golang.design/x/clipboard"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Utilities"
 )
+
+func GetClipboardText() string {
+	clipboardText := ""
+	err := clipboard.Init()
+	if err == nil {
+		clipboardBinary := clipboard.Read(clipboard.FmtText)
+		if clipboardBinary != nil {
+			clipboardText = string(clipboardBinary)
+		}
+	}
+	if len(fyne.CurrentApp().Driver().AllWindows()) > 0 && clipboardText == "" {
+		clipboardText = fyne.CurrentApp().Driver().AllWindows()[0].Clipboard().Content()
+	}
+	return clipboardText
+}
+
+func OnOpenTextToSpeechWindow(container fyne.CanvasObject) {
+	//mainContent := container.(*fyne.Container)
+	//clipboardText := Fields.Field.TranscriptionTranslationInput.Text
+	if Fields.Field.TranscriptionTranslationInput.FindAdditionalMenuItemByLabel("sep-tts") == nil {
+		seperatorMenuItem := fyne.NewMenuItemSeparator()
+		seperatorMenuItem.Label = "sep-tts"
+		Fields.Field.TranscriptionTranslationInput.AddAdditionalMenuItem(seperatorMenuItem)
+	}
+	if Fields.Field.TranscriptionTranslationInput.FindAdditionalMenuItemByLabel("Send to TTS from Clipboard") == nil {
+		Fields.Field.TranscriptionTranslationInput.AddAdditionalMenuItem(fyne.NewMenuItem("Send to TTS from Clipboard", func() {
+			clipboardText := GetClipboardText()
+			if clipboardText == "" {
+				return
+			}
+			valueData := struct {
+				Text     string `json:"text"`
+				ToDevice bool   `json:"to_device"`
+				Download bool   `json:"download"`
+			}{
+				Text:     clipboardText,
+				ToDevice: true,
+				Download: false,
+			}
+			sendMessage := Fields.SendMessageStruct{
+				Type:  "tts_req",
+				Value: valueData,
+			}
+			sendMessage.SendMessage()
+		}))
+	}
+	if Fields.Field.TranscriptionTranslationInput.FindAdditionalMenuItemByLabel("Export .wav from Clipboard") == nil {
+		Fields.Field.TranscriptionTranslationInput.AddAdditionalMenuItem(fyne.NewMenuItem("Export .wav from Clipboard", func() {
+			clipboardText := GetClipboardText()
+			if clipboardText == "" {
+				return
+			}
+			sendMessage := Fields.SendMessageStruct{
+				Type: "tts_req",
+				Value: struct {
+					Text     string `json:"text"`
+					ToDevice bool   `json:"to_device"`
+					Download bool   `json:"download"`
+				}{
+					Text:     clipboardText,
+					ToDevice: false,
+					Download: true,
+				},
+			}
+			sendMessage.SendMessage()
+		}))
+	}
+}
+
+func OnCloseTextToSpeechWindow(container fyne.CanvasObject) {
+	seperatorMenuItem := Fields.Field.TranscriptionTranslationInput.FindAdditionalMenuItemByLabel("sep-tts")
+	if seperatorMenuItem == nil {
+		Fields.Field.TranscriptionTranslationInput.RemoveAdditionalMenuItem(seperatorMenuItem)
+	}
+	playFromClipboardMenuItem := Fields.Field.TranscriptionTranslationInput.FindAdditionalMenuItemByLabel("Send to TTS from Clipboard")
+	if playFromClipboardMenuItem != nil {
+		Fields.Field.TranscriptionTranslationInput.RemoveAdditionalMenuItem(playFromClipboardMenuItem)
+	}
+	exportFromClipboardMenuItem := Fields.Field.TranscriptionTranslationInput.FindAdditionalMenuItemByLabel("Export .wav from Clipboard")
+	if exportFromClipboardMenuItem != nil {
+		Fields.Field.TranscriptionTranslationInput.RemoveAdditionalMenuItem(exportFromClipboardMenuItem)
+	}
+}
 
 func CreateTextToSpeechWindow() fyne.CanvasObject {
 	defer Utilities.PanicLogger()

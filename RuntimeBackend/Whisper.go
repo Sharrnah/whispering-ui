@@ -160,6 +160,9 @@ func (c *WhisperProcessConfig) processLogOutputLine(line string, isUpdating bool
 	}
 
 	if !isUpdating {
+		// Try to decode the line as loading JSON message
+		ProcessLoadingMessage(line)
+
 		// write to c.RecentLog
 		c.RecentLog = append(c.RecentLog, line)
 		// remove first element if length is greater than 2000
@@ -207,6 +210,9 @@ func (c *WhisperProcessConfig) processErrorOutputLine(line string, isUpdating bo
 				fmt.Printf("%s\n", exceptionMessage.Error)
 			}
 		}
+
+		// Try to decode the line as loading JSON message
+		ProcessLoadingMessage(line)
 
 		// write to c.RecentLog
 		c.RecentLog = append(c.RecentLog, line)
