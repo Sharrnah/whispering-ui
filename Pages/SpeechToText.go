@@ -210,7 +210,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 	})
 	lastResultLine := container.NewBorder(nil, nil, saveCsvButton, nil, Fields.Field.ProcessingStatus)
 
-	whisperResultContainer := container.NewMax(
+	whisperResultContainer := container.NewStack(
 		container.NewBorder(
 			realtimeWhisperResultBlock, lastResultLine, nil, nil,
 			Fields.Field.WhisperResultList,
@@ -219,7 +219,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 
 	mainContent := container.NewHSplit(
 		leftVerticalLayout,
-		container.NewMax(
+		container.NewStack(
 			whisperResultContainer,
 		),
 	)

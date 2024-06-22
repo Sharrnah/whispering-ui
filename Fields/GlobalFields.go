@@ -230,7 +230,7 @@ var Field = struct {
 		}
 		sendMessage.SendMessage()
 	}),
-	OcrImageContainer: container.NewMax(),
+	OcrImageContainer: container.NewStack(),
 	LogText:           terminal.New(),
 	// Status Bar
 	StatusBar:  nil,

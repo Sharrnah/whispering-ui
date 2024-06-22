@@ -305,7 +305,7 @@ func CreatePluginListWindow(closeFunction func()) {
 
 		previewLink := row.PreviewLink
 
-		previewImageContainer := container.NewMax()
+		previewImageContainer := container.NewStack()
 		previewBorder := container.NewBorder(nil, nil, nil, previewImageContainer, descriptionScroller)
 
 		go func() {

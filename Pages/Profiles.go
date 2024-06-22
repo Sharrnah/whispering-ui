@@ -1802,7 +1802,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	)
 
 	mainContent := container.NewHSplit(
-		container.NewMax(profileHelpTextContent, profileListContent),
+		container.NewStack(profileHelpTextContent, profileListContent),
 		container.NewBorder(newProfileRow, memoryArea, nil, nil, profileList),
 	)
 	mainContent.SetOffset(0.6)

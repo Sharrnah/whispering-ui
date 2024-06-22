@@ -138,7 +138,7 @@ func main() {
 			return ""
 		}
 
-		Fields.Field.StatusRow = container.NewMax(Fields.Field.StatusBar, Fields.Field.StatusText)
+		Fields.Field.StatusRow = container.NewStack(Fields.Field.StatusBar, Fields.Field.StatusText)
 
 		// initialize main window
 		appTabs := container.NewAppTabs(

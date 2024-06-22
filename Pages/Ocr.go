@@ -48,7 +48,7 @@ func CreateOcrWindow() fyne.CanvasObject {
 		log.Println("ocr Select set to", value)
 	}
 
-	container.New(layout.NewMaxLayout())
+	container.New(layout.NewStackLayout())
 	ocrLanguageWindowForm := container.New(layout.NewFormLayout(), widget.NewLabel("Text in Image Language:"), Fields.Field.OcrLanguageCombo, widget.NewLabel("Window:"), Fields.Field.OcrWindowCombo)
 
 	ocrSettingsRow := container.New(layout.NewGridLayout(1), ocrLanguageWindowForm)
