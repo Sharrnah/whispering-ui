@@ -519,6 +519,11 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 			settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, entry))
 		} else if v["type"] == "textfield" {
 			entry := widget.NewEntry()
+			if password, ok := v["password"].(bool); ok {
+				if password {
+					entry = widget.NewPasswordEntry()
+				}
+			}
 			entry.SetText(v["value"].(string))
 			entry.OnChanged = func(text string) {
 				v["value"] = text
