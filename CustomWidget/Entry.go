@@ -51,6 +51,22 @@ func (e *EntryWithPopupMenu) requestFocus() {
 func (e *EntryWithPopupMenu) AddAdditionalMenuItem(menuItem *fyne.MenuItem) {
 	e.additionalMenuItems = append(e.additionalMenuItems, menuItem)
 }
+func (e *EntryWithPopupMenu) RemoveAdditionalMenuItem(menuItem *fyne.MenuItem) {
+	for i, item := range e.additionalMenuItems {
+		if item == menuItem {
+			e.additionalMenuItems = append(e.additionalMenuItems[:i], e.additionalMenuItems[i+1:]...)
+			return
+		}
+	}
+}
+func (e *EntryWithPopupMenu) FindAdditionalMenuItemByLabel(label string) *fyne.MenuItem {
+	for _, item := range e.additionalMenuItems {
+		if item.Label == label {
+			return item
+		}
+	}
+	return nil
+}
 
 func (e *EntryWithPopupMenu) TappedSecondary(pe *fyne.PointEvent) {
 	if e.Disabled() && e.Password {
