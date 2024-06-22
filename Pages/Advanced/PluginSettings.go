@@ -95,9 +95,9 @@ func GetClassNameOfPlugin(path string) string {
 }
 
 func getPluginStatusString(pluginClassName string) string {
-	pluginStatusString := " (✖)"
+	pluginStatusString := " (❌)"
 	if Settings.Config.Plugins[pluginClassName] {
-		pluginStatusString = " (✔)"
+		pluginStatusString = " (✅)"
 	}
 	return pluginStatusString
 }
