@@ -101,6 +101,31 @@ var Field = struct {
 			}
 			sendMessage.SendMessage()
 		}))
+		entry.AddAdditionalMenuItem(fyne.NewMenuItem("Send to Both (TTS + OSC)", func() {
+			valueData := struct {
+				Text     string `json:"text"`
+				ToDevice bool   `json:"to_device"`
+				Download bool   `json:"download"`
+			}{
+				Text:     entry.Text,
+				ToDevice: true,
+				Download: false,
+			}
+			sendMessageTts := SendMessageStruct{
+				Type:  "tts_req",
+				Value: valueData,
+			}
+			sendMessageTts.SendMessage()
+			sendMessageOsc := SendMessageStruct{
+				Type: "send_osc",
+				Value: struct {
+					Text *string `json:"text"`
+				}{
+					Text: &entry.Text,
+				},
+			}
+			sendMessageOsc.SendMessage()
+		}))
 		return entry
 	}(),
 	TranscriptionInputHint: canvas.NewText("0", color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}),
@@ -136,6 +161,31 @@ var Field = struct {
 				},
 			}
 			sendMessage.SendMessage()
+		}))
+		entry.AddAdditionalMenuItem(fyne.NewMenuItem("Send to Both (TTS + OSC)", func() {
+			valueData := struct {
+				Text     string `json:"text"`
+				ToDevice bool   `json:"to_device"`
+				Download bool   `json:"download"`
+			}{
+				Text:     entry.Text,
+				ToDevice: true,
+				Download: false,
+			}
+			sendMessageTts := SendMessageStruct{
+				Type:  "tts_req",
+				Value: valueData,
+			}
+			sendMessageTts.SendMessage()
+			sendMessageOsc := SendMessageStruct{
+				Type: "send_osc",
+				Value: struct {
+					Text *string `json:"text"`
+				}{
+					Text: &entry.Text,
+				},
+			}
+			sendMessageOsc.SendMessage()
 		}))
 		return entry
 	}(),
