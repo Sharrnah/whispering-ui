@@ -1,6 +1,7 @@
 package Pages
 
 import (
+	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
@@ -16,7 +17,6 @@ import (
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
-	"whispering-tiger-ui/Websocket/Messages"
 )
 
 func CreateSpeechToTextWindow() fyne.CanvasObject {

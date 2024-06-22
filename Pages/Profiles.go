@@ -13,6 +13,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 	"github.com/gen2brain/malgo"
 	"github.com/youpy/go-wav"
+	"image/color"
 	"io"
 	"math"
 	"net/url"
@@ -1353,12 +1354,17 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 	})
 
+	beginLine := canvas.NewHorizontalGradient(&color.NRGBA{R: 198, G: 123, B: 0, A: 255}, &color.NRGBA{R: 198, G: 123, B: 0, A: 0})
+
 	profileHelpTextContent := container.NewVScroll(
 		container.NewVBox(
 			widget.NewLabel("Select an existing Profile or create a new one.\n\nClick Save and Load Profile.\n\n"),
+			beginLine,
+			container.NewHBox(widget.NewLabel("Website:"), widget.NewHyperlink("https://whispering-tiger.github.io", parseURL("https://whispering-tiger.github.io"))),
 			heartButton,
 		),
 	)
+	beginLine.Resize(fyne.NewSize(profileHelpTextContent.Size().Width, 2))
 
 	Utilities.MigrateProfileSettingsLocation1704429446()
 

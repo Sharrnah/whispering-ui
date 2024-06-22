@@ -293,6 +293,7 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 
 	downloadButton := widget.NewButton("Download / Update Plugins", nil)
 	filterEnabledPluginsCheckbox := widget.NewCheck("Only show enabled plugins", nil)
+	onlyShowEnabledPlugins = fyne.CurrentApp().Preferences().BoolWithFallback("OnlyShowEnabledPlugins", onlyShowEnabledPlugins)
 	filterEnabledPluginsCheckbox.Checked = onlyShowEnabledPlugins
 	topContainer := container.NewBorder(nil, nil, nil, filterEnabledPluginsCheckbox, downloadButton)
 	downloadButton.OnTapped = func() {
@@ -312,6 +313,7 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 
 	filterEnabledPluginsCheckbox.OnChanged = func(enabled bool) {
 		onlyShowEnabledPlugins = enabled
+		fyne.CurrentApp().Preferences().SetBool("OnlyShowEnabledPlugins", onlyShowEnabledPlugins)
 
 		pluginAccordion, pluginFilesCount = BuildPluginSettingsAccordion()
 		if pluginFilesCount > 0 {

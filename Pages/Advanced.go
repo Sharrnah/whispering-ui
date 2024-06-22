@@ -58,8 +58,15 @@ func buildAboutInfo() *fyne.Container {
 	aboutCard := widget.NewCard("Whispering Tiger UI",
 		"Version: "+fyne.CurrentApp().Metadata().Version+" Build: "+strconv.Itoa(fyne.CurrentApp().Metadata().Build),
 		container.NewVBox(
-			widget.NewHyperlink("https://github.com/Sharrnah/whispering-ui", parseURL("https://github.com/Sharrnah/whispering-ui")),
-			widget.NewHyperlink("https://github.com/Sharrnah/whispering", parseURL("https://github.com/Sharrnah/whispering")),
+			widget.NewHyperlink("https://whispering-tiger.github.io", parseURL("https://whispering-tiger.github.io")),
+			widget.NewAccordion(
+				widget.NewAccordionItem("Repositories",
+					container.NewVBox(
+						widget.NewHyperlink("https://github.com/Sharrnah/whispering-ui", parseURL("https://github.com/Sharrnah/whispering-ui")),
+						widget.NewHyperlink("https://github.com/Sharrnah/whispering", parseURL("https://github.com/Sharrnah/whispering")),
+					),
+				),
+			),
 			widget.NewSeparator(),
 			supportLabel,
 			heartButton,
