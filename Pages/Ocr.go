@@ -6,6 +6,7 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"golang.design/x/clipboard"
 	"log"
 	"strings"
 	"whispering-tiger-ui/Fields"
@@ -14,6 +15,43 @@ import (
 	"whispering-tiger-ui/Utilities"
 	"whispering-tiger-ui/Websocket/Messages"
 )
+
+// Guess the language from the OCR language selection if auto to lessen the language guessing
+func guessTranslationFromLanguage(ocrLanguageCode string) string {
+	fromLang := ""
+	if len(Fields.Field.SourceLanguageTxtTranslateCombo.OptionsTextValue) > 0 {
+		fromLang = Messages.InstalledLanguages.GetCodeByName(Fields.Field.SourceLanguageTxtTranslateCombo.GetValueOptionEntryByText(Fields.Field.SourceLanguageTxtTranslateCombo.Text).Value)
+	} else {
+		fromLang = Messages.InstalledLanguages.GetCodeByName(Fields.Field.SourceLanguageTxtTranslateCombo.Text)
+	}
+	if fromLang == "" || fromLang == "Auto" {
+		fromLang = "auto"
+	}
+	if fromLang == "auto" {
+		guessedSrcLangByOCRLang := ""
+		// try to guess the language from the OCR language selection if auto to lessen the language guessing
+		guessedSrcLangByOCRLang = Messages.InstalledLanguages.GetCodeByName(Fields.Field.OcrLanguageCombo.Text)
+		if guessedSrcLangByOCRLang == "" {
+			if Utilities.LanguageMapList.GetName(ocrLanguageCode) != "" {
+				guessedSrcLangByOCRLang = ocrLanguageCode
+			}
+		}
+		if guessedSrcLangByOCRLang != "" {
+			fromLang = guessedSrcLangByOCRLang
+			println("guessedSrcLangByOCRLang", guessedSrcLangByOCRLang)
+		}
+	}
+	return fromLang
+}
+
+func GetClipboardImage() []byte {
+	var clipboardBinary []byte
+	err := clipboard.Init()
+	if err == nil {
+		clipboardBinary = clipboard.Read(clipboard.FmtImage)
+	}
+	return clipboardBinary
+}
 
 func CreateOcrWindow() fyne.CanvasObject {
 	defer Utilities.PanicLogger()
@@ -57,29 +95,7 @@ func CreateOcrWindow() fyne.CanvasObject {
 
 		ocrLanguageCode := Messages.OcrLanguagesList.GetCodeByName(Fields.Field.OcrLanguageCombo.Text)
 
-		fromLang := ""
-		if len(Fields.Field.SourceLanguageTxtTranslateCombo.OptionsTextValue) > 0 {
-			fromLang = Messages.InstalledLanguages.GetCodeByName(Fields.Field.SourceLanguageTxtTranslateCombo.GetValueOptionEntryByText(Fields.Field.SourceLanguageTxtTranslateCombo.Text).Value)
-		} else {
-			fromLang = Messages.InstalledLanguages.GetCodeByName(Fields.Field.SourceLanguageTxtTranslateCombo.Text)
-		}
-		if fromLang == "" || fromLang == "Auto" {
-			fromLang = "auto"
-		}
-		if fromLang == "auto" {
-			guessedSrcLangByOCRLang := ""
-			// try to guess the language from the OCR language selection if auto to lessen the language guessing
-			guessedSrcLangByOCRLang = Messages.InstalledLanguages.GetCodeByName(Fields.Field.OcrLanguageCombo.Text)
-			if guessedSrcLangByOCRLang == "" {
-				if Utilities.LanguageMapList.GetName(ocrLanguageCode) != "" {
-					guessedSrcLangByOCRLang = ocrLanguageCode
-				}
-			}
-			if guessedSrcLangByOCRLang != "" {
-				fromLang = guessedSrcLangByOCRLang
-				println("guessedSrcLangByOCRLang", guessedSrcLangByOCRLang)
-			}
-		}
+		fromLang := guessTranslationFromLanguage(ocrLanguageCode)
 
 		toLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.TargetLanguageTxtTranslateCombo.Text)
 		//goland:noinspection GoSnakeCaseUsage
@@ -99,7 +115,37 @@ func CreateOcrWindow() fyne.CanvasObject {
 	})
 	ocrButton.Importance = widget.HighImportance
 
+	ocrClipboardButtonRow := widget.NewButtonWithIcon("process clipboard image with OCR", theme.ContentPasteIcon(), func() {
+		image := GetClipboardImage()
+		if image == nil {
+			return
+		}
+
+		ocrLanguageCode := Messages.OcrLanguagesList.GetCodeByName(Fields.Field.OcrLanguageCombo.Text)
+
+		fromLang := guessTranslationFromLanguage(ocrLanguageCode)
+
+		toLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.TargetLanguageTxtTranslateCombo.Text)
+		//goland:noinspection GoSnakeCaseUsage
+		sendMessage := Fields.SendMessageStruct{
+			Type: "ocr_req",
+			Value: struct {
+				Image     []byte `json:"image"`
+				Ocr_lang  string `json:"ocr_lang"`
+				From_lang string `json:"from_lang"`
+				To_lang   string `json:"to_lang"`
+			}{
+				Image:     image,
+				Ocr_lang:  ocrLanguageCode,
+				From_lang: fromLang,
+				To_lang:   toLang,
+			},
+		}
+		sendMessage.SendMessage()
+	})
+
 	buttonRow := container.NewHBox(layout.NewSpacer(),
+		ocrClipboardButtonRow,
 		ocrButton,
 	)
 
