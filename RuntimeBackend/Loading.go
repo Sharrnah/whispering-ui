@@ -40,20 +40,20 @@ func InitializeLoadingState() bool {
 	return true
 	//LoadingStateContainer.Add(widget.NewLabel(strings.ReplaceAll(loadingMessage.Data.Name, "_", " ")))
 }
-func ProcessLoadingMessage(line string) {
+func ProcessLoadingMessage(line string) bool {
 	if !InitializeLoadingState() {
-		return
+		return false
 	}
 
 	var loadingMessage LoadingMessage
 	if err := json.Unmarshal([]byte(line), &loadingMessage); err != nil {
 		//fmt.Println("Error unmarshalling JSON:", err)
-		return
+		return false
 	}
 
 	// message is not a loading state message
 	if loadingMessage.Type != "loading_state" {
-		return
+		return false
 	}
 
 	name := loadingMessage.Data.Name
@@ -71,6 +71,7 @@ func ProcessLoadingMessage(line string) {
 	} else {
 		loadingStateDialog.Hide()
 	}
+	return true
 }
 
 func updateLoadingStateContainer() {

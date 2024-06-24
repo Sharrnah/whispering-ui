@@ -269,6 +269,11 @@ func Capitalize(str string) string {
 func ParseProgressFromString(s string) (float64, error) {
 	// Define a regular expression to match progress formats.
 	// It matches a number followed by optional whitespace and a percentage sign.
+
+	if strings.HasPrefix(s, "Transcribe (OSC):") || strings.HasPrefix(s, "Transcribe:") {
+		return 0, fmt.Errorf("string starts with \"Transcribe (OSC):\" so is considered transcription")
+	}
+
 	pattern := `(?mi)(\d{1,3}(?:,\d{3})*(\.\d+)?)(\s*%)`
 
 	re := regexp.MustCompile(pattern)
