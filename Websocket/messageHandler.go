@@ -126,6 +126,9 @@ func (c *MessageStruct) GetMessage(messageData []byte) *MessageStruct {
 	return msgStruct.(*MessageStruct)
 }
 
+var resultListMutex sync.Mutex
+var intermediateResultListMutex sync.Mutex
+var processingStatusMutex sync.Mutex
 // Handle the different receiving message types
 
 func (c *MessageStruct) HandleReceiveMessage() {
@@ -236,6 +239,9 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		println("Whisper Result processing update call.")
 
 		go func(resultMsg_ Messages.WhisperResult) {
+			resultListMutex.Lock()
+			defer resultListMutex.Unlock()
+
 			resultMsg_.Update()
 
 			// stop processing status
@@ -317,6 +323,9 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		}
 
 		go func(resultMsg_ Messages.WhisperResult) {
+			resultListMutex.Lock()
+			defer resultListMutex.Unlock()
+
 			resultMsg_.Update()
 
 			// stop processing status
@@ -335,6 +344,8 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			return
 		}
 		go func(processStarted_ bool) {
+			processingStatusMutex.Lock()
+			defer processingStatusMutex.Unlock()
 			if processStarted_ {
 				Fields.Field.ProcessingStatus.Start()
 				Fields.Field.ProcessingStatus.Refresh()
@@ -358,6 +369,8 @@ func (c *MessageStruct) HandleReceiveMessage() {
 
 		if processingData != "" {
 			go func(procData_ string) {
+				intermediateResultListMutex.Lock()
+				defer intermediateResultListMutex.Unlock()
 				Fields.DataBindings.WhisperResultIntermediateResult.Set(procData_)
 			}(processingData)
 
