@@ -150,6 +150,7 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 			tab.Content.(*container.Scroll).Refresh()
 		}
 		if tab.Text == "Logs" {
+			Fields.Field.LogText.SetText("")
 			Fields.Field.LogText.Write([]byte(strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\r\n") + "\r\n"))
 		}
 	}

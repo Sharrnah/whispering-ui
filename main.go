@@ -12,6 +12,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strconv"
+	"strings"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Pages"
 	"whispering-tiger-ui/Pages/Advanced"
@@ -173,6 +174,10 @@ func main() {
 					if tabContent.Selected().Text == "Advanced Settings" {
 						// force trigger onselect for (Advanced -> Settings) Tab
 						tabContent.OnSelected(tabContent.Items[tabContent.SelectedIndex()])
+					}
+					if tabContent.Selected().Text == "Logs" {
+						Fields.Field.LogText.SetText("")
+						Fields.Field.LogText.Write([]byte(strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\r\n") + "\r\n"))
 					}
 				}
 			}

@@ -2,13 +2,15 @@ module whispering-tiger-ui
 
 go 1.21
 
-//replace github.com/fyne-io/terminal => github.com/Sharrnah/terminal v0.0.0-20231009095144-0814cfd3013e
+replace github.com/fyne-io/terminal => github.com/Sharrnah/terminal v0.0.0-20240624130956-fdffe9f9ba4e
 
 require (
 	fyne.io/fyne/v2 v2.4.6-0.20240619121048-510bb8744330
 	github.com/dustin/go-humanize v1.0.0
+	github.com/fyne-io/terminal v0.0.0-20240618091142-9d4252f9e78f
 	//github.com/fyne-io/terminal v0.0.0-20231009085607-0814cfd3013e
 	github.com/gen2brain/malgo v0.11.10
+	github.com/gorilla/websocket v1.5.3
 	github.com/hajimehoshi/oto/v2 v2.3.1
 	github.com/hashicorp/go-cleanhttp v0.5.1
 	github.com/jaypipes/ghw v0.10.0
@@ -18,10 +20,7 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-require (
-	github.com/fyne-io/terminal v0.0.0-20240618091142-9d4252f9e78f
-	github.com/gorilla/websocket v1.5.3
-)
+require golang.design/x/clipboard v0.7.0
 
 require (
 	fyne.io/systray v1.10.1-0.20240611130111-26449f257a02 // indirect
@@ -57,7 +56,6 @@ require (
 	github.com/youpy/go-riff v0.1.0 // indirect
 	github.com/yuin/goldmark v1.7.1 // indirect
 	github.com/zaf/g711 v0.0.0-20190814101024-76a4a538f52b // indirect
-	golang.design/x/clipboard v0.7.0 // indirect
 	golang.org/x/exp/shiny v0.0.0-20240613232115-7f521ea00fb8 // indirect
 	golang.org/x/image v0.14.0 // indirect
 	golang.org/x/mobile v0.0.0-20231127183840-76ac6878050a // indirect

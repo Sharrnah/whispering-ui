@@ -129,11 +129,11 @@ func (c *MessageStruct) GetMessage(messageData []byte) *MessageStruct {
 var resultListMutex sync.Mutex
 var intermediateResultListMutex sync.Mutex
 var processingStatusMutex sync.Mutex
+
 // Handle the different receiving message types
 
 func (c *MessageStruct) HandleReceiveMessage() {
 	defer Utilities.PanicLogger()
-
 	var err error = nil
 
 	switch c.Type {
