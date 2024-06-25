@@ -44,17 +44,50 @@ func guessTranslationFromLanguage(ocrLanguageCode string) string {
 	return fromLang
 }
 
-func GetClipboardImage() []byte {
+func GetClipboardImage() ([]byte, clipboard.Format) {
 	var clipboardBinary []byte
 	err := clipboard.Init()
 	if err == nil {
 		clipboardBinary = clipboard.Read(clipboard.FmtImage)
+		if clipboardBinary != nil {
+			return clipboardBinary, clipboard.FmtImage
+		}
+		clipboardBinary = clipboard.Read(clipboard.FmtText)
+		if clipboardBinary != nil {
+			return clipboardBinary, clipboard.FmtText
+		}
 	}
-	return clipboardBinary
+	return nil, -1
 }
 
 func CreateOcrWindow() fyne.CanvasObject {
 	defer Utilities.PanicLogger()
+
+	translateOnlyFunction := func() {
+		fromLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.SourceLanguageTxtTranslateCombo.Text)
+		if fromLang == "" {
+			fromLang = "auto"
+		}
+		toLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.TargetLanguageTxtTranslateCombo.Text)
+		//goland:noinspection GoSnakeCaseUsage
+		sendMessage := Fields.SendMessageStruct{
+			Type: "translate_req",
+			Value: struct {
+				Text                string `json:"text"`
+				From_lang           string `json:"from_lang"`
+				To_lang             string `json:"to_lang"`
+				To_romaji           bool   `json:"to_romaji"`
+				Ignore_send_options bool   `json:"ignore_send_options"`
+			}{
+				Text:                Fields.Field.TranscriptionInput.Text,
+				From_lang:           fromLang,
+				To_lang:             toLang,
+				To_romaji:           Settings.Config.Txt_romaji,
+				Ignore_send_options: true,
+			},
+		}
+		sendMessage.SendMessage()
+	}
 
 	Fields.Field.OcrLanguageCombo.OnSubmitted = func(value string) {
 		for i := 0; i < len(Fields.Field.OcrLanguageCombo.Options); i++ {
@@ -91,7 +124,7 @@ func CreateOcrWindow() fyne.CanvasObject {
 
 	ocrSettingsRow := container.New(layout.NewGridLayout(1), ocrLanguageWindowForm)
 
-	ocrButton := widget.NewButtonWithIcon("process window with OCR", theme.ConfirmIcon(), func() {
+	ocrButton := widget.NewButtonWithIcon("Window Scan & Translate", theme.ConfirmIcon(), func() {
 
 		ocrLanguageCode := Messages.OcrLanguagesList.GetCodeByName(Fields.Field.OcrLanguageCombo.Text)
 
@@ -115,9 +148,9 @@ func CreateOcrWindow() fyne.CanvasObject {
 	})
 	ocrButton.Importance = widget.HighImportance
 
-	ocrClipboardButtonRow := widget.NewButtonWithIcon("process clipboard image with OCR", theme.ContentPasteIcon(), func() {
-		image := GetClipboardImage()
-		if image == nil {
+	ocrClipboardButtonRow := widget.NewButtonWithIcon("Clipboard Scan & Translate", theme.ContentPasteIcon(), func() {
+		clipboardData, clipboardFormat := GetClipboardImage()
+		if clipboardData == nil {
 			return
 		}
 
@@ -126,22 +159,30 @@ func CreateOcrWindow() fyne.CanvasObject {
 		fromLang := guessTranslationFromLanguage(ocrLanguageCode)
 
 		toLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.TargetLanguageTxtTranslateCombo.Text)
-		//goland:noinspection GoSnakeCaseUsage
-		sendMessage := Fields.SendMessageStruct{
-			Type: "ocr_req",
-			Value: struct {
-				Image     []byte `json:"image"`
-				Ocr_lang  string `json:"ocr_lang"`
-				From_lang string `json:"from_lang"`
-				To_lang   string `json:"to_lang"`
-			}{
-				Image:     image,
-				Ocr_lang:  ocrLanguageCode,
-				From_lang: fromLang,
-				To_lang:   toLang,
-			},
+		if clipboardFormat == clipboard.FmtImage {
+			//goland:noinspection GoSnakeCaseUsage
+			sendMessage := Fields.SendMessageStruct{
+				Type: "ocr_req",
+				Value: struct {
+					Image     []byte `json:"image"`
+					Ocr_lang  string `json:"ocr_lang"`
+					From_lang string `json:"from_lang"`
+					To_lang   string `json:"to_lang"`
+				}{
+					Image:     clipboardData,
+					Ocr_lang:  ocrLanguageCode,
+					From_lang: fromLang,
+					To_lang:   toLang,
+				},
+			}
+			sendMessage.SendMessage()
 		}
-		sendMessage.SendMessage()
+		if clipboardFormat == clipboard.FmtText {
+			clipboardText := string(clipboardData)
+			Fields.Field.TranscriptionInput.SetText(clipboardText)
+			translateOnlyFunction()
+			Fields.Field.OcrImageContainer.RemoveAll()
+		}
 	})
 
 	buttonRow := container.NewHBox(layout.NewSpacer(),
@@ -182,31 +223,6 @@ func CreateOcrWindow() fyne.CanvasObject {
 
 	transcriptionRow := container.New(layout.NewGridLayout(2), Fields.Field.TranscriptionInput, Fields.Field.TranscriptionTranslationInput)
 
-	translateOnlyFunction := func() {
-		fromLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.SourceLanguageTxtTranslateCombo.Text)
-		if fromLang == "" {
-			fromLang = "auto"
-		}
-		toLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.TargetLanguageTxtTranslateCombo.Text)
-		//goland:noinspection GoSnakeCaseUsage
-		sendMessage := Fields.SendMessageStruct{
-			Type: "translate_req",
-			Value: struct {
-				Text                string `json:"text"`
-				From_lang           string `json:"from_lang"`
-				To_lang             string `json:"to_lang"`
-				To_romaji           bool   `json:"to_romaji"`
-				Ignore_send_options bool   `json:"ignore_send_options"`
-			}{
-				Text:                Fields.Field.TranscriptionInput.Text,
-				From_lang:           fromLang,
-				To_lang:             toLang,
-				To_romaji:           Settings.Config.Txt_romaji,
-				Ignore_send_options: true,
-			},
-		}
-		sendMessage.SendMessage()
-	}
 	translateOnlyButton := widget.NewButtonWithIcon("Translate Only", theme.MenuExpandIcon(), translateOnlyFunction)
 
 	ocrContent := container.New(layout.NewVBoxLayout(),

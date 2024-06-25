@@ -30,7 +30,7 @@ func parseURL(urlStr string) *url.URL {
 	return link
 }
 
-func buildAboutInfo() *fyne.Container {
+func buildAboutInfo() fyne.CanvasObject {
 	aboutImage := canvas.NewImageFromResource(Resources.ResourceAppIconPng)
 	aboutImage.FillMode = canvas.ImageFillContain
 	aboutImage.ScaleMode = canvas.ImageScaleFastest
@@ -99,7 +99,7 @@ func buildAboutInfo() *fyne.Container {
 
 	verticalLayout := container.NewVBox(aboutCard, checkForUpdatesButton, updateCheckAtStartupCheckbox)
 
-	return container.NewCenter(verticalLayout)
+	return container.NewVScroll(container.NewCenter(verticalLayout))
 }
 
 func CreateAdvancedWindow() fyne.CanvasObject {
