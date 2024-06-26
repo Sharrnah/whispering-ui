@@ -20,6 +20,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
@@ -647,6 +648,60 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 			fileSelectButton := widget.NewButton(selectButtonLabel, fileSelectFunc)
 
 			settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), fileSelectButton, entry))
+		} else if v["type"] == "select_audio" {
+			var selectEntries []CustomWidget.TextValueOption = nil
+			if deviceType, ok := v["device_type"].(string); ok {
+				if strings.ToLower(deviceType) == "input" {
+					selectEntries = Utilities.AudioInputDevicesOptionsList
+				} else if strings.ToLower(deviceType) == "output" {
+					selectEntries = Utilities.AudioOutputDevicesOptionsList
+				}
+			}
+			if selectEntries == nil {
+				selectEntries = Utilities.AudioInputDevicesOptionsList
+				selectEntries = append(selectEntries, Utilities.AudioOutputDevicesOptionsList...)
+			}
+
+			audioSelect := CustomWidget.NewTextValueSelect("device_index", selectEntries, nil, 0)
+
+			savedValue := ""
+			switch val := v["value"].(type) {
+			case int:
+				// convert val to string
+				savedValue = strconv.Itoa(val)
+			case string:
+				savedValue = val
+			}
+
+			var updateFunc = func(s CustomWidget.TextValueOption) {
+				if s.Text != savedValue {
+					v["value"] = s.Value
+					v["_value_text"] = s.Text
+					pluginSettings[settingName] = v
+					updateSettings(*SettingsFile, pluginClassName, pluginSettings)
+				}
+			}
+
+			if selectedValueText, ok := v["_value_text"].(string); ok && selectedValueText != "" {
+				containedEntry := audioSelect.GetEntry(&CustomWidget.TextValueOption{
+					Text: selectedValueText,
+				}, CustomWidget.CompareText)
+				if containedEntry != nil {
+					audioSelect.SetSelectedByText(selectedValueText)
+					// Update value in pluginSettings if the selected index does not fit the saved device name.
+					if savedValue != audioSelect.GetSelected().Value {
+						go updateFunc(*containedEntry)
+					}
+				} else {
+					audioSelect.SetSelected(savedValue)
+				}
+			} else {
+				audioSelect.SetSelected(savedValue)
+			}
+
+			audioSelect.OnChanged = updateFunc
+
+			settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, audioSelect))
 		} else {
 			yamlBytes, _ := yaml.Marshal(v)
 			entry := widget.NewMultiLineEntry()

@@ -82,6 +82,14 @@ func (s *TextValueSelect) SetSelected(value string) {
 	}
 }
 
+func (s *TextValueSelect) SetSelectedByText(value string) {
+	for _, option := range s.Options {
+		if value == option.Text {
+			s.updateSelected(option.Text)
+		}
+	}
+}
+
 // SetSelectedIndex will set the Selected option from the value in Options list at index position.
 func (s *TextValueSelect) SetSelectedIndex(index int) {
 	if index < 0 || index >= len(s.Options) {
@@ -107,13 +115,47 @@ func (s *TextValueSelect) updateSelected(text string) {
 	s.Refresh()
 }
 
-func (s *TextValueSelect) ContainsEntry(entry *TextValueOption) bool {
+const (
+	CompareValue = iota
+	CompareText
+)
+
+func (s *TextValueSelect) ContainsEntry(compareEntry *TextValueOption, compareType int) bool {
+	if compareEntry == nil {
+		return false
+	}
 	for i := 0; i < len(s.Options); i++ {
-		if entry != nil && s.Options[i].Value == entry.Value {
-			return true
+		if compareType == CompareValue {
+			if compareEntry != nil && s.Options[i].Value == compareEntry.Value {
+				return true
+			}
+		}
+		if compareType == CompareText {
+			if compareEntry != nil && s.Options[i].Text == compareEntry.Text {
+				return true
+			}
 		}
 	}
 	return false
+}
+
+func (s *TextValueSelect) GetEntry(compareEntry *TextValueOption, compareType int) *TextValueOption {
+	if compareEntry == nil {
+		return nil
+	}
+	for i := 0; i < len(s.Options); i++ {
+		if compareType == CompareValue {
+			if compareEntry != nil && s.Options[i].Value == compareEntry.Value {
+				return &s.Options[i]
+			}
+		}
+		if compareType == CompareText {
+			if compareEntry != nil && s.Options[i].Text == compareEntry.Text {
+				return &s.Options[i]
+			}
+		}
+	}
+	return nil
 }
 
 // Tapped is called when a pointer tapped event is captured and triggers any tap handler

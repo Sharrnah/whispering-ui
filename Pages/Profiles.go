@@ -296,7 +296,7 @@ func (c *CurrentPlaybackDevice) Init() {
 	}
 }
 
-func GetAudioDevices(audioApi malgo.Backend, deviceTypes []malgo.DeviceType, deviceIndexStartPoint int) ([]CustomWidget.TextValueOption, error) {
+func GetAudioDevices(audioApi malgo.Backend, deviceTypes []malgo.DeviceType, deviceIndexStartPoint int) ([]CustomWidget.TextValueOption, []Utilities.AudioDevice, error) {
 
 	deviceList := make([]Utilities.AudioDevice, 0)
 
@@ -310,23 +310,23 @@ func GetAudioDevices(audioApi malgo.Backend, deviceTypes []malgo.DeviceType, dev
 	}
 
 	if deviceList == nil {
-		return nil, fmt.Errorf("no devices found")
+		return nil, nil, fmt.Errorf("no devices found")
 	}
 
-	devices := make([]CustomWidget.TextValueOption, 0)
+	devicesOptions := make([]CustomWidget.TextValueOption, 0)
 	for _, device := range deviceList {
-		devices = append(devices, CustomWidget.TextValueOption{
+		devicesOptions = append(devicesOptions, CustomWidget.TextValueOption{
 			Text:  device.Name,
 			Value: strconv.Itoa(device.Index + 1),
 		})
 	}
 
-	devices = append([]CustomWidget.TextValueOption{{
+	devicesOptions = append([]CustomWidget.TextValueOption{{
 		Text:  "Default",
 		Value: "-1",
-	}}, devices...)
+	}}, devicesOptions...)
 
-	return devices, nil
+	return devicesOptions, deviceList, nil
 }
 
 func appendWidgetToForm(form *widget.Form, text string, itemWidget fyne.CanvasObject, hintText string) {
@@ -431,10 +431,14 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	playBackDevice.AudioAPI = malgo.BackendWasapi
 	go playBackDevice.Init()
 
-	audioInputDevices, _ := GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0)
-	audioOutputDevices, _ := GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Playback}, len(audioInputDevices))
+	audioInputDevicesOptions, audioInputDevices, _ := GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0)
+	audioOutputDevicesOptions, audioOutputDevices, _ := GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Playback}, len(audioInputDevicesOptions))
+	Utilities.AudioInputDevicesList = audioInputDevices
+	Utilities.AudioOutputDevicesList = audioOutputDevices
+	Utilities.AudioInputDevicesOptionsList = audioInputDevicesOptions
+	Utilities.AudioOutputDevicesOptionsList = audioOutputDevicesOptions
 
-	audioInputSelect := CustomWidget.NewTextValueSelect("device_index", audioInputDevices,
+	audioInputSelect := CustomWidget.NewTextValueSelect("device_index", audioInputDevicesOptions,
 		func(s CustomWidget.TextValueOption) {
 			println(s.Value)
 			playBackDevice.InputDeviceName = s.Text
@@ -446,7 +450,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		},
 		0)
 
-	audioOutputSelect := CustomWidget.NewTextValueSelect("device_out_index", audioOutputDevices,
+	audioOutputSelect := CustomWidget.NewTextValueSelect("device_out_index", audioOutputDevicesOptions,
 		func(s CustomWidget.TextValueOption) {
 			println(s.Value)
 			playBackDevice.OutputDeviceName = s.Text
@@ -481,11 +485,15 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 				go playBackDevice.Init()
 
-				audioInputDevices, _ = GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0)
-				audioOutputDevices, _ = GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Playback}, len(audioInputDevices))
+				audioInputDevicesOptions, audioInputDevices, _ = GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0)
+				audioOutputDevicesOptions, audioOutputDevices, _ = GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Playback}, len(audioInputDevicesOptions))
+				Utilities.AudioInputDevicesList = audioInputDevices
+				Utilities.AudioOutputDevicesList = audioOutputDevices
+				Utilities.AudioInputDevicesOptionsList = audioInputDevicesOptions
+				Utilities.AudioOutputDevicesOptionsList = audioOutputDevicesOptions
 
-				audioInputSelect.Options = audioInputDevices
-				audioOutputSelect.Options = audioOutputDevices
+				audioInputSelect.Options = audioInputDevicesOptions
+				audioOutputSelect.Options = audioOutputDevicesOptions
 				audioInputSelect.SetSelectedIndex(0)
 				audioOutputSelect.SetSelectedIndex(0)
 				audioInputSelect.Refresh()
@@ -948,7 +956,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			if s.Value == "faster_whisper" {
 				sttModelSize.Options = fasterWhisperModelList
 				// unselect if not in list
-				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption) {
+				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption, CustomWidget.CompareValue) {
 					sttModelSize.SetSelectedIndex(0)
 				}
 
@@ -965,7 +973,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			} else if s.Value == "original_whisper" {
 				sttModelSize.Options = originalWhisperModelList
 				// unselect if not in list
-				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption) {
+				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption, CustomWidget.CompareValue) {
 					sttModelSize.SetSelectedIndex(0)
 				}
 
@@ -980,7 +988,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			} else if s.Value == "transformer_whisper" {
 				sttModelSize.Options = originalWhisperModelList
 				// unselect if not in list
-				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption) {
+				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption, CustomWidget.CompareValue) {
 					sttModelSize.SetSelectedIndex(0)
 				}
 
@@ -997,7 +1005,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			} else if s.Value == "seamless_m4t" {
 				sttModelSize.Options = originalSeamlessM4TModelList
 				// unselect if not in list
-				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption) {
+				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption, CustomWidget.CompareValue) {
 					sttModelSize.SetSelectedIndex(1)
 				}
 
@@ -1040,7 +1048,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			} else if s.Value == "mms" {
 				sttModelSize.Options = originalMmsModelList
 				// unselect if not in list
-				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption) {
+				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption, CustomWidget.CompareValue) {
 					sttModelSize.SetSelectedIndex(1)
 				}
 				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
@@ -1069,7 +1077,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			special case for Seamless M4T since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
 			*/
 			if txtTranslatorTypeSelect.GetSelected().Value == "Seamless_M4T" && s.Value == "seamless_m4t" {
-				if txtTranslatorSizeSelect.ContainsEntry(sttModelSize.GetSelected()) {
+				if txtTranslatorSizeSelect.ContainsEntry(sttModelSize.GetSelected(), CustomWidget.CompareValue) {
 					txtTranslatorSizeSelect.SetSelected(sttModelSize.GetSelected().Value)
 				}
 				txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
@@ -1260,7 +1268,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			*/
 			if s.Value == "Seamless_M4T" && sttTypeSelect.GetSelected().Value == "seamless_m4t" {
 				modelType = "N"
-				if txtTranslatorSizeSelect.ContainsEntry(sttModelSize.GetSelected()) {
+				if txtTranslatorSizeSelect.ContainsEntry(sttModelSize.GetSelected(), CustomWidget.CompareValue) {
 					txtTranslatorSizeSelect.SetSelected(sttModelSize.GetSelected().Value)
 				}
 				txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
@@ -1525,9 +1533,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 		// select audio input device by name instead of index if possible
 		if profileSettings.Audio_input_device != "" && profileSettings.Audio_input_device != "Default" && deviceInValue != "-1" {
-			for i := 0; i < len(audioInputDevices); i++ {
-				if audioInputDevices[i].Value != deviceInValue && audioInputDevices[i].Text == profileSettings.Audio_input_device {
-					deviceInValue = audioInputDevices[i].Value
+			for i := 0; i < len(audioInputDevicesOptions); i++ {
+				if audioInputDevicesOptions[i].Value != deviceInValue && audioInputDevicesOptions[i].Text == profileSettings.Audio_input_device {
+					deviceInValue = audioInputDevicesOptions[i].Value
 					break
 				}
 			}
@@ -1549,9 +1557,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 		// select audio output device by name instead of index if possible
 		if profileSettings.Audio_output_device != "" && profileSettings.Audio_output_device != "Default" && deviceOutValue != "-1" {
-			for i := 0; i < len(audioOutputDevices); i++ {
-				if audioOutputDevices[i].Value != deviceOutValue && audioOutputDevices[i].Text == profileSettings.Audio_output_device {
-					deviceOutValue = audioOutputDevices[i].Value
+			for i := 0; i < len(audioOutputDevicesOptions); i++ {
+				if audioOutputDevicesOptions[i].Value != deviceOutValue && audioOutputDevicesOptions[i].Text == profileSettings.Audio_output_device {
+					deviceOutValue = audioOutputDevicesOptions[i].Value
 					break
 				}
 			}

@@ -192,12 +192,13 @@ func main() {
 
 		w.Resize(fyne.NewSize(float32(mainWindowWidth), float32(mainWindowHeight)))
 
-		// set websocket client to configured ip+port
-		WebsocketClient.Addr = Settings.Config.Websocket_ip + ":" + strconv.Itoa(Settings.Config.Websocket_port)
-		go WebsocketClient.Start()
-
 		// show main window
 		w.Show()
+
+		// set websocket client to configured ip+port
+		WebsocketClient.Addr = Settings.Config.Websocket_ip + ":" + strconv.Itoa(Settings.Config.Websocket_port)
+
+		go WebsocketClient.Start()
 
 		fyne.CurrentApp().Preferences().SetFloat("ProfileWindowWidth", float64(profileWindow.Canvas().Size().Width))
 		fyne.CurrentApp().Preferences().SetFloat("ProfileWindowHeight", float64(profileWindow.Canvas().Size().Height))

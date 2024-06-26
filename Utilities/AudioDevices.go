@@ -3,6 +3,7 @@ package Utilities
 import (
 	"fmt"
 	"github.com/gen2brain/malgo"
+	"whispering-tiger-ui/CustomWidget"
 )
 
 type AudioDevice struct {
@@ -16,6 +17,12 @@ type AudioDeviceList struct {
 	DeviceType malgo.DeviceType
 	Devices    []AudioDevice
 }
+
+var AudioInputDevicesList []AudioDevice
+var AudioOutputDevicesList []AudioDevice
+
+var AudioInputDevicesOptionsList []CustomWidget.TextValueOption
+var AudioOutputDevicesOptionsList []CustomWidget.TextValueOption
 
 func GetAudioDevices(audioAPI malgo.Backend, deviceType malgo.DeviceType, deviceIndexStartPoint int) ([]AudioDevice, error) {
 	//a.DeviceType = deviceType
