@@ -102,9 +102,19 @@ func (s *SettingMapping) processWidget(settingsValue interface{}, settingWidget 
 		onChange := settingWidget.(*widget.Check).OnChanged
 		settingWidget.(*widget.Check).OnChanged = func(b bool) {
 			onChange(b)
+			if b {
+				settingWidget.(*widget.Check).SetText("Enabled")
+			} else {
+				settingWidget.(*widget.Check).SetText("Disabled")
+			}
 			if !s.DoNotSendToBackend {
 				s.SendUpdatedValue(b)
 			}
+		}
+		if value {
+			settingWidget.(*widget.Check).SetText("Enabled")
+		} else {
+			settingWidget.(*widget.Check).SetText("Disabled")
 		}
 	case *widget.Slider:
 		var originalType interface{}

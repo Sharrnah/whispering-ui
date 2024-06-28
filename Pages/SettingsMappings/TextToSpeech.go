@@ -8,7 +8,7 @@ import (
 var TextToSpeechSettingsMapping = SettingsMapping{
 	Mappings: []SettingMapping{
 		{
-			SettingsName:         "Enable integrated Text-to-Speech",
+			SettingsName:         "Integrated Text-to-Speech",
 			SettingsInternalName: "tts_enabled",
 			SettingsDescription:  "",
 			_widget: func() fyne.CanvasObject {
