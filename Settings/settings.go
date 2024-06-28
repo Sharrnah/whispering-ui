@@ -47,10 +47,11 @@ type Conf struct {
 	Vad_thread_num           int     `yaml:"vad_thread_num,omitempty" json:"vad_thread_num,omitempty"`
 
 	// speaker diarization
-	Speaker_change_check            bool    `yaml:"speaker_change_check" json:"speaker_change_check"`
-	Speaker_similarity_threshold    float64 `yaml:"speaker_similarity_threshold" json:"speaker_similarity_threshold"`
-	Speaker_diarization_window_size int     `yaml:"speaker_diarization_window_size" json:"speaker_diarization_window_size"`
-	Speaker_min_duration            float64 `yaml:"speaker_min_duration" json:"speaker_min_duration"`
+	Speaker_diarization  bool    `yaml:"speaker_diarization" json:"speaker_diarization"`
+	Speaker_change_split bool    `yaml:"speaker_change_split" json:"speaker_change_split"`
+	Min_speaker_length   float64 `yaml:"min_speaker_length" json:"min_speaker_length"`
+	Min_speakers         int     `yaml:"min_speakers" json:"min_speakers"`
+	Max_speakers         int     `yaml:"max_speakers" json:"max_speakers"`
 
 	// Whisper Settings
 	Stt_enabled                   bool        `yaml:"stt_enabled" json:"stt_enabled"`
