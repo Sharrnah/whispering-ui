@@ -329,6 +329,41 @@ func GetAudioDevices(audioApi malgo.Backend, deviceTypes []malgo.DeviceType, dev
 	return devicesOptions, deviceList, nil
 }
 
+func fillAudioDeviceLists() {
+	audioInputDevicesOptionsWASAPI, audioInputDevicesWASAPI, _ := GetAudioDevices(malgo.BackendWasapi, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0)
+	audioOutputDevicesOptionsWASAPI, audioOutputDevicesWASAPI, _ := GetAudioDevices(malgo.BackendWasapi, []malgo.DeviceType{malgo.Playback}, len(audioInputDevicesOptionsWASAPI))
+	Utilities.AudioInputDevicesListWASAPI.Backend = malgo.BackendWasapi
+	Utilities.AudioInputDevicesListWASAPI.Devices = audioInputDevicesWASAPI
+	Utilities.AudioInputDevicesListWASAPI.WidgetOptions = audioInputDevicesOptionsWASAPI
+
+	Utilities.AudioOutputDevicesListWASAPI.Backend = malgo.BackendWasapi
+	Utilities.AudioOutputDevicesListWASAPI.Devices = audioOutputDevicesWASAPI
+	Utilities.AudioOutputDevicesListWASAPI.WidgetOptions = audioOutputDevicesOptionsWASAPI
+
+	// fill other lists
+	audioInputDevicesOptionsMme, audioInputDevicesMme, _ := GetAudioDevices(malgo.BackendWinmm, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0)
+	audioOutputDevicesOptionsMme, audioOutputDevicesMme, _ := GetAudioDevices(malgo.BackendWinmm, []malgo.DeviceType{malgo.Playback}, len(audioInputDevicesOptionsMme))
+
+	Utilities.AudioInputDevicesListMME.Backend = malgo.BackendWinmm
+	Utilities.AudioInputDevicesListMME.Devices = audioInputDevicesMme
+	Utilities.AudioInputDevicesListMME.WidgetOptions = audioInputDevicesOptionsMme
+
+	Utilities.AudioOutputDevicesListMME.Backend = malgo.BackendWinmm
+	Utilities.AudioOutputDevicesListMME.Devices = audioOutputDevicesMme
+	Utilities.AudioOutputDevicesListMME.WidgetOptions = audioOutputDevicesOptionsMme
+
+	audioInputDevicesOptionsDsound, audioInputDevicesDsound, _ := GetAudioDevices(malgo.BackendDsound, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0)
+	audioOutputDevicesOptionsDsound, audioOutputDevicesDsound, _ := GetAudioDevices(malgo.BackendDsound, []malgo.DeviceType{malgo.Playback}, len(audioInputDevicesOptionsDsound))
+
+	Utilities.AudioInputDevicesListDirectSound.Backend = malgo.BackendDsound
+	Utilities.AudioInputDevicesListDirectSound.Devices = audioInputDevicesDsound
+	Utilities.AudioInputDevicesListDirectSound.WidgetOptions = audioInputDevicesOptionsDsound
+
+	Utilities.AudioOutputDevicesListDirectSound.Backend = malgo.BackendDsound
+	Utilities.AudioOutputDevicesListDirectSound.Devices = audioOutputDevicesDsound
+	Utilities.AudioOutputDevicesListDirectSound.WidgetOptions = audioOutputDevicesOptionsDsound
+}
+
 func appendWidgetToForm(form *widget.Form, text string, itemWidget fyne.CanvasObject, hintText string) {
 	item := &widget.FormItem{Text: text, Widget: itemWidget, HintText: hintText}
 	form.AppendItem(item)
@@ -431,12 +466,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	playBackDevice.AudioAPI = malgo.BackendWasapi
 	go playBackDevice.Init()
 
-	audioInputDevicesOptions, audioInputDevices, _ := GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0)
-	audioOutputDevicesOptions, audioOutputDevices, _ := GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Playback}, len(audioInputDevicesOptions))
-	Utilities.AudioInputDevicesList = audioInputDevices
-	Utilities.AudioOutputDevicesList = audioOutputDevices
-	Utilities.AudioInputDevicesOptionsList = audioInputDevicesOptions
-	Utilities.AudioOutputDevicesOptionsList = audioOutputDevicesOptions
+	audioInputDevicesOptions, _, _ := GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0)
+	audioOutputDevicesOptions, _, _ := GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Playback}, len(audioInputDevicesOptions))
+
+	// fill audio device lists for later access
+	fillAudioDeviceLists()
 
 	audioInputSelect := CustomWidget.NewTextValueSelect("device_index", audioInputDevicesOptions,
 		func(s CustomWidget.TextValueOption) {
@@ -485,12 +519,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 				go playBackDevice.Init()
 
-				audioInputDevicesOptions, audioInputDevices, _ = GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0)
-				audioOutputDevicesOptions, audioOutputDevices, _ = GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Playback}, len(audioInputDevicesOptions))
-				Utilities.AudioInputDevicesList = audioInputDevices
-				Utilities.AudioOutputDevicesList = audioOutputDevices
-				Utilities.AudioInputDevicesOptionsList = audioInputDevicesOptions
-				Utilities.AudioOutputDevicesOptionsList = audioOutputDevicesOptions
+				audioInputDevicesOptions, _, _ = GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0)
+				audioOutputDevicesOptions, _, _ = GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Playback}, len(audioInputDevicesOptions))
 
 				audioInputSelect.Options = audioInputDevicesOptions
 				audioOutputSelect.Options = audioOutputDevicesOptions

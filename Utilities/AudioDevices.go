@@ -18,11 +18,23 @@ type AudioDeviceList struct {
 	Devices    []AudioDevice
 }
 
-var AudioInputDevicesList []AudioDevice
-var AudioOutputDevicesList []AudioDevice
+type AudioDeviceMemory struct {
+	Backend       malgo.Backend
+	Devices       []AudioDevice
+	WidgetOptions []CustomWidget.TextValueOption
+}
 
-var AudioInputDevicesOptionsList []CustomWidget.TextValueOption
-var AudioOutputDevicesOptionsList []CustomWidget.TextValueOption
+// WASAPI device lists
+var AudioInputDevicesListWASAPI AudioDeviceMemory
+var AudioOutputDevicesListWASAPI AudioDeviceMemory
+
+// MME device lists
+var AudioInputDevicesListMME AudioDeviceMemory
+var AudioOutputDevicesListMME AudioDeviceMemory
+
+// DirectSound device lists
+var AudioInputDevicesListDirectSound AudioDeviceMemory
+var AudioOutputDevicesListDirectSound AudioDeviceMemory
 
 func GetAudioDevices(audioAPI malgo.Backend, deviceType malgo.DeviceType, deviceIndexStartPoint int) ([]AudioDevice, error) {
 	//a.DeviceType = deviceType

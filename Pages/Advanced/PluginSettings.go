@@ -650,16 +650,62 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 			settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), fileSelectButton, entry))
 		} else if v["type"] == "select_audio" {
 			var selectEntries []CustomWidget.TextValueOption = nil
-			if deviceType, ok := v["device_type"].(string); ok {
-				if strings.ToLower(deviceType) == "input" {
-					selectEntries = Utilities.AudioInputDevicesOptionsList
-				} else if strings.ToLower(deviceType) == "output" {
-					selectEntries = Utilities.AudioOutputDevicesOptionsList
+
+			var audioInputDevices = Utilities.AudioDeviceMemory{}
+			var audioOutputDevices = Utilities.AudioDeviceMemory{}
+			switch strings.ToLower(Settings.Config.Audio_api) {
+			case "wasapi":
+				audioInputDevices = Utilities.AudioInputDevicesListWASAPI
+				audioOutputDevices = Utilities.AudioOutputDevicesListWASAPI
+			case "mme":
+				audioInputDevices = Utilities.AudioInputDevicesListMME
+				audioOutputDevices = Utilities.AudioOutputDevicesListMME
+			case "directsound":
+				audioInputDevices = Utilities.AudioInputDevicesListDirectSound
+				audioOutputDevices = Utilities.AudioOutputDevicesListDirectSound
+			}
+
+			selectEntries = audioInputDevices.WidgetOptions
+			selectEntries = append(selectEntries, audioOutputDevices.WidgetOptions...)
+
+			selectedDeviceApi := strings.ToLower(Settings.Config.Audio_api)
+
+			if deviceApi, ok := v["device_api"].(string); ok {
+				selectedDeviceApi = strings.ToLower(deviceApi)
+				if strings.ToLower(deviceApi) == "wasapi" {
+					selectEntries = Utilities.AudioInputDevicesListWASAPI.WidgetOptions
+					selectEntries = append(selectEntries, Utilities.AudioOutputDevicesListWASAPI.WidgetOptions...)
+				}
+				if strings.ToLower(deviceApi) == "mme" {
+					selectEntries = Utilities.AudioInputDevicesListMME.WidgetOptions
+					selectEntries = append(selectEntries, Utilities.AudioOutputDevicesListMME.WidgetOptions...)
+				}
+				if strings.ToLower(deviceApi) == "directsound" {
+					selectEntries = Utilities.AudioInputDevicesListDirectSound.WidgetOptions
+					selectEntries = append(selectEntries, Utilities.AudioOutputDevicesListDirectSound.WidgetOptions...)
 				}
 			}
-			if selectEntries == nil {
-				selectEntries = Utilities.AudioInputDevicesOptionsList
-				selectEntries = append(selectEntries, Utilities.AudioOutputDevicesOptionsList...)
+
+			if deviceType, ok := v["device_type"].(string); ok {
+				if strings.ToLower(deviceType) == "input" {
+					selectEntries = audioInputDevices.WidgetOptions
+					if selectedDeviceApi == "wasapi" {
+						selectEntries = Utilities.AudioInputDevicesListWASAPI.WidgetOptions
+					} else if selectedDeviceApi == "mme" {
+						selectEntries = Utilities.AudioInputDevicesListMME.WidgetOptions
+					} else if selectedDeviceApi == "directsound" {
+						selectEntries = Utilities.AudioInputDevicesListDirectSound.WidgetOptions
+					}
+				} else if strings.ToLower(deviceType) == "output" {
+					selectEntries = audioOutputDevices.WidgetOptions
+					if selectedDeviceApi == "wasapi" {
+						selectEntries = Utilities.AudioOutputDevicesListWASAPI.WidgetOptions
+					} else if selectedDeviceApi == "mme" {
+						selectEntries = Utilities.AudioOutputDevicesListMME.WidgetOptions
+					} else if selectedDeviceApi == "directsound" {
+						selectEntries = Utilities.AudioOutputDevicesListDirectSound.WidgetOptions
+					}
+				}
 			}
 
 			audioSelect := CustomWidget.NewTextValueSelect("device_index", selectEntries, nil, 0)
