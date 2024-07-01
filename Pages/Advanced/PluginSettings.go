@@ -8,6 +8,7 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -133,13 +134,171 @@ func _getFilePathDialogInitPath(v map[string]interface{}, entry *widget.Entry) (
 var onlyShowEnabledPlugins bool
 var openPluginItem = -1
 
-func BuildPluginSettingsAccordion() (fyne.CanvasObject, int) {
+func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widget.AccordionItem, pluginAccordion *widget.Accordion) fyne.CanvasObject {
 	// load settings file for plugin settings
 	SettingsFile := Settings.Conf{}
 	err := SettingsFile.LoadYamlSettings(filepath.Join(Settings.GetConfProfileDir(), Settings.Config.SettingsFilename))
 	if err != nil {
 		SettingsFile = Settings.Config
 	}
+
+	// plugin to window button
+	//var pluginToWindowButton *widget.Button = nil
+	pluginToWindowButton := widget.NewButtonWithIcon("", theme.ViewFullScreenIcon(), func() {
+		pluginWindow := fyne.CurrentApp().NewWindow(pluginClassName + " Settings")
+		pluginContentWin := BuildSinglePluginSettings(pluginClassName, nil, nil)
+		pluginWindowContainer := container.NewVScroll(pluginContentWin)
+		reloadButton := widget.NewButtonWithIcon("Reload", theme.ViewRefreshIcon(), nil)
+		reloadButton.OnTapped = func() {
+			pluginContentWin = BuildSinglePluginSettings(pluginClassName, nil, nil)
+			pluginWindowContainer.Content = pluginContentWin
+			pluginWindowContainer.Refresh()
+			pluginWindow.Content().Refresh()
+		}
+		reloadButton.Importance = widget.MediumImportance
+
+		pluginWindow.SetContent(container.NewBorder(container.NewBorder(nil, nil, nil, reloadButton, layout.NewSpacer()), nil, nil, nil, pluginWindowContainer))
+
+		// guess the size
+		windowHeight := pluginContentWin.Size().Height + reloadButton.Size().Height + 20
+		windowWidth := pluginContentWin.Size().Width
+		if windowHeight >= fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size().Height {
+			windowHeight = fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size().Height
+		}
+		if pluginAccordionItem != nil {
+			windowHeight = pluginAccordionItem.Detail.Size().Height + reloadButton.Size().Height + 20
+			windowWidth = pluginAccordionItem.Detail.Size().Width
+			if windowHeight >= fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size().Height {
+				windowHeight = fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size().Height
+			}
+			if windowWidth >= 1400 {
+				windowWidth = windowWidth / 2
+			}
+		}
+		pluginWindow.Resize(fyne.NewSize(windowWidth, windowHeight))
+		pluginWindow.CenterOnScreen()
+		pluginWindow.Show()
+	})
+	if pluginAccordionItem == nil || pluginAccordion == nil {
+		pluginToWindowButton.Hide()
+	}
+
+	// plugin enabled checkbox
+	pluginEnabledCheckbox := widget.NewCheck(pluginClassName+" enabled", func(enabled bool) {
+		Settings.Config.Plugins[pluginClassName] = enabled
+		sendMessage := Fields.SendMessageStruct{
+			Type:  "setting_change",
+			Name:  "plugins",
+			Value: Settings.Config.Plugins,
+		}
+		sendMessage.SendMessage()
+
+		if pluginAccordionItem != nil && pluginAccordion != nil {
+			pluginAccordionItem.Title = pluginClassName + getPluginStatusString(pluginClassName)
+			pluginAccordion.Refresh()
+		}
+	})
+	pluginEnabledCheckbox.Checked = Settings.Config.Plugins[pluginClassName]
+
+	beginLine := canvas.NewHorizontalGradient(&color.NRGBA{R: 198, G: 123, B: 0, A: 255}, &color.NRGBA{R: 198, G: 123, B: 0, A: 0})
+	beginLine.Resize(fyne.NewSize(pluginEnabledCheckbox.Size().Width, 2))
+
+	spacerText := canvas.NewText("", &color.NRGBA{R: 0, G: 0, B: 0, A: 0})
+	spacerText.TextSize = theme.CaptionTextSize()
+
+	// get plugin settings
+	var pluginSettings map[string]interface{}
+	if SettingsFile.Plugin_settings != nil {
+		if settings, ok := SettingsFile.Plugin_settings.(map[string]interface{})[pluginClassName]; ok {
+			if settingsMap, ok := settings.(map[string]interface{}); ok {
+				pluginSettings = settingsMap
+			}
+		}
+	}
+
+	// check if settings_groups exists
+	if groupData, exists := pluginSettings["settings_groups"]; exists && groupData != nil {
+		// create settings fields grouped by 'settings_groups'
+		var settingsGroups map[string][]string
+		settingsGroupsByte, _ := json.Marshal(groupData)
+		json.Unmarshal(settingsGroupsByte, &settingsGroups)
+
+		// Convert the map to a slice and sort
+		type kv struct {
+			Key   string
+			Value []string
+		}
+
+		var settingsGroupList []kv
+		for k, v := range settingsGroups {
+			settingsGroupList = append(settingsGroupList, kv{k, v})
+		}
+
+		sort.Slice(settingsGroupList, func(i, j int) bool {
+			if strings.EqualFold(settingsGroupList[i].Key, "General") {
+				return true
+			} else if strings.EqualFold(settingsGroupList[j].Key, "General") {
+				return false
+			}
+			return strings.ToLower(settingsGroupList[i].Key) < strings.ToLower(settingsGroupList[j].Key)
+		})
+
+		settingsGroupTabs := container.NewAppTabs()
+		for _, kv := range settingsGroupList {
+			groupName := kv.Key
+			settingsGroup := kv.Value
+
+			groupContainer := container.NewVBox()
+
+			sort.Strings(settingsGroup)
+
+			for _, settingName := range settingsGroup {
+				if _, ok := pluginSettings[settingName]; ok && settingName != "settings_groups" {
+					settingsFields := createSettingsFields(pluginSettings, settingName, &SettingsFile, pluginClassName)
+					for _, field := range settingsFields {
+						groupContainer.Add(field)
+					}
+				}
+			}
+			settingsGroupTabs.Append(container.NewTabItem(groupName, groupContainer))
+		}
+
+		pluginSettingsContainer := container.NewVBox(
+			container.NewBorder(nil, nil, nil, pluginToWindowButton, pluginEnabledCheckbox),
+			container.NewGridWithColumns(2, beginLine),
+			settingsGroupTabs,
+			spacerText,
+		)
+
+		return pluginSettingsContainer
+	} else {
+		// no grouping
+		pluginSettingsContainer := container.NewVBox()
+		pluginSettingsContainer.Add(container.NewBorder(nil, nil, nil, pluginToWindowButton, pluginEnabledCheckbox))
+		pluginSettingsContainer.Add(container.NewGridWithColumns(2, beginLine))
+
+		var sortedSettingNames []string
+		for settingName := range pluginSettings {
+			sortedSettingNames = append(sortedSettingNames, settingName)
+		}
+		sort.Strings(sortedSettingNames) // sort the keys in ascending order
+
+		for _, settingName := range sortedSettingNames {
+			if settingName != "settings_groups" {
+				settingsFields := createSettingsFields(pluginSettings, settingName, &SettingsFile, pluginClassName)
+				for _, field := range settingsFields {
+					pluginSettingsContainer.Add(field)
+				}
+			}
+		}
+
+		pluginSettingsContainer.Add(spacerText)
+
+		return pluginSettingsContainer
+	}
+}
+
+func BuildPluginSettingsAccordion() (fyne.CanvasObject, int) {
 
 	// build plugins list
 	var pluginFiles []string
@@ -164,116 +323,10 @@ func BuildPluginSettingsAccordion() (fyne.CanvasObject, int) {
 				nil,
 			)
 
-			// plugin enabled checkbox
-			pluginEnabledCheckbox := widget.NewCheck(pluginClassName+" enabled", func(enabled bool) {
-				Settings.Config.Plugins[pluginClassName] = enabled
-				sendMessage := Fields.SendMessageStruct{
-					Type:  "setting_change",
-					Name:  "plugins",
-					Value: Settings.Config.Plugins,
-				}
-				sendMessage.SendMessage()
+			pluginSettingsContainer := BuildSinglePluginSettings(pluginClassName, pluginAccordionItem, pluginAccordion)
 
-				pluginAccordionItem.Title = pluginClassName + getPluginStatusString(pluginClassName)
-				pluginAccordion.Refresh()
-			})
-			pluginEnabledCheckbox.Checked = Settings.Config.Plugins[pluginClassName]
+			pluginAccordionItem.Detail = pluginSettingsContainer
 
-			beginLine := canvas.NewHorizontalGradient(&color.NRGBA{R: 198, G: 123, B: 0, A: 255}, &color.NRGBA{R: 198, G: 123, B: 0, A: 0})
-			beginLine.Resize(fyne.NewSize(pluginEnabledCheckbox.Size().Width, 2))
-
-			spacerText := canvas.NewText("", &color.NRGBA{R: 0, G: 0, B: 0, A: 0})
-			spacerText.TextSize = theme.CaptionTextSize()
-
-			// get plugin settings
-			var pluginSettings map[string]interface{}
-			if SettingsFile.Plugin_settings != nil {
-				if settings, ok := SettingsFile.Plugin_settings.(map[string]interface{})[pluginClassName]; ok {
-					if settingsMap, ok := settings.(map[string]interface{}); ok {
-						pluginSettings = settingsMap
-					}
-				}
-			}
-
-			// check if settings_groups exists
-			if groupData, exists := pluginSettings["settings_groups"]; exists && groupData != nil {
-				// create settings fields grouped by 'settings_groups'
-				var settingsGroups map[string][]string
-				settingsGroupsByte, _ := json.Marshal(groupData)
-				json.Unmarshal(settingsGroupsByte, &settingsGroups)
-
-				// Convert the map to a slice and sort
-				type kv struct {
-					Key   string
-					Value []string
-				}
-
-				var settingsGroupList []kv
-				for k, v := range settingsGroups {
-					settingsGroupList = append(settingsGroupList, kv{k, v})
-				}
-
-				sort.Slice(settingsGroupList, func(i, j int) bool {
-					if strings.EqualFold(settingsGroupList[i].Key, "General") {
-						return true
-					} else if strings.EqualFold(settingsGroupList[j].Key, "General") {
-						return false
-					}
-					return strings.ToLower(settingsGroupList[i].Key) < strings.ToLower(settingsGroupList[j].Key)
-				})
-
-				settingsGroupTabs := container.NewAppTabs()
-				for _, kv := range settingsGroupList {
-					groupName := kv.Key
-					settingsGroup := kv.Value
-
-					groupContainer := container.NewVBox()
-
-					sort.Strings(settingsGroup)
-
-					for _, settingName := range settingsGroup {
-						if _, ok := pluginSettings[settingName]; ok && settingName != "settings_groups" {
-							settingsFields := createSettingsFields(pluginSettings, settingName, &SettingsFile, pluginClassName)
-							for _, field := range settingsFields {
-								groupContainer.Add(field)
-							}
-						}
-					}
-					settingsGroupTabs.Append(container.NewTabItem(groupName, groupContainer))
-				}
-
-				pluginSettingsContainer := container.NewVBox(
-					pluginEnabledCheckbox,
-					container.NewGridWithColumns(2, beginLine),
-					settingsGroupTabs,
-					spacerText,
-				)
-				pluginAccordionItem.Detail = pluginSettingsContainer
-			} else {
-				// no grouping
-				pluginSettingsContainer := container.NewVBox()
-				pluginSettingsContainer.Add(pluginEnabledCheckbox)
-				pluginSettingsContainer.Add(container.NewGridWithColumns(2, beginLine))
-
-				var sortedSettingNames []string
-				for settingName := range pluginSettings {
-					sortedSettingNames = append(sortedSettingNames, settingName)
-				}
-				sort.Strings(sortedSettingNames) // sort the keys in ascending order
-
-				for _, settingName := range sortedSettingNames {
-					if settingName != "settings_groups" {
-						settingsFields := createSettingsFields(pluginSettings, settingName, &SettingsFile, pluginClassName)
-						for _, field := range settingsFields {
-							pluginSettingsContainer.Add(field)
-						}
-					}
-				}
-
-				pluginSettingsContainer.Add(spacerText)
-
-				pluginAccordionItem.Detail = pluginSettingsContainer
-			}
 			pluginAccordion.Append(pluginAccordionItem)
 		}
 	}
@@ -281,7 +334,6 @@ func BuildPluginSettingsAccordion() (fyne.CanvasObject, int) {
 	//if openPluginItem >= 0 {
 	//	pluginAccordion.Open(openPluginItem)
 	//}
-
 	return pluginAccordion, len(pluginFiles)
 }
 
@@ -292,11 +344,49 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 
 	pluginsContent := container.NewVScroll(nil)
 
+	// plugin list to window button
+	pluginToWindowButton := widget.NewButtonWithIcon("Open List in Window", theme.ViewFullScreenIcon(), nil)
+
+	pluginToWindowButton.OnTapped = func() {
+		pluginWindow := fyne.CurrentApp().NewWindow("Plugin Settings")
+		pluginAccordionWin, _ := BuildPluginSettingsAccordion()
+		pluginWindowContainer := container.NewVScroll(pluginAccordionWin)
+		reloadButton := widget.NewButtonWithIcon("Reload", theme.ViewRefreshIcon(), nil)
+		reloadButton.OnTapped = func() {
+			openItem := -1
+			for index, item := range pluginAccordionWin.(*widget.Accordion).Items {
+				if item.Open {
+					openItem = index
+					break
+				}
+			}
+			pluginAccordionWin, _ = BuildPluginSettingsAccordion()
+			pluginWindowContainer.Content = pluginAccordionWin
+			pluginWindowContainer.Refresh()
+			pluginWindow.Content().Refresh()
+			if openItem >= 0 && openItem <= len(pluginAccordionWin.(*widget.Accordion).Items) {
+				pluginAccordionWin.(*widget.Accordion).Open(openItem)
+			}
+		}
+		reloadButton.Importance = widget.MediumImportance
+		pluginWindow.SetContent(container.NewBorder(container.NewBorder(nil, nil, nil, reloadButton), nil, nil, nil, pluginWindowContainer))
+
+		windowHeight := pluginAccordion.Size().Height
+		if windowHeight >= fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size().Height {
+			windowHeight = fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size().Height
+		}
+		pluginWindow.Resize(fyne.NewSize(pluginAccordion.Size().Width, windowHeight))
+		pluginWindow.CenterOnScreen()
+
+		pluginWindow.Show()
+	}
+
 	downloadButton := widget.NewButton("Download / Update Plugins", nil)
 	filterEnabledPluginsCheckbox := widget.NewCheck("Only show enabled plugins", nil)
 	onlyShowEnabledPlugins = fyne.CurrentApp().Preferences().BoolWithFallback("OnlyShowEnabledPlugins", onlyShowEnabledPlugins)
 	filterEnabledPluginsCheckbox.Checked = onlyShowEnabledPlugins
-	topContainer := container.NewBorder(nil, nil, nil, filterEnabledPluginsCheckbox, downloadButton)
+	//topContainer := container.NewBorder(nil, nil, nil, filterEnabledPluginsCheckbox, downloadButton)
+	topContainer := container.NewBorder(nil, nil, nil, container.NewBorder(nil, nil, filterEnabledPluginsCheckbox, pluginToWindowButton), container.NewBorder(nil, nil, nil, downloadButton))
 	downloadButton.OnTapped = func() {
 		CreatePluginListWindow(func() {
 			pluginAccordion, pluginFilesCount = BuildPluginSettingsAccordion()
@@ -684,6 +774,23 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 					selectEntries = Utilities.AudioInputDevicesListDirectSound.WidgetOptions
 					selectEntries = append(selectEntries, Utilities.AudioOutputDevicesListDirectSound.WidgetOptions...)
 				}
+				if strings.ToLower(deviceApi) == "all" {
+					selectEntries = []CustomWidget.TextValueOption{
+						{Text: "==========[WASAPI]==========", Value: ""},
+					}
+					selectEntries = append(selectEntries, Utilities.AudioInputDevicesListWASAPI.WidgetOptions...)
+					selectEntries = append(selectEntries, Utilities.AudioOutputDevicesListWASAPI.WidgetOptions...)
+					selectEntries = append(selectEntries,
+						CustomWidget.TextValueOption{Text: "==========[MME]==========", Value: ""},
+					)
+					selectEntries = append(selectEntries, Utilities.AudioInputDevicesListMME.WidgetOptions...)
+					selectEntries = append(selectEntries, Utilities.AudioOutputDevicesListMME.WidgetOptions...)
+					selectEntries = append(selectEntries,
+						CustomWidget.TextValueOption{Text: "==========[DirectSound]==========", Value: ""},
+					)
+					selectEntries = append(selectEntries, Utilities.AudioInputDevicesListDirectSound.WidgetOptions...)
+					selectEntries = append(selectEntries, Utilities.AudioOutputDevicesListDirectSound.WidgetOptions...)
+				}
 			}
 
 			if deviceType, ok := v["device_type"].(string); ok {
@@ -695,6 +802,19 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 						selectEntries = Utilities.AudioInputDevicesListMME.WidgetOptions
 					} else if selectedDeviceApi == "directsound" {
 						selectEntries = Utilities.AudioInputDevicesListDirectSound.WidgetOptions
+					} else if selectedDeviceApi == "all" {
+						selectEntries = []CustomWidget.TextValueOption{
+							{Text: "==========[WASAPI]==========", Value: ""},
+						}
+						selectEntries = append(selectEntries, Utilities.AudioInputDevicesListWASAPI.WidgetOptions...)
+						selectEntries = append(selectEntries,
+							CustomWidget.TextValueOption{Text: "==========[MME]==========", Value: ""},
+						)
+						selectEntries = append(selectEntries, Utilities.AudioInputDevicesListMME.WidgetOptions...)
+						selectEntries = append(selectEntries,
+							CustomWidget.TextValueOption{Text: "==========[DirectSound]==========", Value: ""},
+						)
+						selectEntries = append(selectEntries, Utilities.AudioInputDevicesListDirectSound.WidgetOptions...)
 					}
 				} else if strings.ToLower(deviceType) == "output" {
 					selectEntries = audioOutputDevices.WidgetOptions
@@ -704,6 +824,19 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 						selectEntries = Utilities.AudioOutputDevicesListMME.WidgetOptions
 					} else if selectedDeviceApi == "directsound" {
 						selectEntries = Utilities.AudioOutputDevicesListDirectSound.WidgetOptions
+					} else if selectedDeviceApi == "all" {
+						selectEntries = []CustomWidget.TextValueOption{
+							{Text: "==========[WASAPI]==========", Value: ""},
+						}
+						selectEntries = append(selectEntries, Utilities.AudioOutputDevicesListWASAPI.WidgetOptions...)
+						selectEntries = append(selectEntries,
+							CustomWidget.TextValueOption{Text: "==========[MME]==========", Value: ""},
+						)
+						selectEntries = append(selectEntries, Utilities.AudioOutputDevicesListMME.WidgetOptions...)
+						selectEntries = append(selectEntries,
+							CustomWidget.TextValueOption{Text: "==========[DirectSound]==========", Value: ""},
+						)
+						selectEntries = append(selectEntries, Utilities.AudioOutputDevicesListDirectSound.WidgetOptions...)
 					}
 				}
 			}
