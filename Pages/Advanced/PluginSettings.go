@@ -739,6 +739,18 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 
 			settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), fileSelectButton, entry))
 		} else if v["type"] == "select_audio" {
+			valueTextCleanupFunc := func(value string) string {
+				// delete everything after the last "- API:" and trim spaces afterward.
+				lastIndex := strings.LastIndex(value, "- API:")
+				if lastIndex != -1 {
+					// Keep everything before the last occurrence
+					value = value[:lastIndex]
+				}
+				// Trim spaces afterward
+				value = strings.TrimSpace(value)
+				return value
+			}
+
 			var selectEntries []CustomWidget.TextValueOption = nil
 
 			var audioInputDevices = Utilities.AudioDeviceMemory{}
@@ -852,24 +864,46 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 				savedValue = val
 			}
 
-			var updateFunc = func(s CustomWidget.TextValueOption) {
-				if s.Text != savedValue {
-					v["value"] = s.Value
-					v["_value_text"] = s.Text
-					pluginSettings[settingName] = v
-					updateSettings(*SettingsFile, pluginClassName, pluginSettings)
-				}
+			savedValueSplit := strings.Split(savedValue, "#|")
+			savedValueAudioApi := ""
+			savedValueAudioType := ""
+			if len(savedValueSplit) >= 2 {
+				savedValueAudioApi = strings.Split(savedValueSplit[1], ",")[0]
+				savedValueAudioType = strings.Split(savedValueSplit[1], ",")[1]
 			}
 
-			if selectedValueText, ok := v["_value_text"].(string); ok && selectedValueText != "" {
+			var updateFunc = func(s CustomWidget.TextValueOption) {
+				//if s.Value != savedValue {
+				v["value"] = s.Value
+				v["_value_text"] = valueTextCleanupFunc(s.Text)
+				pluginSettings[settingName] = v
+				updateSettings(*SettingsFile, pluginClassName, pluginSettings)
+				//}
+			}
+
+			if selectedValueText, ok := v["_value_text"].(string); ok && valueTextCleanupFunc(selectedValueText) != "" {
 				containedEntry := audioSelect.GetEntry(&CustomWidget.TextValueOption{
 					Text: selectedValueText,
 				}, CustomWidget.CompareText)
 				if containedEntry != nil {
-					audioSelect.SetSelectedByText(selectedValueText)
-					// Update value in pluginSettings if the selected index does not fit the saved device name.
-					if savedValue != audioSelect.GetSelected().Value {
-						go updateFunc(*containedEntry)
+					if selectedDeviceApi != "all" && selectedDeviceApi != "" {
+						audioSelect.SetSelectedByText(selectedValueText)
+					} else {
+						// loop over all audioSelect.Options and check each value if the AudioApi and AudioType together with the selectedValueText is the same
+						for _, option := range audioSelect.Options {
+							optionSplit := strings.Split(option.Value, "#|")
+							optionAudioApi := ""
+							optionAudioType := ""
+							if len(optionSplit) >= 2 {
+								optionAudioApi = strings.Split(optionSplit[1], ",")[0]
+								optionAudioType = strings.Split(optionSplit[1], ",")[1]
+							}
+
+							if optionAudioApi == savedValueAudioApi && optionAudioType == savedValueAudioType && valueTextCleanupFunc(option.Text) == valueTextCleanupFunc(selectedValueText) {
+								audioSelect.SetSelected(option.Value)
+								break
+							}
+						}
 					}
 				} else {
 					audioSelect.SetSelected(savedValue)

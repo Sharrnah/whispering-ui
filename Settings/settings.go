@@ -83,10 +83,11 @@ type Conf struct {
 	Realtime_whisper_beam_size    int         `yaml:"realtime_whisper_beam_size" json:"realtime_whisper_beam_size"`
 	Realtime_temperature_fallback bool        `yaml:"realtime_temperature_fallback" json:"realtime_temperature_fallback"`
 	Push_to_talk_key              string      `yaml:"push_to_talk_key" json:"push_to_talk_key"`
-	Word_timestamps               bool        `yaml:"word_timestamps" json:"word_timestamps"`                     // if enabled, Whisper will add timestamps to the transcribed text.
-	Faster_without_timestamps     bool        `yaml:"faster_without_timestamps" json:"faster_without_timestamps"` // if enabled, faster whisper will only sample text tokens. (only when using stt_type=faster_whisper)
-	Denoise_audio                 bool        `yaml:"denoise_audio" json:"denoise_audio"`                         // if enabled, audio will be de-noised before processing.
-	Denoise_audio_post_filter     bool        `yaml:"denoise_audio_post_filter" json:"denoise_audio_post_filter"` // Enable post filter for some minor, extra noise reduction.
+	Word_timestamps               bool        `yaml:"word_timestamps" json:"word_timestamps"`                           // if enabled, Whisper will add timestamps to the transcribed text.
+	Faster_without_timestamps     bool        `yaml:"faster_without_timestamps" json:"faster_without_timestamps"`       // if enabled, faster whisper will only sample text tokens. (only when using stt_type=faster_whisper)
+	Denoise_audio                 string      `yaml:"denoise_audio" json:"denoise_audio"`                               // if enabled, audio will be de-noised before processing. (Can be empty, "deepfilter" or "noise_reduce")
+	Denoise_audio_post_filter     bool        `yaml:"denoise_audio_post_filter" json:"denoise_audio_post_filter"`       // Enable post filter for some minor, extra noise reduction.
+	Denoise_audio_before_trigger  bool        `yaml:"denoise_audio_before_trigger" json:"denoise_audio_before_trigger"` // if enabled, noise cancellation will be applied on the audio chunks before recording trigger conditions are detected.
 	Whisper_apply_voice_markers   bool        `yaml:"whisper_apply_voice_markers" json:"whisper_apply_voice_markers"`
 	Max_sentence_repetition       int         `yaml:"max_sentence_repetition" json:"max_sentence_repetition"`
 	Thread_per_transcription      bool        `yaml:"thread_per_transcription" json:"thread_per_transcription"` // Enable a new thread for each transcription. (can improve speed)

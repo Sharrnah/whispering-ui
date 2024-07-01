@@ -240,6 +240,9 @@ func (c *WhisperProcessConfig) SetOutputHandling(stderr io.Reader, processLineFu
 	var incompleteLine string
 
 	for {
+		if stderr == nil {
+			break
+		}
 		num, err := stderr.Read(buf)
 		if err != nil {
 			if err.Error() == "EOF" {

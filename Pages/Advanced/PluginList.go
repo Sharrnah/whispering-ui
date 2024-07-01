@@ -115,7 +115,8 @@ func fetchAndAnalyzeGist(url string) (string, string, string, []byte) {
 func CreatePluginListWindow(closeFunction func()) {
 	defer Utilities.PanicLogger()
 
-	fileUrl := "https://raw.githubusercontent.com/Sharrnah/whispering/main/documentation/plugins.md"
+	fileUrl := "https://github.com/Sharrnah/whispering-plugins/raw/main/README.md"
+	relativeUrlPreviewPrefixPart := "https://raw.githubusercontent.com/Sharrnah/whispering-plugins/main/"
 
 	pluginListWindow := fyne.CurrentApp().NewWindow("Plugin List")
 
@@ -166,7 +167,7 @@ func CreatePluginListWindow(closeFunction func()) {
 
 	table := extractTable(md)
 
-	tableData := parseTableIntoStruct(table)
+	tableData := parseTableIntoStruct(table, relativeUrlPreviewPrefixPart)
 
 	localPluginFilesData := parseLocalPluginFiles()
 
@@ -455,7 +456,7 @@ func extractTable(md string) string {
 	return table
 }
 
-func parseTableIntoStruct(table string) []TableData {
+func parseTableIntoStruct(table string, relativeUrlPreviewPart string) []TableData {
 	lines := strings.Split(table, "\n")
 	var tableData []TableData
 	reLink := regexp.MustCompile(`\[(.*?)\]\((.*?)\)`)            // regex to match markdown links
@@ -491,6 +492,11 @@ func parseTableIntoStruct(table string) []TableData {
 		if len(matches) > 1 {
 			previewLink = matches[1]
 			preview = "Preview available"
+		}
+
+		// Check if Link is relative
+		if !strings.HasPrefix(previewLink, "http") {
+			previewLink = relativeUrlPreviewPart + previewLink
 		}
 
 		description := strings.TrimSpace(cells[3])

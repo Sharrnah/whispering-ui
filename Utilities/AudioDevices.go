@@ -36,9 +36,7 @@ var AudioOutputDevicesListMME AudioDeviceMemory
 var AudioInputDevicesListDirectSound AudioDeviceMemory
 var AudioOutputDevicesListDirectSound AudioDeviceMemory
 
-func GetAudioDevices(audioAPI malgo.Backend, deviceType malgo.DeviceType, deviceIndexStartPoint int) ([]AudioDevice, error) {
-	//a.DeviceType = deviceType
-
+func InitMalgo(audioAPI malgo.Backend) (*malgo.AllocatedContext, error) {
 	// initialize malgo
 	var backends = []malgo.Backend{audioAPI}
 
@@ -50,10 +48,16 @@ func GetAudioDevices(audioAPI malgo.Backend, deviceType malgo.DeviceType, device
 		//os.Exit(1)
 		return nil, err
 	}
-	defer func() {
-		_ = ctx.Uninit()
-		ctx.Free()
-	}()
+	return ctx, nil
+}
+
+func GetAudioDevices(audioAPI malgo.Backend, deviceType malgo.DeviceType, deviceIndexStartPoint int) ([]AudioDevice, error) {
+	//a.DeviceType = deviceType
+	ctx, err := InitMalgo(audioAPI)
+	if err != nil {
+		fmt.Println(err)
+		return nil, err
+	}
 
 	devices, err := ctx.Devices(deviceType)
 	if err != nil {
@@ -81,6 +85,11 @@ func GetAudioDevices(audioAPI malgo.Backend, deviceType malgo.DeviceType, device
 			IsDefault: fullInfo.IsDefault != 0,
 		})
 	}
+
+	defer func() {
+		_ = ctx.Uninit()
+		ctx.Free()
+	}()
 
 	return deviceList, nil
 }

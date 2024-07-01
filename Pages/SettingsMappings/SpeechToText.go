@@ -5,6 +5,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/widget"
+	"whispering-tiger-ui/CustomWidget"
 )
 
 var SpeechToTextSettingsMapping = SettingsMapping{
@@ -77,11 +78,16 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 			},
 		},
 		{
-			SettingsName:         "A.I. denoise audio",
+			SettingsName:         "Noise Filter",
 			SettingsInternalName: "denoise_audio",
-			SettingsDescription:  "",
+			SettingsDescription:  "Requires a restart when switching the Noise Filter type.\nDisabling will stop applying it even without restart.",
 			_widget: func() fyne.CanvasObject {
-				return widget.NewCheck("", func(b bool) {})
+				settingWidget := CustomWidget.NewTextValueSelect("denoise_audio", []CustomWidget.TextValueOption{
+					{Text: "", Value: ""},
+					{Text: "Noise Reduce", Value: "noise_reduce"},
+					{Text: "DeepFilterNet", Value: "deepfilter"},
+				}, func(s CustomWidget.TextValueOption) {}, 0)
+				return settingWidget
 			},
 		},
 		{

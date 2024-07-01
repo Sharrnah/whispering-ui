@@ -52,6 +52,14 @@ var ExperimentalSettingsMapping = SettingsMapping{
 			},
 		},
 		{
+			SettingsName:         "Noise Filter before recording trigger",
+			SettingsInternalName: "denoise_audio_before_trigger",
+			SettingsDescription:  "Noise Filter will be applied on audio before Volume + VAD trigger conditions are detected.\nThis can heavily influence audio quality since it increases processing time per chunk!",
+			_widget: func() fyne.CanvasObject {
+				return widget.NewCheck("", func(b bool) {})
+			},
+		},
+		{
 			SettingsName:         "Recognize speaker changes",
 			SettingsInternalName: "speaker_diarization",
 			SettingsDescription:  "Process speaker changes in conversation.",

@@ -24,7 +24,8 @@ type Profile struct {
 	Vad_on_full_clip         bool    `yaml:"vad_on_full_clip"`
 	Vad_confidence_threshold float64 `yaml:"vad_confidence_threshold"`
 
-	Denoise_audio bool `yaml:"denoise_audio"`
+	Denoise_audio                string `yaml:"denoise_audio"`
+	Denoise_audio_before_trigger bool   `yaml:"denoise_audio_before_trigger"`
 
 	// Whisper Settings
 	Ai_device                interface{} `yaml:"ai_device"`
