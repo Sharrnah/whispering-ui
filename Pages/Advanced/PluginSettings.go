@@ -143,11 +143,12 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 	}
 
 	// plugin to window button
-	//var pluginToWindowButton *widget.Button = nil
-	pluginToWindowButton := widget.NewButtonWithIcon("", theme.ViewFullScreenIcon(), func() {
+	pluginToWindowButton := widget.NewButtonWithIcon("", theme.ViewFullScreenIcon(), nil)
+	pluginToWindowButton.OnTapped = func() {
 		pluginWindow := fyne.CurrentApp().NewWindow(pluginClassName + " Settings")
 		pluginContentWin := BuildSinglePluginSettings(pluginClassName, nil, nil)
 		pluginWindowContainer := container.NewVScroll(pluginContentWin)
+
 		reloadButton := widget.NewButtonWithIcon("Reload", theme.ViewRefreshIcon(), nil)
 		reloadButton.OnTapped = func() {
 			pluginContentWin = BuildSinglePluginSettings(pluginClassName, nil, nil)
@@ -178,7 +179,7 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 		pluginWindow.Resize(fyne.NewSize(windowWidth, windowHeight))
 		pluginWindow.CenterOnScreen()
 		pluginWindow.Show()
-	})
+	}
 	if pluginAccordionItem == nil || pluginAccordion == nil {
 		pluginToWindowButton.Hide()
 	}
