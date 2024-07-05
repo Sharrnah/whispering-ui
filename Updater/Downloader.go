@@ -448,9 +448,10 @@ func (d *Download) CreateFinishedFile(fileExtension string, maxRetries int, retr
 	}
 
 	var finishedErr, closeFileErr error
+	var finishedFile *os.File
 	for i := 0; i < maxRetries; i++ {
-		finishedFile, finishedErr := os.Create(d.Filepath + fileExtension)
-		closeFileErr := finishedFile.Close()
+		finishedFile, finishedErr = os.Create(d.Filepath + fileExtension)
+		closeFileErr = finishedFile.Close()
 
 		if closeFileErr == nil && finishedErr == nil {
 			break

@@ -24,6 +24,11 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 		window = fyne.CurrentApp().Driver().AllWindows()[0]
 	} else if len(fyne.CurrentApp().Driver().AllWindows()) == 2 && fyne.CurrentApp().Driver().AllWindows()[1] != nil {
 		window = fyne.CurrentApp().Driver().AllWindows()[1]
+		// more general fallbacks in case more than 1 or 2 windows
+	} else if len(fyne.CurrentApp().Driver().AllWindows()) > 0 && fyne.CurrentApp().Driver().AllWindows()[0] != nil {
+		window = fyne.CurrentApp().Driver().AllWindows()[0]
+	} else if len(fyne.CurrentApp().Driver().AllWindows()) > 0 && fyne.CurrentApp().Driver().AllWindows()[1] != nil {
+		window = fyne.CurrentApp().Driver().AllWindows()[1]
 	} else {
 		return fmt.Errorf("no active window found")
 	}
@@ -148,7 +153,7 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 			dialog.ShowError(err, window)
 			return err
 		}
-		err = downloader.CreateFinishedFile(".finished", 5, 1*time.Second)
+		err = downloader.CreateFinishedFile(".finished", 5, 3*time.Second)
 		if err != nil {
 			dialog.ShowError(err, window)
 			return err
@@ -167,7 +172,7 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 		//}
 	} else {
 		//err = os.Rename(targetDir, targetDir+".finished")
-		err = downloader.CreateFinishedFile(".finished", 5, 1*time.Second)
+		err = downloader.CreateFinishedFile(".finished", 5, 3*time.Second)
 		if err != nil {
 			dialog.ShowError(err, window)
 			return err
