@@ -20,6 +20,10 @@ func (res LoadingState) Update() *LoadingState {
 	if LoadingStateDialog == nil {
 		res.InitStateWindow()
 	}
+	// still no dialog? just return.
+	if LoadingStateDialog == nil {
+		return &res
+	}
 
 	if len(res.States) == 0 {
 		LoadingStateDialog.Hide()

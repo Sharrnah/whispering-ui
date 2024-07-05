@@ -85,7 +85,7 @@ func main() {
 	//Utilities.AppVersion = a.Metadata().Version
 	//Utilities.AppBuild = strconv.Itoa(a.Metadata().Build)
 	Utilities.AppVersion = "1.3.1"
-	Utilities.AppBuild = "2"
+	Utilities.AppBuild = "3"
 
 	w := a.NewWindow("Whispering Tiger")
 	w.SetMaster()

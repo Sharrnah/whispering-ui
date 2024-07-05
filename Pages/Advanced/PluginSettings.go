@@ -434,7 +434,7 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 				widget.NewLabel("\nNo Plugins found.\n\nDownload Plugins using the button below."),
 				downloadButton,
 				widget.NewLabel("\nOr download Plugins manually from:"),
-				widget.NewHyperlink("https://github.com/Sharrnah/whispering/blob/main/documentation/plugins.md", parseURL("https://github.com/Sharrnah/whispering/blob/main/documentation/plugins.md")),
+				widget.NewHyperlink("https://github.com/Sharrnah/whispering-plugins/blob/main/README.md", parseURL("https://github.com/Sharrnah/whispering-plugins/blob/main/README.md")),
 				widget.NewLabel("and place the *.py file in the Plugins folder."),
 				openPluginsFolderButton,
 			),
