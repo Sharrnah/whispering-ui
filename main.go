@@ -224,7 +224,7 @@ func main() {
 	profileWindow.Show()
 
 	// check for updates
-	if fyne.CurrentApp().Preferences().BoolWithFallback("CheckForUpdateAtStartup", true) {
+	if fyne.CurrentApp().Preferences().BoolWithFallback("CheckForUpdateAtStartup", true) || (!Utilities.FileExists("audioWhisper/audioWhisper.exe") && !Utilities.FileExists("audioWhisper.py")) {
 		go func() {
 			if len(fyne.CurrentApp().Driver().AllWindows()) == 2 {
 				UpdateUtility.VersionCheck(fyne.CurrentApp().Driver().AllWindows()[1], false)
