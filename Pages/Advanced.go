@@ -10,7 +10,6 @@ import (
 	"io"
 	"net/url"
 	"path/filepath"
-	"strconv"
 	"strings"
 	"time"
 	"whispering-tiger-ui/Fields"
@@ -56,7 +55,7 @@ func buildAboutInfo() fyne.CanvasObject {
 	supportLabel.Alignment = fyne.TextAlignCenter
 
 	aboutCard := widget.NewCard("Whispering Tiger UI",
-		"Version: "+fyne.CurrentApp().Metadata().Version+" Build: "+strconv.Itoa(fyne.CurrentApp().Metadata().Build),
+		"Version: "+Utilities.AppVersion+" Build: "+Utilities.AppBuild,
 		container.NewVBox(
 			widget.NewHyperlink("https://whispering-tiger.github.io", parseURL("https://whispering-tiger.github.io")),
 			widget.NewAccordion(

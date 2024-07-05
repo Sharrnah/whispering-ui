@@ -3,7 +3,6 @@ package Updater
 import (
 	"context"
 	"fmt"
-	"fyne.io/fyne/v2"
 	"github.com/hashicorp/go-cleanhttp"
 	"io"
 	"io/ioutil"
@@ -53,11 +52,9 @@ type Download struct {
 }
 
 func (d *Download) getUserAgent() string {
-	// convert build int to string
-	build := fyne.CurrentApp().Metadata().Build
-	buildStr := fmt.Sprintf("%d", build)
+	build := Utilities.AppBuild
 
-	return "Whispering_Tiger_DL/" + fyne.CurrentApp().Metadata().Version + " (" + buildStr + ")"
+	return "Whispering_Tiger_DL/" + Utilities.AppVersion + " (" + build + ")"
 }
 
 func (d *Download) getRemoteFileSize() (int64, error) {

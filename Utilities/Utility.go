@@ -30,6 +30,9 @@ const (
 	TiB
 )
 
+var AppVersion = "0.0.1"
+var AppBuild = "1"
+
 func PanicLogger() {
 	if r := recover(); r != nil {
 		// 2. Create a log file when a crash occurs

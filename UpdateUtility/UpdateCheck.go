@@ -11,7 +11,6 @@ import (
 	"net/url"
 	"os"
 	"path/filepath"
-	"strconv"
 	"time"
 	"whispering-tiger-ui/RuntimeBackend"
 	"whispering-tiger-ui/Updater"
@@ -233,7 +232,7 @@ func VersionCheck(window fyne.Window, startBackend bool) bool {
 	}
 
 	// check app version
-	currentAppVersion := fyne.CurrentApp().Metadata().Version + "." + strconv.Itoa(fyne.CurrentApp().Metadata().Build)
+	currentAppVersion := Utilities.AppVersion + "." + Utilities.AppBuild
 	if updater.Packages["app"].Version != currentAppVersion {
 		updateAvailable = true
 		dialog.ShowConfirm("App Update available", "There is a new Update of the App available. Open GitHub Release page now?", func(b bool) {
