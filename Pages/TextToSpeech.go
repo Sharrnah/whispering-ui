@@ -3,14 +3,85 @@ package Pages
 import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"golang.design/x/clipboard"
+	"log"
+	"os"
+	"path/filepath"
+	"strings"
+	"time"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Utilities"
 )
+
+func ShowSaveTTSWindow(saveFunc func(string)) {
+	// find active window
+	window := fyne.CurrentApp().Driver().AllWindows()[0]
+	if len(fyne.CurrentApp().Driver().AllWindows()) == 1 && fyne.CurrentApp().Driver().AllWindows()[0] != nil {
+		window = fyne.CurrentApp().Driver().AllWindows()[0]
+	} else if len(fyne.CurrentApp().Driver().AllWindows()) == 2 && fyne.CurrentApp().Driver().AllWindows()[1] != nil {
+		window = fyne.CurrentApp().Driver().AllWindows()[1]
+		// more general fallbacks in case more than 1 or 2 windows
+	} else if len(fyne.CurrentApp().Driver().AllWindows()) > 0 && fyne.CurrentApp().Driver().AllWindows()[0] != nil {
+		window = fyne.CurrentApp().Driver().AllWindows()[0]
+	} else if len(fyne.CurrentApp().Driver().AllWindows()) > 0 && fyne.CurrentApp().Driver().AllWindows()[1] != nil {
+		window = fyne.CurrentApp().Driver().AllWindows()[1]
+	} else {
+		return
+	}
+
+	fileSaveDialog := dialog.NewFileSave(func(writer fyne.URIWriteCloser, err error) {
+		if writer == nil {
+			return
+		}
+		if err != nil {
+			log.Println("Error saving file:", err)
+			return
+		}
+		defer writer.Close()
+
+		uri := writer.URI().String()
+		// replace "file://" from the beginning of the string
+		uri, _ = strings.CutPrefix(uri, "file://")
+
+		saveFunc(uri)
+
+		fyne.CurrentApp().Preferences().SetString("LastTTSSavePath", filepath.Dir(writer.URI().Path()))
+
+	}, window)
+
+	fileSaveDialog.SetFilter(storage.NewExtensionFileFilter([]string{".wav"}))
+	fileSaveDialog.SetFileName("tts_" + time.Now().Format("2006-01-02_15-04-05") + ".wav")
+
+	saveStartingPath := fyne.CurrentApp().Preferences().StringWithFallback("LastTTSSavePath", "")
+	if saveStartingPath != "" {
+		// check if folder exists
+		folderExists := false
+		if _, err := os.Stat(saveStartingPath); !os.IsNotExist(err) {
+			folderExists = true
+		}
+		if folderExists {
+			fileURI := storage.NewFileURI(saveStartingPath)
+			fileLister, _ := storage.ListerForURI(fileURI)
+
+			fileSaveDialog.SetLocation(fileLister)
+		}
+	}
+
+	dialogSize := fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size()
+	dialogSize.Height = dialogSize.Height - 50
+	dialogSize.Width = dialogSize.Width - 50
+	fileSaveDialog.Resize(dialogSize)
+
+	fileSaveDialog.Show()
+
+	return
+}
 
 func GetClipboardText() string {
 	clipboardText := ""
@@ -63,19 +134,23 @@ func OnOpenTextToSpeechWindow(container fyne.CanvasObject) {
 			if clipboardText == "" {
 				return
 			}
-			sendMessage := Fields.SendMessageStruct{
-				Type: "tts_req",
-				Value: struct {
-					Text     string `json:"text"`
-					ToDevice bool   `json:"to_device"`
-					Download bool   `json:"download"`
-				}{
-					Text:     clipboardText,
-					ToDevice: false,
-					Download: true,
-				},
-			}
-			sendMessage.SendMessage()
+			ShowSaveTTSWindow(func(s string) {
+				sendMessage := Fields.SendMessageStruct{
+					Type: "tts_req",
+					Value: struct {
+						Text     string `json:"text"`
+						ToDevice bool   `json:"to_device"`
+						Download bool   `json:"download"`
+						Path     string `json:"path,omitempty"`
+					}{
+						Text:     clipboardText,
+						ToDevice: false,
+						Download: true,
+						Path:     s,
+					},
+				}
+				sendMessage.SendMessage()
+			})
 		}))
 	}
 }
@@ -116,19 +191,23 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 	transcriptionRow := container.New(layout.NewGridLayout(1), Fields.Field.TranscriptionTranslationInput)
 
 	exportSpeechButton := widget.NewButtonWithIcon("Export .wav", theme.DocumentSaveIcon(), func() {
-		sendMessage := Fields.SendMessageStruct{
-			Type: "tts_req",
-			Value: struct {
-				Text     string `json:"text"`
-				ToDevice bool   `json:"to_device"`
-				Download bool   `json:"download"`
-			}{
-				Text:     Fields.Field.TranscriptionTranslationInput.Text,
-				ToDevice: false,
-				Download: true,
-			},
-		}
-		sendMessage.SendMessage()
+		ShowSaveTTSWindow(func(s string) {
+			sendMessage := Fields.SendMessageStruct{
+				Type: "tts_req",
+				Value: struct {
+					Text     string `json:"text"`
+					ToDevice bool   `json:"to_device"`
+					Download bool   `json:"download"`
+					Path     string `json:"path,omitempty"`
+				}{
+					Text:     Fields.Field.TranscriptionTranslationInput.Text,
+					ToDevice: false,
+					Download: true,
+					Path:     s,
+				},
+			}
+			sendMessage.SendMessage()
+		})
 	})
 
 	sendFunction := func() {
