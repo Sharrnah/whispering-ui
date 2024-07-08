@@ -7,7 +7,7 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 
 [![ko-fi](https://ko-fi.com/img/githubbutton_sm.svg)](https://ko-fi.com/sharrnah)
 
-<img src=doc/images/speech2text.png width=550 alt="Speech-to-Text Tab">
+<img src=doc/images/speech2text.png width=750 alt="Speech-to-Text Tab">
 
 ## Content
 - [Features](#features)
