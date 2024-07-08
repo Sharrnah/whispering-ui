@@ -36,7 +36,7 @@ var AppBuild = "1"
 func PanicLogger() {
 	if r := recover(); r != nil {
 		// 2. Create a log file when a crash occurs
-		logFile, err := os.OpenFile("crash.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
+		logFile, err := os.OpenFile("error_ui.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
 		if err != nil {
 			fmt.Printf("Failed to create log file: %v\n", err)
 			os.Exit(1)
@@ -50,7 +50,7 @@ func PanicLogger() {
 		stackTrace := debug.Stack()
 		log.Printf("Panic occurred: %v\nStack trace:\n%s", r, stackTrace)
 
-		fmt.Println("A crash occurred. Check the crash.log file for more information.")
+		fmt.Println("A crash occurred. Check the error_ui.log file for more information.")
 	}
 }
 
