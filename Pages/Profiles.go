@@ -1534,7 +1534,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			Whisper_apply_voice_markers:   false,
 			Max_sentence_repetition:       -1,
 			Transcription_auto_save_file:  "",
-			Thread_per_transcription:      false,
+			Thread_per_transcription:      true,
 
 			Silence_cutting_enabled:   true,
 			Silence_offset:            -40.0,
