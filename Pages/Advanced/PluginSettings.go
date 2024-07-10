@@ -134,7 +134,7 @@ func _getFilePathDialogInitPath(v map[string]interface{}, entry *widget.Entry) (
 var onlyShowEnabledPlugins bool
 var openPluginItem = -1
 
-func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widget.AccordionItem, pluginAccordion *widget.Accordion) fyne.CanvasObject {
+func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widget.AccordionItem, pluginAccordion *widget.Accordion, window fyne.Window) fyne.CanvasObject {
 	// load settings file for plugin settings
 	SettingsFile := Settings.Conf{}
 	err := SettingsFile.LoadYamlSettings(filepath.Join(Settings.GetConfProfileDir(), Settings.Config.SettingsFilename))
@@ -146,12 +146,12 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 	pluginToWindowButton := widget.NewButtonWithIcon("", theme.ViewFullScreenIcon(), nil)
 	pluginToWindowButton.OnTapped = func() {
 		pluginWindow := fyne.CurrentApp().NewWindow(pluginClassName + " Settings")
-		pluginContentWin := BuildSinglePluginSettings(pluginClassName, nil, nil)
+		pluginContentWin := BuildSinglePluginSettings(pluginClassName, nil, nil, pluginWindow)
 		pluginWindowContainer := container.NewVScroll(pluginContentWin)
 
 		reloadButton := widget.NewButtonWithIcon("Reload", theme.ViewRefreshIcon(), nil)
 		reloadButton.OnTapped = func() {
-			pluginContentWin = BuildSinglePluginSettings(pluginClassName, nil, nil)
+			pluginContentWin = BuildSinglePluginSettings(pluginClassName, nil, nil, pluginWindow)
 			pluginWindowContainer.Content = pluginContentWin
 			pluginWindowContainer.Refresh()
 			pluginWindow.Content().Refresh()
@@ -255,7 +255,7 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 
 			for _, settingName := range settingsGroup {
 				if _, ok := pluginSettings[settingName]; ok && settingName != "settings_groups" {
-					settingsFields := createSettingsFields(pluginSettings, settingName, &SettingsFile, pluginClassName)
+					settingsFields := createSettingsFields(pluginSettings, settingName, &SettingsFile, pluginClassName, window)
 					for _, field := range settingsFields {
 						groupContainer.Add(field)
 					}
@@ -286,7 +286,7 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 
 		for _, settingName := range sortedSettingNames {
 			if settingName != "settings_groups" {
-				settingsFields := createSettingsFields(pluginSettings, settingName, &SettingsFile, pluginClassName)
+				settingsFields := createSettingsFields(pluginSettings, settingName, &SettingsFile, pluginClassName, window)
 				for _, field := range settingsFields {
 					pluginSettingsContainer.Add(field)
 				}
@@ -299,7 +299,7 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 	}
 }
 
-func BuildPluginSettingsAccordion() (fyne.CanvasObject, int) {
+func BuildPluginSettingsAccordion(window fyne.Window) (fyne.CanvasObject, int) {
 
 	// build plugins list
 	var pluginFiles []string
@@ -324,7 +324,7 @@ func BuildPluginSettingsAccordion() (fyne.CanvasObject, int) {
 				nil,
 			)
 
-			pluginSettingsContainer := BuildSinglePluginSettings(pluginClassName, pluginAccordionItem, pluginAccordion)
+			pluginSettingsContainer := BuildSinglePluginSettings(pluginClassName, pluginAccordionItem, pluginAccordion, window)
 
 			pluginAccordionItem.Detail = pluginSettingsContainer
 
@@ -341,7 +341,7 @@ func BuildPluginSettingsAccordion() (fyne.CanvasObject, int) {
 func CreatePluginSettingsPage() fyne.CanvasObject {
 	defer Utilities.PanicLogger()
 
-	pluginAccordion, pluginFilesCount := BuildPluginSettingsAccordion()
+	pluginAccordion, pluginFilesCount := BuildPluginSettingsAccordion(nil)
 
 	pluginsContent := container.NewVScroll(nil)
 
@@ -350,7 +350,7 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 
 	pluginToWindowButton.OnTapped = func() {
 		pluginWindow := fyne.CurrentApp().NewWindow("Plugin Settings")
-		pluginAccordionWin, _ := BuildPluginSettingsAccordion()
+		pluginAccordionWin, _ := BuildPluginSettingsAccordion(pluginWindow)
 		pluginWindowContainer := container.NewVScroll(pluginAccordionWin)
 		reloadButton := widget.NewButtonWithIcon("Reload", theme.ViewRefreshIcon(), nil)
 		reloadButton.OnTapped = func() {
@@ -361,7 +361,7 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 					break
 				}
 			}
-			pluginAccordionWin, _ = BuildPluginSettingsAccordion()
+			pluginAccordionWin, _ = BuildPluginSettingsAccordion(pluginWindow)
 			pluginWindowContainer.Content = pluginAccordionWin
 			pluginWindowContainer.Refresh()
 			pluginWindow.Content().Refresh()
@@ -390,7 +390,7 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 	topContainer := container.NewBorder(nil, nil, nil, container.NewBorder(nil, nil, filterEnabledPluginsCheckbox, pluginToWindowButton), container.NewBorder(nil, nil, nil, downloadButton))
 	downloadButton.OnTapped = func() {
 		CreatePluginListWindow(func() {
-			pluginAccordion, pluginFilesCount = BuildPluginSettingsAccordion()
+			pluginAccordion, pluginFilesCount = BuildPluginSettingsAccordion(nil)
 			if pluginFilesCount > 0 {
 				pluginsContainerBorder := container.NewBorder(topContainer, nil, nil, nil, pluginAccordion)
 				pluginsContent.Content = pluginsContainerBorder
@@ -407,7 +407,7 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 		onlyShowEnabledPlugins = enabled
 		fyne.CurrentApp().Preferences().SetBool("OnlyShowEnabledPlugins", onlyShowEnabledPlugins)
 
-		pluginAccordion, pluginFilesCount = BuildPluginSettingsAccordion()
+		pluginAccordion, pluginFilesCount = BuildPluginSettingsAccordion(nil)
 		if pluginFilesCount > 0 {
 			pluginsContainerBorder := container.NewBorder(topContainer, nil, nil, nil, pluginAccordion)
 			pluginsContent.Content = pluginsContainerBorder
@@ -447,8 +447,17 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 	return pluginsContent
 }
 
-func createSettingsFields(pluginSettings map[string]interface{}, settingName string, SettingsFile *Settings.Conf, pluginClassName string) []fyne.CanvasObject {
+func createSettingsFields(pluginSettings map[string]interface{}, settingName string, SettingsFile *Settings.Conf, pluginClassName string, window fyne.Window) []fyne.CanvasObject {
 	var settingsFields []fyne.CanvasObject
+
+	if window == nil {
+		if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
+			window = fyne.CurrentApp().Driver().AllWindows()[0]
+		} else {
+			window = fyne.CurrentApp().NewWindow("Plugin Settings " + pluginClassName)
+			window.Show()
+		}
+	}
 
 	// Skip creating a field for "settings_groups"
 	if settingName == "settings_groups" {
@@ -670,16 +679,14 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 					if err == nil && reader != nil {
 						entry.SetText(reader.URI().Path())
 					}
-				}, fyne.CurrentApp().Driver().AllWindows()[0])
+				}, window)
 				fileDialog.SetFilter(storage.NewExtensionFileFilter(filterArray))
 				fileSelectFunc = func() {
 					// resize dialog
-					if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
-						dialogSize := fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size()
-						dialogSize.Height = dialogSize.Height - 50
-						dialogSize.Width = dialogSize.Width - 50
-						fileDialog.Resize(dialogSize)
-					}
+					dialogSize := window.Canvas().Size()
+					dialogSize.Height = dialogSize.Height - 50
+					dialogSize.Width = dialogSize.Width - 50
+					fileDialog.Resize(dialogSize)
 
 					// update dialog initpath on change
 					fileLister, currentFilename = _getFilePathDialogInitPath(v, entry)
@@ -693,17 +700,15 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 					if err == nil && writer != nil {
 						entry.SetText(writer.URI().Path())
 					}
-				}, fyne.CurrentApp().Driver().AllWindows()[0])
+				}, window)
 				fileDialog.SetFilter(storage.NewExtensionFileFilter(filterArray))
 
 				fileSelectFunc = func() {
 					// resize dialog
-					if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
-						dialogSize := fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size()
-						dialogSize.Height = dialogSize.Height - 50
-						dialogSize.Width = dialogSize.Width - 50
-						fileDialog.Resize(dialogSize)
-					}
+					dialogSize := window.Canvas().Size()
+					dialogSize.Height = dialogSize.Height - 50
+					dialogSize.Width = dialogSize.Width - 50
+					fileDialog.Resize(dialogSize)
 
 					// update dialog initpath on change
 					fileLister, currentFilename = _getFilePathDialogInitPath(v, entry)
@@ -718,15 +723,13 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 					if err == nil && uri != nil {
 						entry.SetText(uri.Path())
 					}
-				}, fyne.CurrentApp().Driver().AllWindows()[0])
+				}, window)
 				fileSelectFunc = func() {
 					// resize dialog
-					if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
-						dialogSize := fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size()
-						dialogSize.Height = dialogSize.Height - 50
-						dialogSize.Width = dialogSize.Width - 50
-						fileDialog.Resize(dialogSize)
-					}
+					dialogSize := window.Canvas().Size()
+					dialogSize.Height = dialogSize.Height - 50
+					dialogSize.Width = dialogSize.Width - 50
+					fileDialog.Resize(dialogSize)
 
 					// update dialog initpath on change
 					fileLister, currentFilename = _getFilePathDialogInitPath(v, entry)
