@@ -21,19 +21,7 @@ import (
 
 func ShowSaveTTSWindow(saveFunc func(string)) {
 	// find active window
-	window := fyne.CurrentApp().Driver().AllWindows()[0]
-	if len(fyne.CurrentApp().Driver().AllWindows()) == 1 && fyne.CurrentApp().Driver().AllWindows()[0] != nil {
-		window = fyne.CurrentApp().Driver().AllWindows()[0]
-	} else if len(fyne.CurrentApp().Driver().AllWindows()) == 2 && fyne.CurrentApp().Driver().AllWindows()[1] != nil {
-		window = fyne.CurrentApp().Driver().AllWindows()[1]
-		// more general fallbacks in case more than 1 or 2 windows
-	} else if len(fyne.CurrentApp().Driver().AllWindows()) > 0 && fyne.CurrentApp().Driver().AllWindows()[0] != nil {
-		window = fyne.CurrentApp().Driver().AllWindows()[0]
-	} else if len(fyne.CurrentApp().Driver().AllWindows()) > 0 && fyne.CurrentApp().Driver().AllWindows()[1] != nil {
-		window = fyne.CurrentApp().Driver().AllWindows()[1]
-	} else {
-		return
-	}
+	window := Utilities.GetCurrentMainWindow("Save TTS File")
 
 	fileSaveDialog := dialog.NewFileSave(func(writer fyne.URIWriteCloser, err error) {
 		if writer == nil {

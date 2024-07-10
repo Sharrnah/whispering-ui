@@ -7,6 +7,7 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"fyne.io/fyne/v2"
 	"image"
 	"image/color"
 	"image/draw"
@@ -297,4 +298,14 @@ func ParseProgressFromString(s string) (float64, error) {
 	}
 
 	return 0, fmt.Errorf("no progress percentage found in the string")
+}
+
+func GetCurrentMainWindow(windowTitleFallback string) fyne.Window {
+	if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
+		return fyne.CurrentApp().Driver().AllWindows()[0]
+	}
+	// if no window found, make a new window.
+	newWindow := fyne.CurrentApp().NewWindow(windowTitleFallback)
+	newWindow.Show()
+	return newWindow
 }

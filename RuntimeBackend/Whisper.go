@@ -3,7 +3,6 @@ package RuntimeBackend
 import (
 	"encoding/json"
 	"errors"
-	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/dialog"
 	"io"
@@ -202,13 +201,7 @@ func (c *WhisperProcessConfig) processErrorOutputLine(line string, isUpdating bo
 				lastTraceback = exceptionMessage.Traceback[len(exceptionMessage.Traceback)-1]
 			}
 			// Handle error message
-			if len(fyne.CurrentApp().Driver().AllWindows()) == 1 && fyne.CurrentApp().Driver().AllWindows()[0] != nil {
-				dialog.ShowError(errors.New(exceptionMessage.Error+"\n\n"+lastTraceback), fyne.CurrentApp().Driver().AllWindows()[0])
-			} else if len(fyne.CurrentApp().Driver().AllWindows()) == 2 && fyne.CurrentApp().Driver().AllWindows()[1] != nil {
-				dialog.ShowError(errors.New(exceptionMessage.Error+"\n\n"+lastTraceback), fyne.CurrentApp().Driver().AllWindows()[1])
-			} else {
-				fmt.Printf("%s\n", exceptionMessage.Error)
-			}
+			dialog.ShowError(errors.New(exceptionMessage.Error+"\n\n"+lastTraceback), Utilities.GetCurrentMainWindow(""))
 		}
 
 		// Try to decode the line as loading JSON message

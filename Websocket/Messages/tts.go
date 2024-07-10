@@ -11,6 +11,7 @@ import (
 	"time"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Settings"
+	"whispering-tiger-ui/Utilities"
 )
 
 // TTS Languages
@@ -94,7 +95,7 @@ func (res TtsSpeechAudio) SaveWav() {
 
 		fyne.CurrentApp().Preferences().SetString("LastTTSSavePath", filepath.Dir(writer.URI().Path()))
 
-	}, fyne.CurrentApp().Driver().AllWindows()[0])
+	}, Utilities.GetCurrentMainWindow("Save TTS Wav"))
 
 	fileSaveDialog.SetFilter(storage.NewExtensionFileFilter([]string{".wav"}))
 	fileSaveDialog.SetFileName("tts_" + time.Now().Format("2006-01-02_15-04-05") + ".wav")

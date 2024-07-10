@@ -77,7 +77,7 @@ func main() {
 		_ = os.Setenv("FYNE_SCALE", val)
 	}
 
-	a := app.NewWithID("tiger.whispering")
+	a := app.NewWithID("io.github.whispering-tiger")
 	a.SetIcon(Resources.ResourceAppIconPng)
 
 	a.Settings().SetTheme(&AppTheme{})

@@ -2,7 +2,6 @@ package ModelDownloader
 
 import (
 	"fmt"
-	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
@@ -13,25 +12,14 @@ import (
 	"strings"
 	"time"
 	"whispering-tiger-ui/Updater"
+	"whispering-tiger-ui/Utilities"
 )
 
 const rootCacheFolder = ".cache"
 
 func DownloadFile(urls []string, targetDir string, checksum string, title string, extractFormat string) error {
 	// find active window
-	window := fyne.CurrentApp().Driver().AllWindows()[0]
-	if len(fyne.CurrentApp().Driver().AllWindows()) == 1 && fyne.CurrentApp().Driver().AllWindows()[0] != nil {
-		window = fyne.CurrentApp().Driver().AllWindows()[0]
-	} else if len(fyne.CurrentApp().Driver().AllWindows()) == 2 && fyne.CurrentApp().Driver().AllWindows()[1] != nil {
-		window = fyne.CurrentApp().Driver().AllWindows()[1]
-		// more general fallbacks in case more than 1 or 2 windows
-	} else if len(fyne.CurrentApp().Driver().AllWindows()) > 0 && fyne.CurrentApp().Driver().AllWindows()[0] != nil {
-		window = fyne.CurrentApp().Driver().AllWindows()[0]
-	} else if len(fyne.CurrentApp().Driver().AllWindows()) > 0 && fyne.CurrentApp().Driver().AllWindows()[1] != nil {
-		window = fyne.CurrentApp().Driver().AllWindows()[1]
-	} else {
-		return fmt.Errorf("no active window found")
-	}
+	window := Utilities.GetCurrentMainWindow("Downloading " + title)
 
 	// select download url
 	randomUrlIndex := rand.Int() % len(urls)
@@ -204,14 +192,7 @@ func (c *modelNameLinksMap) DownloadModel(modelName string, modelType string) er
 	modelChecksum := modelLinks.checksum
 
 	// find active window
-	window := fyne.CurrentApp().Driver().AllWindows()[0]
-	if len(fyne.CurrentApp().Driver().AllWindows()) == 1 && fyne.CurrentApp().Driver().AllWindows()[0] != nil {
-		window = fyne.CurrentApp().Driver().AllWindows()[0]
-	} else if len(fyne.CurrentApp().Driver().AllWindows()) == 2 && fyne.CurrentApp().Driver().AllWindows()[1] != nil {
-		window = fyne.CurrentApp().Driver().AllWindows()[1]
-	} else {
-		return fmt.Errorf("no active window found")
-	}
+	window := Utilities.GetCurrentMainWindow("Downloading " + modelName + " " + modelType)
 
 	err := DownloadFile(modelLinks.urls, modelCachePath, modelChecksum, modelName+" "+modelType, "")
 	if err != nil {
