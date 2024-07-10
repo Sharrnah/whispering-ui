@@ -44,6 +44,8 @@ var Models = []AIModel{
 	{"Whispernemo-canary_large", 4509.0},
 	// MMS models
 	{"Whispermms_1b-all", 4646.0},
+	{"Whispermms_mms-1b-fl102", 4544.0},
+	{"Whispermms_mms-1b-l1107", 4623.0},
 	// NLLB200CT2 models
 	{"TxtTranslatorNLLB200_CT2_small", 3087.0},
 	{"TxtTranslatorNLLB200_CT2_medium", 6069.0},
