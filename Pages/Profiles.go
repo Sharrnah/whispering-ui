@@ -97,6 +97,13 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 		c.device.Uninit()
 	}
 
+	if c.Context == nil {
+		time.Sleep(1 * time.Second)
+		if c.Context == nil {
+			c.Init()
+		}
+	}
+
 	captureDevices, err := c.Context.Devices(malgo.Capture)
 	if err != nil {
 		fmt.Println(err)
