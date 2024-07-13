@@ -89,6 +89,8 @@ func (c *CurrentPlaybackDevice) InitTestAudio() (*bytes.Reader, *wav.Reader) {
 }
 
 func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
+	defer Utilities.PanicLogger()
+
 	byteReader, testAudioReader := c.InitTestAudio()
 
 	if c.device != nil && c.device.IsStarted() {
@@ -251,6 +253,8 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 }
 
 func (c *CurrentPlaybackDevice) Init() {
+	defer Utilities.PanicLogger()
+
 	if c.OutputWaveWidget == nil {
 		c.OutputWaveWidget = widget.NewProgressBar()
 		c.OutputWaveWidget.Max = 100.0
@@ -297,6 +301,7 @@ func (c *CurrentPlaybackDevice) Init() {
 }
 
 func GetAudioDevices(audioApi malgo.Backend, deviceTypes []malgo.DeviceType, deviceIndexStartPoint int, specialValueSuffix string, specialTextSuffix string) ([]CustomWidget.TextValueOption, []Utilities.AudioDevice, error) {
+	defer Utilities.PanicLogger()
 
 	deviceList := make([]Utilities.AudioDevice, 0)
 
@@ -370,6 +375,8 @@ func appendWidgetToForm(form *widget.Form, text string, itemWidget fyne.CanvasOb
 }
 
 func stopAndClose(playBackDevice CurrentPlaybackDevice, onClose func()) {
+	defer Utilities.PanicLogger()
+
 	// Pause a bit until the server is closed
 	time.Sleep(1 * time.Second)
 
