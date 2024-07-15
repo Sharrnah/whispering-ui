@@ -83,7 +83,7 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 			SettingsDescription:  "Requires a restart when switching the Noise Filter type.\nDisabling will stop applying it even without restart.",
 			_widget: func() fyne.CanvasObject {
 				settingWidget := CustomWidget.NewTextValueSelect("denoise_audio", []CustomWidget.TextValueOption{
-					{Text: "", Value: ""},
+					{Text: "Disabled", Value: ""},
 					{Text: "Noise Reduce", Value: "noise_reduce"},
 					{Text: "DeepFilterNet", Value: "deepfilter"},
 				}, func(s CustomWidget.TextValueOption) {}, 0)
