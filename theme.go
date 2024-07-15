@@ -7,8 +7,12 @@ import (
 )
 
 var (
-	orange            = &color.NRGBA{R: 198, G: 123, B: 0, A: 255}
-	orangeTransparent = &color.NRGBA{R: 198, G: 123, B: 0, A: 180}
+	orange                     = &color.NRGBA{R: 198, G: 123, B: 0, A: 255}
+	orangeTransparent          = &color.NRGBA{R: 198, G: 123, B: 0, A: 180}
+	orangeTransparentSelection = &color.NRGBA{R: 198, G: 123, B: 0, A: 100}
+	colorDarkHover             = color.NRGBA{R: 0xff, G: 0xff, B: 0xff, A: 0x0f}
+	colorDarkDisabled          = color.NRGBA{R: 80, G: 80, B: 81, A: 255}
+	colorDarkInputBackground   = color.NRGBA{R: 0x25, G: 0x25, B: 0x28, A: 0xff}
 )
 
 type AppTheme struct{}
@@ -21,6 +25,14 @@ func (m AppTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) col
 		return orange
 	case theme.ColorNameScrollBar:
 		return orangeTransparent
+	case theme.ColorNameHover, theme.ColorNameFocus:
+		return colorDarkHover
+	case theme.ColorNameSelection:
+		return orangeTransparentSelection
+	case theme.ColorNameDisabled:
+		return colorDarkDisabled
+	case theme.ColorNameInputBackground:
+		return colorDarkInputBackground
 	}
 
 	variant = theme.VariantDark
