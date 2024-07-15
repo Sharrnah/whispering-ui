@@ -5,10 +5,9 @@ go 1.22
 replace github.com/fyne-io/terminal => github.com/Sharrnah/terminal v0.0.0-20240624130956-fdffe9f9ba4e
 
 require (
-	fyne.io/fyne/v2 v2.4.6-0.20240704212036-6aef0c339f53
+	fyne.io/fyne/v2 v2.5.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/fyne-io/terminal v0.0.0-20240618091142-9d4252f9e78f
-	//github.com/fyne-io/terminal v0.0.0-20231009085607-0814cfd3013e
 	github.com/gen2brain/malgo v0.11.22
 	github.com/gorilla/websocket v1.5.3
 	github.com/hajimehoshi/oto/v2 v2.4.2
