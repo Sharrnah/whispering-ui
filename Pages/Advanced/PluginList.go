@@ -230,12 +230,13 @@ func CreatePluginListWindow(closeFunction func()) {
 
 		title := row.Title
 
-		titleLabel := widget.NewLabel(title)
-		titleLabel.Wrapping = fyne.TextWrapWord
+		titleLabel := canvas.NewText(title, color.RGBA{255, 255, 255, 255})
+		titleLabel.TextSize = theme.TextSubHeadingSize()
+		titleLabel.TextStyle.Bold = true
 
 		remoteVersionLabel := widget.NewLabel("Newest V: ")
 		currentVersionLabel := canvas.NewText("  Current V: ", color.RGBA{255, 255, 255, 255})
-		currentVersionLabel.Move(fyne.NewPos(10, 0))
+		currentVersionLabel.Move(fyne.NewPos(theme.Padding(), 0))
 
 		author := row.Author
 		authorLabel := widget.NewLabel("Author:\n" + author)
@@ -291,9 +292,7 @@ func CreatePluginListWindow(closeFunction func()) {
 		descriptionLabel := widget.NewLabel(descriptionText)
 		descriptionLabel.Wrapping = fyne.TextWrapWord
 
-		grid.Add(container.NewVBox(titleLabel, row.Widgets.UpdateButton, row.Widgets.RemoteVersion, row.Widgets.CurrentVersion))
-		descriptionScroller := container.NewVScroll(descriptionLabel)
-		descriptionScroller.Resize(fyne.NewSize(descriptionScroller.Size().Width, 400))
+		grid.Add(container.NewVBox(row.Widgets.UpdateButton, row.Widgets.RemoteVersion, row.Widgets.CurrentVersion))
 
 		openPageButton := widget.NewButton("Open Page", func() {
 			err := fyne.CurrentApp().OpenURL(parseURL(titleLink))
@@ -307,7 +306,7 @@ func CreatePluginListWindow(closeFunction func()) {
 		previewLink := row.PreviewLink
 
 		previewImageContainer := container.NewStack()
-		previewBorder := container.NewBorder(nil, nil, nil, previewImageContainer, descriptionScroller)
+		previewBorder := container.NewBorder(container.NewPadded(titleLabel), nil, nil, previewImageContainer, descriptionLabel)
 
 		go func() {
 			if previewLink != "" {
