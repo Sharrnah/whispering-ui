@@ -11,6 +11,7 @@ func CreateSettingsWindow() fyne.CanvasObject {
 	defer Utilities.PanicLogger()
 
 	settingsFormTabs := container.NewAppTabs(
+		container.NewTabItem("Application Options", SettingsMappings.CreateSettingsFormByMapping(SettingsMappings.ApplicationSettingsMapping)),
 		container.NewTabItem("Speech-to-Text Options", SettingsMappings.CreateSettingsFormByMapping(SettingsMappings.SpeechToTextSettingsMapping)),
 		container.NewTabItem("Text-Translate Options", SettingsMappings.CreateSettingsFormByMapping(SettingsMappings.TextTranslateSettingsMapping)),
 		container.NewTabItem("Text-to-Speech Options", SettingsMappings.CreateSettingsFormByMapping(SettingsMappings.TextToSpeechSettingsMapping)),

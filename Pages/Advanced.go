@@ -16,7 +16,6 @@ import (
 	"whispering-tiger-ui/Resources"
 	"whispering-tiger-ui/RuntimeBackend"
 	"whispering-tiger-ui/Settings"
-	"whispering-tiger-ui/UpdateUtility"
 	"whispering-tiger-ui/Utilities"
 )
 
@@ -74,29 +73,7 @@ func buildAboutInfo() fyne.CanvasObject {
 	)
 	aboutCard.SetImage(aboutImage)
 
-	checkForUpdatesButton := widget.NewButton("Check for updates", func() {
-		if !UpdateUtility.VersionCheck(fyne.CurrentApp().Driver().AllWindows()[0], true) {
-			dialog.ShowInformation("No update available", "You are running the latest version of Whispering Tiger.", fyne.CurrentApp().Driver().AllWindows()[0])
-		}
-	})
-
-	updateCheckAtStartupCheckbox := widget.NewCheck("Check for updates at startup", nil)
-	updateCheckAtStartupCheckbox.OnChanged = func(b bool) {
-		if b {
-			fyne.CurrentApp().Preferences().SetBool("CheckForUpdateAtStartup", true)
-		} else {
-			dialog.ShowConfirm("Disable update check", "Are you sure you want to disable update checks at startup?", func(b bool) {
-				if b {
-					fyne.CurrentApp().Preferences().SetBool("CheckForUpdateAtStartup", false)
-				} else {
-					updateCheckAtStartupCheckbox.SetChecked(true)
-				}
-			}, fyne.CurrentApp().Driver().AllWindows()[0])
-		}
-	}
-	updateCheckAtStartupCheckbox.Checked = fyne.CurrentApp().Preferences().BoolWithFallback("CheckForUpdateAtStartup", true)
-
-	verticalLayout := container.NewVBox(aboutCard, checkForUpdatesButton, updateCheckAtStartupCheckbox)
+	verticalLayout := container.NewVBox(aboutCard)
 
 	return container.NewVScroll(container.NewCenter(verticalLayout))
 }

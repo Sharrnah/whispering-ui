@@ -5,6 +5,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"log"
@@ -13,6 +14,7 @@ import (
 	"runtime"
 	"strconv"
 	"strings"
+	"time"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Pages"
 	"whispering-tiger-ui/Pages/Advanced"
@@ -226,6 +228,25 @@ func main() {
 		go func() {
 			if len(fyne.CurrentApp().Driver().AllWindows()) == 2 {
 				UpdateUtility.VersionCheck(fyne.CurrentApp().Driver().AllWindows()[1], false)
+			}
+		}()
+	}
+	if fyne.CurrentApp().Preferences().BoolWithFallback("CheckForPluginUpdatesAtStartup", true) {
+		go func() {
+			lastCheckTimestamp := fyne.CurrentApp().Preferences().IntWithFallback("CheckForPluginUpdatesAtStartupLastTime", 0)
+			lastCheckTime := time.Unix(int64(lastCheckTimestamp), 0)
+			currentTime := time.Now()
+
+			if lastCheckTime.Year() != currentTime.Year() || lastCheckTime.YearDay() != currentTime.YearDay() {
+				fyne.CurrentApp().Preferences().SetInt("CheckForPluginUpdatesAtStartupLastTime", int(currentTime.Unix()))
+
+				if UpdateUtility.PluginsUpdateAvailable() {
+					dialog.ShowConfirm("New Plugin updates available", "Whispering Tiger has new Plugin updates available. Go to Plugin List now?", func(b bool) {
+						if b {
+							Advanced.CreatePluginListWindow(nil, false)
+						}
+					}, fyne.CurrentApp().Driver().AllWindows()[1])
+				}
 			}
 		}()
 	}

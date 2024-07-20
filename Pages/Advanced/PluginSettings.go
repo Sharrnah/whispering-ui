@@ -398,7 +398,7 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 				pluginAccordion.Refresh()
 				pluginsContent.Refresh()
 			}
-		})
+		}, true)
 	}
 	downloadButton.Importance = widget.HighImportance
 	downloadButton.Refresh()
