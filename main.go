@@ -237,6 +237,7 @@ func main() {
 			lastCheckTime := time.Unix(int64(lastCheckTimestamp), 0)
 			currentTime := time.Now()
 
+			// make sure to check for plugin updates only every day
 			if lastCheckTime.Year() != currentTime.Year() || lastCheckTime.YearDay() != currentTime.YearDay() {
 				fyne.CurrentApp().Preferences().SetInt("CheckForPluginUpdatesAtStartupLastTime", int(currentTime.Unix()))
 
