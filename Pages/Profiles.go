@@ -455,11 +455,11 @@ func (p ProfileAIModelOption) CalculateMemoryConsumption(CPUbar *widget.Progress
 	CPUbar.Value = 0.0
 	for _, profileAIModelOption := range AllProfileAIModelOptions {
 		println(profileAIModelOption.AIModel, profileAIModelOption.MemoryConsumption)
-		if strings.ToLower(profileAIModelOption.Device) == "cuda" {
+		if strings.HasPrefix(strings.ToLower(profileAIModelOption.Device), "cuda") || strings.HasPrefix(strings.ToLower(profileAIModelOption.Device), "direct-ml") {
 			println("CUDA MEMORY:")
 			println(int(profileAIModelOption.MemoryConsumption))
 			GPUBar.Value = GPUBar.Value + profileAIModelOption.MemoryConsumption
-		} else if strings.ToLower(profileAIModelOption.Device) == "cpu" {
+		} else if strings.HasPrefix(strings.ToLower(profileAIModelOption.Device), "cpu") {
 			println("CPU MEMORY:")
 			println(int(profileAIModelOption.MemoryConsumption))
 			CPUbar.Value = CPUbar.Value + profileAIModelOption.MemoryConsumption
@@ -776,11 +776,15 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		txtTranslatorDeviceSelect := CustomWidget.NewTextValueSelect("txt_translator_device", []CustomWidget.TextValueOption{
 			{Text: "CUDA", Value: "cuda"},
 			{Text: "CPU", Value: "cpu"},
+			{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
+			{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
 		sttAiDeviceSelect := CustomWidget.NewTextValueSelect("ai_device", []CustomWidget.TextValueOption{
 			{Text: "CUDA", Value: "cuda"},
 			{Text: "CPU", Value: "cpu"},
+			{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
+			{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
 		sttPrecisionSelect := CustomWidget.NewTextValueSelect("Precision", []CustomWidget.TextValueOption{
@@ -1005,11 +1009,24 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			sttAiDeviceSelect.Enable()
 
 			selectedModelSizeOption := sttModelSize.GetSelected()
+
+			sttAiDeviceSelect.Options = []CustomWidget.TextValueOption{
+				{Text: "CUDA", Value: "cuda"},
+				{Text: "CPU", Value: "cpu"},
+				{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
+				{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
+			}
+
 			if s.Value == "faster_whisper" {
 				sttModelSize.Options = fasterWhisperModelList
 				// unselect if not in list
 				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption, CustomWidget.CompareValue) {
 					sttModelSize.SetSelectedIndex(0)
+				}
+
+				sttAiDeviceSelect.Options = []CustomWidget.TextValueOption{
+					{Text: "CUDA", Value: "cuda"},
+					{Text: "CPU", Value: "cpu"},
 				}
 
 				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
@@ -1124,6 +1141,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				sttAiDeviceSelect.Disable()
 				AIModelType = "disabled"
 			}
+
+			sttAiDeviceSelect.Refresh()
 
 			/**
 			special case for Seamless M4T since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
@@ -1257,6 +1276,13 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 			modelType := s.Value
 
+			txtTranslatorDeviceSelect.Options = []CustomWidget.TextValueOption{
+				{Text: "CUDA", Value: "cuda"},
+				{Text: "CPU", Value: "cpu"},
+				{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
+				{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
+			}
+
 			if s.Value == "NLLB200" {
 				txtTranslatorPrecisionSelect.Options = []CustomWidget.TextValueOption{
 					{Text: "float32 precision", Value: "float32"},
@@ -1275,6 +1301,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
 					{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
 				}
+				// CTranslate2 models do not support direct-ml
+				txtTranslatorDeviceSelect.Options = []CustomWidget.TextValueOption{
+					{Text: "CUDA", Value: "cuda"},
+					{Text: "CPU", Value: "cpu"},
+				}
 			} else if s.Value == "Seamless_M4T" {
 				txtTranslatorPrecisionSelect.Options = []CustomWidget.TextValueOption{
 					{Text: "float32 precision", Value: "float32"},
@@ -1289,6 +1320,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				txtTranslatorDeviceSelect.Disable()
 				modelType = "N"
 			}
+
+			txtTranslatorDeviceSelect.Refresh()
 
 			if s.Value == "M2M100" {
 				txtTranslatorSizeSelect.Options = []CustomWidget.TextValueOption{
@@ -1359,6 +1392,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileForm.Append("A.I. Device for Text-to-Speech", CustomWidget.NewTextValueSelect("tts_ai_device", []CustomWidget.TextValueOption{
 			{Text: "CUDA", Value: "cuda"},
 			{Text: "CPU", Value: "cpu"},
+			{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
+			{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
 		}, func(s CustomWidget.TextValueOption) {
 			if !Hardwareinfo.HasNVIDIACard() && s.Value == "cuda" {
 				dialog.ShowInformation("No NVIDIA Card found", "No NVIDIA Card found. You might need to use CPU instead for it to work.", fyne.CurrentApp().Driver().AllWindows()[1])
