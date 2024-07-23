@@ -6,6 +6,7 @@ import (
 	"fyne.io/fyne/v2/app"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"log"
@@ -79,6 +80,8 @@ func main() {
 		_ = os.Setenv("FYNE_SCALE", val)
 	}
 
+	lang.AddTranslationsFS(Resources.Translations, "translations")
+
 	a := app.NewWithID("io.github.whispering-tiger")
 	a.SetIcon(Resources.ResourceAppIconPng)
 
@@ -103,7 +106,7 @@ func main() {
 	//whisperProcess.SettingsFile = Settings.Config.SettingsFilename
 	//RuntimeBackend.BackendsList = append(RuntimeBackend.BackendsList, whisperProcess)
 
-	profileWindow := a.NewWindow("Whispering Tiger Profiles")
+	profileWindow := a.NewWindow(lang.L("Whispering Tiger Profiles"))
 
 	onProfileClose := func() {
 
@@ -148,39 +151,39 @@ func main() {
 
 		// initialize main window
 		appTabs := container.NewAppTabs(
-			container.NewTabItemWithIcon("Speech-to-Text", theme.NewThemedResource(Resources.ResourceSpeechToTextIconSvg), Pages.CreateSpeechToTextWindow()),
-			container.NewTabItemWithIcon("Text-Translate", theme.NewThemedResource(Resources.ResourceTranslateIconSvg), Pages.CreateTextTranslateWindow()),
-			container.NewTabItemWithIcon("Text-to-Speech", theme.NewThemedResource(Resources.ResourceTextToSpeechIconSvg), Pages.CreateTextToSpeechWindow()),
-			container.NewTabItemWithIcon("Image-to-Text", theme.NewThemedResource(Resources.ResourceImageRecognitionIconSvg), Pages.CreateOcrWindow()),
-			container.NewTabItemWithIcon("Plugins", theme.NewThemedResource(Resources.ResourcePluginsIconSvg), Advanced.CreatePluginSettingsPage()),
-			container.NewTabItemWithIcon("Settings", theme.SettingsIcon(), Pages.CreateSettingsWindow()),
-			container.NewTabItemWithIcon("Advanced", theme.MoreVerticalIcon(), Pages.CreateAdvancedWindow()),
+			container.NewTabItemWithIcon(lang.L("Speech-to-Text"), theme.NewThemedResource(Resources.ResourceSpeechToTextIconSvg), Pages.CreateSpeechToTextWindow()),
+			container.NewTabItemWithIcon(lang.L("Text-Translate"), theme.NewThemedResource(Resources.ResourceTranslateIconSvg), Pages.CreateTextTranslateWindow()),
+			container.NewTabItemWithIcon(lang.L("Text-to-Speech"), theme.NewThemedResource(Resources.ResourceTextToSpeechIconSvg), Pages.CreateTextToSpeechWindow()),
+			container.NewTabItemWithIcon(lang.L("Image-to-Text"), theme.NewThemedResource(Resources.ResourceImageRecognitionIconSvg), Pages.CreateOcrWindow()),
+			container.NewTabItemWithIcon(lang.L("Plugins"), theme.NewThemedResource(Resources.ResourcePluginsIconSvg), Advanced.CreatePluginSettingsPage()),
+			container.NewTabItemWithIcon(lang.L("Settings"), theme.SettingsIcon(), Pages.CreateSettingsWindow()),
+			container.NewTabItemWithIcon(lang.L("Advanced"), theme.MoreVerticalIcon(), Pages.CreateAdvancedWindow()),
 		)
 		appTabs.SetTabLocation(container.TabLocationTop)
 
 		appTabs.OnSelected = func(tab *container.TabItem) {
-			if tab.Text == "Text-to-Speech" {
+			if tab.Text == lang.L("Text-to-Speech") {
 				Pages.OnOpenTextToSpeechWindow(tab.Content)
 			} else {
 				Pages.OnCloseTextToSpeechWindow(tab.Content)
 			}
-			if tab.Text == "Settings" {
+			if tab.Text == lang.L("Settings") {
 				tab.Content = Pages.CreateSettingsWindow()
 				tab.Content.Refresh()
 			}
-			if tab.Text == "Plugins" {
+			if tab.Text == lang.L("Plugins") {
 				tab.Content.(*container.Scroll).Content = Advanced.CreatePluginSettingsPage()
 				tab.Content.(*container.Scroll).Content.Refresh()
 				tab.Content.(*container.Scroll).Refresh()
 			}
-			if tab.Text == "Advanced" {
+			if tab.Text == lang.L("Advanced") {
 				// check if tab content is of type container.AppTabs
 				if tabContent, ok := tab.Content.(*container.AppTabs); ok {
-					if tabContent.Selected().Text == "Advanced Settings" {
+					if tabContent.Selected().Text == lang.L("Advanced Settings") {
 						// force trigger onselect for (Advanced -> Settings) Tab
 						tabContent.OnSelected(tabContent.Items[tabContent.SelectedIndex()])
 					}
-					if tabContent.Selected().Text == "Logs" {
+					if tabContent.Selected().Text == lang.L("Logs") {
 						Fields.Field.LogText.SetText("")
 						Fields.Field.LogText.Write([]byte(strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\r\n") + "\r\n"))
 					}
@@ -242,7 +245,7 @@ func main() {
 				fyne.CurrentApp().Preferences().SetInt("CheckForPluginUpdatesAtStartupLastTime", int(currentTime.Unix()))
 
 				if UpdateUtility.PluginsUpdateAvailable() {
-					dialog.ShowConfirm("New Plugin updates available", "Whispering Tiger has new Plugin updates available. Go to Plugin List now?", func(b bool) {
+					dialog.ShowConfirm(lang.L("New Plugin updates available"), lang.L("Whispering Tiger has new Plugin updates available. Go to Plugin List now?"), func(b bool) {
 						if b {
 							Advanced.CreatePluginListWindow(nil, false)
 						}

@@ -115,6 +115,8 @@ var ApplicationSettingsMapping = SettingsMapping{
 								Advanced.CreatePluginListWindow(nil, true)
 							}
 						}, fyne.CurrentApp().Driver().AllWindows()[0])
+					} else {
+						dialog.ShowInformation("No update available", "You are running the latest Plugin versions for Whispering Tiger.", fyne.CurrentApp().Driver().AllWindows()[0])
 					}
 				})
 

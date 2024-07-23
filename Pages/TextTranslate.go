@@ -3,6 +3,7 @@ package Pages
 import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -18,10 +19,10 @@ import (
 func CreateTextTranslateWindow() fyne.CanvasObject {
 	defer Utilities.PanicLogger()
 
-	sourceLanguageRow := container.New(layout.NewFormLayout(), widget.NewLabel("Source Language:"), Fields.Field.SourceLanguageCombo)
-	targetLanguageRow := container.New(layout.NewFormLayout(), widget.NewLabel("Target Language:"), Fields.Field.TargetLanguageCombo)
+	sourceLanguageRow := container.New(layout.NewFormLayout(), widget.NewLabel(lang.L("Source Language")+":"), Fields.Field.SourceLanguageCombo)
+	targetLanguageRow := container.New(layout.NewFormLayout(), widget.NewLabel(lang.L("Target Language")+":"), Fields.Field.TargetLanguageCombo)
 
-	switchButton := widget.NewButtonWithIcon("Swap languages", theme.NewThemedResource(Resources.ResourceSwapHorizontalSvg), func() {
+	switchButton := widget.NewButtonWithIcon(lang.L("Swap languages"), theme.NewThemedResource(Resources.ResourceSwapHorizontalSvg), func() {
 		sourceLanguage := Fields.Field.SourceLanguageCombo.Text
 		// use last detected language when switching between source and target language
 		if strings.HasPrefix(strings.ToLower(sourceLanguage), "auto") && Settings.Config.Last_auto_txt_translate_lang != "" {
@@ -80,7 +81,7 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 		}
 		sendMessage.SendMessage()
 	}
-	translateOnlyButton := widget.NewButtonWithIcon("Translate Only\n[CTRL+ALT+Enter]", theme.MenuExpandIcon(), translateOnlyFunction)
+	translateOnlyButton := widget.NewButtonWithIcon(lang.L("Translate Only[CTRL+ALT+Enter]"), theme.MenuExpandIcon(), translateOnlyFunction)
 
 	translateFunction := func() {
 		fromLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.SourceLanguageCombo.Text)
@@ -107,7 +108,7 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 		}
 		sendMessage.SendMessage()
 	}
-	translateButton := widget.NewButtonWithIcon("Translate (and send)\n[CTRL+Enter]", theme.ConfirmIcon(), translateFunction)
+	translateButton := widget.NewButtonWithIcon(lang.L("Translate (and send)[CTRL+Enter]"), theme.ConfirmIcon(), translateFunction)
 	translateButton.Importance = widget.HighImportance
 
 	// quick options row

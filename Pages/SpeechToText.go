@@ -5,6 +5,7 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/widget"
@@ -20,13 +21,13 @@ import (
 func CreateSpeechToTextWindow() fyne.CanvasObject {
 	defer Utilities.PanicLogger()
 
-	speechLanguageLabel := widget.NewLabel("Speech Language:")
+	speechLanguageLabel := widget.NewLabel(lang.L("Speech Language") + ":")
 
-	speechTaskWidgetLabel := widget.NewLabel("Speech Task:")
+	speechTaskWidgetLabel := widget.NewLabel(lang.L("Speech Task") + ":")
 	var speechTaskWidget fyne.CanvasObject = Fields.Field.TranscriptionTaskCombo
 	// disable task for seamless_m4t model, as it always translates to target language (Speech Language)
 	if Settings.Config.Stt_type == "seamless_m4t" || Settings.Config.Stt_type == "nemo_canary" {
-		speechTaskWidgetLabel.SetText("Target Language:")
+		speechTaskWidgetLabel.SetText(lang.L("Target Language") + ":")
 		speechTaskWidget = Fields.Field.TranscriptionTargetLanguageCombo
 	}
 	if Settings.Config.Stt_type == "wav2vec_bert" {
@@ -166,7 +167,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		Fields.Field.RealtimeResultLabel,
 	)
 
-	saveCsvButton := widget.NewButton("Save CSV", func() {
+	saveCsvButton := widget.NewButton(lang.L("Save CSV"), func() {
 		dialogSize := fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size()
 		dialogSize.Height = dialogSize.Height - 80
 		dialogSize.Width = dialogSize.Width - 80

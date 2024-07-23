@@ -43,6 +43,10 @@ fyne.io/fyne/v2 v2.4.6-0.20240704212036-6aef0c339f53 h1:ZaZoYqLEw48LC4/5jYgHTTfg
 fyne.io/fyne/v2 v2.4.6-0.20240704212036-6aef0c339f53/go.mod h1:9D4oT3NWeG+MLi/lP7ItZZyujHC/qqMJpoGTAYX5Uqc=
 fyne.io/fyne/v2 v2.5.0 h1:lEjEIso0Vi4sJXYngIMoXOM6aUjqnPjK7pBpxRxG9aI=
 fyne.io/fyne/v2 v2.5.0/go.mod h1:9D4oT3NWeG+MLi/lP7ItZZyujHC/qqMJpoGTAYX5Uqc=
+fyne.io/fyne/v2 v2.5.1-0.20240716011200-bed23d914f5d h1:lPKQwfD/wP9WqHlYMu1oNnXcAUVxOCfAil1E2IwTFeM=
+fyne.io/fyne/v2 v2.5.1-0.20240716011200-bed23d914f5d/go.mod h1:9D4oT3NWeG+MLi/lP7ItZZyujHC/qqMJpoGTAYX5Uqc=
+fyne.io/fyne/v2 v2.5.1-0.20240723013128-bbfc67312e64 h1:AR8iFr+DKB3O7M17Mrmd89N/Dv0R4qzM6nX36kKDHMA=
+fyne.io/fyne/v2 v2.5.1-0.20240723013128-bbfc67312e64/go.mod h1:9D4oT3NWeG+MLi/lP7ItZZyujHC/qqMJpoGTAYX5Uqc=
 fyne.io/systray v1.10.1-0.20240611130111-26449f257a02 h1:ukSAnDNGKtlve5Cj5cB0qU3UAPIf1tRi5dQ/BOtfAdQ=
 fyne.io/systray v1.10.1-0.20240611130111-26449f257a02/go.mod h1:RVwqP9nYMo7h5zViCBHri2FgjXF7H2cub7MAq4NSoLs=
 fyne.io/systray v1.11.0 h1:D9HISlxSkx+jHSniMBR6fCFOUjk1x/OOOJLa9lJYAKg=

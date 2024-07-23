@@ -8,6 +8,7 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -551,7 +552,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	totalCPUMemory := Hardwareinfo.GetCPUMemory()
 	CPUMemoryBar.Max = float64(totalCPUMemory)
 	CPUMemoryBar.TextFormatter = func() string {
-		return "Estimated CPU RAM Usage: " + strconv.Itoa(int(CPUMemoryBar.Value)) + " / " + strconv.Itoa(int(CPUMemoryBar.Max)) + " MiB"
+		return lang.L("Estimated CPU RAM Usage:") + " " + strconv.Itoa(int(CPUMemoryBar.Value)) + " / " + strconv.Itoa(int(CPUMemoryBar.Max)) + " MiB"
 	}
 
 	GPUMemoryBar := widget.NewProgressBar()
@@ -564,7 +565,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		ComputeCapability = Hardwareinfo.GetGPUComputeCapability()
 	}
 	GPUMemoryBar.TextFormatter = func() string {
-		return "Estimated Video-RAM Usage: " + strconv.Itoa(int(GPUMemoryBar.Value)) + " / " + strconv.Itoa(int(GPUMemoryBar.Max)) + " MiB"
+		return lang.L("Estimated Video-RAM Usage:") + " " + strconv.Itoa(int(GPUMemoryBar.Value)) + " / " + strconv.Itoa(int(GPUMemoryBar.Max)) + " MiB"
 	}
 	GPUInformationLabel := widget.NewLabel("Compute Capability: " + fmt.Sprintf("%.1f", ComputeCapability))
 
@@ -578,7 +579,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		websocketPort.SetText("5000")
 
 		audioInputProgress := playBackDevice.InputWaveWidget
-		audioOutputProgress := container.NewBorder(nil, nil, nil, widget.NewButtonWithIcon("Test", theme.MediaPlayIcon(), func() {
+		audioOutputProgress := container.NewBorder(nil, nil, nil, widget.NewButtonWithIcon(lang.L("Test"), theme.MediaPlayIcon(), func() {
 			err := playBackDevice.InitDevices(true)
 			if err != nil {
 				var newError = fmt.Errorf("audio test error: %v", err)
@@ -594,22 +595,22 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			}()
 		}), playBackDevice.OutputWaveWidget)
 
-		runBackendCheckbox := widget.NewCheck("Run Backend", func(b bool) {
+		runBackendCheckbox := widget.NewCheck(lang.L("Run Backend"), func(b bool) {
 			if !b {
-				dialog.ShowInformation("Info", "The backend will not be started. You will have to start it manually or remotely. Without it, the UI will have no function.", fyne.CurrentApp().Driver().AllWindows()[1])
+				dialog.ShowInformation(lang.L("Information"), lang.L("The backend will not be started. You will have to start it manually or remotely. Without it, the UI will have no function."), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 		})
 
-		appendWidgetToForm(profileForm, "Websocket IP + Port", container.NewGridWithColumns(3, websocketIp, websocketPort, runBackendCheckbox), "IP + Port of the websocket server the backend will start and the UI will connect to.")
+		appendWidgetToForm(profileForm, lang.L("Websocket IP + Port"), container.NewGridWithColumns(3, websocketIp, websocketPort, runBackendCheckbox), lang.L("IP + Port of the websocket server the backend will start and the UI will connect to."))
 		profileForm.Append("", layout.NewSpacer())
 
-		appendWidgetToForm(profileForm, "Audio API", audioApiSelect, "")
+		appendWidgetToForm(profileForm, lang.L("Audio API"), audioApiSelect, "")
 
-		appendWidgetToForm(profileForm, "Audio Input (mic)", audioInputSelect, "")
+		appendWidgetToForm(profileForm, lang.L("Audio Input (mic)"), audioInputSelect, "")
 
 		profileForm.Append("", audioInputProgress)
 
-		appendWidgetToForm(profileForm, "Audio Output (speaker)", audioOutputSelect, "")
+		appendWidgetToForm(profileForm, lang.L("Audio Output (speaker)"), audioOutputSelect, "")
 
 		profileForm.Append("", audioOutputProgress)
 
@@ -623,14 +624,14 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		vadOnFullClipCheckbox := widget.NewCheck("+ Check on Full Clip", func(b bool) {})
 		vadOnFullClipCheckbox.Hide() // hide for now as it does not seem very useful
 
-		vadRealtimeCheckbox := widget.NewCheck("Realtime", func(b bool) {})
+		vadRealtimeCheckbox := widget.NewCheck(lang.L("Realtime"), func(b bool) {})
 
 		PushToTalkInput := CustomWidget.NewHotKeyEntry()
-		PushToTalkInput.PlaceHolder = "Keypress"
+		PushToTalkInput.PlaceHolder = lang.L("Keypress")
 
-		pushToTalkBlock := container.NewBorder(nil, nil, container.NewHBox(widget.NewLabel("Push to Talk"), widget.NewIcon(theme.ComputerIcon())), nil, PushToTalkInput)
+		pushToTalkBlock := container.NewBorder(nil, nil, container.NewHBox(widget.NewLabel(lang.L("Push to Talk")), widget.NewIcon(theme.ComputerIcon())), nil, PushToTalkInput)
 
-		vadEnableCheckbox := widget.NewCheck("Enable", func(b bool) {
+		vadEnableCheckbox := widget.NewCheck(lang.L("Enable"), func(b bool) {
 			if b {
 				vadConfidenceSliderWidget.Show()
 				// vadOnFullClipCheckbox.Show()
@@ -642,24 +643,28 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				vadRealtimeCheckbox.Hide()
 				pushToTalkBlock.Hide()
 				if audioApiSelect.Selected != "MME" {
-					dialog.ShowInformation("Info", "Disabled VAD is only supported with \"MME\" Audio API.\nPlease make sure MME is selected as audio API.\n\n(Enabling VAD is highly recommended)", fyne.CurrentApp().Driver().AllWindows()[1])
+					dialog.ShowInformation(lang.L("Information"), lang.L("Disabled VAD is only supported with MME Audio API. Please make sure MME is selected as audio API. (Enabling VAD is highly recommended)"), fyne.CurrentApp().Driver().AllWindows()[1])
 				}
 			}
 		})
 
-		appendWidgetToForm(profileForm, "VAD (Voice activity detection)", container.NewGridWithColumns(3, vadEnableCheckbox, vadOnFullClipCheckbox, vadRealtimeCheckbox, pushToTalkBlock), "Press ESC in Push to Talk field to clear the keybinding.")
-		appendWidgetToForm(profileForm, "VAD Speech confidence", container.NewBorder(nil, nil, nil, vadConfidenceSliderState, vadConfidenceSliderWidget), "The confidence level required to detect speech.")
+		appendWidgetToForm(profileForm, lang.L("VAD (Voice activity detection)"), container.NewGridWithColumns(3, vadEnableCheckbox, vadOnFullClipCheckbox, vadRealtimeCheckbox, pushToTalkBlock), lang.L("Press ESC in Push to Talk field to clear the keybinding."))
+		appendWidgetToForm(profileForm, lang.L("VAD Speech confidence"), container.NewBorder(nil, nil, nil, vadConfidenceSliderState, vadConfidenceSliderWidget), lang.L("The confidence level required to detect speech."))
 
 		energySliderWidget := widget.NewSlider(0, EnergySliderMax)
 
 		// energy autodetect
-		autoDetectEnergyDialog := dialog.NewCustomConfirm("This will detect the current noise level.", "Detect noise level now.", "Cancel",
-			container.NewVBox(widget.NewLabel("This will record for "+strconv.Itoa(energyDetectionTime)+" seconds and sets the energy to the max detected level.\nPlease behave normally (breathing etc.) but don't say anything.\n\nThis value can later be fine-tuned without restarting by setting the \"energy\" value in Advanced -> Settings.")), func(b bool) {
+		autoDetectEnergyDialog := dialog.NewCustomConfirm(lang.L("This will detect the current noise level."), lang.L("Detect noise level now."), lang.L("Cancel"),
+			container.NewVBox(widget.NewLabel(lang.L("This will record for energyDetectionTime seconds and sets the energy to the max detected level. Please behave normally (breathing etc.) but don't say anything. This value can later be fine-tuned without restarting by setting the energy value in Advanced-Settings.", map[string]interface{}{
+				"EnergyDetectionTime": lang.N("TimeSeconds", energyDetectionTime, map[string]interface{}{"RecordingTime": energyDetectionTime}),
+			}))), func(b bool) {
 				if b {
 					statusBar := widget.NewProgressBarInfinite()
 					statusBarContainer := container.NewVBox(statusBar)
-					statusBarContainer.Add(widget.NewLabel("Please behave normally (breathing etc.) but don't say anything for around " + strconv.Itoa(energyDetectionTime) + " seconds to have it record only your noise level."))
-					detectDialog := dialog.NewCustom("detecting...", "Hide", statusBarContainer, fyne.CurrentApp().Driver().AllWindows()[1])
+					statusBarContainer.Add(widget.NewLabel(lang.L("Please behave normally (breathing etc.) but don't say anything for around energyDetectionTime seconds to have it record only your noise level.", map[string]interface{}{
+						"EnergyDetectionTime": lang.N("TimeSeconds", energyDetectionTime, map[string]interface{}{"RecordingTime": energyDetectionTime}),
+					})))
+					detectDialog := dialog.NewCustom(lang.L("Detecting..."), lang.L("Hide"), statusBarContainer, fyne.CurrentApp().Driver().AllWindows()[1])
 					detectDialog.Show()
 
 					cmd := exec.Command("---")
@@ -671,7 +676,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					} else if Utilities.FileExists("audioWhisper/audioWhisper.exe") {
 						cmd = exec.Command("audioWhisper/audioWhisper.exe", cmdArguments...)
 					} else {
-						dialog.ShowInformation("Error", "Could not find audioWhisper.py or audioWhisper.exe", fyne.CurrentApp().Driver().AllWindows()[1])
+						dialog.ShowInformation(lang.L("Error"), lang.L("Could not find audioWhisper.py or audioWhisper.exe"), fyne.CurrentApp().Driver().AllWindows()[1])
 						return
 					}
 					cmd.SysProcAttr = &syscall.SysProcAttr{
@@ -693,7 +698,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 						}
 						energySliderWidget.SetValue(detectedEnergy + 20)
 					} else {
-						dialog.ShowInformation("Error", "Could not find detected_energy in output.", fyne.CurrentApp().Driver().AllWindows()[1])
+						dialog.ShowInformation(lang.L("Error"), lang.L("Could not find detected_energy in output."), fyne.CurrentApp().Driver().AllWindows()[1])
 					}
 					detectDialog.Hide()
 
@@ -701,11 +706,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					_ = playBackDevice.InitDevices(false)
 				}
 			}, fyne.CurrentApp().Driver().AllWindows()[1])
-		energyHelpBtn := widget.NewButtonWithIcon("Autodetect", theme.VolumeUpIcon(), func() {
+		energyHelpBtn := widget.NewButtonWithIcon(lang.L("Autodetect"), theme.VolumeUpIcon(), func() {
 			autoDetectEnergyDialog.Show()
 		})
 		energySliderState := widget.NewLabel("0.0")
-		energySliderWidgetZeroValueInfo := dialog.NewError(fmt.Errorf("You did set Speech volume detection to 0 and have no PushToTalk Button set.\nThis would prevent the app from recording anything."), fyne.CurrentApp().Driver().AllWindows()[1])
+		energySliderWidgetZeroValueInfo := dialog.NewError(fmt.Errorf(lang.L("You did set Speech volume level to 0 and have no PushToTalk Button set.This would prevent the app from recording anything.")), fyne.CurrentApp().Driver().AllWindows()[1])
 		energySliderWidget.OnChanged = func(value float64) {
 			if value >= energySliderWidget.Max {
 				energySliderWidget.Max += 10
@@ -717,20 +722,20 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				energySliderWidgetZeroValueInfo.Show()
 			}
 		}
-		appendWidgetToForm(profileForm, "Speech volume Level", container.NewBorder(nil, nil, nil, container.NewHBox(energySliderState, energyHelpBtn), energySliderWidget), "The volume level at which the speech detection will trigger. (0 = Disabled, useful for Push2Talk)")
+		appendWidgetToForm(profileForm, lang.L("Speech volume Level"), container.NewBorder(nil, nil, nil, container.NewHBox(energySliderState, energyHelpBtn), energySliderWidget), lang.L("The volume level at which the speech detection will trigger. (0 = Disabled, useful for Push2Talk)"))
 
 		denoiseSelect := CustomWidget.NewTextValueSelect("denoise_audio", []CustomWidget.TextValueOption{
-			{Text: "Disabled", Value: ""},
+			{Text: lang.L("Disabled"), Value: ""},
 			{Text: "Noise Reduce", Value: "noise_reduce"},
 			{Text: "DeepFilterNet", Value: "deepfilter"},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
-		profileForm.Append("Noise Filter", denoiseSelect)
+		profileForm.Append(lang.L("Noise Filter"), denoiseSelect)
 
 		pauseSliderState := widget.NewLabel("0.0")
 		pauseSliderWidget := widget.NewSlider(0, 5)
 		pauseSliderWidget.Step = 0.1
-		pauseSliderWidgetZeroValueInfo := dialog.NewError(fmt.Errorf("You did set Speech pause detection to 0 and have no PushToTalk Button set.\nThis would prevent the app from stopping recording automatically."), fyne.CurrentApp().Driver().AllWindows()[1])
+		pauseSliderWidgetZeroValueInfo := dialog.NewError(fmt.Errorf(lang.L("You did set Speech pause detection to 0 and have no PushToTalk Button set.This would prevent the app from stopping recording automatically.")), fyne.CurrentApp().Driver().AllWindows()[1])
 		pauseSliderWidget.OnChanged = func(value float64) {
 			pauseSliderState.SetText(fmt.Sprintf("%.1f", value))
 
@@ -739,7 +744,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				pauseSliderWidgetZeroValueInfo.Show()
 			}
 		}
-		appendWidgetToForm(profileForm, "Speech pause detection", container.NewBorder(nil, nil, nil, pauseSliderState, pauseSliderWidget), "The pause time in seconds after which the speech detection will stop and A.I. processing starts.")
+		appendWidgetToForm(profileForm, lang.L("Speech pause detection"), container.NewBorder(nil, nil, nil, pauseSliderState, pauseSliderWidget), lang.L("The pause time in seconds after which the speech detection will stop and A.I. processing starts."))
 
 		phraseLimitSliderState := widget.NewLabel("0.0")
 		phraseLimitSliderWidget := widget.NewSlider(0, 30)
@@ -747,7 +752,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		phraseLimitSliderWidget.OnChanged = func(value float64) {
 			phraseLimitSliderState.SetText(fmt.Sprintf("%.1f", value))
 		}
-		appendWidgetToForm(profileForm, "Phrase time limit", container.NewBorder(nil, nil, nil, phraseLimitSliderState, phraseLimitSliderWidget), "The max. time limit in seconds after which the audio processing starts.")
+		appendWidgetToForm(profileForm, lang.L("Phrase time limit"), container.NewBorder(nil, nil, nil, phraseLimitSliderState, phraseLimitSliderWidget), lang.L("The max. time limit in seconds after which the audio processing starts."))
 
 		txtTranslatorSizeSelect := CustomWidget.NewTextValueSelect("txt_translator_size", []CustomWidget.TextValueOption{
 			{Text: "Small", Value: "small"},
@@ -756,13 +761,13 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
 		txtTranslatorPrecisionSelect := CustomWidget.NewTextValueSelect("txt_translator_precision", []CustomWidget.TextValueOption{
-			{Text: "float32 precision", Value: "float32"},
-			{Text: "float16 precision", Value: "float16"},
-			{Text: "int16 precision", Value: "int16"},
-			{Text: "int8_float16 precision", Value: "int8_float16"},
-			{Text: "int8 precision", Value: "int8"},
-			{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
-			{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
+			{Text: "float32 " + lang.L("precision"), Value: "float32"},
+			{Text: "float16 " + lang.L("precision"), Value: "float16"},
+			{Text: "int16 " + lang.L("precision"), Value: "int16"},
+			{Text: "int8_float16 " + lang.L("precision"), Value: "int8_float16"},
+			{Text: "int8 " + lang.L("precision"), Value: "int8"},
+			{Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"},
+			{Text: "int8_bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "int8_bfloat16"},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
 		txtTranslatorTypeSelect := CustomWidget.NewTextValueSelect("txt_translator", []CustomWidget.TextValueOption{
@@ -788,21 +793,23 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
 		sttPrecisionSelect := CustomWidget.NewTextValueSelect("Precision", []CustomWidget.TextValueOption{
-			{Text: "float32 precision", Value: "float32"},
-			{Text: "float16 precision", Value: "float16"},
-			{Text: "int16 precision", Value: "int16"},
-			{Text: "int8_float16 precision", Value: "int8_float16"},
-			{Text: "int8 precision", Value: "int8"},
-			{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
-			{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
-			{Text: "8bit precision", Value: "8bit"},
-			{Text: "4bit precision", Value: "4bit"},
+			{Text: "float32 " + lang.L("precision"), Value: "float32"},
+			{Text: "float16 " + lang.L("precision"), Value: "float16"},
+			{Text: "int16 " + lang.L("precision"), Value: "int16"},
+			{Text: "int8_float16 " + lang.L("precision"), Value: "int8_float16"},
+			{Text: "int8 " + lang.L("precision"), Value: "int8"},
+			{Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"},
+			{Text: "int8_bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "int8_bfloat16"},
+			{Text: "8bit " + lang.L("precision"), Value: "8bit"},
+			{Text: "4bit " + lang.L("precision"), Value: "4bit"},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
 		sttTypeSelect := CustomWidget.NewTextValueSelect("stt_type", []CustomWidget.TextValueOption{
 			{Text: "Faster Whisper", Value: "faster_whisper"},
 			{Text: "Original Whisper", Value: "original_whisper"},
 			{Text: "Transformer Whisper", Value: "transformer_whisper"},
+			//{Text: "TensorRT Whisper", Value: "tensorrt_whisper"},
+			//{Text: "Whisper CPP", Value: "whisper_cpp"},
 			{Text: "Seamless M4T", Value: "seamless_m4t"},
 			{Text: "MMS", Value: "mms"},
 			{Text: "Speech T5 (English only)", Value: "speech_t5"},
@@ -813,7 +820,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		sttAiDeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {
 			if !Hardwareinfo.HasNVIDIACard() && s.Value == "cuda" {
-				dialog.ShowInformation("No NVIDIA Card found", "No NVIDIA Card found. You might need to use CPU instead for it to work.", fyne.CurrentApp().Driver().AllWindows()[1])
+				dialog.ShowInformation(lang.L("No NVIDIA Card found"), lang.L("No NVIDIA Card found. You might need to use CPU instead for it to work."), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 			if s.Value == "cpu" && (sttPrecisionSelect.GetSelected().Value == "float16" || sttPrecisionSelect.GetSelected().Value == "int8_float16") {
 				sttPrecisionSelect.SetSelected("float32")
@@ -870,16 +877,16 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				precisionType = Hardwareinfo.Bit4
 			}
 			if sttAiDeviceSelect.GetSelected().Value == "cpu" && (s.Value == "float16" || s.Value == "int8_float16") {
-				dialog.ShowInformation("Information", "Most CPU's do not support float16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
+				dialog.ShowInformation(lang.L("Information"), lang.L("Most Devices of this type do not support this precision computation. Please consider switching to some other precision.", map[string]interface{}{"Device": "CPU's", "Precision": "float16"}), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 			if sttAiDeviceSelect.GetSelected().Value == "cpu" && (s.Value == "bfloat16" || s.Value == "int8_bfloat16") {
-				dialog.ShowInformation("Information", "Most CPU's do not support bfloat16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
+				dialog.ShowInformation(lang.L("Information"), lang.L("Most Devices of this type do not support this precision computation. Please consider switching to some other precision.", map[string]interface{}{"Device": "CPU's", "Precision": "bfloat16"}), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 			if sttAiDeviceSelect.GetSelected().Value == "cuda" && (s.Value == "int16") {
-				dialog.ShowInformation("Information", "Most CUDA GPU's do not support int16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
+				dialog.ShowInformation(lang.L("Information"), lang.L("Most Devices of this type do not support this precision computation. Please consider switching to some other precision.", map[string]interface{}{"Device": "CUDA GPU's", "Precision": "int16"}), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 			if sttAiDeviceSelect.GetSelected().Value == "cuda" && (s.Value == "bfloat16" || s.Value == "int8_bfloat16") && ComputeCapability < 8.0 {
-				dialog.ShowInformation("Information", "Your CUDA GPU most likely does not support bfloat16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
+				dialog.ShowInformation(lang.L("Information"), lang.L("Your Device most likely does not support this precision computation. Please consider switching to some other precision.", map[string]interface{}{"Device": "CUDA GPU", "Precision": "bfloat16"}), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 			// calculate memory consumption
 			AIModel := ProfileAIModelOption{
@@ -1030,13 +1037,13 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				}
 
 				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 precision", Value: "float32"},
-					{Text: "float16 precision", Value: "float16"},
-					{Text: "int16 precision", Value: "int16"},
-					{Text: "int8_float16 precision", Value: "int8_float16"},
-					{Text: "int8 precision", Value: "int8"},
-					{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
-					{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
+					{Text: "float32 " + lang.L("precision"), Value: "float32"},
+					{Text: "float16 " + lang.L("precision"), Value: "float16"},
+					{Text: "int16 " + lang.L("precision"), Value: "int16"},
+					{Text: "int8_float16 " + lang.L("precision"), Value: "int8_float16"},
+					{Text: "int8 " + lang.L("precision"), Value: "int8"},
+					{Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"},
+					{Text: "int8_bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "int8_bfloat16"},
 				}
 				AIModelType = "CT2"
 			} else if s.Value == "original_whisper" {
@@ -1047,8 +1054,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				}
 
 				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 precision", Value: "float32"},
-					{Text: "float16 precision", Value: "float16"},
+					{Text: "float32 " + lang.L("precision"), Value: "float32"},
+					{Text: "float16 " + lang.L("precision"), Value: "float16"},
 				}
 				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "bfloat16" || selectedPrecision == "int8_bfloat16" {
 					sttPrecisionSelect.SetSelected("float16")
@@ -1062,15 +1069,32 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				}
 
 				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 precision", Value: "float32"},
-					{Text: "float16 precision", Value: "float16"},
-					{Text: "8bit precision", Value: "8bit"},
-					{Text: "4bit precision", Value: "4bit"},
+					{Text: "float32 " + lang.L("precision"), Value: "float32"},
+					{Text: "float16 " + lang.L("precision"), Value: "float16"},
+					{Text: "8bit " + lang.L("precision"), Value: "8bit"},
+					{Text: "4bit " + lang.L("precision"), Value: "4bit"},
 				}
 				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "bfloat16" || selectedPrecision == "int8_bfloat16" {
 					sttPrecisionSelect.SetSelected("float16")
 				}
 				AIModelType = "O"
+				//} else if s.Value == "tensorrt_whisper" {
+				//	sttModelSize.Options = originalWhisperModelList
+				//	// unselect if not in list
+				//	if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption, CustomWidget.CompareValue) {
+				//		sttModelSize.SetSelectedIndex(0)
+				//	}
+				//
+				//	sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
+				//		{Text: "float32 " + lang.L("precision"), Value: "float32"},
+				//		{Text: "float16 " + lang.L("precision"), Value: "float16"},
+				//		{Text: "8bit " + lang.L("precision"), Value: "8bit"},
+				//		{Text: "4bit " + lang.L("precision"), Value: "4bit"},
+				//	}
+				//	if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "bfloat16" || selectedPrecision == "int8_bfloat16" {
+				//		sttPrecisionSelect.SetSelected("float16")
+				//	}
+				//	AIModelType = "O"
 			} else if s.Value == "seamless_m4t" {
 				sttModelSize.Options = originalSeamlessM4TModelList
 				// unselect if not in list
@@ -1079,11 +1103,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				}
 
 				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 precision", Value: "float32"},
-					{Text: "float16 precision", Value: "float16"},
-					{Text: "int8_float16 precision", Value: "int8_float16"},
-					{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
-					{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
+					{Text: "float32 " + lang.L("precision"), Value: "float32"},
+					{Text: "float16 " + lang.L("precision"), Value: "float16"},
+					{Text: "int8_float16 " + lang.L("precision"), Value: "int8_float16"},
+					{Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"},
+					{Text: "int8_bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "int8_bfloat16"},
 				}
 				if selectedPrecision == "int8" || selectedPrecision == "int16" {
 					sttPrecisionSelect.SetSelected("float32")
@@ -1092,7 +1116,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				AIModelType = "m4t"
 
 				if txtTranslatorTypeSelect.GetSelected().Value != "Seamless_M4T" && !isLoadingSettingsFile {
-					dialog.NewConfirm("Usage of Multi-Modal Model.", "Use Multi-Modal model for Text-Translation as well?", func(b bool) {
+					dialog.NewConfirm(lang.L("Usage of Multi-Modal Model."), lang.L("Use Multi-Modal model for Text-Translation as well?"), func(b bool) {
 						if b {
 							txtTranslatorTypeSelect.SetSelected("Seamless_M4T")
 						}
@@ -1105,10 +1129,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			} else if s.Value == "wav2vec_bert" {
 				sttModelSize.Disable()
 				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 precision", Value: "float32"},
-					{Text: "float16 precision", Value: "float16"},
-					{Text: "8bit precision", Value: "8bit"},
-					{Text: "4bit precision", Value: "4bit"},
+					{Text: "float32 " + lang.L("precision"), Value: "float32"},
+					{Text: "float16 " + lang.L("precision"), Value: "float16"},
+					{Text: "8bit " + lang.L("precision"), Value: "8bit"},
+					{Text: "4bit " + lang.L("precision"), Value: "4bit"},
 				}
 				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "bfloat16" || selectedPrecision == "int8_bfloat16" {
 					sttPrecisionSelect.SetSelected("float16")
@@ -1121,10 +1145,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					sttModelSize.SetSelectedIndex(1)
 				}
 				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 precision", Value: "float32"},
-					{Text: "float16 precision", Value: "float16"},
-					{Text: "8bit precision", Value: "8bit"},
-					{Text: "4bit precision", Value: "4bit"},
+					{Text: "float32 " + lang.L("precision"), Value: "float32"},
+					{Text: "float16 " + lang.L("precision"), Value: "float16"},
+					{Text: "8bit " + lang.L("precision"), Value: "8bit"},
+					{Text: "4bit " + lang.L("precision"), Value: "4bit"},
 				}
 				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "bfloat16" || selectedPrecision == "int8_bfloat16" {
 					sttPrecisionSelect.SetSelected("float16")
@@ -1172,19 +1196,19 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 
 		//denoiseCheckbox := widget.NewCheck("A.I. Denoise", func(b bool) {})
-		profileForm.Append("Speech-to-Text Type", container.NewGridWithColumns(2, sttTypeSelect))
+		profileForm.Append(lang.L("Speech-to-Text Type"), container.NewGridWithColumns(2, sttTypeSelect))
 
-		profileForm.Append("A.I. Device for Speech-to-Text", sttAiDeviceSelect)
+		profileForm.Append(lang.L("A.I. Device for Speech-to-Text"), sttAiDeviceSelect)
 
-		profileForm.Append("Speech-to-Text Size", container.NewGridWithColumns(2, sttModelSize, sttPrecisionSelect))
+		profileForm.Append(lang.L("Speech-to-Text A.I. Size"), container.NewGridWithColumns(2, sttModelSize, sttPrecisionSelect))
 
 		profileForm.Append("", layout.NewSpacer())
 
-		profileForm.Append("Text-Translation Type", container.NewGridWithColumns(2, txtTranslatorTypeSelect))
+		profileForm.Append(lang.L("Text-Translation Type"), container.NewGridWithColumns(2, txtTranslatorTypeSelect))
 
 		txtTranslatorDeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {
 			if !Hardwareinfo.HasNVIDIACard() && s.Value == "cuda" {
-				dialog.ShowInformation("No NVIDIA Card found", "No NVIDIA Card found. You might need to use CPU instead for it to work.", fyne.CurrentApp().Driver().AllWindows()[1])
+				dialog.ShowInformation(lang.L("No NVIDIA Card found"), lang.L("No NVIDIA Card found. You might need to use CPU instead for it to work."), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 			if s.Value == "cpu" && txtTranslatorPrecisionSelect.GetSelected() != nil && (txtTranslatorPrecisionSelect.GetSelected().Value == "float16" || txtTranslatorPrecisionSelect.GetSelected().Value == "int8_float16") {
 				txtTranslatorPrecisionSelect.SetSelected("float32")
@@ -1228,16 +1252,16 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				precisionType = Hardwareinfo.Bit4
 			}
 			if txtTranslatorDeviceSelect.GetSelected() != nil && txtTranslatorDeviceSelect.GetSelected().Value == "cpu" && (s.Value == "float16" || s.Value == "int8_float16") {
-				dialog.ShowInformation("Information", "Most CPU's do not support float16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
+				dialog.ShowInformation(lang.L("Information"), lang.L("Most Devices of this type do not support this precision computation. Please consider switching to some other precision.", map[string]interface{}{"Device": "CPU's", "Precision": "float16"}), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 			if txtTranslatorDeviceSelect.GetSelected() != nil && txtTranslatorDeviceSelect.GetSelected().Value == "cpu" && (s.Value == "bfloat16" || s.Value == "int8_bfloat16") {
-				dialog.ShowInformation("Information", "Most CPU's do not support bfloat16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
+				dialog.ShowInformation(lang.L("Information"), lang.L("Most Devices of this type do not support this precision computation. Please consider switching to some other precision.", map[string]interface{}{"Device": "CPU's", "Precision": "bfloat16"}), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 			if txtTranslatorDeviceSelect.GetSelected() != nil && txtTranslatorDeviceSelect.GetSelected().Value == "cuda" && (s.Value == "int16") {
-				dialog.ShowInformation("Information", "Most CUDA GPU's do not support int16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
+				dialog.ShowInformation(lang.L("Information"), lang.L("Most Devices of this type do not support this precision computation. Please consider switching to some other precision.", map[string]interface{}{"Device": "CUDA GPU's", "Precision": "int16"}), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 			if sttAiDeviceSelect.GetSelected() != nil && sttAiDeviceSelect.GetSelected().Value == "cuda" && (s.Value == "bfloat16" || s.Value == "int8_bfloat16") && ComputeCapability < 8.0 {
-				dialog.ShowInformation("Information", "Your CUDA GPU most likely does not support bfloat16 computation. Please consider switching to some other precision.", fyne.CurrentApp().Driver().AllWindows()[1])
+				dialog.ShowInformation(lang.L("Information"), lang.L("Your Device most likely does not support this precision computation. Please consider switching to some other precision.", map[string]interface{}{"Device": "CUDA GPU", "Precision": "bfloat16"}), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 			// calculate memory consumption
 			AIModel := ProfileAIModelOption{
@@ -1247,7 +1271,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
 		}
 
-		profileForm.Append("A.I. Device for Text-Translation", txtTranslatorDeviceSelect)
+		profileForm.Append(lang.L("A.I. Device for Text-Translation"), txtTranslatorDeviceSelect)
 
 		txtTranslatorSizeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
 			// calculate memory consumption
@@ -1285,21 +1309,21 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 			if s.Value == "NLLB200" {
 				txtTranslatorPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 precision", Value: "float32"},
-					{Text: "float16 precision", Value: "float16"},
+					{Text: "float32 " + lang.L("precision"), Value: "float32"},
+					{Text: "float16 " + lang.L("precision"), Value: "float16"},
 				}
 				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" {
 					txtTranslatorPrecisionSelect.SetSelected("float16")
 				}
 			} else if s.Value == "NLLB200_CT2" || s.Value == "M2M100" {
 				txtTranslatorPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 precision", Value: "float32"},
-					{Text: "float16 precision", Value: "float16"},
-					{Text: "int16 precision", Value: "int16"},
-					{Text: "int8_float16 precision", Value: "int8_float16"},
-					{Text: "int8 precision", Value: "int8"},
-					{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
-					{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
+					{Text: "float32 " + lang.L("precision"), Value: "float32"},
+					{Text: "float16 " + lang.L("precision"), Value: "float16"},
+					{Text: "int16 " + lang.L("precision"), Value: "int16"},
+					{Text: "int8_float16 " + lang.L("precision"), Value: "int8_float16"},
+					{Text: "int8 " + lang.L("precision"), Value: "int8"},
+					{Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"},
+					{Text: "int8_bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "int8_bfloat16"},
 				}
 				// CTranslate2 models do not support direct-ml
 				txtTranslatorDeviceSelect.Options = []CustomWidget.TextValueOption{
@@ -1308,11 +1332,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				}
 			} else if s.Value == "Seamless_M4T" {
 				txtTranslatorPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 precision", Value: "float32"},
-					{Text: "float16 precision", Value: "float16"},
-					{Text: "int8_float16 precision", Value: "int8_float16"},
-					{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
-					{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
+					{Text: "float32 " + lang.L("precision"), Value: "float32"},
+					{Text: "float16 " + lang.L("precision"), Value: "float16"},
+					{Text: "int8_float16 " + lang.L("precision"), Value: "int8_float16"},
+					{Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"},
+					{Text: "int8_bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "int8_bfloat16"},
 				}
 			} else if s.Value == "" {
 				txtTranslatorPrecisionSelect.Disable()
@@ -1371,11 +1395,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
 		}
 
-		profileForm.Append("Text-Translation Size", container.NewGridWithColumns(2, txtTranslatorSizeSelect, txtTranslatorPrecisionSelect))
+		profileForm.Append(lang.L("Text-Translation A.I. Size"), container.NewGridWithColumns(2, txtTranslatorSizeSelect, txtTranslatorPrecisionSelect))
 
 		profileForm.Append("", layout.NewSpacer())
 
-		profileForm.Append("Integrated Text-to-Speech Enabled", widget.NewCheck("", func(b bool) {
+		profileForm.Append(lang.L("Integrated Text-to-Speech"), widget.NewCheck("", func(b bool) {
 			enabledType := "N"
 			if b {
 				enabledType = "O"
@@ -1389,14 +1413,14 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
 		}))
 
-		profileForm.Append("A.I. Device for Text-to-Speech", CustomWidget.NewTextValueSelect("tts_ai_device", []CustomWidget.TextValueOption{
+		profileForm.Append(lang.L("A.I. Device for Text-to-Speech"), CustomWidget.NewTextValueSelect("tts_ai_device", []CustomWidget.TextValueOption{
 			{Text: "CUDA", Value: "cuda"},
 			{Text: "CPU", Value: "cpu"},
 			{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
 			{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
 		}, func(s CustomWidget.TextValueOption) {
 			if !Hardwareinfo.HasNVIDIACard() && s.Value == "cuda" {
-				dialog.ShowInformation("No NVIDIA Card found", "No NVIDIA Card found. You might need to use CPU instead for it to work.", fyne.CurrentApp().Driver().AllWindows()[1])
+				dialog.ShowInformation(lang.L("No NVIDIA Card found"), lang.L("No NVIDIA Card found. You might need to use CPU instead for it to work."), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 			// calculate memory consumption
 			AIModel := ProfileAIModelOption{
@@ -1415,7 +1439,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 		PushToTalkInput.OnFocusChanged = func(focusGained bool) {
 			if !focusGained && pushToTalkChanged && PushToTalkInput.Text != "" {
-				dialog.NewConfirm("Change speech trigger settings?", "You did set a PushToTalk Button.\nDo you want to set settings to trigger with only a Button press?", func(b bool) {
+				dialog.NewConfirm(lang.L("Change speech trigger settings?"), lang.L("You did set a PushToTalk Button. Do you want to set settings to trigger with only a Button press?"), func(b bool) {
 					if b {
 						energySliderWidget.SetValue(0)
 						pauseSliderWidget.SetValue(0)
@@ -1436,8 +1460,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	heartImage.FillMode = canvas.ImageFillContain
 	heartImage.ScaleMode = canvas.ImageScaleFastest
 	heartImage.SetMinSize(fyne.NewSize(128, 128))
-	heartButton := widget.NewButtonWithIcon("Support me on https://ko-fi.com/sharrnah", Resources.ResourceHeartPng, func() {
-		u, err := url.Parse("https://ko-fi.com/sharrnah")
+	heartButton := widget.NewButtonWithIcon(lang.L("Support me on Ko-Fi", map[string]interface{}{
+		"KofiUrl": lang.L("KofiUrl"),
+	}), Resources.ResourceHeartPng, func() {
+		u, err := url.Parse(lang.L("KofiUrl"))
 		if err != nil {
 			return
 		}
@@ -1453,9 +1479,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 	profileHelpTextContent := container.NewVScroll(
 		container.NewVBox(
-			widget.NewLabel("Select an existing Profile or create a new one.\n\nClick Save and Load Profile.\n\n"),
+			widget.NewLabel(lang.L("Select an existing Profile or create a new one. Click Save and Load Profile.")),
 			beginLine,
-			container.NewHBox(widget.NewLabel("Website:"), widget.NewHyperlink("https://whispering-tiger.github.io", parseURL("https://whispering-tiger.github.io"))),
+			container.NewHBox(widget.NewLabel("Website:"), widget.NewHyperlink(lang.L("WebsiteUrl"), parseURL(lang.L("WebsiteUrl")))),
 			heartButton,
 		),
 	)
@@ -1602,7 +1628,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 		profileSettings.SettingsFilename = settingsFiles[id]
 		profileForm := profileListContent.Content.(*widget.Form)
-		profileForm.SubmitText = "Save and Load Profile"
+		profileForm.SubmitText = lang.L("Save and Load Profile")
 		profileForm.Items[0].Widget.(*fyne.Container).Objects[0].(*widget.Entry).SetText(profileSettings.Websocket_ip)
 		profileForm.Items[0].Widget.(*fyne.Container).Objects[1].(*widget.Entry).SetText(strconv.Itoa(profileSettings.Websocket_port))
 		profileForm.Items[0].Widget.(*fyne.Container).Objects[2].(*widget.Check).SetChecked(profileSettings.Run_backend)
@@ -1696,18 +1722,18 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 		if profileSettings.Stt_type == "faster_whisper" {
 			profileForm.Items[15].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
-				{Text: "float32 precision", Value: "float32"},
-				{Text: "float16 precision", Value: "float16"},
-				{Text: "int16 precision", Value: "int16"},
-				{Text: "int8_float16 precision", Value: "int8_float16"},
-				{Text: "int8 precision", Value: "int8"},
-				{Text: "bfloat16 precision (Compute >=8.0)", Value: "bfloat16"},
-				{Text: "int8_bfloat16 precision (Compute >=8.0)", Value: "int8_bfloat16"},
+				{Text: "float32 " + lang.L("precision"), Value: "float32"},
+				{Text: "float16 " + lang.L("precision"), Value: "float16"},
+				{Text: "int16 " + lang.L("precision"), Value: "int16"},
+				{Text: "int8_float16 " + lang.L("precision"), Value: "int8_float16"},
+				{Text: "int8 " + lang.L("precision"), Value: "int8"},
+				{Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"},
+				{Text: "int8_bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "int8_bfloat16"},
 			}
 		} else if profileSettings.Stt_type == "original_whisper" {
 			profileForm.Items[15].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
-				{Text: "float32 precision", Value: "float32"},
-				{Text: "float16 precision", Value: "float16"},
+				{Text: "float32 " + lang.L("precision"), Value: "float32"},
+				{Text: "float16 " + lang.L("precision"), Value: "float16"},
 			}
 			if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" {
 				profileForm.Items[15].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected("float16")
@@ -1810,11 +1836,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			backendCheckStateContainer := container.NewVBox()
 			backendCheckStateDialog := dialog.NewCustom(
 				"",
-				"Hide",
+				lang.L("Hide"),
 				container.NewBorder(statusBar, nil, nil, nil, backendCheckStateContainer),
 				fyne.CurrentApp().Driver().AllWindows()[1],
 			)
-			backendCheckStateContainer.Add(widget.NewLabel("Checking backend state..."))
+			backendCheckStateContainer.Add(widget.NewLabel(lang.L("Checking backend state")))
 			backendCheckStateDialog.Show()
 
 			// check if websocket port is in use
@@ -1823,17 +1849,17 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				backendCheckStateDialog.Hide()
 
 				backendCheckDialogContent := container.NewVBox()
-				backendCheckDialog := dialog.NewCustom("Websocket Port in use", "Cancel",
+				backendCheckDialog := dialog.NewCustom(lang.L("Websocket Port in use"), lang.L("Cancel"),
 					backendCheckDialogContent,
 					fyne.CurrentApp().Driver().AllWindows()[1],
 				)
 				buttonList := container.New(layout.NewGridLayout(2))
-				buttonList.Add(widget.NewButtonWithIcon("Reconnect", theme.MediaReplayIcon(), func() {
+				buttonList.Add(widget.NewButtonWithIcon(lang.L("Reconnect"), theme.MediaReplayIcon(), func() {
 					Settings.Config.Run_backend_reconnect = true
 					stopAndClose(playBackDevice, onClose)
 					backendCheckDialog.Hide()
 				}))
-				yesButton := widget.NewButtonWithIcon("Yes", theme.ConfirmIcon(), func() {
+				yesButton := widget.NewButtonWithIcon(lang.L("Yes"), theme.ConfirmIcon(), func() {
 					err := Utilities.KillProcessById(Settings.Config.Process_id)
 					if err != nil {
 						err = Utilities.SendQuitMessage(websocketAddr)
@@ -1850,7 +1876,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				buttonList.Add(yesButton)
 
 				backendCheckDialogContent.Add(
-					widget.NewLabelWithStyle("The Websocket Port is already in use.\nDo you want to quit the running backend or reconnect to it?", fyne.TextAlignCenter, fyne.TextStyle{}),
+					widget.NewLabelWithStyle(lang.L("The Websocket Port is already in use")+"\n"+lang.L("Do you want to quit the running backend or reconnect to it?"), fyne.TextAlignCenter, fyne.TextStyle{}),
 				)
 
 				backendCheckDialogContent.Add(
@@ -1874,19 +1900,19 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	}
 
 	newProfileEntry := widget.NewEntry()
-	newProfileEntry.PlaceHolder = "New Profile Name"
+	newProfileEntry.PlaceHolder = lang.L("New Profile Name")
 	newProfileEntry.Validator = func(s string) error {
 		s = strings.TrimSpace(s)
 		if len(s) == 0 {
-			return fmt.Errorf("please enter a profile name")
+			return fmt.Errorf(lang.L("please enter a profile name"))
 		}
 		if strings.HasSuffix(s, ".yaml") || strings.HasSuffix(s, ".yml") {
-			return fmt.Errorf("please do not include file extension")
+			return fmt.Errorf(lang.L("please do not include file extension"))
 		}
 		return nil
 	}
 
-	newProfileRow := container.NewBorder(nil, nil, nil, widget.NewButtonWithIcon("New", theme.DocumentCreateIcon(), func() {
+	newProfileRow := container.NewBorder(nil, nil, nil, widget.NewButtonWithIcon(lang.L("New"), theme.DocumentCreateIcon(), func() {
 		validationError := newProfileEntry.Validate()
 		if validationError != nil {
 			return
