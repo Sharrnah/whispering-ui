@@ -20,7 +20,7 @@
   "Error": "Fehler",
   "Keypress": "Tastendruck",
   "The Websocket Port is already in use": "Der ausgewählte Websocket Port ist bereits in Benutzung.",
-  "Do you want to quit the running backend or reconnect to it": "Möchtest du den laufenden Backend beenden oder erneut verbinden?",
+  "Do you want to quit the running backend or reconnect to it?": "Möchtest du den laufenden Backend beenden oder erneut verbinden?",
   "New Profile Name": "Neuer Profil Name",
   "New": "Neu",
   "Test": "Test",
