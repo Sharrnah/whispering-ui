@@ -40,8 +40,8 @@
   "Information": "Information",
   "Realtime": "Echtzeit",
   "Push to Talk": "Push to Talk",
-  "A.I. Device for Text-to-Speech": "KI-Gerät für Text-to-Speech",
-  "Integrated Text-to-Speech": "Integriertes Text-to-Speech",
+  "A.I. Device for Text-to-Speech": "KI-Gerät für Text-zu-Sprache",
+  "Integrated Text-to-Speech": "Integriertes Text-zu-Sprache",
   "Text-Translation A.I. Size": "Textübersetzungs-KI Größe",
   "A.I. Device for Text-Translation": "KI-Gerät für Textübersetzung",
   "Text-Translation Type": "Textübersetzungs Typ",
@@ -93,7 +93,7 @@
   "Text-to-Speech Options": "Text-zu-Sprache Optionen",
   "OSC (VRChat) Options": "OSC (VRChat) Optionen",
   "Experimental Options": "Experimentelle Optionen",
-  "Logs": "Protokolle",
+  "Logs": "Logs",
   "New Plugin updates available": "Neue Plugin-Updates verfügbar",
   "Whispering Tiger has new Plugin updates available. Go to Plugin List now?": "Whispering Tiger hat neue Plugin Updates verfügbar. Jetzt zur Plugin-Liste gehen?",
 
@@ -110,7 +110,7 @@
   "Save Random Voice": "Zufällige Stimme speichern",
   "Voice": "Stimme",
   "Export .wav": ".wav exportieren",
-  "Send to Text-to-Speech": "Senden an Text-to-Speech",
+  "Send to Text-to-Speech": "Senden an Text-zu-Sprache",
   "Test the Voice": "Stimme testen",
   "Stop playing": "Abspielen stoppen",
 
