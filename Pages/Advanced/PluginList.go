@@ -5,6 +5,7 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/theme"
@@ -32,7 +33,7 @@ func CreatePluginListWindow(closeFunction func(), backendRunning bool) {
 		return
 	}
 
-	pluginListWindow := fyne.CurrentApp().NewWindow("Plugin List")
+	pluginListWindow := fyne.CurrentApp().NewWindow(lang.L("Plugin List"))
 
 	windowSize := fyne.NewSize(1150, 700)
 	if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
@@ -54,10 +55,10 @@ func CreatePluginListWindow(closeFunction func(), backendRunning bool) {
 			pluginListWindow.Close()
 		}
 		if len(FreshInstalledPlugins) > 0 && backendRunning {
-			dialog.NewConfirm("New Plugins Installed", "Would you like to restart Whispering Tiger now?\n(Required for new Plugins to load.)", func(response bool) {
+			dialog.NewConfirm(lang.L("New Plugins Installed"), lang.L("Would you like to restart Whispering Tiger now? (Required for new Plugins to load.)"), func(response bool) {
 				// close running backend process
 				if len(RuntimeBackend.BackendsList) > 0 && RuntimeBackend.BackendsList[0].IsRunning() {
-					infinityProcessDialog := dialog.NewCustom("Restarting Backend", "OK", container.NewVBox(widget.NewLabel("Restarting backend..."), widget.NewProgressBarInfinite()), fyne.CurrentApp().Driver().AllWindows()[0])
+					infinityProcessDialog := dialog.NewCustom(lang.L("Restarting Backend"), lang.L("OK"), container.NewVBox(widget.NewLabel(lang.L("Restarting backend")+"..."), widget.NewProgressBarInfinite()), fyne.CurrentApp().Driver().AllWindows()[0])
 					infinityProcessDialog.Show()
 					RuntimeBackend.BackendsList[0].Stop()
 					time.Sleep(2 * time.Second)
@@ -74,7 +75,7 @@ func CreatePluginListWindow(closeFunction func(), backendRunning bool) {
 	// Create a new Fyne container for the table
 	tableContainer := container.NewVBox()
 
-	tableContainer.Add(widget.NewLabel("Plugin List"))
+	tableContainer.Add(widget.NewLabel(lang.L("Plugin List")))
 
 	loadingBar := widget.NewProgressBarInfinite()
 
@@ -84,7 +85,7 @@ func CreatePluginListWindow(closeFunction func(), backendRunning bool) {
 
 	localPluginFilesData := UpdateUtility.ParseLocalPluginFiles()
 
-	checkAllButton := widget.NewButton("Check all Plugins for Updates", func() {
+	checkAllButton := widget.NewButton(lang.L("Check all Plugins for Updates"), func() {
 		loadingBar.Show()
 		for _, row := range tableData {
 			UpdateUtility.PluginsUpdateWidgetsRefresh(&row, localPluginFilesData)
@@ -114,19 +115,19 @@ func CreatePluginListWindow(closeFunction func(), backendRunning bool) {
 		titleLabel.TextSize = theme.TextSubHeadingSize()
 		titleLabel.TextStyle.Bold = true
 
-		remoteVersionLabel := widget.NewLabel("Newest V: ")
-		currentVersionLabel := canvas.NewText("  Current V: ", color.RGBA{255, 255, 255, 255})
+		remoteVersionLabel := widget.NewLabel(lang.L("Newest V") + ": ")
+		currentVersionLabel := canvas.NewText("  "+lang.L("Current V")+": ", color.RGBA{255, 255, 255, 255})
 		currentVersionLabel.Move(fyne.NewPos(theme.Padding(), 0))
 
 		author := row.Author
-		authorLabel := widget.NewLabel("Author:\n" + author)
+		authorLabel := widget.NewLabel(lang.L("Author") + ":\n" + author)
 
 		row.Widgets.RemoteVersion = remoteVersionLabel
 		row.Widgets.CurrentVersion = currentVersionLabel
 
 		titleLink := row.TitleLink
 
-		titleButton := widget.NewButtonWithIcon("Update / Install", theme.DownloadIcon(), nil)
+		titleButton := widget.NewButtonWithIcon(lang.L("Update")+" / "+lang.L("Install"), theme.DownloadIcon(), nil)
 		titleButton.OnTapped = func() {
 			version, class, _, fileContent := UpdateUtility.FetchAndAnalyzePluginUrl(titleLink)
 
@@ -145,15 +146,15 @@ func CreatePluginListWindow(closeFunction func(), backendRunning bool) {
 
 			//currentVersionLabel.SetText("Current V: " + version)
 			currentVersionLabel.Color = color.RGBA{R: 255, G: 255, B: 255, A: 255}
-			currentVersionLabel.Text = "  Current V: " + version
+			currentVersionLabel.Text = "  " + lang.L("Current V") + ": " + version
 			currentVersionLabel.Refresh()
 
 			titleButton.Importance = widget.LowImportance
-			titleButton.SetText("Installed")
+			titleButton.SetText(lang.L("Installed"))
 
 			// show success installed dialog
-			dialog.ShowInformation("Plugin Installed", class+" has been installed. The Plugin is disabled by default.\n"+
-				"Please restart Whispering Tiger to load the Plugin.\n",
+
+			dialog.ShowInformation(lang.L("Plugin Installed"), lang.L("Plugin has been installed. The Plugin is disabled by default. Please restart Whispering Tiger to load the Plugin.", map[string]interface{}{"Plugin": class})+"\n",
 				pluginListWindow)
 
 			// add to FreshInstalledPlugins list
@@ -174,7 +175,7 @@ func CreatePluginListWindow(closeFunction func(), backendRunning bool) {
 
 		grid.Add(container.NewVBox(row.Widgets.UpdateButton, row.Widgets.RemoteVersion, row.Widgets.CurrentVersion))
 
-		openPageButton := widget.NewButton("Open Page", func() {
+		openPageButton := widget.NewButton(lang.L("Open Webpage"), func() {
 			err := fyne.CurrentApp().OpenURL(parseURL(titleLink))
 			if err != nil {
 				dialog.ShowError(err, pluginListWindow)

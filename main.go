@@ -80,6 +80,10 @@ func main() {
 		_ = os.Setenv("FYNE_SCALE", val)
 	}
 
+	langVal, langOk := os.LookupEnv("LANG")
+	if langOk && langVal != "" {
+		lang.SetPreferredLanguage(langVal)
+	}
 	lang.AddTranslationsFS(Resources.Translations, "translations")
 
 	a := app.NewWithID("io.github.whispering-tiger")

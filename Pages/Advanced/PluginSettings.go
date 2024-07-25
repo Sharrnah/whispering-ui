@@ -8,6 +8,7 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/theme"
@@ -346,13 +347,13 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 	pluginsContent := container.NewVScroll(nil)
 
 	// plugin list to window button
-	pluginToWindowButton := widget.NewButtonWithIcon("Open List in Window", theme.ViewFullScreenIcon(), nil)
+	pluginToWindowButton := widget.NewButtonWithIcon(lang.L("Open List in Window"), theme.ViewFullScreenIcon(), nil)
 
 	pluginToWindowButton.OnTapped = func() {
-		pluginWindow := fyne.CurrentApp().NewWindow("Plugin Settings")
+		pluginWindow := fyne.CurrentApp().NewWindow(lang.L("Plugin Settings"))
 		pluginAccordionWin, _ := BuildPluginSettingsAccordion(pluginWindow)
 		pluginWindowContainer := container.NewVScroll(pluginAccordionWin)
-		reloadButton := widget.NewButtonWithIcon("Reload", theme.ViewRefreshIcon(), nil)
+		reloadButton := widget.NewButtonWithIcon(lang.L("Reload"), theme.ViewRefreshIcon(), nil)
 		reloadButton.OnTapped = func() {
 			openItem := -1
 			for index, item := range pluginAccordionWin.(*widget.Accordion).Items {
@@ -382,8 +383,8 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 		pluginWindow.Show()
 	}
 
-	downloadButton := widget.NewButton("Download / Update Plugins", nil)
-	filterEnabledPluginsCheckbox := widget.NewCheck("Only show enabled plugins", nil)
+	downloadButton := widget.NewButton(lang.L("Download / Update Plugins"), nil)
+	filterEnabledPluginsCheckbox := widget.NewCheck(lang.L("Only show enabled Plugins"), nil)
 	onlyShowEnabledPlugins = fyne.CurrentApp().Preferences().BoolWithFallback("OnlyShowEnabledPlugins", onlyShowEnabledPlugins)
 	filterEnabledPluginsCheckbox.Checked = onlyShowEnabledPlugins
 	//topContainer := container.NewBorder(nil, nil, nil, filterEnabledPluginsCheckbox, downloadButton)
@@ -418,7 +419,7 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 	}
 
 	if pluginFilesCount == 0 {
-		openPluginsFolderButton := widget.NewButton("Open Plugins folder", func() {
+		openPluginsFolderButton := widget.NewButton(lang.L("Open Plugins folder"), func() {
 			appExec, _ := os.Executable()
 			appPath := filepath.Dir(appExec)
 			uiPluginsFolder, _ := url.Parse(filepath.Join(appPath, "Plugins"))
@@ -431,11 +432,11 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 
 		pluginsContent.Content = container.NewCenter(
 			container.NewVBox(
-				widget.NewLabel("\nNo Plugins found.\n\nDownload Plugins using the button below."),
+				widget.NewLabel("\n"+lang.L("No Plugins found. Download Plugins using the button below.")),
 				downloadButton,
-				widget.NewLabel("\nOr download Plugins manually from:"),
+				widget.NewLabel("\n"+lang.L("Or download Plugins manually from:")),
 				widget.NewHyperlink("https://github.com/Sharrnah/whispering-plugins/blob/main/README.md", parseURL("https://github.com/Sharrnah/whispering-plugins/blob/main/README.md")),
-				widget.NewLabel("and place the *.py file in the Plugins folder."),
+				widget.NewLabel(lang.L("and place the *.py file in the Plugins folder.")),
 				openPluginsFolderButton,
 			),
 		)
@@ -454,7 +455,7 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 		if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
 			window = fyne.CurrentApp().Driver().AllWindows()[0]
 		} else {
-			window = fyne.CurrentApp().NewWindow("Plugin Settings " + pluginClassName)
+			window = fyne.CurrentApp().NewWindow(lang.L("Plugin Settings") + " " + pluginClassName)
 			window.Show()
 		}
 	}

@@ -5,6 +5,7 @@ import (
 	"bytes"
 	"fmt"
 	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
 	"image/color"
 	"io"
@@ -323,14 +324,14 @@ func PluginsUpdateWidgetsRefresh(tableDataRow *TableData, localPluginFilesData [
 	if tableDataRow.Widgets.RemoteVersion != nil {
 		pluginUpdateInfo := PluginsUpdateCheck(titleLink, localPluginFilesData)
 
-		tableDataRow.Widgets.RemoteVersion.SetText("Newest V: " + pluginUpdateInfo.remoteVersion)
+		tableDataRow.Widgets.RemoteVersion.SetText(lang.L("Newest V") + ": " + pluginUpdateInfo.remoteVersion)
 		//row.Widgets.CurrentVersion.SetText("Current V: " + localVersion)
-		tableDataRow.Widgets.CurrentVersion.Text = "  Current V: " + pluginUpdateInfo.localVersion
+		tableDataRow.Widgets.CurrentVersion.Text = "  " + lang.L("Current V") + ": " + pluginUpdateInfo.localVersion
 
 		if pluginUpdateInfo.remoteVersion != pluginUpdateInfo.localVersion && pluginUpdateInfo.localVersion != "" {
 			tableDataRow.Widgets.CurrentVersion.Color = color.RGBA{R: 240, G: 0, B: 0, A: 255}
 			tableDataRow.Widgets.UpdateButton.Importance = widget.HighImportance
-			tableDataRow.Widgets.UpdateButton.SetText("Update")
+			tableDataRow.Widgets.UpdateButton.SetText(lang.L("Update"))
 		} else {
 			tableDataRow.Widgets.CurrentVersion.Color = color.RGBA{R: 255, G: 255, B: 255, A: 255}
 			tableDataRow.Widgets.UpdateButton.Importance = widget.LowImportance
@@ -338,9 +339,9 @@ func PluginsUpdateWidgetsRefresh(tableDataRow *TableData, localPluginFilesData [
 				tableDataRow.Widgets.UpdateButton.Importance = widget.HighImportance
 			}
 			if (pluginUpdateInfo.localVersion == "" && pluginUpdateInfo.remoteVersion != "") || (pluginUpdateInfo.localVersion == "" && pluginUpdateInfo.remoteVersion == "") {
-				tableDataRow.Widgets.UpdateButton.SetText("Install")
+				tableDataRow.Widgets.UpdateButton.SetText(lang.L("Install"))
 			} else {
-				tableDataRow.Widgets.UpdateButton.SetText("ReInstall")
+				tableDataRow.Widgets.UpdateButton.SetText(lang.L("Reinstall"))
 			}
 		}
 		tableDataRow.Widgets.CurrentVersion.Refresh()
