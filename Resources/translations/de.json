@@ -136,7 +136,7 @@
   "Removing old version...": "Entfernen der alten Version...",
   "Extracting...": "Extrahieren...",
   "Finished.": "Fertig.",
-  "Platform Update available.": "Plattform Update verfügbar",
+  "Platform Update available": "Plattform Update verfügbar",
   "There is a new Update of the Platform available. Update to new version now?": "Es ist ein neues Update der Plattform verfügbar.\n\nJetzt auf {{.Version}} aktualisieren?",
   "Downloading Platform Update. (Please wait until this is finished!)": "Plattform-Update wird heruntergeladen. (Bitte warten Sie, bis dies abgeschlossen ist!)",
   "Platform not found": "Plattform nicht gefunden",
