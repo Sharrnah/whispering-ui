@@ -82,6 +82,19 @@
   "Usage of Multi-Modal Model.": "Usage of Multi-Modal Model.",
   "Use Multi-Modal model for Text-Translation as well?": "Use Multi-Modal model for Text-Translation as well?",
 
+  "Send to OSC (VRChat)": "Send to OSC (VRChat)",
+  "Send to Both (TTS + OSC)": "Send to Both (TTS + OSC)",
+  "Speech-to-Text Enabled": "Speech-to-Text Enabled",
+  "Automatic Text-to-Speech": "Automatic Text-to-Speech",
+  "Automatic OSC (VRChat)": "Automatic OSC (VRChat)",
+  "... show all": "... show all",
+  "Select source language": "Select source language",
+  "Select target language": "Select target language",
+  "Select a language": "Select a language",
+  "Select language in image": "Select language in image",
+
+  "SttTextTranslateLabel": "Automatic Text-Translate from {{.FromLang}} to {{.ToLang}}",
+
   "Whispering Tiger Profiles": "Whispering Tiger Profiles",
   "Speech-to-Text": "Speech-to-Text",
   "Text-Translate": "Text-Translate",
@@ -101,6 +114,7 @@
   "Logs": "Logs",
   "New Plugin updates available": "New Plugin updates available",
   "Whispering Tiger has new Plugin updates available. Go to Plugin List now?": "Whispering Tiger has new Plugin updates available. Go to Plugin List now?",
+  "pluginClass enabled": "{{.PluginClass}} enabled",
   "Plugin List": "Plugin List",
   "New Plugins Installed": "New Plugins Installed",
   "Would you like to restart Whispering Tiger now? (Required for new Plugins to load.)": "Would you like to restart Whispering Tiger now?\n(Required for new Plugins to load.)",

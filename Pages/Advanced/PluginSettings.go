@@ -146,11 +146,12 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 	// plugin to window button
 	pluginToWindowButton := widget.NewButtonWithIcon("", theme.ViewFullScreenIcon(), nil)
 	pluginToWindowButton.OnTapped = func() {
-		pluginWindow := fyne.CurrentApp().NewWindow(pluginClassName + " Settings")
+		pluginWindow := fyne.CurrentApp().NewWindow(pluginClassName + " " + lang.L("Settings"))
+
 		pluginContentWin := BuildSinglePluginSettings(pluginClassName, nil, nil, pluginWindow)
 		pluginWindowContainer := container.NewVScroll(pluginContentWin)
 
-		reloadButton := widget.NewButtonWithIcon("Reload", theme.ViewRefreshIcon(), nil)
+		reloadButton := widget.NewButtonWithIcon(lang.L("Reload"), theme.ViewRefreshIcon(), nil)
 		reloadButton.OnTapped = func() {
 			pluginContentWin = BuildSinglePluginSettings(pluginClassName, nil, nil, pluginWindow)
 			pluginWindowContainer.Content = pluginContentWin
@@ -186,7 +187,7 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 	}
 
 	// plugin enabled checkbox
-	pluginEnabledCheckbox := widget.NewCheck(pluginClassName+" enabled", func(enabled bool) {
+	pluginEnabledCheckbox := widget.NewCheck(lang.L("pluginClass enabled", map[string]interface{}{"PluginClass": pluginClassName}), func(enabled bool) {
 		Settings.Config.Plugins[pluginClassName] = enabled
 		sendMessage := Fields.SendMessageStruct{
 			Type:  "setting_change",

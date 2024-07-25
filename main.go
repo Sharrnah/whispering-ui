@@ -86,6 +86,9 @@ func main() {
 	}
 	lang.AddTranslationsFS(Resources.Translations, "translations")
 
+	// initialize global fields (so they can use initialized languages)
+	Fields.InitializeGlobalFields()
+
 	a := app.NewWithID("io.github.whispering-tiger")
 	a.SetIcon(Resources.ResourceAppIconPng)
 
