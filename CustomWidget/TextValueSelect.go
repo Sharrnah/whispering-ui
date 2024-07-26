@@ -2,6 +2,7 @@ package CustomWidget
 
 import (
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -33,7 +34,7 @@ func NewTextValueSelect(name string, options []TextValueOption, changed func(Tex
 		s.updateSelected(text)
 	}
 	s.Options = options
-	s.PlaceHolder = defaultPlaceHolder
+	s.PlaceHolder = lang.L("(Select one)")
 
 	if defaultIndex > -1 && defaultIndex <= len(s.Options) {
 		s.Selected = s.Options[defaultIndex].Text

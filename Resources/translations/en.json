@@ -46,6 +46,7 @@
   "Enable": "Enable",
   "Enabled": "Enabled",
   "Disabled": "Disabled",
+  "(Select one)": "(Select one)",
   "Loading...": "Loading...",
   "Keypress": "Keypress",
   "The Websocket Port is already in use": "The Websocket Port is already in use.",

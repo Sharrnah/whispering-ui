@@ -104,18 +104,6 @@ func (e *EntryWithPopupMenu) TappedSecondary(pe *fyne.PointEvent) {
 		menu = fyne.NewMenu("", pasteItem, selectAllItem)
 	} else {
 		var menuItems []*fyne.MenuItem
-		e.propertyLock.Lock()
-		//canUndo, canRedo := e.undoStack.CanUndo(), e.undoStack.CanRedo()
-		e.propertyLock.Unlock()
-		//if canUndo {
-		//	menuItems = append(menuItems, undoItem)
-		//}
-		//if canRedo {
-		//	menuItems = append(menuItems, redoItem)
-		//}
-		//if canUndo || canRedo {
-		//	menuItems = append(menuItems, fyne.NewMenuItemSeparator())
-		//}
 		menuItems = append(menuItems, cutItem, copyItem, pasteItem, selectAllItem)
 		menu = fyne.NewMenu("", menuItems...)
 	}

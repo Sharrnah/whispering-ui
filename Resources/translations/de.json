@@ -46,6 +46,7 @@
   "Enable": "Aktivieren",
   "Enabled": "Aktiviert",
   "Disabled": "Deaktiviert",
+  "(Select one)": "(einen auswählen)",
   "Loading...": "Laden...",
   "Keypress": "Tastendruck",
   "The Websocket Port is already in use": "Der ausgewählte Websocket Port ist bereits in Benutzung.",

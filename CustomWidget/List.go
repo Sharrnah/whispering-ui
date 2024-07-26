@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/data/binding"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
 	"log"
 )
@@ -45,7 +46,7 @@ func NewListWithData(data binding.DataList, createItem func() fyne.CanvasObject,
 	return l
 }
 func (t *List) TappedSecondary(pe *fyne.PointEvent) {
-	cutItem := fyne.NewMenuItem("Cut", func() {
+	cutItem := fyne.NewMenuItem(lang.L("Cut"), func() {
 		log.Println("CUTTED")
 	})
 

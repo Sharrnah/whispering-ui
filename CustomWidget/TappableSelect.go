@@ -2,12 +2,11 @@ package CustomWidget
 
 import (
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"sync"
 )
-
-const defaultPlaceHolder string = "(Select one)"
 
 type TappableSelect struct {
 	widget.Select
@@ -27,7 +26,7 @@ func NewSelect(options []string, changed func(string)) *TappableSelect {
 	s := &TappableSelect{}
 	s.OnChanged = changed
 	s.Options = options
-	s.PlaceHolder = defaultPlaceHolder
+	s.PlaceHolder = lang.L("(Select one)")
 
 	s.ExtendBaseWidget(s)
 	return s
