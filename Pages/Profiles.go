@@ -649,7 +649,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		})
 
 		appendWidgetToForm(profileForm, lang.L("VAD (Voice activity detection)"), container.NewGridWithColumns(3, vadEnableCheckbox, vadOnFullClipCheckbox, vadRealtimeCheckbox, pushToTalkBlock), lang.L("Press ESC in Push to Talk field to clear the keybinding."))
-		appendWidgetToForm(profileForm, lang.L("VAD Speech confidence"), container.NewBorder(nil, nil, nil, vadConfidenceSliderState, vadConfidenceSliderWidget), lang.L("The confidence level required to detect speech."))
+		appendWidgetToForm(profileForm, lang.L("vad_confidence_threshold.Name"), container.NewBorder(nil, nil, nil, vadConfidenceSliderState, vadConfidenceSliderWidget), lang.L("The confidence level required to detect speech."))
 
 		energySliderWidget := widget.NewSlider(0, EnergySliderMax)
 

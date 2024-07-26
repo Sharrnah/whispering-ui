@@ -91,7 +91,6 @@
   "The volume level at which the speech detection will trigger. (0 = Disabled, useful for Push2Talk)": "The volume level at which the speech detection will trigger. (0 = Disabled, useful for Push2Talk)",
   "Autodetect": "Autodetect",
   "VAD (Voice activity detection)": "VAD (Voice activity detection)",
-  "VAD Speech confidence": "VAD Speech confidence",
   "Disabled VAD is only supported with MME Audio API. Please make sure MME is selected as audio API. (Enabling VAD is highly recommended)": "Disabled VAD is only supported with \"MME\" Audio API.\nPlease make sure MME is selected as audio API.\n\n(Enabling VAD is highly recommended)",
   "Press ESC in Push to Talk field to clear the keybinding.": "Press ESC in Push to Talk field to clear the keybinding.",
   "The confidence level required to detect speech.": "The confidence level required to detect speech.",
