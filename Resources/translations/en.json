@@ -79,12 +79,6 @@
   "Speech-to-Text A.I. Size": "Speech-to-Text A.I. Size",
   "A.I. Device for Speech-to-Text": "A.I. Device for Speech-to-Text",
   "Speech-to-Text Type": "Speech-to-Text Type",
-  "Phrase time limit": "Phrase time limit",
-  "The max. time limit in seconds after which the audio processing starts.": "The maximum time limit in seconds after which the audio processing starts.",
-  "Speech pause detection": "Speech pause detection",
-  "The pause time in seconds after which the speech detection will stop and A.I. processing starts.": "The pause time in seconds after which the speech detection will stop and A.I. processing starts.",
-  "Noise Filter": "Noise Filter",
-  "Speech volume Level": "Speech volume Level",
   "This will detect the current noise level.": "This will detect the current noise level.",
   "This will record for energyDetectionTime seconds and sets the energy to the max detected level. Please behave normally (breathing etc.) but don't say anything. This value can later be fine-tuned without restarting by setting the energy value in Advanced-Settings.": "This will record for {{.EnergyDetectionTime}} and sets the energy to the max detected level.\nPlease behave normally (breathing etc.) but don't say anything.\n\nThis value can later be fine-tuned without restarting by setting the \"Speech volume Level\" value in Advanced -> Settings.",
   "TimeSeconds": {
@@ -234,6 +228,7 @@
   "Focus window on message receive. (Can improve speed in VR)": "Focus window on message receive. (Can improve speed in VR)",
   "Check for App updates at startup": "Check for App updates at startup",
   "Check for Plugin updates at startup": "Check for Plugin updates at startup",
+
   "energy.Name": "Speech volume level",
   "energy.Description": "Volume level at which the speech detection will trigger.",
   "vad_confidence_threshold.Name": "Voice Activity Confidence",

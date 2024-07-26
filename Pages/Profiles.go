@@ -722,7 +722,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				energySliderWidgetZeroValueInfo.Show()
 			}
 		}
-		appendWidgetToForm(profileForm, lang.L("Speech volume Level"), container.NewBorder(nil, nil, nil, container.NewHBox(energySliderState, energyHelpBtn), energySliderWidget), lang.L("The volume level at which the speech detection will trigger. (0 = Disabled, useful for Push2Talk)"))
+		appendWidgetToForm(profileForm, lang.L("energy.Name"), container.NewBorder(nil, nil, nil, container.NewHBox(energySliderState, energyHelpBtn), energySliderWidget), lang.L("The volume level at which the speech detection will trigger. (0 = Disabled, useful for Push2Talk)"))
 
 		denoiseSelect := CustomWidget.NewTextValueSelect("denoise_audio", []CustomWidget.TextValueOption{
 			{Text: lang.L("Disabled"), Value: ""},
@@ -730,7 +730,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "DeepFilterNet", Value: "deepfilter"},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
-		profileForm.Append(lang.L("Noise Filter"), denoiseSelect)
+		profileForm.Append(lang.L("denoise_audio.Name"), denoiseSelect)
 
 		pauseSliderState := widget.NewLabel("0.0")
 		pauseSliderWidget := widget.NewSlider(0, 5)
@@ -744,7 +744,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				pauseSliderWidgetZeroValueInfo.Show()
 			}
 		}
-		appendWidgetToForm(profileForm, lang.L("Speech pause detection"), container.NewBorder(nil, nil, nil, pauseSliderState, pauseSliderWidget), lang.L("The pause time in seconds after which the speech detection will stop and A.I. processing starts."))
+		appendWidgetToForm(profileForm, lang.L("pause.Name"), container.NewBorder(nil, nil, nil, pauseSliderState, pauseSliderWidget), lang.L("pause.Description"))
 
 		phraseLimitSliderState := widget.NewLabel("0.0")
 		phraseLimitSliderWidget := widget.NewSlider(0, 30)
@@ -752,7 +752,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		phraseLimitSliderWidget.OnChanged = func(value float64) {
 			phraseLimitSliderState.SetText(fmt.Sprintf("%.1f", value))
 		}
-		appendWidgetToForm(profileForm, lang.L("Phrase time limit"), container.NewBorder(nil, nil, nil, phraseLimitSliderState, phraseLimitSliderWidget), lang.L("The max. time limit in seconds after which the audio processing starts."))
+		appendWidgetToForm(profileForm, lang.L("phrase_time_limit.Name"), container.NewBorder(nil, nil, nil, phraseLimitSliderState, phraseLimitSliderWidget), lang.L("phrase_time_limit.Description"))
 
 		txtTranslatorSizeSelect := CustomWidget.NewTextValueSelect("txt_translator_size", []CustomWidget.TextValueOption{
 			{Text: "Small", Value: "small"},
