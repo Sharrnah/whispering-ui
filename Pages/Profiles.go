@@ -775,7 +775,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Original NLLB200 (200 languages)", Value: "NLLB200"},
 			{Text: "M2M100 (100 languages)", Value: "M2M100"},
 			{Text: "Seamless M4T (101 languages)", Value: "Seamless_M4T"},
-			{Text: "Disabled", Value: ""},
+			{Text: lang.L("Disabled"), Value: ""},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
 		txtTranslatorDeviceSelect := CustomWidget.NewTextValueSelect("txt_translator_device", []CustomWidget.TextValueOption{
@@ -815,7 +815,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Speech T5 (English only)", Value: "speech_t5"},
 			{Text: "Wav2Vec Bert 2.0", Value: "wav2vec_bert"},
 			{Text: "NeMo Canary", Value: "nemo_canary"},
-			{Text: "Disabled", Value: ""},
+			{Text: lang.L("Disabled"), Value: ""},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
 		sttAiDeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {

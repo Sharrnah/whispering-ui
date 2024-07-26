@@ -7,6 +7,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
 	"github.com/gorilla/websocket"
 	"io"
@@ -58,7 +59,7 @@ func (c *Client) Start() {
 	connectingStateContainer := container.NewVBox()
 	connectingStateDialog := dialog.NewCustom(
 		"",
-		"Hide",
+		lang.L("Hide"),
 		container.NewBorder(statusBar, nil, nil, nil, connectingStateContainer),
 		fyne.CurrentApp().Driver().AllWindows()[0],
 	)
@@ -75,7 +76,8 @@ func (c *Client) Start() {
 
 	u := url.URL{Scheme: "ws", Host: c.Addr, Path: "/"}
 	log.Printf("connecting to %s", u.String())
-	connectingStateContainer.Add(widget.NewLabel("Connecting to " + u.String()))
+
+	connectingStateContainer.Add(widget.NewLabel(lang.L("Connecting to Server", map[string]interface{}{"ServerUri": u.String()})))
 	connectingStateDialog.Show()
 
 	// create websocket dialer

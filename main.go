@@ -80,9 +80,9 @@ func main() {
 		_ = os.Setenv("FYNE_SCALE", val)
 	}
 
-	langVal, langOk := os.LookupEnv("LANG")
+	langVal, langOk := os.LookupEnv("PREFERRED_LANGUAGE")
 	if langOk && langVal != "" {
-		lang.SetPreferredLanguage(langVal)
+		lang.SetPreferredLocale(langVal)
 	}
 	lang.AddTranslationsFS(Resources.Translations, "translations")
 

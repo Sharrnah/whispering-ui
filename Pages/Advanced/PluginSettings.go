@@ -656,7 +656,7 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 			label.Wrapping = fyne.TextWrapOff
 			settingsFields = append(settingsFields, container.NewHScroll(label))
 		} else if v["type"] == "file_open" || v["type"] == "file_save" || v["type"] == "folder_open" || v["type"] == "dir_open" {
-			selectButtonLabel := "Select File"
+			selectButtonLabel := lang.L("Select File")
 			entry := widget.NewEntry()
 			entry.SetText(v["value"].(string))
 
