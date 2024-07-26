@@ -110,7 +110,7 @@
     "Select target language": "Zielsprache auswählen",
     "Select a language": "Wählen Sie eine Sprache",
     "Select language in image": "Sprache im Bild auswählen",
-    "SttTextTranslateLabel": "Automatische Text-Übersetzung von {{.FromLang}} nach {{.ToLang}}",
+    "SttTextTranslateLabel": "Automatisches Text-Übersetzen von {{.FromLang}} nach {{.ToLang}}",
     "Whispering Tiger Profiles": "Whispering Tiger Profile",
     "Speech-to-Text": "Sprache-zu-Text",
     "Text-Translate": "Text-Übersetzung",
