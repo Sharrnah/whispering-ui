@@ -282,5 +282,7 @@
     "tts_use_secondary_playback.Description": "Wiedergabe von Text-zu-Sprache auf einem zweiten Audiogerät zur gleichen Zeit wie das ausgewählte Ausgabegerät.\n(Standardmäßig wird das Standard-Audiogerät von Windows verwendet)",
     "txt_translate_realtime.Name": "Text in Echtzeit übersetzen",
     "txt_translate_realtime.Description": "Übersetzt den Zwischentext im Echtzeitmodus der Spracherkennung.",
-    "txt_romaji.Name": "Text in Romaji umwandeln"
+    "txt_romaji.Name": "Text in Romaji umwandeln",
+    "If you want to support the development of Whispering Tiger": "Wenn Sie die Entwicklung von Whispering Tiger unterstützen wollen,\nkönnen Sie dies tun, indem Sie mich auf Ko-fi unterstützen.",
+    "VersionBuild": "Version{{.Version}} Build: {{.Build}}"
 }
