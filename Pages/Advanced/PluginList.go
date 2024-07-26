@@ -58,7 +58,7 @@ func CreatePluginListWindow(closeFunction func(), backendRunning bool) {
 			dialog.NewConfirm(lang.L("New Plugins Installed"), lang.L("Would you like to restart Whispering Tiger now? (Required for new Plugins to load.)"), func(response bool) {
 				// close running backend process
 				if len(RuntimeBackend.BackendsList) > 0 && RuntimeBackend.BackendsList[0].IsRunning() {
-					infinityProcessDialog := dialog.NewCustom(lang.L("Restarting Backend"), lang.L("OK"), container.NewVBox(widget.NewLabel(lang.L("Restarting backend")+"..."), widget.NewProgressBarInfinite()), fyne.CurrentApp().Driver().AllWindows()[0])
+					infinityProcessDialog := dialog.NewCustom(lang.L("Restarting Backend"), lang.L("OK"), container.NewVBox(widget.NewLabel(lang.L("Restarting Backend")+"..."), widget.NewProgressBarInfinite()), fyne.CurrentApp().Driver().AllWindows()[0])
 					infinityProcessDialog.Show()
 					RuntimeBackend.BackendsList[0].Stop()
 					time.Sleep(2 * time.Second)
