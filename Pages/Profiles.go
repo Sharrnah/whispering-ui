@@ -27,6 +27,7 @@ import (
 	"syscall"
 	"time"
 	"whispering-tiger-ui/CustomWidget"
+	"whispering-tiger-ui/Pages/ProfileSettings"
 	"whispering-tiger-ui/Profiles"
 	"whispering-tiger-ui/Resources"
 	"whispering-tiger-ui/Settings"
@@ -475,6 +476,20 @@ const EnergySliderMax = 2000
 
 func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	defer Utilities.PanicLogger()
+
+	createProfilePresetSelect := CustomWidget.NewTextValueSelect("Profile Preset", []CustomWidget.TextValueOption{
+		{Text: lang.L("(Select Preset)"), Value: ""},
+		{Text: lang.L("NVIDIA, High Performance, Accuracy optimized"), Value: "NVIDIA-HighPerformance-Accuracy"},
+		{Text: lang.L("NVIDIA, Low Performance, Accuracy optimized"), Value: "NVIDIA-LowPerformance-Accuracy"},
+		{Text: lang.L("NVIDIA, High Performance, Realtime optimized"), Value: "NVIDIA-HighPerformance-Realtime"},
+		{Text: lang.L("NVIDIA, Low Performance, Realtime optimized"), Value: "NVIDIA-LowPerformance-Realtime"},
+		{Text: lang.L("AMD / Intel, High Performance, Accuracy optimized"), Value: "AMDIntel-HighPerformance-Accuracy"},
+		{Text: lang.L("AMD / Intel, Low Performance, Accuracy optimized"), Value: "AMDIntel-LowPerformance-Accuracy"},
+		{Text: lang.L("AMD / Intel, High Performance, Realtime optimized"), Value: "AMDIntel-HighPerformance-Realtime"},
+		{Text: lang.L("AMD / Intel, Low Performance, Realtime optimized"), Value: "AMDIntel-LowPerformance-Realtime"},
+		{Text: lang.L("CPU, High Performance, Accuracy optimized"), Value: "CPU-HighPerformance-Accuracy"},
+		{Text: lang.L("CPU, Low Performance, Accuracy optimized"), Value: "CPU-LowPerformance-Accuracy"},
+	}, nil, 0)
 
 	playBackDevice := CurrentPlaybackDevice{}
 
@@ -1519,107 +1534,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileHelpTextContent.Hide()
 		profileListContent.Show()
 
-		profileSettings := Settings.Conf{
-			SettingsFilename:         settingsFiles[id],
-			Websocket_ip:             "127.0.0.1",
-			Websocket_port:           5000,
-			Run_backend:              true,
-			Device_index:             -1,
-			Device_out_index:         -1,
-			Audio_api:                "WASAPI",
-			Audio_input_device:       "",
-			Audio_output_device:      "",
-			Ai_device:                "cpu",
-			Model:                    "tiny",
-			Txt_translator:           "NLLB200_CT2",
-			Txt_translator_size:      "small",
-			Txt_translator_device:    "cpu",
-			Txt_translator_precision: "float32",
-			Txt_translate_realtime:   false,
+		profileSettings := ProfileSettings.Presets[createProfilePresetSelect.GetSelected().Value]
+		profileSettings.SettingsFilename = settingsFiles[id]
 
-			Tts_enabled:      true,
-			Tts_ai_device:    "cpu",
-			Current_language: "",
-
-			Osc_ip:                             "127.0.0.1",
-			Osc_port:                           9000,
-			Osc_address:                        "/chatbox/input",
-			Osc_min_time_between_messages:      1.5,
-			Osc_typing_indicator:               true,
-			Osc_convert_ascii:                  false,
-			Osc_chat_limit:                     144,
-			Osc_type_transfer:                  "translation_result",
-			Osc_type_transfer_split:            " 🌐 ",
-			Osc_send_type:                      "chunks",
-			Osc_time_limit:                     15.0,
-			Osc_scroll_time_limit:              1.5,
-			Osc_initial_time_limit:             15.0,
-			Osc_scroll_size:                    3,
-			Osc_max_scroll_size:                30,
-			Osc_delay_until_audio_playback:     false,
-			Osc_delay_until_audio_playback_tag: "tts",
-			Osc_delay_timeout:                  10.0,
-
-			Ocr_window_name: "VRChat",
-			Ocr_lang:        "en",
-
-			Logprob_threshold:   "-1.0",
-			No_speech_threshold: "0.6",
-
-			Vad_enabled:              true,
-			Vad_on_full_clip:         false,
-			Vad_confidence_threshold: 0.4,
-			Vad_frames_per_buffer:    1536,
-			Vad_thread_num:           1,
-			Push_to_talk_key:         "",
-
-			Speaker_diarization:  false,
-			Speaker_change_split: true,
-			Min_speaker_length:   0.5,
-			Min_speakers:         1,
-			Max_speakers:         3,
-
-			Denoise_audio:                "",
-			Denoise_audio_post_filter:    false,
-			Denoise_audio_before_trigger: false,
-
-			Whisper_task:                  "transcribe",
-			Whisper_precision:             "float32",
-			Stt_type:                      "faster_whisper",
-			Temperature_fallback:          true,
-			Phrase_time_limit:             30.0,
-			Pause:                         1.0,
-			Energy:                        300,
-			Beam_size:                     5,
-			Length_penalty:                1.0,
-			Beam_search_patience:          1.0,
-			Repetition_penalty:            1.0,
-			No_repeat_ngram_size:          0,
-			Whisper_cpu_threads:           0,
-			Whisper_num_workers:           1,
-			Condition_on_previous_text:    false,
-			Prompt_reset_on_temperature:   0.5,
-			Realtime:                      false,
-			Realtime_frame_multiply:       15,
-			Realtime_frequency_time:       1.0,
-			Realtime_whisper_model:        "",
-			Realtime_whisper_precision:    "float32",
-			Realtime_whisper_beam_size:    1,
-			Realtime_temperature_fallback: false,
-			Whisper_apply_voice_markers:   false,
-			Max_sentence_repetition:       -1,
-			Transcription_auto_save_file:  "",
-			Thread_per_transcription:      true,
-
-			Silence_cutting_enabled:   true,
-			Silence_offset:            -40.0,
-			Max_silence_length:        30.0,
-			Keep_silence_length:       0.20,
-			Normalize_enabled:         true,
-			Normalize_lower_threshold: -24.0,
-			Normalize_upper_threshold: -16.0,
-			Normalize_gain_factor:     2.0,
-		}
 		if Utilities.FileExists(filepath.Join(profilesDir, settingsFiles[id])) {
 			err = profileSettings.LoadYamlSettings(filepath.Join(profilesDir, settingsFiles[id]))
 			if err != nil {
@@ -1923,7 +1840,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		settingsFiles = append(settingsFiles, newEntryName)
 		profileList.Select(len(settingsFiles) - 1)
 		profileList.Refresh()
-	}), newProfileEntry)
+	}), container.NewBorder(nil, nil, createProfilePresetSelect, nil, newProfileEntry))
 
 	memoryArea := container.NewVBox(
 		CPUMemoryBar,

@@ -301,5 +301,17 @@
 
   "txt_translate_realtime.Name": "Translate text in real-time",
   "txt_translate_realtime.Description": "Translate the intermediate text in Speech-to-text real-time mode.",
-  "txt_romaji.Name": "Convert text to romaji"
+  "txt_romaji.Name": "Convert text to romaji",
+
+  "(Select Preset)": "(Select Preset)",
+  "NVIDIA, High Performance, Accuracy optimized": "NVIDIA, High Performance, Accuracy optimized",
+  "NVIDIA, Low Performance, Accuracy optimized": "NVIDIA, Low Performance, Accuracy optimized",
+  "NVIDIA, High Performance, Realtime optimized": "NVIDIA, High Performance, Realtime optimized",
+  "NVIDIA, Low Performance, Realtime optimized": "NVIDIA, Low Performance, Realtime optimized",
+  "AMD / Intel, High Performance, Accuracy optimized": "AMD / Intel, High Performance, Accuracy optimized",
+  "AMD / Intel, Low Performance, Accuracy optimized": "AMD / Intel, Low Performance, Accuracy optimized",
+  "AMD / Intel, High Performance, Realtime optimized": "AMD / Intel, High Performance, Realtime optimized",
+  "AMD / Intel, Low Performance, Realtime optimized": "AMD / Intel, Low Performance, Realtime optimized",
+  "CPU, High Performance, Accuracy optimized": "CPU, High Performance, Accuracy optimized",
+  "CPU, Low Performance, Accuracy optimized": "CPU, Low Performance, Accuracy optimized"
 }
