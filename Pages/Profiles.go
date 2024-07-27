@@ -1840,7 +1840,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		settingsFiles = append(settingsFiles, newEntryName)
 		profileList.Select(len(settingsFiles) - 1)
 		profileList.Refresh()
-	}), container.NewBorder(nil, nil, createProfilePresetSelect, nil, newProfileEntry))
+	}), container.NewAdaptiveGrid(2, createProfilePresetSelect, newProfileEntry))
 
 	memoryArea := container.NewVBox(
 		CPUMemoryBar,
