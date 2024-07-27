@@ -284,7 +284,7 @@
     "txt_translate_realtime.Description": "Übersetzt den Zwischentext im Echtzeitmodus der Spracherkennung.",
     "txt_romaji.Name": "Text in Romaji umwandeln",
     "If you want to support the development of Whispering Tiger": "Wenn Sie die Entwicklung von Whispering Tiger unterstützen wollen,\nkönnen Sie dies tun, indem Sie mich auf Ko-fi unterstützen.",
-    "VersionBuild": "Version{{.Version}} Build: {{.Build}}",
+    "VersionBuild": "Version {{.Version}} Build: {{.Build}}",
     "(Select Preset)": "(Voreinstellung wählen)",
     "NVIDIA, High Performance, Realtime optimized": "NVIDIA, Hohe Leistung, Echtzeit optimiert",
     "NVIDIA, Low Performance, Realtime optimized": "NVIDIA, Niedrige Leistung, Echtzeit optimiert",
