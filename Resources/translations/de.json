@@ -284,5 +284,16 @@
     "txt_translate_realtime.Description": "Übersetzt den Zwischentext im Echtzeitmodus der Spracherkennung.",
     "txt_romaji.Name": "Text in Romaji umwandeln",
     "If you want to support the development of Whispering Tiger": "Wenn Sie die Entwicklung von Whispering Tiger unterstützen wollen,\nkönnen Sie dies tun, indem Sie mich auf Ko-fi unterstützen.",
-    "VersionBuild": "Version{{.Version}} Build: {{.Build}}"
+    "VersionBuild": "Version{{.Version}} Build: {{.Build}}",
+    "(Select Preset)": "(Voreinstellung wählen)",
+    "NVIDIA, High Performance, Realtime optimized": "NVIDIA, Hohe Leistung, Echtzeit optimiert",
+    "NVIDIA, Low Performance, Realtime optimized": "NVIDIA, Niedrige Leistung, Echtzeit optimiert",
+    "AMD / Intel, High Performance, Accuracy optimized": "AMD / Intel, Hohe Leistung, Genauigkeit optimiert",
+    "AMD / Intel, Low Performance, Accuracy optimized": "AMD / Intel, Niedrige Leistung, Genauigkeit optimiert",
+    "AMD / Intel, High Performance, Realtime optimized": "AMD / Intel, Hohe Leistung, Echtzeit optimiert",
+    "AMD / Intel, Low Performance, Realtime optimized": "AMD / Intel, Niedrige Leistung, Echtzeit optimiert",
+    "CPU, High Performance, Accuracy optimized": "CPU, Hohe Leistung, Genauigkeit optimiert",
+    "CPU, Low Performance, Accuracy optimized": "CPU, Niedrige Leistung, Genauigkeit optimiert",
+    "NVIDIA, High Performance, Accuracy optimized": "NVIDIA, Hohe Leistung, Genauigkeit optimiert",
+    "NVIDIA, Low Performance, Accuracy optimized": "NVIDIA, Niedrige Leistung, Genauigkeit optimiert"
 }
