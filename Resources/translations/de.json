@@ -295,5 +295,7 @@
     "CPU, High Performance, Accuracy optimized": "CPU, Hohe Leistung, Genauigkeit optimiert",
     "CPU, Low Performance, Accuracy optimized": "CPU, Niedrige Leistung, Genauigkeit optimiert",
     "NVIDIA, High Performance, Accuracy optimized": "NVIDIA, Hohe Leistung, Genauigkeit optimiert",
-    "NVIDIA, Low Performance, Accuracy optimized": "NVIDIA, Niedrige Leistung, Genauigkeit optimiert"
+    "NVIDIA, Low Performance, Accuracy optimized": "NVIDIA, Niedrige Leistung, Genauigkeit optimiert",
+    "translate (to English)": "übersetzen (ins Englische)",
+    "transcribe": "transkribieren"
 }
