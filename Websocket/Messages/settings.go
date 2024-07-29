@@ -49,8 +49,8 @@ func (res TranslateSetting) Update() *TranslateSetting {
 	}
 
 	// Set options to current settings
-	if strings.Contains(res.Whisper_task, "translate") && Fields.Field.TranscriptionTaskCombo.Selected != "translate (to English)" {
-		Fields.Field.TranscriptionTaskCombo.SetSelected("translate (to English)")
+	if strings.Contains(res.Whisper_task, "translate") && Fields.Field.TranscriptionTaskCombo.Selected != "translate" {
+		Fields.Field.TranscriptionTaskCombo.SetSelected("translate")
 	}
 	if strings.Contains(res.Whisper_task, "transcribe") && !strings.Contains(Fields.Field.TranscriptionTaskCombo.Selected, "transcribe") {
 		Fields.Field.TranscriptionTaskCombo.SetSelected("transcribe")

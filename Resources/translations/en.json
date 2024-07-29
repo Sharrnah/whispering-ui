@@ -177,6 +177,8 @@
     "There is a new Update of the App available. Open GitHub Release page now?": "There is a new Update of the App available. Open GitHub Release page now?",
     "Speech Language": "Speech Language",
     "Speech Task": "Speech AI task",
+    "transcribe": "transcribe",
+    "translate (to English)": "translate (to English)",
     "Source Language": "Source Language",
     "Target Language": "Target Language",
     "Save CSV": "Save CSV",

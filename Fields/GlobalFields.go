@@ -166,7 +166,7 @@ var Field = struct {
 	RealtimeResultLabel               *widget.Label // only displayed if realtime is enabled
 	ProcessingStatus                  *widget.ProgressBarInfinite
 	WhisperResultList                 *widget.List
-	TranscriptionTaskCombo            *widget.Select
+	TranscriptionTaskCombo            *CustomWidget.TextValueSelect
 	TranscriptionSpeakerLanguageCombo *CustomWidget.CompletionEntry
 	TranscriptionTargetLanguageCombo  *CustomWidget.CompletionEntry
 	TranscriptionInput                *CustomWidget.EntryWithPopupMenu
@@ -195,11 +195,20 @@ var Field = struct {
 	RealtimeResultLabel: widget.NewLabelWithData(DataBindings.WhisperResultIntermediateResult),
 	ProcessingStatus:    nil,
 	WhisperResultList:   nil,
-	TranscriptionTaskCombo: widget.NewSelect([]string{"transcribe", "translate (to English)"}, func(value string) {
-		switch value {
+	TranscriptionTaskCombo: CustomWidget.NewTextValueSelect("task", []CustomWidget.TextValueOption{{
+		Text:  lang.L("transcribe"),
+		Value: "transcribe",
+	}, {
+		Text:  lang.L("translate (to English)"),
+		Value: "translate",
+	}}, func(valueOption CustomWidget.TextValueOption) {
+		value := valueOption.Value
+		switch valueOption.Value {
 		case "transcribe":
 			value = "transcribe"
-		case "translate (to English)":
+		case "translate":
+			value = "translate"
+		case "translate (to English)": // deprecated
 			value = "translate"
 		}
 		sendMessage := SendMessageStruct{
@@ -208,7 +217,7 @@ var Field = struct {
 			Value: value,
 		}
 		sendMessage.SendMessage()
-	}),
+	}, 0),
 	TranscriptionSpeakerLanguageCombo: CustomWidget.NewCompletionEntry([]string{"Auto"}),
 	TranscriptionTargetLanguageCombo:  CustomWidget.NewCompletionEntry([]string{}),
 	TranscriptionInputHint:            canvas.NewText("0", color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}),
