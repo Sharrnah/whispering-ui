@@ -270,7 +270,7 @@
     "osc_scroll_time_limit.Name": "OSC Lauftext Zeitlimit",
     "osc_scroll_time_limit.Description": "Zeit zwischen Lauftext OSC-Nachrichten in Sekunden.\n(Wird nur verwendet, wenn der OSC-Sendetyp auf \"Scroll\" eingestellt ist)",
     "osc_send_type.Name": "OSC Textaufteilung Sendeart",
-    "osc_send_type.Description": "Wie die OSC-Nachrichten gesendet werden.\nChunks = Senden Sie den Text in Chunks, wenn er zu lang ist. Die Nachrichten werden durch '...' getrennt.\nFull = Den gesamten Text auf einmal senden.\nFull oder Scroll = Den gesamten Text senden oder scrollen, wenn er zu lang ist.\nScroll = Den Text scrollen.",
+    "osc_send_type.Description": "Wie die OSC-Nachrichten gesendet werden.\nStücke = Senden Sie den Text in Stücken, wenn er zu lang ist. Die Nachrichten werden durch '...' getrennt.\nKomplett = Den gesamten Text auf einmal senden.\nKomplett oder Scrollen = Den gesamten Text senden oder scrollen, wenn er zu lang ist.\nScrollen = Den Text scrollen.",
     "osc_type_transfer.Name": "OSC-Übertragungsart",
     "osc_type_transfer.Description": "Typ der zu sendenden OSC-Nachricht.\nNur Übersetzung (Translation), Beide (Both) oder Quelle (Source).",
     "osc_type_transfer_split.Name": "OSC-Textaufteilung",
@@ -297,5 +297,13 @@
     "NVIDIA, High Performance, Accuracy optimized": "NVIDIA, Hohe Leistung, Genauigkeit optimiert",
     "NVIDIA, Low Performance, Accuracy optimized": "NVIDIA, Niedrige Leistung, Genauigkeit optimiert",
     "translate (to English)": "übersetzen (ins Englische)",
-    "transcribe": "transkribieren"
+    "transcribe": "transkribieren",
+    "osc_send.option.Chunks": "Stücke",
+    "osc_send.option.Full": "Komplett",
+    "osc_send.option.Full or Scroll": "Komplett oder Scrollen",
+    "osc_send.option.Scroll": "Scrollen",
+    "osc_send.option.Send Translation": "Sende Übersetzung",
+    "osc_send.option.Send both Source and Translation": "Sende beides 'Ursprungstext und Übersetzung'",
+    "osc_send.option.Send Source Text": "Sende Ursprungstext",
+    "osc_send.option.Send both (inverted) Translation and Source": "Sende beides (umgekehrt) 'Übersetzung und Ursprungstext'"
 }
