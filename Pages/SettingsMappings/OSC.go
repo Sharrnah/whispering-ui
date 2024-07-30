@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
 	"whispering-tiger-ui/CustomWidget"
 )
@@ -98,10 +99,10 @@ var OSCSettingsMapping = SettingsMapping{
 			SettingsDescription:  "How the OSC messages are send.\nChunks = Send the text in chunks if too long. Messages are separated via '...'.\nFull = Send the full text at once.\nFull or Scroll = Send the full text or scroll it if too long.\nScroll = Scroll the text.",
 			_widget: func() fyne.CanvasObject {
 				settingWidget := CustomWidget.NewTextValueSelect("osc_send_type", []CustomWidget.TextValueOption{
-					{Text: "Chunks", Value: "chunks"},
-					{Text: "Full", Value: "full"},
-					{Text: "Full or Scroll", Value: "full_or_scroll"},
-					{Text: "Scroll", Value: "scroll"},
+					{Text: lang.L("osc_send.option.Chunks"), Value: "chunks"},
+					{Text: lang.L("osc_send.option.Full"), Value: "full"},
+					{Text: lang.L("osc_send.option.Full or Scroll"), Value: "full_or_scroll"},
+					{Text: lang.L("osc_send.option.Scroll"), Value: "scroll"},
 				}, func(s CustomWidget.TextValueOption) {}, 0)
 				return settingWidget
 			},
@@ -112,10 +113,10 @@ var OSCSettingsMapping = SettingsMapping{
 			SettingsDescription:  "Type of OSC message to send.\nOnly Translation, Both or Source.",
 			_widget: func() fyne.CanvasObject {
 				settingWidget := CustomWidget.NewTextValueSelect("osc_type_transfer", []CustomWidget.TextValueOption{
-					{Text: "Send Translation", Value: "translation_result"},
-					{Text: "Send Source Text", Value: "source"},
-					{Text: "Send both 'Source and Translation'", Value: "both"},
-					{Text: "Send both (inverted) 'Translation and Source'", Value: "both_inverted"},
+					{Text: lang.L("osc_send.option.Send Translation"), Value: "translation_result"},
+					{Text: lang.L("osc_send.option.Send Source Text"), Value: "source"},
+					{Text: lang.L("osc_send.option.Send both Source and Translation"), Value: "both"},
+					{Text: lang.L("osc_send.option.Send both (inverted) Translation and Source"), Value: "both_inverted"},
 				}, func(s CustomWidget.TextValueOption) {}, 0)
 				return settingWidget
 			},

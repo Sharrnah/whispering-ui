@@ -21,6 +21,7 @@ const OscLimitLabelConst = "[%d / %d]"
 var OscLimitHintUpdateFunc = func() {}
 
 var fieldCreationFunctions = struct {
+	TranscriptionTaskCombo        func() *CustomWidget.TextValueSelect
 	TranscriptionInput            func() *CustomWidget.EntryWithPopupMenu
 	TranscriptionTranslationInput func() *CustomWidget.EntryWithPopupMenu
 	TextTranslateEnabled          func() *widget.Check
@@ -28,6 +29,31 @@ var fieldCreationFunctions = struct {
 	TtsEnabled                    func() *widget.Check
 	OscEnabled                    func() *widget.Check
 }{
+	TranscriptionTaskCombo: func() *CustomWidget.TextValueSelect {
+		return CustomWidget.NewTextValueSelect("whisper_task", []CustomWidget.TextValueOption{{
+			Text:  lang.L("transcribe"),
+			Value: "transcribe",
+		}, {
+			Text:  lang.L("translate (to English)"),
+			Value: "translate",
+		}}, func(valueOption CustomWidget.TextValueOption) {
+			value := valueOption.Value
+			switch valueOption.Value {
+			case "transcribe":
+				value = "transcribe"
+			case "translate":
+				value = "translate"
+			case "translate (to English)": // deprecated
+				value = "translate"
+			}
+			sendMessage := SendMessageStruct{
+				Type:  "setting_change",
+				Name:  "whisper_task",
+				Value: value,
+			}
+			sendMessage.SendMessage()
+		}, 0)
+	},
 	TranscriptionInput: func() *CustomWidget.EntryWithPopupMenu {
 		entry := CustomWidget.NewMultiLineEntry()
 		entry.Wrapping = fyne.TextWrapWord
@@ -192,32 +218,10 @@ var Field = struct {
 	StatusText                        *widget.Label
 	StatusRow                         *fyne.Container
 }{
-	RealtimeResultLabel: widget.NewLabelWithData(DataBindings.WhisperResultIntermediateResult),
-	ProcessingStatus:    nil,
-	WhisperResultList:   nil,
-	TranscriptionTaskCombo: CustomWidget.NewTextValueSelect("task", []CustomWidget.TextValueOption{{
-		Text:  lang.L("transcribe"),
-		Value: "transcribe",
-	}, {
-		Text:  lang.L("translate (to English)"),
-		Value: "translate",
-	}}, func(valueOption CustomWidget.TextValueOption) {
-		value := valueOption.Value
-		switch valueOption.Value {
-		case "transcribe":
-			value = "transcribe"
-		case "translate":
-			value = "translate"
-		case "translate (to English)": // deprecated
-			value = "translate"
-		}
-		sendMessage := SendMessageStruct{
-			Type:  "setting_change",
-			Name:  "whisper_task",
-			Value: value,
-		}
-		sendMessage.SendMessage()
-	}, 0),
+	RealtimeResultLabel:               widget.NewLabelWithData(DataBindings.WhisperResultIntermediateResult),
+	ProcessingStatus:                  nil,
+	WhisperResultList:                 nil,
+	TranscriptionTaskCombo:            nil,
 	TranscriptionSpeakerLanguageCombo: CustomWidget.NewCompletionEntry([]string{"Auto"}),
 	TranscriptionTargetLanguageCombo:  CustomWidget.NewCompletionEntry([]string{}),
 	TranscriptionInputHint:            canvas.NewText("0", color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}),
@@ -301,6 +305,7 @@ func updateCompletionEntryBasedOnValue(completionEntryWidget *CustomWidget.Compl
 }
 
 func createFields() {
+	Field.TranscriptionTaskCombo = fieldCreationFunctions.TranscriptionTaskCombo()
 	Field.TranscriptionInput = fieldCreationFunctions.TranscriptionInput()
 	Field.TranscriptionTranslationInput = fieldCreationFunctions.TranscriptionTranslationInput()
 	Field.TextTranslateEnabled = fieldCreationFunctions.TextTranslateEnabled()
