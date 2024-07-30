@@ -148,7 +148,7 @@
     "Settings have been saved to settingsFile This might require a restart of the application for some changes to take effect.": "Nastavení byla uložena do {{.SettingsFile}}\n To může vyžadovat restart aplikace, aby se některé změny projevily.",
     "realtime_whisper_beam_size.Description": "Počet paprsků pro hledání nejlepšího výsledku.\nMůže být 1-5. (nižší = rychlejší)",
     "osc_min_time_between_messages.Name": "OSC minimální doba mezi zprávami",
-    "osc_send_type.Description": "Jak se odesílají zprávy OSC.\nChunks = Odeslat text po částech, pokud je příliš dlouhý. Zprávy jsou odděleny pomocí '...'.\nFull = Odeslat celý text najednou.\nFull or Scroll = Odeslat celý text nebo jej posouvat, pokud je příliš dlouhý.\nScroll = Posouvat text.",
+    "osc_send_type.Description": "Jak se odesílají zprávy OSC.\nČásti = Odeslat text po částech, pokud je příliš dlouhý. Zprávy jsou odděleny pomocí '...'.\nCelé = Odeslat celý text najednou.\nCelé nebo Posun = Odeslat celý text nebo jej posouvat, pokud je příliš dlouhý.\nPosun = Posouvat text.",
     "osc_scroll_time_limit.Description": "Doba mezi posouváním zpráv OSC v sekundách.\n(Používá se pouze v případě, že je Typ odeslání OSC nastaven na \"Scroll“)",
     "AMD / Intel, Low Performance, Realtime optimized": "AMD / Intel, nízký výkon, optimalizováno v reálném čase",
     "osc_delay_until_audio_playback.Description": "Odloží zprávu OSC, dokud nezačne přehrávání zvuku.\n(Pro lepší synchronizaci zvuku s textem)\n(Pokud se nepřehraje žádný zvuk, zpráva bude odložena, dokud nenastane časový limit)",
@@ -297,5 +297,13 @@
     "txt_translate_realtime.Description": "Přeložit mezilehlý text v režimu převodu řeči na text v reálném čase.",
     "txt_romaji.Name": "Převést text na romaji",
     "AMD / Intel, High Performance, Realtime optimized": "AMD / Intel, vysoký výkon, optimalizováno v reálném čase",
-    "CPU, High Performance, Accuracy optimized": "CPU, vysoký výkon, optimalizovaná přesnost"
+    "CPU, High Performance, Accuracy optimized": "CPU, vysoký výkon, optimalizovaná přesnost",
+    "osc_send.option.Chunks": "Části",
+    "osc_send.option.Full": "Celé",
+    "osc_send.option.Full or Scroll": "Celé nebo Posun",
+    "osc_send.option.Scroll": "Posun",
+    "osc_send.option.Send Translation": "Odeslat překlad",
+    "osc_send.option.Send Source Text": "Odeslat zdrojový text",
+    "osc_send.option.Send both Source and Translation": "Odeslat „Zdroj i překlad“",
+    "osc_send.option.Send both (inverted) Translation and Source": "Odeslat oba (obrácené) „Překlad a zdroj“"
 }
