@@ -305,5 +305,6 @@
     "osc_send.option.Send Translation": "Sende Übersetzung",
     "osc_send.option.Send both Source and Translation": "Sende beides 'Ursprungstext und Übersetzung'",
     "osc_send.option.Send Source Text": "Sende Ursprungstext",
-    "osc_send.option.Send both (inverted) Translation and Source": "Sende beides (umgekehrt) 'Übersetzung und Ursprungstext'"
+    "osc_send.option.Send both (inverted) Translation and Source": "Sende beides (umgekehrt) 'Übersetzung und Ursprungstext'",
+    "Select Folder": "Verzeichnis auswählen"
 }
