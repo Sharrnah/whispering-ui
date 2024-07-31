@@ -102,6 +102,7 @@
     "Usage of Multi-Modal Model.": "Usage of Multi-Modal Model.",
     "Use Multi-Modal model for Text-Translation as well?": "Use Multi-Modal model for Text-Translation as well?",
     "Select File": "Select File",
+    "Select Folder": "Select Folder",
     "Send to OSC (VRChat)": "Send to OSC (VRChat)",
     "Send to Both (TTS + OSC)": "Send to Both (TTS + OSC)",
     "Speech-to-Text Enabled": "Speech-to-Text Enabled",

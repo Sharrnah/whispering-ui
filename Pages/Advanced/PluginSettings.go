@@ -720,7 +720,7 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 					fileDialog.Show()
 				}
 			} else if v["type"] == "folder_open" || v["type"] == "dir_open" {
-				selectButtonLabel = "Select Folder"
+				selectButtonLabel = lang.L("Select Folder")
 				fileDialog := dialog.NewFolderOpen(func(uri fyne.ListableURI, err error) {
 					if err == nil && uri != nil {
 						entry.SetText(uri.Path())
