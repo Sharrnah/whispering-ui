@@ -253,5 +253,11 @@
     "txt_romaji.Name": "Convertir texte en romaji",
     "txt_translate_realtime.Description": "Traduit le texte intermédiaire en temps réel pour la reconnaissance vocale.",
     "tts_use_secondary_playback.Description": "Écouter la reconnaissance vocale sur une sortie audio secondaire en même temps que la sortie audio définie\n(Par défaut, utilisez la sortie audio de windows)",
-    "tts_enabled.Name": "Synthèse vocale intégrée"
+    "tts_enabled.Name": "Synthèse vocale intégrée",
+    "beam_size.Name": "Rechercher par faisceaux",
+    "beam_size.Description": "Nombre de faisceaux à rechercher pour un meilleur résultat.\nPeut être de 1 à 5. (plus bas = plus rapide)",
+    "temperature_fallback.Name": "Température fallback",
+    "Select Folder": "Sélectionnez un répertoire",
+    "transcribe": "transcrire",
+    "translate (to English)": "Traduire (en Anglais)"
 }
