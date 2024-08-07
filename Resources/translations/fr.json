@@ -251,7 +251,7 @@
     "CPU, High Performance, Accuracy optimized": "Processeur, Haute Performance, Précision optimisée",
     "AMD / Intel, High Performance, Accuracy optimized": "AMD / Intel, Haute Performance, Précision optimisée",
     "txt_romaji.Name": "Convertir texte en romaji",
-    "txt_translate_realtime.Description": "Traduire le texte intermédiaire en mode Voix-vers-texte temps réel.",
+    "txt_translate_realtime.Description": "Traduit le texte intermédiaire en temps réel pour la reconnaissance vocale.",
     "tts_use_secondary_playback.Description": "Écouter la reconnaissance vocale sur une sortie audio secondaire en même temps que la sortie audio définie\n(Par défaut, utilisez la sortie audio de Windows)",
     "tts_enabled.Name": "Synthèse vocale intégrée",
     "beam_size.Name": "Rechercher par faisceaux",
