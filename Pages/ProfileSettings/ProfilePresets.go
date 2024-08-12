@@ -52,7 +52,7 @@ var DefaultProfileSetting = Settings.Conf{
 	Vad_enabled:              true,
 	Vad_on_full_clip:         false,
 	Vad_confidence_threshold: 0.4,
-	Vad_frames_per_buffer:    1536,
+	Vad_frames_per_buffer:    512,
 	Vad_thread_num:           1,
 	Push_to_talk_key:         "",
 
