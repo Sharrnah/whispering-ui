@@ -80,6 +80,7 @@ func main() {
 		_ = os.Setenv("FYNE_SCALE", val)
 	}
 
+	lang.SetLanguageOrder([]string{"en"})
 	langVal, langOk := os.LookupEnv("PREFERRED_LANGUAGE")
 	if langOk && langVal != "" {
 		lang.SetPreferredLocale(langVal)

@@ -823,6 +823,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Faster Whisper", Value: "faster_whisper"},
 			{Text: "Original Whisper", Value: "original_whisper"},
 			{Text: "Transformer Whisper", Value: "transformer_whisper"},
+			//{Text: "Medusa Whisper", Value: "medusa_whisper"},
 			//{Text: "TensorRT Whisper", Value: "tensorrt_whisper"},
 			//{Text: "Whisper CPP", Value: "whisper_cpp"},
 			{Text: "Seamless M4T", Value: "seamless_m4t"},
@@ -939,6 +940,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Large V1", Value: "large-v1"},
 			{Text: "Large V2", Value: "large-v2"},
 			{Text: "Large V3", Value: "large-v3"},
+		}
+
+		medusaWhisperModelList := []CustomWidget.TextValueOption{
+			{Text: "V1", Value: "v1"},
 		}
 
 		fasterWhisperModelList := []CustomWidget.TextValueOption{
@@ -1110,6 +1115,21 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				//		sttPrecisionSelect.SetSelected("float16")
 				//	}
 				//	AIModelType = "O"
+			} else if s.Value == "medusa_whisper" {
+				sttModelSize.Options = medusaWhisperModelList
+				// unselect if not in list
+				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption, CustomWidget.CompareValue) {
+					sttModelSize.SetSelectedIndex(0)
+				}
+
+				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
+					{Text: "float32 " + lang.L("precision"), Value: "float32"},
+					{Text: "float16 " + lang.L("precision"), Value: "float16"},
+				}
+				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "bfloat16" || selectedPrecision == "int8_bfloat16" {
+					sttPrecisionSelect.SetSelected("float16")
+				}
+				AIModelType = "O"
 			} else if s.Value == "seamless_m4t" {
 				sttModelSize.Options = originalSeamlessM4TModelList
 				// unselect if not in list
