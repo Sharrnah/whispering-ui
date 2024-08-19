@@ -96,13 +96,24 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 	byteReader, testAudioReader := c.InitTestAudio()
 
 	if c.device != nil && c.device.IsStarted() {
-		c.device.Uninit()
+		if c.device != nil {
+			c.device.Uninit()
+		}
+	}
+
+	// wait in a loop until c.Context is not nil before trying to initialize
+	for {
+		if c.Context != nil {
+			break
+		}
+		time.Sleep(1 * time.Second)
 	}
 
 	if c.Context == nil {
 		time.Sleep(1 * time.Second)
 		if c.Context == nil {
 			c.Init()
+			time.Sleep(1 * time.Second)
 		}
 	}
 
@@ -183,13 +194,15 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 
 		// play test audio
 		if c.playTestAudio {
-			// read audio bytes while reading bytes
-			readBytes, _ := io.ReadFull(testAudioReader, pOutputSample)
-			if readBytes <= 0 {
-				c.playTestAudio = false
-				byteReader.Seek(0, io.SeekStart)
-				testAudioReader = wav.NewReader(byteReader)
-			}
+			go func() {
+				// read audio bytes while reading bytes
+				readBytes, _ := io.ReadFull(testAudioReader, pOutputSample)
+				if readBytes <= 0 {
+					c.playTestAudio = false
+					byteReader.Seek(0, io.SeekStart)
+					testAudioReader = wav.NewReader(byteReader)
+				}
+			}()
 		} else {
 			byteReader.Seek(0, io.SeekStart)
 			testAudioReader = wav.NewReader(byteReader)
@@ -261,6 +274,26 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 	return nil
 }
 
+func (c *CurrentPlaybackDevice) UnInitDevices() {
+	if c.device != nil {
+		c.device.Uninit()
+		c.device = nil
+	}
+}
+
+func (c *CurrentPlaybackDevice) WaitUntilInitialized(timeout time.Duration) {
+	startTimestamp := time.Now()
+	// wait in a loop until c.Context is not nil before trying to initialize. with a max timeout of 5 seconds
+	for c.Context == nil && time.Since(startTimestamp) < timeout*time.Second {
+		time.Sleep(100 * time.Millisecond)
+	}
+
+	if c.Context == nil {
+		fmt.Println("Initialization timeout. Exiting...")
+		os.Exit(1)
+	}
+}
+
 func (c *CurrentPlaybackDevice) Init() {
 	defer Utilities.PanicLogger()
 
@@ -292,6 +325,7 @@ func (c *CurrentPlaybackDevice) Init() {
 		if c.Context != nil {
 			_ = c.Context.Uninit()
 			c.Context.Free()
+			c.Context = nil
 		}
 	}()
 
@@ -303,6 +337,7 @@ func (c *CurrentPlaybackDevice) Init() {
 			fmt.Println("stopping...")
 			if c.device != nil {
 				c.device.Uninit()
+				c.device = nil
 			}
 			return
 		}
@@ -543,6 +578,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				value = malgo.BackendWasapi
 			}
 			if playBackDevice.AudioAPI != value && playBackDevice.AudioAPI != malgo.BackendNull {
+				oldAudioInputSelection := audioInputSelect.GetSelected()
+				oldAudioOutputSelection := audioOutputSelect.GetSelected()
+
 				playBackDevice.Stop()
 				time.Sleep(1 * time.Second)
 				playBackDevice.AudioAPI = value
@@ -552,12 +590,20 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 				go playBackDevice.Init()
 
+				playBackDevice.WaitUntilInitialized(5)
+
 				audioInputSelect.Options = audioInputDevicesOptions
+				if audioInputSelect.ContainsEntry(oldAudioInputSelection, CustomWidget.CompareText) {
+					audioInputSelect.SetSelectedByText(oldAudioInputSelection.Text)
+				} else {
+					audioInputSelect.SetSelectedIndex(0)
+				}
 				audioOutputSelect.Options = audioOutputDevicesOptions
-				audioInputSelect.SetSelectedIndex(0)
-				audioOutputSelect.SetSelectedIndex(0)
-				audioInputSelect.Refresh()
-				audioOutputSelect.Refresh()
+				if audioOutputSelect.ContainsEntry(oldAudioOutputSelection, CustomWidget.CompareText) {
+					audioOutputSelect.SetSelectedByText(oldAudioOutputSelection.Text)
+				} else {
+					audioOutputSelect.SetSelectedIndex(0)
+				}
 			}
 		},
 		2)
@@ -595,19 +641,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		audioInputProgress := playBackDevice.InputWaveWidget
 		audioOutputProgress := container.NewBorder(nil, nil, nil, widget.NewButtonWithIcon(lang.L("Test"), theme.MediaPlayIcon(), func() {
-			err := playBackDevice.InitDevices(true)
-			if err != nil {
-				var newError = fmt.Errorf("audio test error: %v", err)
-				dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
-			}
 			playBackDevice.PlayStopTestAudio()
-			go func() {
-				// wait as long as playBackDevice.TestAudio is running
-				for playBackDevice.IsPlayingTestAudio() {
-					time.Sleep(100 * time.Millisecond)
-				}
-				_ = playBackDevice.InitDevices(false)
-			}()
 		}), playBackDevice.OutputWaveWidget)
 
 		runBackendCheckbox := widget.NewCheck(lang.L("Run Backend"), func(b bool) {
