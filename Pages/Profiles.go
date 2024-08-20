@@ -441,7 +441,7 @@ type ProfileAIModelOption struct {
 
 var AllProfileAIModelOptions = make([]ProfileAIModelOption, 0)
 
-func (p ProfileAIModelOption) CalculateMemoryConsumption(CPUbar *widget.ProgressBar, GPUBar *widget.ProgressBar) {
+func (p ProfileAIModelOption) CalculateMemoryConsumption(CPUbar *widget.ProgressBar, GPUBar *widget.ProgressBar, totalGPUMemory int64) {
 	addToList := true
 	lastIndex := -1
 	for index, profileAIModelOption := range AllProfileAIModelOptions {
@@ -495,6 +495,9 @@ func (p ProfileAIModelOption) CalculateMemoryConsumption(CPUbar *widget.Progress
 		if strings.HasPrefix(strings.ToLower(profileAIModelOption.Device), "cuda") || strings.HasPrefix(strings.ToLower(profileAIModelOption.Device), "direct-ml") {
 			println("CUDA MEMORY:")
 			println(int(profileAIModelOption.MemoryConsumption))
+			if totalGPUMemory == 0 {
+				GPUBar.Max = GPUBar.Value + profileAIModelOption.MemoryConsumption
+			}
 			GPUBar.Value = GPUBar.Value + profileAIModelOption.MemoryConsumption
 		} else if strings.HasPrefix(strings.ToLower(profileAIModelOption.Device), "cpu") {
 			println("CPU MEMORY:")
@@ -624,8 +627,15 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		GPUMemoryBar.Max = float64(totalGPUMemory)
 
 		ComputeCapability = Hardwareinfo.GetGPUComputeCapability()
+	} else {
+		_, totalGPUMemory = Hardwareinfo.GetWinGPUMemory("")
+		GPUMemoryBar.Max = float64(totalGPUMemory)
 	}
+
 	GPUMemoryBar.TextFormatter = func() string {
+		if totalGPUMemory == 0 {
+			return lang.L("Estimated Video-RAM Usage:") + " " + strconv.Itoa(int(GPUMemoryBar.Value)) + " MiB"
+		}
 		return lang.L("Estimated Video-RAM Usage:") + " " + strconv.Itoa(int(GPUMemoryBar.Value)) + " / " + strconv.Itoa(int(GPUMemoryBar.Max)) + " MiB"
 	}
 	GPUInformationLabel := widget.NewLabel("Compute Capability: " + fmt.Sprintf("%.1f", ComputeCapability))
@@ -883,7 +893,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				AIModel: "Whisper",
 				Device:  s.Value,
 			}
-			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 
 			/**
 			special case for Seamless M4T since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
@@ -943,7 +953,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				AIModel:   "Whisper",
 				Precision: precisionType,
 			}
-			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 
 			/**
 			special case for Seamless M4T since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
@@ -1039,7 +1049,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				AIModel:     "Whisper",
 				AIModelSize: sizeName,
 			}
-			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 
 			/**
 			special case for Seamless M4T since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
@@ -1260,7 +1270,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				AIModel:     "Whisper",
 				AIModelType: AIModelType,
 			}
-			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 
 		}
 
@@ -1293,7 +1303,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				AIModel: "TxtTranslator",
 				Device:  s.Value,
 			}
-			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 		}
 
 		txtTranslatorPrecisionSelect.OnChanged = func(s CustomWidget.TextValueOption) {
@@ -1337,7 +1347,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				AIModel:   "TxtTranslator",
 				Precision: precisionType,
 			}
-			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 		}
 
 		profileForm.Append(lang.L("A.I. Device for Text-Translation"), txtTranslatorDeviceSelect)
@@ -1348,7 +1358,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				AIModel:     "TxtTranslator",
 				AIModelSize: s.Value,
 			}
-			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 		}
 
 		txtTranslatorTypeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
@@ -1461,7 +1471,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				AIModelType: modelType,
 			}
 
-			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 		}
 
 		profileForm.Append(lang.L("Text-Translation A.I. Size"), container.NewGridWithColumns(2, txtTranslatorSizeSelect, txtTranslatorPrecisionSelect))
@@ -1479,7 +1489,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				AIModelType: enabledType,
 				Precision:   Hardwareinfo.Float32,
 			}
-			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 		}))
 
 		profileForm.Append(lang.L("A.I. Device for Text-to-Speech"), CustomWidget.NewTextValueSelect("tts_ai_device", []CustomWidget.TextValueOption{
@@ -1497,7 +1507,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				Device:    s.Value,
 				Precision: Hardwareinfo.Float32,
 			}
-			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar)
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 		}, 0))
 
 		pushToTalkChanged := false
