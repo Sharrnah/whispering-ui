@@ -3,6 +3,7 @@ package Pages
 import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -120,11 +121,11 @@ func CreateOcrWindow() fyne.CanvasObject {
 	}
 
 	container.New(layout.NewStackLayout())
-	ocrLanguageWindowForm := container.New(layout.NewFormLayout(), widget.NewLabel("Text in Image Language:"), Fields.Field.OcrLanguageCombo, widget.NewLabel("Window:"), Fields.Field.OcrWindowCombo)
+	ocrLanguageWindowForm := container.New(layout.NewFormLayout(), widget.NewLabel(lang.L("Text in Image Language")+":"), Fields.Field.OcrLanguageCombo, widget.NewLabel(lang.L("Window")+":"), Fields.Field.OcrWindowCombo)
 
 	ocrSettingsRow := container.New(layout.NewGridLayout(1), ocrLanguageWindowForm)
 
-	ocrButton := widget.NewButtonWithIcon("Window Scan & Translate", theme.ConfirmIcon(), func() {
+	ocrButton := widget.NewButtonWithIcon(lang.L("Window Scan & Translate"), theme.ConfirmIcon(), func() {
 
 		ocrLanguageCode := Messages.OcrLanguagesList.GetCodeByName(Fields.Field.OcrLanguageCombo.Text)
 
@@ -148,7 +149,7 @@ func CreateOcrWindow() fyne.CanvasObject {
 	})
 	ocrButton.Importance = widget.HighImportance
 
-	ocrClipboardButtonRow := widget.NewButtonWithIcon("Clipboard Scan & Translate", theme.ContentPasteIcon(), func() {
+	ocrClipboardButtonRow := widget.NewButtonWithIcon(lang.L("Clipboard Scan & Translate"), theme.ContentPasteIcon(), func() {
 		clipboardData, clipboardFormat := GetClipboardImage()
 		if clipboardData == nil {
 			return
@@ -190,7 +191,7 @@ func CreateOcrWindow() fyne.CanvasObject {
 		ocrButton,
 	)
 
-	switchButton := widget.NewButtonWithIcon("Swap languages", theme.NewThemedResource(Resources.ResourceSwapHorizontalSvg), func() {
+	switchButton := widget.NewButtonWithIcon(lang.L("Swap languages"), theme.NewThemedResource(Resources.ResourceSwapHorizontalSvg), func() {
 		sourceLanguage := Fields.Field.SourceLanguageTxtTranslateCombo.Text
 		// use last detected language when switching between source and target language
 		if strings.HasPrefix(strings.ToLower(sourceLanguage), "auto") && Settings.Config.Last_auto_txt_translate_lang != "" {
@@ -217,19 +218,19 @@ func CreateOcrWindow() fyne.CanvasObject {
 	switchButton.IconPlacement = widget.ButtonIconLeadingText
 	switchButtonAligner := container.NewCenter(switchButton)
 
-	sourceLanguageForm := container.New(layout.NewFormLayout(), widget.NewLabel("Source Language:"), Fields.Field.SourceLanguageTxtTranslateCombo)
-	targetLanguageForm := container.New(layout.NewFormLayout(), widget.NewLabel("Target Language:"), Fields.Field.TargetLanguageTxtTranslateCombo)
+	sourceLanguageForm := container.New(layout.NewFormLayout(), widget.NewLabel(lang.L("Source Language")+":"), Fields.Field.SourceLanguageTxtTranslateCombo)
+	targetLanguageForm := container.New(layout.NewFormLayout(), widget.NewLabel(lang.L("Target Language")+":"), Fields.Field.TargetLanguageTxtTranslateCombo)
 	languageRow := container.New(layout.NewGridLayout(2), sourceLanguageForm, targetLanguageForm)
 
 	transcriptionRow := container.New(layout.NewGridLayout(2), Fields.Field.TranscriptionInput, Fields.Field.TranscriptionTranslationInput)
 
-	translateOnlyButton := widget.NewButtonWithIcon("Translate Only", theme.MenuExpandIcon(), translateOnlyFunction)
+	translateOnlyButton := widget.NewButtonWithIcon(lang.L("Translate Only"), theme.MenuExpandIcon(), translateOnlyFunction)
 
 	ocrContent := container.New(layout.NewVBoxLayout(),
 		ocrSettingsRow,
 		container.New(layout.NewPaddedLayout(), buttonRow),
 		widget.NewSeparator(),
-		widget.NewLabel("Text-Translation of OCR Result:"),
+		widget.NewLabel(lang.L("Text-Translation of OCR Result")+":"),
 		languageRow,
 		switchButtonAligner,
 	)

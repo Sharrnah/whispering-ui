@@ -60,6 +60,7 @@ var Models = []AIModel{
 	// Seamless M4T models
 	{"TxtTranslatorSeamless_M4T_medium", 6250.0},
 	{"TxtTranslatorSeamless_M4T_large", 10518.0},
+	{"TxtTranslatorSeamless_M4T_large-v2", 10518.0},
 	// Silero TTS
 	{"SileroO_", 1533.0},
 }

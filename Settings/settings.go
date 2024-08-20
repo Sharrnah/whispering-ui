@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -554,7 +555,7 @@ func BuildSettingsForm(includeConfigFields []string, settingsFile string) fyne.C
 				MergedConfig.WriteYamlSettings(settingsFile)
 			}
 
-			dialog.ShowInformation("Settings Saved", "Settings have been saved to "+settingsFile+"\n This might require a restart of the application for some changes to take effect.", fyne.CurrentApp().Driver().AllWindows()[0])
+			dialog.ShowInformation(lang.L("Settings Saved"), lang.L("Settings have been saved to settingsFile This might require a restart of the application for some changes to take effect.", map[string]interface{}{"SettingsFile": settingsFile}), fyne.CurrentApp().Driver().AllWindows()[0])
 		}
 	}
 

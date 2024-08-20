@@ -6,6 +6,7 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -103,18 +104,18 @@ func (s *SettingMapping) processWidget(settingsValue interface{}, settingWidget 
 		settingWidget.(*widget.Check).OnChanged = func(b bool) {
 			onChange(b)
 			if b {
-				settingWidget.(*widget.Check).SetText("Enabled")
+				settingWidget.(*widget.Check).SetText(lang.L("Enabled"))
 			} else {
-				settingWidget.(*widget.Check).SetText("Disabled")
+				settingWidget.(*widget.Check).SetText(lang.L("Disabled"))
 			}
 			if !s.DoNotSendToBackend {
 				s.SendUpdatedValue(b)
 			}
 		}
 		if value {
-			settingWidget.(*widget.Check).SetText("Enabled")
+			settingWidget.(*widget.Check).SetText(lang.L("Enabled"))
 		} else {
-			settingWidget.(*widget.Check).SetText("Disabled")
+			settingWidget.(*widget.Check).SetText(lang.L("Disabled"))
 		}
 	case *widget.Slider:
 		var originalType interface{}
@@ -205,11 +206,35 @@ func (s *SettingMapping) processWidget(settingsValue interface{}, settingWidget 
 			s.processWidget(settingsValue, settingChild, false)
 		}
 	}
-	if _topMost && s.SettingsDescription != "" {
+
+	// find translations for settings name and description
+	settingsName := s.SettingsName
+	SettingsDescription := s.SettingsDescription
+	if s.SettingsInternalName != "" {
+		settingsTranslateName := lang.L(s.SettingsInternalName + ".Name")
+		if settingsTranslateName != "" && settingsTranslateName != s.SettingsInternalName+".Name" {
+			settingsName = settingsTranslateName
+		}
+		settingsTranslateDescription := lang.L(s.SettingsInternalName + ".Description")
+		if settingsTranslateDescription != "" && settingsTranslateDescription != s.SettingsInternalName+".Description" {
+			SettingsDescription = settingsTranslateDescription
+		}
+	} else {
+		settingsTranslateName := lang.L(settingsName)
+		if settingsTranslateName != "" && settingsTranslateName != settingsName {
+			settingsName = settingsTranslateName
+		}
+		settingsTranslateDescription := lang.L(SettingsDescription)
+		if settingsTranslateDescription != "" && settingsTranslateDescription != SettingsDescription {
+			SettingsDescription = settingsTranslateDescription
+		}
+	}
+
+	if _topMost && SettingsDescription != "" {
 		originalWidget := settingWidget.(fyne.CanvasObject)
 		infoButton := widget.NewButtonWithIcon("", theme.InfoIcon(), func() {
 			if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
-				dialog.ShowInformation(s.SettingsName, s.SettingsDescription, fyne.CurrentApp().Driver().AllWindows()[0])
+				dialog.ShowInformation(settingsName, SettingsDescription, fyne.CurrentApp().Driver().AllWindows()[0])
 			}
 		})
 		s.Widget = container.NewBorder(nil, nil, infoButton, nil, originalWidget)
@@ -255,7 +280,20 @@ func CreateSettingsFormByMapping(mappings SettingsMapping) *container.Scroll {
 
 		// add widget to form
 		if singleMapping.Widget != nil {
-			settingsForm.Append(singleMapping.SettingsName, singleMapping.Widget)
+			// find translations for settings name
+			settingsName := singleMapping.SettingsName
+			if singleMapping.SettingsInternalName != "" {
+				settingsTranslateName := lang.L(singleMapping.SettingsInternalName + ".Name")
+				if settingsTranslateName != "" && settingsTranslateName != singleMapping.SettingsInternalName+".Name" {
+					settingsName = settingsTranslateName
+				}
+			} else {
+				settingsTranslateName := lang.L(settingsName)
+				if settingsTranslateName != "" && settingsTranslateName != settingsName {
+					settingsName = settingsTranslateName
+				}
+			}
+			settingsForm.Append(settingsName, singleMapping.Widget)
 		}
 	}
 

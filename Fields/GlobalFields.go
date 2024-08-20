@@ -5,6 +5,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/fyne-io/terminal"
@@ -15,16 +16,183 @@ import (
 	"whispering-tiger-ui/Utilities"
 )
 
-const SttTextTranslateLabelConst = "Automatic Text-Translate from %s to %s"
 const OscLimitLabelConst = "[%d / %d]"
 
 var OscLimitHintUpdateFunc = func() {}
+
+var fieldCreationFunctions = struct {
+	TranscriptionTaskCombo        func() *CustomWidget.TextValueSelect
+	TranscriptionInput            func() *CustomWidget.EntryWithPopupMenu
+	TranscriptionTranslationInput func() *CustomWidget.EntryWithPopupMenu
+	TextTranslateEnabled          func() *widget.Check
+	SttEnabled                    func() *widget.Check
+	TtsEnabled                    func() *widget.Check
+	OscEnabled                    func() *widget.Check
+}{
+	TranscriptionTaskCombo: func() *CustomWidget.TextValueSelect {
+		return CustomWidget.NewTextValueSelect("whisper_task", []CustomWidget.TextValueOption{{
+			Text:  lang.L("transcribe"),
+			Value: "transcribe",
+		}, {
+			Text:  lang.L("translate (to English)"),
+			Value: "translate",
+		}}, func(valueOption CustomWidget.TextValueOption) {
+			value := valueOption.Value
+			switch valueOption.Value {
+			case "transcribe":
+				value = "transcribe"
+			case "translate":
+				value = "translate"
+			case "translate (to English)": // deprecated
+				value = "translate"
+			}
+			sendMessage := SendMessageStruct{
+				Type:  "setting_change",
+				Name:  "whisper_task",
+				Value: value,
+			}
+			sendMessage.SendMessage()
+		}, 0)
+	},
+	TranscriptionInput: func() *CustomWidget.EntryWithPopupMenu {
+		entry := CustomWidget.NewMultiLineEntry()
+		entry.Wrapping = fyne.TextWrapWord
+
+		entry.AddAdditionalMenuItem(fyne.NewMenuItem(lang.L("Send to Text-to-Speech"), func() {
+			valueData := struct {
+				Text     string `json:"text"`
+				ToDevice bool   `json:"to_device"`
+				Download bool   `json:"download"`
+			}{
+				Text:     entry.Text,
+				ToDevice: true,
+				Download: false,
+			}
+			sendMessage := SendMessageStruct{
+				Type:  "tts_req",
+				Value: valueData,
+			}
+			sendMessage.SendMessage()
+		}))
+		entry.AddAdditionalMenuItem(fyne.NewMenuItem(lang.L("Send to OSC (VRChat)"), func() {
+			sendMessage := SendMessageStruct{
+				Type: "send_osc",
+				//Value: &entry.Text,
+				Value: struct {
+					Text *string `json:"text"`
+				}{
+					Text: &entry.Text,
+				},
+			}
+			sendMessage.SendMessage()
+		}))
+		entry.AddAdditionalMenuItem(fyne.NewMenuItem(lang.L("Send to Both (TTS + OSC)"), func() {
+			valueData := struct {
+				Text     string `json:"text"`
+				ToDevice bool   `json:"to_device"`
+				Download bool   `json:"download"`
+			}{
+				Text:     entry.Text,
+				ToDevice: true,
+				Download: false,
+			}
+			sendMessageTts := SendMessageStruct{
+				Type:  "tts_req",
+				Value: valueData,
+			}
+			sendMessageTts.SendMessage()
+			sendMessageOsc := SendMessageStruct{
+				Type: "send_osc",
+				Value: struct {
+					Text *string `json:"text"`
+				}{
+					Text: &entry.Text,
+				},
+			}
+			sendMessageOsc.SendMessage()
+		}))
+		return entry
+	},
+	TranscriptionTranslationInput: func() *CustomWidget.EntryWithPopupMenu {
+		entry := CustomWidget.NewMultiLineEntry()
+		entry.Wrapping = fyne.TextWrapWord
+
+		entry.AddAdditionalMenuItem(fyne.NewMenuItem(lang.L("Send to Text-to-Speech"), func() {
+			valueData := struct {
+				Text     string `json:"text"`
+				ToDevice bool   `json:"to_device"`
+				Download bool   `json:"download"`
+			}{
+				Text:     entry.Text,
+				ToDevice: true,
+				Download: false,
+			}
+			sendMessage := SendMessageStruct{
+				Type:  "tts_req",
+				Value: valueData,
+			}
+			sendMessage.SendMessage()
+		}))
+		entry.AddAdditionalMenuItem(fyne.NewMenuItem(lang.L("Send to OSC (VRChat)"), func() {
+
+			sendMessage := SendMessageStruct{
+				Type: "send_osc",
+				//Value: &entry.Text,
+				Value: struct {
+					Text *string `json:"text"`
+				}{
+					Text: &entry.Text,
+				},
+			}
+			sendMessage.SendMessage()
+		}))
+		entry.AddAdditionalMenuItem(fyne.NewMenuItem(lang.L("Send to Both (TTS + OSC)"), func() {
+			valueData := struct {
+				Text     string `json:"text"`
+				ToDevice bool   `json:"to_device"`
+				Download bool   `json:"download"`
+			}{
+				Text:     entry.Text,
+				ToDevice: true,
+				Download: false,
+			}
+			sendMessageTts := SendMessageStruct{
+				Type:  "tts_req",
+				Value: valueData,
+			}
+			sendMessageTts.SendMessage()
+			sendMessageOsc := SendMessageStruct{
+				Type: "send_osc",
+				Value: struct {
+					Text *string `json:"text"`
+				}{
+					Text: &entry.Text,
+				},
+			}
+			sendMessageOsc.SendMessage()
+		}))
+		return entry
+	},
+
+	TextTranslateEnabled: func() *widget.Check {
+		return widget.NewCheckWithData(lang.L("SttTextTranslateLabel", map[string]interface{}{"FromLang": "?", "ToLang": "?"}), DataBindings.TextTranslateEnabledDataBinding)
+	},
+	SttEnabled: func() *widget.Check {
+		return widget.NewCheckWithData(lang.L("Speech-to-Text Enabled"), DataBindings.SpeechToTextEnabledDataBinding)
+	},
+	TtsEnabled: func() *widget.Check {
+		return widget.NewCheckWithData(lang.L("Automatic Text-to-Speech"), DataBindings.TextToSpeechEnabledDataBinding)
+	},
+	OscEnabled: func() *widget.Check {
+		return widget.NewCheckWithData(lang.L("Automatic OSC (VRChat)"), DataBindings.OSCEnabledDataBinding)
+	},
+}
 
 var Field = struct {
 	RealtimeResultLabel               *widget.Label // only displayed if realtime is enabled
 	ProcessingStatus                  *widget.ProgressBarInfinite
 	WhisperResultList                 *widget.List
-	TranscriptionTaskCombo            *widget.Select
+	TranscriptionTaskCombo            *CustomWidget.TextValueSelect
 	TranscriptionSpeakerLanguageCombo *CustomWidget.CompletionEntry
 	TranscriptionTargetLanguageCombo  *CustomWidget.CompletionEntry
 	TranscriptionInput                *CustomWidget.EntryWithPopupMenu
@@ -50,145 +218,14 @@ var Field = struct {
 	StatusText                        *widget.Label
 	StatusRow                         *fyne.Container
 }{
-	RealtimeResultLabel: widget.NewLabelWithData(DataBindings.WhisperResultIntermediateResult),
-	ProcessingStatus:    nil,
-	WhisperResultList:   nil,
-	TranscriptionTaskCombo: widget.NewSelect([]string{"transcribe", "translate (to English)"}, func(value string) {
-		switch value {
-		case "transcribe":
-			value = "transcribe"
-		case "translate (to English)":
-			value = "translate"
-		}
-		sendMessage := SendMessageStruct{
-			Type:  "setting_change",
-			Name:  "whisper_task",
-			Value: value,
-		}
-		sendMessage.SendMessage()
-	}),
+	RealtimeResultLabel:               widget.NewLabelWithData(DataBindings.WhisperResultIntermediateResult),
+	ProcessingStatus:                  nil,
+	WhisperResultList:                 nil,
+	TranscriptionTaskCombo:            nil,
 	TranscriptionSpeakerLanguageCombo: CustomWidget.NewCompletionEntry([]string{"Auto"}),
 	TranscriptionTargetLanguageCombo:  CustomWidget.NewCompletionEntry([]string{}),
-	TranscriptionInput: func() *CustomWidget.EntryWithPopupMenu {
-		entry := CustomWidget.NewMultiLineEntry()
-		entry.Wrapping = fyne.TextWrapWord
-
-		entry.AddAdditionalMenuItem(fyne.NewMenuItem("Send to Text-to-Speech", func() {
-			valueData := struct {
-				Text     string `json:"text"`
-				ToDevice bool   `json:"to_device"`
-				Download bool   `json:"download"`
-			}{
-				Text:     entry.Text,
-				ToDevice: true,
-				Download: false,
-			}
-			sendMessage := SendMessageStruct{
-				Type:  "tts_req",
-				Value: valueData,
-			}
-			sendMessage.SendMessage()
-		}))
-		entry.AddAdditionalMenuItem(fyne.NewMenuItem("Send to OSC (VRChat)", func() {
-			sendMessage := SendMessageStruct{
-				Type: "send_osc",
-				//Value: &entry.Text,
-				Value: struct {
-					Text *string `json:"text"`
-				}{
-					Text: &entry.Text,
-				},
-			}
-			sendMessage.SendMessage()
-		}))
-		entry.AddAdditionalMenuItem(fyne.NewMenuItem("Send to Both (TTS + OSC)", func() {
-			valueData := struct {
-				Text     string `json:"text"`
-				ToDevice bool   `json:"to_device"`
-				Download bool   `json:"download"`
-			}{
-				Text:     entry.Text,
-				ToDevice: true,
-				Download: false,
-			}
-			sendMessageTts := SendMessageStruct{
-				Type:  "tts_req",
-				Value: valueData,
-			}
-			sendMessageTts.SendMessage()
-			sendMessageOsc := SendMessageStruct{
-				Type: "send_osc",
-				Value: struct {
-					Text *string `json:"text"`
-				}{
-					Text: &entry.Text,
-				},
-			}
-			sendMessageOsc.SendMessage()
-		}))
-		return entry
-	}(),
-	TranscriptionInputHint: canvas.NewText("0", color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}),
-	TranscriptionTranslationInput: func() *CustomWidget.EntryWithPopupMenu {
-		entry := CustomWidget.NewMultiLineEntry()
-		entry.Wrapping = fyne.TextWrapWord
-
-		entry.AddAdditionalMenuItem(fyne.NewMenuItem("Send to Text-to-Speech", func() {
-			valueData := struct {
-				Text     string `json:"text"`
-				ToDevice bool   `json:"to_device"`
-				Download bool   `json:"download"`
-			}{
-				Text:     entry.Text,
-				ToDevice: true,
-				Download: false,
-			}
-			sendMessage := SendMessageStruct{
-				Type:  "tts_req",
-				Value: valueData,
-			}
-			sendMessage.SendMessage()
-		}))
-		entry.AddAdditionalMenuItem(fyne.NewMenuItem("Send to OSC (VRChat)", func() {
-
-			sendMessage := SendMessageStruct{
-				Type: "send_osc",
-				//Value: &entry.Text,
-				Value: struct {
-					Text *string `json:"text"`
-				}{
-					Text: &entry.Text,
-				},
-			}
-			sendMessage.SendMessage()
-		}))
-		entry.AddAdditionalMenuItem(fyne.NewMenuItem("Send to Both (TTS + OSC)", func() {
-			valueData := struct {
-				Text     string `json:"text"`
-				ToDevice bool   `json:"to_device"`
-				Download bool   `json:"download"`
-			}{
-				Text:     entry.Text,
-				ToDevice: true,
-				Download: false,
-			}
-			sendMessageTts := SendMessageStruct{
-				Type:  "tts_req",
-				Value: valueData,
-			}
-			sendMessageTts.SendMessage()
-			sendMessageOsc := SendMessageStruct{
-				Type: "send_osc",
-				Value: struct {
-					Text *string `json:"text"`
-				}{
-					Text: &entry.Text,
-				},
-			}
-			sendMessageOsc.SendMessage()
-		}))
-		return entry
-	}(),
+	TranscriptionInputHint:            canvas.NewText("0", color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}),
+	//TranscriptionTranslationInput:     *CustomWidget.EntryWithPopupMenu{},
 	TranscriptionTranslationInputHint: canvas.NewText("0", color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}),
 	SourceLanguageCombo:               CustomWidget.NewCompletionEntry([]string{"Auto"}),
 	TargetLanguageCombo:               CustomWidget.NewCompletionEntry([]string{"None"}),
@@ -215,11 +252,11 @@ var Field = struct {
 
 		log.Println("Select set to", value)
 	}),
-	TextTranslateEnabled: widget.NewCheckWithData(fmt.Sprintf(SttTextTranslateLabelConst, "?", "?"), DataBindings.TextTranslateEnabledDataBinding),
-	SttEnabled:           widget.NewCheckWithData("Speech-to-Text Enabled", DataBindings.SpeechToTextEnabledDataBinding),
-	TtsEnabled:           widget.NewCheckWithData("Automatic Text-to-Speech", DataBindings.TextToSpeechEnabledDataBinding),
-	OscEnabled:           widget.NewCheckWithData("Automatic OSC (VRChat)", DataBindings.OSCEnabledDataBinding),
-	OscLimitHint:         canvas.NewText(fmt.Sprintf(OscLimitLabelConst, 0, 0), color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}),
+	//TextTranslateEnabled: widget.NewCheckWithData(lang.L("SttTextTranslateLabel", map[string]interface{}{"FromLang": "?", "ToLang": "?"}), DataBindings.TextTranslateEnabledDataBinding),
+	//SttEnabled:           widget.NewCheckWithData(lang.L("Speech-to-Text Enabled"), DataBindings.SpeechToTextEnabledDataBinding),
+	//TtsEnabled:           widget.NewCheckWithData(lang.L("Automatic Text-to-Speech"), DataBindings.TextToSpeechEnabledDataBinding),
+	//OscEnabled:           widget.NewCheckWithData(lang.L("Automatic OSC (VRChat)"), DataBindings.OSCEnabledDataBinding),
+	OscLimitHint: canvas.NewText(fmt.Sprintf(OscLimitLabelConst, 0, 0), color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}),
 
 	OcrLanguageCombo: CustomWidget.NewCompletionEntry([]string{}),
 	OcrWindowCombo: CustomWidget.NewSelect([]string{}, func(value string) {
@@ -267,8 +304,20 @@ func updateCompletionEntryBasedOnValue(completionEntryWidget *CustomWidget.Compl
 	return value
 }
 
-func init() {
+func createFields() {
+	Field.TranscriptionTaskCombo = fieldCreationFunctions.TranscriptionTaskCombo()
+	Field.TranscriptionInput = fieldCreationFunctions.TranscriptionInput()
+	Field.TranscriptionTranslationInput = fieldCreationFunctions.TranscriptionTranslationInput()
+	Field.TextTranslateEnabled = fieldCreationFunctions.TextTranslateEnabled()
+	Field.SttEnabled = fieldCreationFunctions.SttEnabled()
+	Field.TtsEnabled = fieldCreationFunctions.TtsEnabled()
+	Field.OscEnabled = fieldCreationFunctions.OscEnabled()
+}
+
+func InitializeGlobalFields() {
 	defer Utilities.PanicLogger()
+
+	createFields()
 
 	Field.RealtimeResultLabel.Wrapping = fyne.TextWrapWord
 	Field.RealtimeResultLabel.TextStyle = fyne.TextStyle{Italic: true}
@@ -277,8 +326,8 @@ func init() {
 		Text:  "Auto",
 		Value: "auto",
 	}}
-	Field.SourceLanguageCombo.ShowAllEntryText = "... show all"
-	Field.SourceLanguageCombo.Entry.PlaceHolder = "Select source language"
+	Field.SourceLanguageCombo.ShowAllEntryText = lang.L("... show all")
+	Field.SourceLanguageCombo.Entry.PlaceHolder = lang.L("Select source language")
 	Field.SourceLanguageCombo.OnChanged = func(value string) {
 		// filter out the values of Options that do not contain the value
 		var filteredValues []string
@@ -305,14 +354,14 @@ func init() {
 		}
 		sendMessage.SendMessage()
 
-		Field.TextTranslateEnabled.Text = fmt.Sprintf(SttTextTranslateLabelConst, valueObj.Value, Field.TargetLanguageCombo.Text)
+		Field.TextTranslateEnabled.Text = lang.L("SttTextTranslateLabel", map[string]interface{}{"FromLang": valueObj.Value, "ToLang": Field.TargetLanguageCombo.Text})
 		Field.TextTranslateEnabled.Refresh()
 
 		log.Println("Select set to", valueObj.Value)
 	}
 
-	Field.TargetLanguageCombo.ShowAllEntryText = "... show all"
-	Field.TargetLanguageCombo.Entry.PlaceHolder = "Select target language"
+	Field.TargetLanguageCombo.ShowAllEntryText = lang.L("... show all")
+	Field.TargetLanguageCombo.Entry.PlaceHolder = lang.L("Select target language")
 	Field.TargetLanguageCombo.OnChanged = func(value string) {
 		// filter out the values of Options that do not contain the value
 		var filteredValues []string
@@ -336,14 +385,14 @@ func init() {
 		}
 		sendMessage.SendMessage()
 
-		Field.TextTranslateEnabled.Text = fmt.Sprintf(SttTextTranslateLabelConst, Field.SourceLanguageCombo.GetValueOptionEntryByText(Field.SourceLanguageCombo.Text).Value, value)
+		Field.TextTranslateEnabled.Text = lang.L("SttTextTranslateLabel", map[string]interface{}{"FromLang": Field.SourceLanguageCombo.GetValueOptionEntryByText(Field.SourceLanguageCombo.Text).Value, "ToLang": value})
 		Field.TextTranslateEnabled.Refresh()
 
 		log.Println("Select set to", value)
 	}
 
-	Field.SourceLanguageTxtTranslateCombo.ShowAllEntryText = "... show all"
-	Field.SourceLanguageTxtTranslateCombo.Entry.PlaceHolder = "Select source language"
+	Field.SourceLanguageTxtTranslateCombo.ShowAllEntryText = lang.L("... show all")
+	Field.SourceLanguageTxtTranslateCombo.Entry.PlaceHolder = lang.L("Select source language")
 	Field.SourceLanguageTxtTranslateCombo.OnChanged = func(value string) {
 		// filter out the values of Options that do not contain the value
 		var filteredValues []string
@@ -370,8 +419,8 @@ func init() {
 		log.Println("Select set to", value)
 	}
 
-	Field.TargetLanguageTxtTranslateCombo.ShowAllEntryText = "... show all"
-	Field.TargetLanguageTxtTranslateCombo.Entry.PlaceHolder = "Select target language"
+	Field.TargetLanguageTxtTranslateCombo.ShowAllEntryText = lang.L("... show all")
+	Field.TargetLanguageTxtTranslateCombo.Entry.PlaceHolder = lang.L("Select target language")
 	Field.TargetLanguageTxtTranslateCombo.OnChanged = func(value string) {
 		// filter out the values of Options that do not contain the value
 		var filteredValues []string
@@ -397,8 +446,8 @@ func init() {
 		log.Println("Select set to", value)
 	}
 
-	Field.TranscriptionSpeakerLanguageCombo.ShowAllEntryText = "... show all"
-	Field.TranscriptionSpeakerLanguageCombo.Entry.PlaceHolder = "Select a language"
+	Field.TranscriptionSpeakerLanguageCombo.ShowAllEntryText = lang.L("... show all")
+	Field.TranscriptionSpeakerLanguageCombo.Entry.PlaceHolder = lang.L("Select a language")
 	Field.TranscriptionSpeakerLanguageCombo.OnChanged = func(value string) {
 		// filter out the values of Options that do not contain the value
 		var filteredValues []string
@@ -423,8 +472,8 @@ func init() {
 		sendMessage.SendMessage()
 	}
 
-	Field.TranscriptionTargetLanguageCombo.ShowAllEntryText = "... show all"
-	Field.TranscriptionTargetLanguageCombo.Entry.PlaceHolder = "Select a language"
+	Field.TranscriptionTargetLanguageCombo.ShowAllEntryText = lang.L("... show all")
+	Field.TranscriptionTargetLanguageCombo.Entry.PlaceHolder = lang.L("Select a language")
 	Field.TranscriptionTargetLanguageCombo.OnChanged = func(value string) {
 		// filter out the values of Options that do not contain the value
 		var filteredValues []string
@@ -488,8 +537,8 @@ func init() {
 		sendMessage.SendMessage()
 	}
 
-	Field.OcrLanguageCombo.ShowAllEntryText = "... show all"
-	Field.OcrLanguageCombo.Entry.PlaceHolder = "Select language in image language"
+	Field.OcrLanguageCombo.ShowAllEntryText = lang.L("... show all")
+	Field.OcrLanguageCombo.Entry.PlaceHolder = lang.L("Select language in image")
 	Field.OcrLanguageCombo.OnChanged = func(value string) {
 		// filter out the values of Field.TargetLanguageTxtTranslateCombo.Options that do not contain the value
 		var filteredValues []string

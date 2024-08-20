@@ -5,6 +5,7 @@ import (
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"io"
@@ -38,8 +39,9 @@ func buildAboutInfo() fyne.CanvasObject {
 	heartImage.FillMode = canvas.ImageFillContain
 	heartImage.ScaleMode = canvas.ImageScaleFastest
 	heartImage.SetMinSize(fyne.NewSize(128, 128))
-	heartButton := widget.NewButtonWithIcon("Support me on https://ko-fi.com/sharrnah", Resources.ResourceHeartPng, func() {
-		u, err := url.Parse("https://ko-fi.com/sharrnah")
+
+	heartButton := widget.NewButtonWithIcon(lang.L("Support me on Ko-Fi", map[string]interface{}{"KofiUrl": lang.L("KofiUrl")}), Resources.ResourceHeartPng, func() {
+		u, err := url.Parse(lang.L("KofiUrl"))
 		if err != nil {
 			return
 		}
@@ -50,11 +52,11 @@ func buildAboutInfo() fyne.CanvasObject {
 			}
 		}
 	})
-	supportLabel := widget.NewLabel("If you want to support the development of Whispering Tiger,\nyou can do so by supporting me on Ko-fi.")
+	supportLabel := widget.NewLabel(lang.L("If you want to support the development of Whispering Tiger"))
 	supportLabel.Alignment = fyne.TextAlignCenter
 
 	aboutCard := widget.NewCard("Whispering Tiger UI",
-		"Version: "+Utilities.AppVersion+" Build: "+Utilities.AppBuild,
+		lang.L("VersionBuild", map[string]interface{}{"Version": Utilities.AppVersion, "Build": Utilities.AppBuild}),
 		container.NewVBox(
 			widget.NewHyperlink("https://whispering-tiger.github.io", parseURL("https://whispering-tiger.github.io")),
 			widget.NewAccordion(
@@ -85,10 +87,10 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 
 	settingsTabContent := container.NewVScroll(Settings.Form)
 
-	RestartBackendButton := widget.NewButton("Restart backend", func() {
+	RestartBackendButton := widget.NewButton(lang.L("Restart backend"), func() {
 		// close running backend process
 		if len(RuntimeBackend.BackendsList) > 0 && RuntimeBackend.BackendsList[0].IsRunning() {
-			infinityProcessDialog := dialog.NewCustom("Restarting Backend", "OK", container.NewVBox(widget.NewLabel("Restarting backend..."), widget.NewProgressBarInfinite()), fyne.CurrentApp().Driver().AllWindows()[0])
+			infinityProcessDialog := dialog.NewCustom(lang.L("Restarting Backend"), lang.L("OK"), container.NewVBox(widget.NewLabel(lang.L("Restarting Backend")+"..."), widget.NewProgressBarInfinite()), fyne.CurrentApp().Driver().AllWindows()[0])
 			infinityProcessDialog.Show()
 			RuntimeBackend.BackendsList[0].Stop()
 			time.Sleep(2 * time.Second)
@@ -98,13 +100,13 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 		}
 	})
 
-	copyLogButton := widget.NewButtonWithIcon("Copy Log", theme.ContentCopyIcon(), func() {
+	copyLogButton := widget.NewButtonWithIcon(lang.L("Copy Log"), theme.ContentCopyIcon(), func() {
 		fyne.CurrentApp().Driver().AllWindows()[0].Clipboard().SetContent(
 			strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\n"),
 		)
 	})
 
-	writeLogFileCheckbox := widget.NewCheck("Write log file", func(writeLogFile bool) {
+	writeLogFileCheckbox := widget.NewCheck(lang.L("Write log file"), func(writeLogFile bool) {
 		fyne.CurrentApp().Preferences().SetBool("WriteLogfile", writeLogFile)
 	})
 	writeLogFileCheckbox.Checked = fyne.CurrentApp().Preferences().BoolWithFallback("WriteLogfile", false)
@@ -112,20 +114,20 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 	logTabContent := container.NewBorder(nil, container.NewHBox(RestartBackendButton, writeLogFileCheckbox, copyLogButton), nil, nil, container.NewScroll(Fields.Field.LogText))
 
 	tabs := container.NewAppTabs(
-		container.NewTabItem("About Whispering Tiger", buildAboutInfo()),
-		container.NewTabItem("Advanced Settings", settingsTabContent),
-		container.NewTabItem("Logs", logTabContent),
+		container.NewTabItem(lang.L("About Whispering Tiger"), buildAboutInfo()),
+		container.NewTabItem(lang.L("Advanced Settings"), settingsTabContent),
+		container.NewTabItem(lang.L("Logs"), logTabContent),
 	)
 	tabs.SetTabLocation(container.TabLocationLeading)
 
 	tabs.OnSelected = func(tab *container.TabItem) {
-		if tab.Text == "Advanced Settings" {
+		if tab.Text == lang.L("Advanced Settings") {
 			Settings.Form = Settings.BuildSettingsForm(nil, filepath.Join(Settings.GetConfProfileDir(), Settings.Config.SettingsFilename)).(*widget.Form)
 			tab.Content.(*container.Scroll).Content = Settings.Form
 			tab.Content.(*container.Scroll).Content.Refresh()
 			tab.Content.(*container.Scroll).Refresh()
 		}
-		if tab.Text == "Logs" {
+		if tab.Text == lang.L("Logs") {
 			Fields.Field.LogText.SetText("")
 			Fields.Field.LogText.Write([]byte(strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\r\n") + "\r\n"))
 		}

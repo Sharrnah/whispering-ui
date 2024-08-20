@@ -5,6 +5,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
 	"github.com/dustin/go-humanize"
 	"math/rand"
@@ -22,9 +23,9 @@ var updateInfoUrl = "https://s3.libs.space:9000/projects/whispering/latest.yaml"
 func versionDownload(updater Updater.UpdatePackages, packageName, filename string, window fyne.Window, startBackend bool, progressTitle string, cleanUpFunc func()) error {
 	statusBar := widget.NewProgressBar()
 	statusBarContainer := container.NewVBox(statusBar)
-	downloadDialog := dialog.NewCustom(progressTitle, "Hide (Download will continue)", statusBarContainer, window)
+	downloadDialog := dialog.NewCustom(progressTitle, lang.L("Hide (Download will continue)"), statusBarContainer, window)
 	downloadDialog.Show()
-	downloadingLabel := widget.NewLabel("Downloading... ")
+	downloadingLabel := widget.NewLabel(lang.L("Downloading...") + " ")
 
 	reOpenAfterHide := false
 	downloadDialog.SetOnClosed(func() {
@@ -53,14 +54,14 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 
 	locationString := "DEFAULT"
 	// try to download from the closest server by checking the user's location
-	lang := Updater.GetLanguage()
-	print("lang: " + lang + "\n")
-	if hasUSServer && Updater.IsUSLocale(lang) {
+	pcLang := Updater.GetLanguage()
+	print("lang: " + pcLang + "\n")
+	if hasUSServer && Updater.IsUSLocale(pcLang) {
 		locationString = "US"
 		// Download from US server
 		randomUrlIndex = rand.Int() % len(updater.Packages[packageName].LocationUrls["US"])
 		downloadUrl = updater.Packages[packageName].LocationUrls["US"][randomUrlIndex]
-	} else if hasEUServer && Updater.IsEULocale(lang) {
+	} else if hasEUServer && Updater.IsEULocale(pcLang) {
 		locationString = "EU"
 		// Download from EU server
 		randomUrlIndex = rand.Int() % len(updater.Packages[packageName].LocationUrls["EU"])
@@ -85,7 +86,7 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 
 			resumeStatusText := ""
 			if downloader.IsResuming() {
-				resumeStatusText = " (Resume)"
+				resumeStatusText = " (" + lang.L("Resuming") + ")"
 			}
 
 			speedStr := ""
@@ -97,7 +98,7 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 				speedStr = fmt.Sprintf("%.2f MiB/s", speed/(1024*1024))
 			}
 
-			downloadingLabel.SetText("Downloading from " + locationString + "... " + humanize.Bytes(total) + " (" + speedStr + ") " + resumeStatusText)
+			downloadingLabel.SetText(lang.L("Downloading from location", map[string]interface{}{"Location": locationString, "TotalSize": humanize.Bytes(total), "Speed": speedStr}) + " " + resumeStatusText)
 		}
 	}
 
@@ -111,17 +112,19 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 	appExec, _ := os.Executable()
 
 	// check if the file has the correct hash
-	statusBarContainer.Add(widget.NewLabel("Checking checksum..."))
+	statusBarContainer.Add(widget.NewLabel(lang.L("Checking checksum...")))
 	if err := Updater.CheckFileHash(filename, updater.Packages[packageName].SHA256); err != nil {
 		fmt.Printf("Error: %s\n", err.Error())
 		dialog.ShowError(err, window)
-		statusBarContainer.Add(widget.NewLabel("Checksum check failed. Please delete temporary file and download again. If it still fails, please contact support."))
+		checksumCheckFailLabel := widget.NewLabel(lang.L("Checksum check failed. Please delete temporary file and download again. If it still fails, please contact support."))
+		checksumCheckFailLabel.Wrapping = fyne.TextWrapWord
+		statusBarContainer.Add(checksumCheckFailLabel)
 		return err
 	}
 
 	// close running backend process
 	if len(RuntimeBackend.BackendsList) > 0 && RuntimeBackend.BackendsList[0].IsRunning() {
-		statusBarContainer.Add(widget.NewLabel("Stopping Backend..."))
+		statusBarContainer.Add(widget.NewLabel(lang.L("Stopping Backend...")))
 		RuntimeBackend.BackendsList[0].Stop()
 		time.Sleep(1 * time.Second)
 	}
@@ -131,12 +134,12 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 
 	// clean up before extracting
 	if cleanUpFunc != nil {
-		statusBarContainer.Add(widget.NewLabel("Removing old version..."))
+		statusBarContainer.Add(widget.NewLabel(lang.L("Removing old version...")))
 		cleanUpFunc()
 	}
 
 	// extract
-	statusBarContainer.Add(widget.NewLabel("Extracting..."))
+	statusBarContainer.Add(widget.NewLabel(lang.L("Extracting...")))
 	statusBarContainer.Refresh()
 	err = Updater.Unzip(filename, filepath.Dir(appExec))
 	if err != nil {
@@ -150,8 +153,8 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 	}
 
 	if err == nil {
-		statusBarContainer.Add(widget.NewLabel("Finished."))
-		downloadDialog.SetDismissText("Close")
+		statusBarContainer.Add(widget.NewLabel(lang.L("Finished.")))
+		downloadDialog.SetDismissText(lang.L("Close"))
 		downloadDialog.Refresh()
 		if reOpenAfterHide {
 			downloadDialog.Show()
@@ -162,7 +165,7 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 
 	// start backend
 	if startBackend && !RuntimeBackend.BackendsList[0].IsRunning() {
-		statusBarContainer.Add(widget.NewLabel("Restarting Backend..."))
+		statusBarContainer.Add(widget.NewLabel(lang.L("Restarting Backend") + "..."))
 		RuntimeBackend.BackendsList[0].Start()
 	}
 
@@ -192,15 +195,15 @@ func VersionCheck(window fyne.Window, startBackend bool) bool {
 		}
 	}
 
-	platformUpdateTitle := "Platform Update available"
-	platformUpdateText := "There is a new Update of the Platform available.\nUpdate to " + updater.Packages["ai_platform"].Version + " now?"
-	progressTitle := "Downloading Platform Update. (Please wait until this is finished!)"
+	platformUpdateTitle := lang.L("Platform Update available")
+	platformUpdateText := lang.L("There is a new Update of the Platform available. Update to new version now?", map[string]interface{}{"Version": updater.Packages["ai_platform"].Version})
+	progressTitle := lang.L("Downloading Platform Update. (Please wait until this is finished!)")
 
 	if !Utilities.FileExists("audioWhisper/audioWhisper.exe") && !Utilities.FileExists("audioWhisper.py") {
 		platformRequiresUpdate = true
-		platformUpdateTitle = "Platform not found"
-		platformUpdateText = "No required Platform file found.\ndownload version " + updater.Packages["ai_platform"].Version + " now?" + "\n\n" + "(This is required for the App to function)"
-		progressTitle = "first-time Setup - Downloading Platform.\n(Please wait until this is finished!)"
+		platformUpdateTitle = lang.L("Platform not found")
+		platformUpdateText = lang.L("No required Platform file found. Download version now?", map[string]interface{}{"Version": updater.Packages["ai_platform"].Version})
+		progressTitle = lang.L("first-time Setup - Downloading Platform.\n(Please wait until this is finished!)")
 	}
 
 	if platformRequiresUpdate || platformFileWithoutVersion {
@@ -235,7 +238,7 @@ func VersionCheck(window fyne.Window, startBackend bool) bool {
 	currentAppVersion := Utilities.AppVersion + "." + Utilities.AppBuild
 	if updater.Packages["app"].Version != currentAppVersion {
 		updateAvailable = true
-		dialog.ShowConfirm("App Update available", "There is a new Update of the App available. Open GitHub Release page now?", func(b bool) {
+		dialog.ShowConfirm(lang.L("App Update available"), lang.L("There is a new Update of the App available. Open GitHub Release page now?"), func(b bool) {
 			if b {
 				uiReleaseUrl, _ := url.Parse("https://github.com/Sharrnah/whispering-ui/releases/latest")
 				fyne.CurrentApp().OpenURL(uiReleaseUrl)

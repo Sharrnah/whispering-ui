@@ -4,6 +4,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
 	"whispering-tiger-ui/Pages/Advanced"
 	"whispering-tiger-ui/UpdateUtility"
@@ -64,7 +65,7 @@ var ApplicationSettingsMapping = SettingsMapping{
 					if b {
 						fyne.CurrentApp().Preferences().SetBool("CheckForUpdateAtStartup", true)
 					} else {
-						dialog.ShowConfirm("Disable update check", "Are you sure you want to disable App update checks at startup?", func(b bool) {
+						dialog.ShowConfirm(lang.L("Disable update check"), lang.L("Are you sure you want to disable App update checks at startup?"), func(b bool) {
 							if b {
 								fyne.CurrentApp().Preferences().SetBool("CheckForUpdateAtStartup", false)
 							} else {
@@ -76,9 +77,9 @@ var ApplicationSettingsMapping = SettingsMapping{
 
 				widgetCheckbox.Checked = fyne.CurrentApp().Preferences().BoolWithFallback("CheckForUpdateAtStartup", true)
 
-				checkForUpdatesButton := widget.NewButton("Check for App updates now", func() {
+				checkForUpdatesButton := widget.NewButton(lang.L("Check for App updates now"), func() {
 					if !UpdateUtility.VersionCheck(fyne.CurrentApp().Driver().AllWindows()[0], true) {
-						dialog.ShowInformation("No update available", "You are running the latest version of Whispering Tiger.", fyne.CurrentApp().Driver().AllWindows()[0])
+						dialog.ShowInformation(lang.L("No update available"), lang.L("You are running the latest version of Whispering Tiger."), fyne.CurrentApp().Driver().AllWindows()[0])
 					}
 				})
 
@@ -96,7 +97,7 @@ var ApplicationSettingsMapping = SettingsMapping{
 					if b {
 						fyne.CurrentApp().Preferences().SetBool("CheckForPluginUpdatesAtStartup", true)
 					} else {
-						dialog.ShowConfirm("Disable update check", "Are you sure you want to disable Plugin update checks at startup?", func(b bool) {
+						dialog.ShowConfirm(lang.L("Disable update check"), lang.L("Are you sure you want to disable Plugin update checks at startup?"), func(b bool) {
 							if b {
 								fyne.CurrentApp().Preferences().SetBool("CheckForPluginUpdatesAtStartup", false)
 							} else {
@@ -108,13 +109,15 @@ var ApplicationSettingsMapping = SettingsMapping{
 
 				widgetCheckbox.Checked = fyne.CurrentApp().Preferences().BoolWithFallback("CheckForPluginUpdatesAtStartup", true)
 
-				checkForUpdatesButton := widget.NewButton("Check for Plugin updates now", func() {
+				checkForUpdatesButton := widget.NewButton(lang.L("Check for Plugin updates now"), func() {
 					if UpdateUtility.PluginsUpdateAvailable() {
-						dialog.ShowConfirm("New Plugin updates available", "Whispering Tiger has new Plugin updates available. Go to Plugin List now?", func(b bool) {
+						dialog.ShowConfirm(lang.L("New Plugin updates available"), lang.L("Whispering Tiger has new Plugin updates available. Go to Plugin List now?"), func(b bool) {
 							if b {
 								Advanced.CreatePluginListWindow(nil, true)
 							}
 						}, fyne.CurrentApp().Driver().AllWindows()[0])
+					} else {
+						dialog.ShowInformation(lang.L("No update available"), lang.L("You are running the latest Plugin versions for Whispering Tiger."), fyne.CurrentApp().Driver().AllWindows()[0])
 					}
 				})
 

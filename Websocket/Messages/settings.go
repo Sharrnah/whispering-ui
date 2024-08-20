@@ -2,6 +2,7 @@ package Messages
 
 import (
 	"fmt"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
@@ -48,8 +49,8 @@ func (res TranslateSetting) Update() *TranslateSetting {
 	}
 
 	// Set options to current settings
-	if strings.Contains(res.Whisper_task, "translate") && Fields.Field.TranscriptionTaskCombo.Selected != "translate (to English)" {
-		Fields.Field.TranscriptionTaskCombo.SetSelected("translate (to English)")
+	if strings.Contains(res.Whisper_task, "translate") && Fields.Field.TranscriptionTaskCombo.Selected != "translate" {
+		Fields.Field.TranscriptionTaskCombo.SetSelected("translate")
 	}
 	if strings.Contains(res.Whisper_task, "transcribe") && !strings.Contains(Fields.Field.TranscriptionTaskCombo.Selected, "transcribe") {
 		Fields.Field.TranscriptionTaskCombo.SetSelected("transcribe")
@@ -101,7 +102,10 @@ func (res TranslateSetting) Update() *TranslateSetting {
 		Fields.Field.TargetLanguageTxtTranslateCombo.ResetOptionsFilter()
 	}
 
-	Fields.Field.TextTranslateEnabled.Text = fmt.Sprintf(Fields.SttTextTranslateLabelConst, Fields.Field.SourceLanguageCombo.GetValueOptionEntryByText(Fields.Field.SourceLanguageCombo.Text).Value, Fields.Field.TargetLanguageCombo.Text)
+	Fields.Field.TextTranslateEnabled.Text = lang.L("SttTextTranslateLabel", map[string]interface{}{
+		"FromLang": Fields.Field.SourceLanguageCombo.GetValueOptionEntryByText(Fields.Field.SourceLanguageCombo.Text).Value,
+		"ToLang":   Fields.Field.TargetLanguageCombo.Text,
+	})
 	Fields.Field.TextTranslateEnabled.Refresh()
 
 	checkValue, _ := Fields.DataBindings.SpeechToTextEnabledDataBinding.Get()

@@ -3,6 +3,7 @@ package CustomWidget
 import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/driver/desktop"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
 	"runtime"
 	"strings"
@@ -77,16 +78,18 @@ func (e *EntryWithPopupMenu) TappedSecondary(pe *fyne.PointEvent) {
 	clipboard := fyne.CurrentApp().Driver().AllWindows()[0].Clipboard()
 	super := e.superWidget()
 
-	cutItem := fyne.NewMenuItem("Cut", func() {
+	//undoItem := fyne.NewMenuItem(lang.L("Undo"), e.Undo)
+	//redoItem := fyne.NewMenuItem(lang.L("Redo"), e.Redo)
+	cutItem := fyne.NewMenuItem(lang.L("Cut"), func() {
 		super.(fyne.Shortcutable).TypedShortcut(&fyne.ShortcutCut{Clipboard: clipboard})
 	})
-	copyItem := fyne.NewMenuItem("Copy", func() {
+	copyItem := fyne.NewMenuItem(lang.L("Copy"), func() {
 		super.(fyne.Shortcutable).TypedShortcut(&fyne.ShortcutCopy{Clipboard: clipboard})
 	})
-	pasteItem := fyne.NewMenuItem("Paste", func() {
+	pasteItem := fyne.NewMenuItem(lang.L("Paste"), func() {
 		super.(fyne.Shortcutable).TypedShortcut(&fyne.ShortcutPaste{Clipboard: clipboard})
 	})
-	selectAllItem := fyne.NewMenuItem("Select all", func() {
+	selectAllItem := fyne.NewMenuItem(lang.L("Select all"), func() {
 		super.(fyne.Shortcutable).TypedShortcut(&fyne.ShortcutSelectAll{})
 	})
 
@@ -100,7 +103,9 @@ func (e *EntryWithPopupMenu) TappedSecondary(pe *fyne.PointEvent) {
 	} else if e.Password {
 		menu = fyne.NewMenu("", pasteItem, selectAllItem)
 	} else {
-		menu = fyne.NewMenu("", cutItem, copyItem, pasteItem, selectAllItem)
+		var menuItems []*fyne.MenuItem
+		menuItems = append(menuItems, cutItem, copyItem, pasteItem, selectAllItem)
+		menu = fyne.NewMenu("", menuItems...)
 	}
 
 	// add additional menu items

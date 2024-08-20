@@ -3,6 +3,7 @@ package Messages
 import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/lang"
 )
 
 type ExceptionMessage struct {
@@ -24,7 +25,7 @@ func (res ExceptionMessage) ShowError(window fyne.Window) {
 
 func (res ExceptionMessage) ShowInfo(window fyne.Window) {
 	infoDialog := dialog.NewInformation(
-		"Info",
+		lang.L("Information"),
 		res.ErrorMessage,
 		window,
 	)

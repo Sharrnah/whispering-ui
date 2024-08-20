@@ -4,6 +4,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
 	"strings"
 )
@@ -76,8 +77,8 @@ func (res *LoadingState) InitStateWindow() {
 	statusBar := widget.NewProgressBarInfinite()
 	LoadingStateContainer = container.NewVBox()
 	LoadingStateDialog = dialog.NewCustom(
-		"Loading...",
-		"Hide",
+		lang.L("Loading..."),
+		lang.L("Hide"),
 		container.NewBorder(statusBar, nil, nil, nil, LoadingStateContainer),
 		fyne.CurrentApp().Driver().AllWindows()[0],
 	)
