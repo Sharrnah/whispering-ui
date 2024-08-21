@@ -28,8 +28,8 @@
         "other": "Übergeordneter Ordner"
     },
     "WebsiteUrl": "https://whispering-tiger.github.io",
-    "Select an existing Profile or create a new one. Click Save and Load Profile.": "Wähle ein existierendes Profil oder erstelle ein neues.\n\nKlicke auf \"Speicher und Lade Profil\".\n\n",
-    "Save and Load Profile": "Speicher und Lade Profil",
+    "Select an existing Profile or create a new one. Click Save and Load Profile.": "Wähle ein existierendes Profil oder erstelle ein neues.\n\nKlicke auf \"Speichern und Profil laden\".\n\n",
+    "Save and Load Profile": "Speichern und Profil laden",
     "KofiUrl": "https://ko-fi.com/sharrnah",
     "Support me on Ko-Fi": "Unterstütze mich auf {{.KofiUrl}}",
     "precision": "Genauigkeit",
