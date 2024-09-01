@@ -140,7 +140,7 @@ func (c *CompletionEntry) DoubleTapped(ev *fyne.PointEvent) {
 // Implements: fyne.Widget
 func (c *CompletionEntry) Move(pos fyne.Position) {
 	c.Entry.Move(pos)
-	if c.popupMenu != nil {
+	if c.popupMenu != nil && c.popupMenu.Canvas != nil {
 		c.popupMenu.Resize(c.maxSize())
 		c.popupMenu.Move(c.popUpPos())
 	}
