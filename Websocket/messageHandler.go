@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/lang"
 	"log"
 	"strings"
 	"sync"
@@ -158,12 +159,39 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			errorMessage.ShowInfo(fyne.CurrentApp().Driver().AllWindows()[0])
 		}
 	case "installed_languages":
+		srcLang := Settings.Config.Src_lang
+		trgLang := Settings.Config.Trg_lang
+		ocrSrcLang := Settings.Config.Ocr_txt_src_lang
+		ocrTrgLang := Settings.Config.Ocr_txt_trg_lang
 		err = json.Unmarshal(c.Raw, &Messages.InstalledLanguages)
 		if err != nil {
 			log.Println(err)
 			return
 		}
 		Messages.InstalledLanguages.Update()
+
+		if srcLang == "" {
+			srcLang = "auto"
+		}
+		if ocrSrcLang == "" {
+			ocrSrcLang = "auto"
+		}
+
+		// set txt source + target lang combo boxes
+		Fields.Field.SourceLanguageCombo.Text = Messages.InstalledLanguages.GetNameByCode(srcLang)
+		Fields.Field.SourceLanguageCombo.ResetOptionsFilter()
+		Fields.Field.TargetLanguageCombo.Text = Messages.InstalledLanguages.GetNameByCode(trgLang)
+		Fields.Field.TargetLanguageCombo.ResetOptionsFilter()
+
+		// set ocr txt source + target lang combo boxes
+		Fields.Field.SourceLanguageTxtTranslateCombo.Text = Messages.InstalledLanguages.GetNameByCode(ocrSrcLang)
+		Fields.Field.SourceLanguageTxtTranslateCombo.ResetOptionsFilter()
+		Fields.Field.TargetLanguageTxtTranslateCombo.Text = Messages.InstalledLanguages.GetNameByCode(ocrTrgLang)
+		Fields.Field.TargetLanguageTxtTranslateCombo.ResetOptionsFilter()
+
+		// set auto text translate checkbox label
+		Fields.Field.TextTranslateEnabled.Text = lang.L("SttTextTranslateLabel", map[string]interface{}{"FromLang": Messages.InstalledLanguages.GetNameByCode(srcLang), "ToLang": Messages.InstalledLanguages.GetNameByCode(trgLang)})
+		Fields.Field.TextTranslateEnabled.Refresh()
 	case "available_tts_models":
 		err = json.Unmarshal(c.Raw, &Messages.TtsLanguages)
 		if err != nil {

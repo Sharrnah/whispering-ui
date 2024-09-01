@@ -103,7 +103,7 @@ func (res TranslateSetting) Update() *TranslateSetting {
 	}
 
 	Fields.Field.TextTranslateEnabled.Text = lang.L("SttTextTranslateLabel", map[string]interface{}{
-		"FromLang": Fields.Field.SourceLanguageCombo.GetValueOptionEntryByText(Fields.Field.SourceLanguageCombo.Text).Value,
+		"FromLang": Fields.Field.SourceLanguageCombo.Text,
 		"ToLang":   Fields.Field.TargetLanguageCombo.Text,
 	})
 	Fields.Field.TextTranslateEnabled.Refresh()

@@ -350,14 +350,14 @@ func InitializeGlobalFields() {
 		sendMessage := SendMessageStruct{
 			Type:  "setting_change",
 			Name:  "src_lang",
-			Value: valueObj.Value,
+			Value: value,
 		}
 		sendMessage.SendMessage()
 
-		Field.TextTranslateEnabled.Text = lang.L("SttTextTranslateLabel", map[string]interface{}{"FromLang": valueObj.Value, "ToLang": Field.TargetLanguageCombo.Text})
+		Field.TextTranslateEnabled.Text = lang.L("SttTextTranslateLabel", map[string]interface{}{"FromLang": valueObj.Text, "ToLang": Field.TargetLanguageCombo.Text})
 		Field.TextTranslateEnabled.Refresh()
 
-		log.Println("Select set to", valueObj.Value)
+		log.Println("Select set to", value)
 	}
 
 	Field.TargetLanguageCombo.ShowAllEntryText = lang.L("... show all")
@@ -377,6 +377,7 @@ func InitializeGlobalFields() {
 	Field.TargetLanguageCombo.OnSubmitted = func(value string) {
 		// check if value is not in Options
 		value = updateCompletionEntryBasedOnValue(Field.TargetLanguageCombo, value)
+		valueObj := Field.TargetLanguageCombo.GetValueOptionEntryByText(value)
 
 		sendMessage := SendMessageStruct{
 			Type:  "setting_change",
@@ -385,7 +386,7 @@ func InitializeGlobalFields() {
 		}
 		sendMessage.SendMessage()
 
-		Field.TextTranslateEnabled.Text = lang.L("SttTextTranslateLabel", map[string]interface{}{"FromLang": Field.SourceLanguageCombo.GetValueOptionEntryByText(Field.SourceLanguageCombo.Text).Value, "ToLang": value})
+		Field.TextTranslateEnabled.Text = lang.L("SttTextTranslateLabel", map[string]interface{}{"FromLang": Field.SourceLanguageCombo.Text, "ToLang": valueObj.Text})
 		Field.TextTranslateEnabled.Refresh()
 
 		log.Println("Select set to", value)
