@@ -23,6 +23,7 @@ steps:
       - mkdir -p dist/
       - apt-get update
       - apt-get install -y -q --no-install-recommends gcc build-essential libgl1-mesa-dev xorg-dev libfuse2
+      - go install fyne.io/fyne/v2/cmd/fyne@latest
       - fyne package --release --executable "dist/Whispering Tiger.exe"
     when:
       status:
@@ -39,6 +40,7 @@ steps:
       - mkdir -p dist/
       - apt-get update
       - apt-get install -y -q --no-install-recommends gcc build-essential libgl1-mesa-dev xorg-dev libfuse2
+      - go install fyne.io/fyne/v2/cmd/fyne@latest
       - fyne package --release --executable "dist/Whispering Tiger"
     when:
       status:
