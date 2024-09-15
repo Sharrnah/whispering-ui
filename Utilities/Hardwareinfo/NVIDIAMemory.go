@@ -7,7 +7,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
-	"syscall"
+	"whispering-tiger-ui/Utilities"
 )
 
 type nvidiaSmiLog struct {
@@ -49,7 +49,7 @@ func GetGPUMemory() (memoryUsed int64, memoryTotal int64) {
 		cmd := exec.Command("nvidia-smi", "-q", "-x")
 
 		// Hide command line window
-		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+		Utilities.ProcessHideWindowAttr(cmd)
 
 		output, err := cmd.Output()
 		if err != nil {
@@ -92,7 +92,7 @@ func GetGPUComputeCapability() (computeCapabilityVersion float32) {
 		cmd := exec.Command("nvidia-smi", "--query-gpu=compute_cap", "--format=csv,noheader")
 
 		// Hide command line window
-		cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+		Utilities.ProcessHideWindowAttr(cmd)
 
 		output, err := cmd.Output()
 		if err != nil {

@@ -485,6 +485,9 @@ func HandleSendMessage(sendMessage *Fields.SendMessageStruct) {
 		case "src_lang", "ocr_txt_src_lang":
 			langCode := Messages.InstalledLanguages.GetCodeByName(sendMessage.Value.(string))
 			if langCode == "" {
+				langCode = sendMessage.Value.(string)
+			}
+			if langCode == "" {
 				langCode = "auto"
 			}
 			if langCode != "" && Messages.TranslateSettings.Src_lang != langCode {
@@ -494,6 +497,9 @@ func HandleSendMessage(sendMessage *Fields.SendMessageStruct) {
 			}
 		case "trg_lang", "ocr_txt_trg_lang":
 			langCode := Messages.InstalledLanguages.GetCodeByName(sendMessage.Value.(string))
+			if langCode == "" {
+				langCode = sendMessage.Value.(string)
+			}
 			if langCode != "" {
 				sendMessage.Value = langCode
 			} else {

@@ -345,7 +345,9 @@ func InitializeGlobalFields() {
 
 		valueObj := Field.SourceLanguageCombo.GetValueOptionEntryByText(value)
 
-		println("Submitted TargetLanguageCombo", valueObj.Value)
+		if strings.ToLower(value) == "auto" {
+			value = ""
+		}
 
 		sendMessage := SendMessageStruct{
 			Type:  "setting_change",

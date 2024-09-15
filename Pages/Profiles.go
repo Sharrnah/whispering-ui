@@ -24,7 +24,6 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
-	"syscall"
 	"time"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Pages/ProfileSettings"
@@ -738,9 +737,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 						dialog.ShowInformation(lang.L("Error"), lang.L("Could not find audioWhisper.py or audioWhisper.exe"), fyne.CurrentApp().Driver().AllWindows()[1])
 						return
 					}
-					cmd.SysProcAttr = &syscall.SysProcAttr{
-						HideWindow: true,
-					}
+					Utilities.ProcessHideWindowAttr(cmd)
 					out, err := cmd.Output()
 					if err != nil {
 						dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
