@@ -21,7 +21,7 @@ steps:
       GOBIN: /drone/src/dist/
     commands:
       - mkdir -p dist/
-      - fyne-cross windows -arch=amd64
+      - fyne package --release --executable "dist/Whispering Tiger.exe"
     when:
       status:
         - success
@@ -35,7 +35,7 @@ steps:
       GOBIN: /drone/src/dist/
     commands:
       - mkdir -p dist/
-      - fyne-cross linux -arch=amd64
+      - fyne package --release --executable "dist/Whispering Tiger"
     when:
       status:
         - success
