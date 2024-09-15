@@ -20,11 +20,11 @@ steps:
     environment:
       GOBIN: /drone/src/dist/
     commands:
-      - mkdir -p dist/
+      - mkdir -p /drone/src/dist/
       - apt-get update
       - apt-get install -y -q --no-install-recommends gcc build-essential libgl1-mesa-dev xorg-dev libfuse2
       - go install fyne.io/fyne/v2/cmd/fyne@latest
-      - fyne package --release --executable "dist/Whispering Tiger.exe"
+      - fyne package --release --executable "/drone/src/dist/Whispering Tiger.exe"
     when:
       status:
         - success
@@ -37,11 +37,11 @@ steps:
     environment:
       GOBIN: /drone/src/dist/
     commands:
-      - mkdir -p dist/
+      - mkdir -p mkdir -p /drone/src/dist/
       - apt-get update
       - apt-get install -y -q --no-install-recommends gcc build-essential libgl1-mesa-dev xorg-dev libfuse2
       - go install fyne.io/fyne/v2/cmd/fyne@latest
-      - fyne package --release --executable "dist/Whispering Tiger"
+      - fyne package --release --executable "/drone/src/dist/Whispering Tiger"
     when:
       status:
         - success
@@ -56,19 +56,31 @@ steps:
   #    - PACKAGE_PREFIX=$(go list -m -f '{{.Path}}')
   #    - go test -v $(go list $${PACKAGE_PREFIX}/... | grep -v /vendor/)
 
-  - name: gitea_release
+  - name: git-release-windows
     image: plugins/gitea-release
     settings:
       api_key:
         from_secret: docker_password
       base_url: ${DRONE_REPO_LINK}
-      files: dist/*
+      files: /drone/src/dist/Whispering Tiger.exe
+    when:
+      event:
+        - tag
+    depends_on:
+      - build-windows
+
+  - name: git-release-linux
+    image: plugins/gitea-release
+    settings:
+      api_key:
+        from_secret: docker_password
+      base_url: ${DRONE_REPO_LINK}
+      files: /drone/src/dist/Whispering Tiger
     when:
       event:
         - tag
     depends_on:
       - build-linux
-      - build-windows
 
 trigger:
   #  event:
