@@ -66,6 +66,9 @@ steps:
     when:
       event:
         - tag
+    depends_on:
+      - build-linux
+      - build-windows
 
 trigger:
   #  event:
