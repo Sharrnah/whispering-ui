@@ -1,0 +1,69 @@
+---
+kind: pipeline
+type: kubernetes
+name: build
+
+steps:
+  - name: lint-test
+    image: golang:1.23
+    environment:
+      CGO_ENABLED: 0
+    commands:
+      - TEST_RESULT=$(gofmt -l ./)
+      - printf "Test Result:\n"
+      - echo "$${TEST_RESULT}"
+      - test -z $${TEST_RESULT}
+
+  - name: build-windows
+    #image: golang:1.23.1-bookworm
+    image: fyneio/fyne-cross-images:windows
+    environment:
+      GOBIN: /drone/src/dist/
+    commands:
+      - mkdir -p dist/
+      - fyne-cross windows -arch=amd64
+    when:
+      status:
+        - success
+    depends_on:
+      - lint-test
+
+  - name: build-linux
+    #image: golang:1.23.1-bookworm
+    image: fyneio/fyne-cross-images:linux
+    environment:
+      GOBIN: /drone/src/dist/
+    commands:
+      - mkdir -p dist/
+      - fyne-cross linux -arch=amd64
+    when:
+      status:
+        - success
+    depends_on:
+      - lint-test
+
+  #- name: unit-test
+  #  image: golang:1.20
+  #  environment:
+  #    CGO_ENABLED: 1
+  #  commands:
+  #    - PACKAGE_PREFIX=$(go list -m -f '{{.Path}}')
+  #    - go test -v $(go list $${PACKAGE_PREFIX}/... | grep -v /vendor/)
+
+  - name: gitea_release
+    image: plugins/gitea-release
+    settings:
+      api_key:
+        from_secret: docker_password
+      base_url: ${DRONE_REPO_LINK}
+      files: dist/*
+    when:
+      event:
+        - tag
+
+trigger:
+  #  event:
+  #    - push
+  ref:
+    exclude:
+      - refs/pipelines/*
