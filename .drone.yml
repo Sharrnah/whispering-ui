@@ -22,7 +22,7 @@ steps:
     commands:
       - mkdir -p dist/
       - apt-get update
-      - apt-get install gcc
+      - apt-get install y -q --no-install-recommends gcc
       - fyne package --release --executable "dist/Whispering Tiger.exe"
     when:
       status:
@@ -38,7 +38,7 @@ steps:
     commands:
       - mkdir -p dist/
       - apt-get update
-      - apt-get install gcc
+      - apt-get install y -q --no-install-recommends gcc
       - fyne package --release --executable "dist/Whispering Tiger"
     when:
       status:
