@@ -21,8 +21,8 @@ steps:
       GOBIN: /drone/src/dist/
     commands:
       - mkdir -p dist/
-      - sudo apt-get update
-      - sudo apt-get install gcc
+      - apt-get update
+      - apt-get install gcc
       - fyne package --release --executable "dist/Whispering Tiger.exe"
     when:
       status:
@@ -37,8 +37,8 @@ steps:
       GOBIN: /drone/src/dist/
     commands:
       - mkdir -p dist/
-      - sudo apt-get update
-      - sudo apt-get install gcc
+      - apt-get update
+      - apt-get install gcc
       - fyne package --release --executable "dist/Whispering Tiger"
     when:
       status:
