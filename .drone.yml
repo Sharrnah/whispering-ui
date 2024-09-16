@@ -40,14 +40,14 @@ steps:
     #image: fyneio/fyne-cross-images:windows
     environment:
       CGO_ENABLED: 1
-      CC: "gcc"
+      CC: "x86_64-w64-mingw32-gcc"
       GOOS: windows
       GOARCH: amd64
       GOBIN: /drone/src/bin/
     commands:
       - mkdir -p /drone/src/dist/
       - apt-get update
-      - apt-get install -y -q --no-install-recommends gcc build-essential libgl1-mesa-dev xorg-dev libfuse2
+      - apt-get install -y -q --no-install-recommends gcc build-essential libgl1-mesa-dev xorg-dev libfuse2 mingw-w64
       - $$GOBIN/fyne package --release --executable "/drone/src/dist/windows/Whispering Tiger.exe"
     when:
       status:
