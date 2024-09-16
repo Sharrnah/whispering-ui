@@ -32,28 +32,32 @@ steps:
     when:
       status:
         - success
+      event:
+        - tag
     depends_on:
       - lint-test
 
-  - name: build-windows
-    image: golang:1.23.1-bookworm
-    #image: fyneio/fyne-cross-images:windows
-    environment:
-      CGO_ENABLED: 1
-      CC: "x86_64-w64-mingw32-gcc"
-      GOOS: windows
-      GOARCH: amd64
-      GOBIN: /drone/src/bin/
-    commands:
-      - mkdir -p /drone/src/dist/
-      - apt-get update
-      - apt-get install -y -q --no-install-recommends gcc build-essential libgl1-mesa-dev xorg-dev libfuse2 mingw-w64
-      - $$GOBIN/fyne package --release --executable "/drone/src/dist/windows/Whispering Tiger.exe"
-    when:
-      status:
-        - success
-    depends_on:
-      - build-fyne-cli
+#  - name: build-windows
+#    image: golang:1.23.1-bookworm
+#    #image: fyneio/fyne-cross-images:windows
+#    environment:
+#      CGO_ENABLED: 1
+#      CC: "x86_64-w64-mingw32-gcc"
+#      GOOS: windows
+#      GOARCH: amd64
+#      GOBIN: /drone/src/bin/
+#    commands:
+#      - mkdir -p /drone/src/dist/
+#      - apt-get update
+#      - apt-get install -y -q --no-install-recommends gcc build-essential libgl1-mesa-dev xorg-dev libfuse2 mingw-w64
+#      - $$GOBIN/fyne package --release --executable "/drone/src/dist/windows/Whispering Tiger.exe"
+#    when:
+#      status:
+#        - success
+#      event:
+#        - tag
+#    depends_on:
+#      - build-fyne-cli
 
   - name: build-linux
     image: golang:1.23.1-bookworm
@@ -72,6 +76,8 @@ steps:
     when:
       status:
         - success
+      event:
+        - tag
     depends_on:
       - build-fyne-cli
 
@@ -87,7 +93,7 @@ steps:
     image: minio/mc
     environment:
       SRCDIR: /drone/src
-      DIST_DIR: ./dist/windows
+      DIST_DIR: ./dist
       MINIO_HOST:
         from_secret: s3-endpoint-s3
       MINIO_ACCESS_KEY:
@@ -97,13 +103,13 @@ steps:
     commands:
       - mc alias set s3_alias $${MINIO_HOST} $${MINIO_ACCESS_KEY} $${MINIO_SECRET_KEY}
       - DIST_DIR="./dist"
-      - mc cp "$${SRCDIR}$${DIST_DIR##.}/windows/Whispering Tiger.exe" s3_alias/projects/whispering-ui/
+      #- mc cp "$${SRCDIR}$${DIST_DIR##.}/windows/Whispering Tiger.exe" s3_alias/projects/whispering-ui/
       - mc cp "$${SRCDIR}$${DIST_DIR##.}/linux/Whispering Tiger" s3_alias/projects/whispering-ui/
     when:
       event:
         - tag
     depends_on:
-      - build-windows
+      #- build-windows
       - build-linux
 
 #  - name: git-release-windows
@@ -112,25 +118,25 @@ steps:
 #      api_key:
 #        from_secret: docker_password
 #      base_url: ${DRONE_REPO_LINK}
-#      files: /drone/src/dist/Whispering Tiger.exe
+#      files: "/drone/src/dist/Whispering Tiger.exe"
 #    when:
 #      event:
 #        - tag
 #    depends_on:
 #      - build-windows
-#
-#  - name: git-release-linux
-#    image: plugins/gitea-release
-#    settings:
-#      api_key:
-#        from_secret: docker_password
-#      base_url: ${DRONE_REPO_LINK}
-#      files: /drone/src/dist/Whispering Tiger
-#    when:
-#      event:
-#        - tag
-#    depends_on:
-#      - build-linux
+
+  - name: git-release-linux
+    image: plugins/gitea-release
+    settings:
+      api_key:
+        from_secret: docker_password
+      base_url: ${DRONE_REPO_LINK}
+      files: "/drone/src/dist/Whispering Tiger"
+    when:
+      event:
+        - tag
+    depends_on:
+      - build-linux
 
 trigger:
   #  event:
