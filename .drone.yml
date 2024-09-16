@@ -24,7 +24,7 @@ steps:
       - apt-get update
       - apt-get install -y -q --no-install-recommends gcc build-essential libgl1-mesa-dev xorg-dev libfuse2
       - go install fyne.io/fyne/v2/cmd/fyne@latest
-      - fyne package --release --executable "/drone/src/dist/Whispering Tiger.exe"
+      - fyne package --release --executable "/drone/src/dist/windows/Whispering Tiger.exe"
     when:
       status:
         - success
@@ -41,7 +41,7 @@ steps:
       - apt-get update
       - apt-get install -y -q --no-install-recommends gcc build-essential libgl1-mesa-dev xorg-dev libfuse2
       - go install fyne.io/fyne/v2/cmd/fyne@latest
-      - fyne package --release --executable "/drone/src/dist/Whispering Tiger"
+      - fyne package --release --executable "/drone/src/dist/linux/Whispering Tiger"
     when:
       status:
         - success
@@ -70,8 +70,8 @@ steps:
     commands:
       - mc alias set s3_alias $${MINIO_HOST} $${MINIO_ACCESS_KEY} $${MINIO_SECRET_KEY}
       - DIST_DIR="./dist"
-      - mc cp "$${SRCDIR}$${DIST_DIR##.}/Whispering Tiger.exe" s3_alias/projects/whispering-ui/
-      - mc cp "$${SRCDIR}$${DIST_DIR##.}/Whispering Tiger" s3_alias/projects/whispering-ui/
+      - mc cp "$${SRCDIR}$${DIST_DIR##.}/windows/Whispering Tiger.exe" s3_alias/projects/whispering-ui/
+      - mc cp "$${SRCDIR}$${DIST_DIR##.}/linux/Whispering Tiger" s3_alias/projects/whispering-ui/
     when:
       event:
         - tag
