@@ -351,7 +351,8 @@ func GetAudioDevices(audioApi malgo.Backend, deviceTypes []malgo.DeviceType, dev
 
 	for _, deviceType := range deviceTypes {
 		// skip loopback devices for all apis except wasapi or linux audio APIs like PulseAudio and ALSA
-		if audioApi != malgo.BackendWasapi && audioApi != malgo.BackendPulseaudio && audioApi != malgo.BackendAlsa && deviceType == malgo.Loopback {
+		//if audioApi != malgo.BackendWasapi && audioApi != malgo.BackendPulseaudio && audioApi != malgo.BackendAlsa && deviceType == malgo.Loopback {
+		if audioApi != malgo.BackendWasapi && deviceType == malgo.Loopback {
 			continue
 		}
 		deviceListPart, _ := Utilities.GetAudioDevices(audioApi, deviceType, len(deviceList)+deviceIndexStartPoint)

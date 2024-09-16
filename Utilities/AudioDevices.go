@@ -74,6 +74,9 @@ func GetAudioDevices(audioAPI malgo.Backend, deviceType malgo.DeviceType, device
 
 	deviceList := make([]AudioDevice, 0)
 	for index, deviceInfo := range devices {
+		if deviceInfo.ID.Pointer() == nil {
+			continue
+		}
 		fullInfo, err := ctx.DeviceInfo(deviceType, deviceInfo.ID, malgo.Shared)
 		if err != nil {
 			continue
