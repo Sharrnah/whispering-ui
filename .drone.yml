@@ -56,31 +56,54 @@ steps:
   #    - PACKAGE_PREFIX=$(go list -m -f '{{.Path}}')
   #    - go test -v $(go list $${PACKAGE_PREFIX}/... | grep -v /vendor/)
 
-  - name: git-release-windows
-    image: plugins/gitea-release
-    settings:
-      api_key:
-        from_secret: docker_password
-      base_url: ${DRONE_REPO_LINK}
-      files: /drone/src/dist/Whispering Tiger.exe
+  - name: upload-build-s3
+    image: minio/mc
+    environment:
+      SRCDIR: /drone/src
+      DIST_DIR: ./dist/windows
+      MINIO_HOST:
+        from_secret: s3-endpoint-s3
+      MINIO_ACCESS_KEY:
+        from_secret: s3-access-key-s3
+      MINIO_SECRET_KEY:
+        from_secret: s3-secret-key-s3
+    commands:
+      - mc alias set s3_alias $${MINIO_HOST} $${MINIO_ACCESS_KEY} $${MINIO_SECRET_KEY}
+      - DIST_DIR="./dist"
+      - mc cp "$${SRCDIR}$${DIST_DIR##.}/Whispering Tiger.exe" s3_alias/projects/whispering-ui/
+      - mc cp "$${SRCDIR}$${DIST_DIR##.}/Whispering Tiger" s3_alias/projects/whispering-ui/
     when:
       event:
         - tag
     depends_on:
       - build-windows
-
-  - name: git-release-linux
-    image: plugins/gitea-release
-    settings:
-      api_key:
-        from_secret: docker_password
-      base_url: ${DRONE_REPO_LINK}
-      files: /drone/src/dist/Whispering Tiger
-    when:
-      event:
-        - tag
-    depends_on:
       - build-linux
+
+#  - name: git-release-windows
+#    image: plugins/gitea-release
+#    settings:
+#      api_key:
+#        from_secret: docker_password
+#      base_url: ${DRONE_REPO_LINK}
+#      files: /drone/src/dist/Whispering Tiger.exe
+#    when:
+#      event:
+#        - tag
+#    depends_on:
+#      - build-windows
+#
+#  - name: git-release-linux
+#    image: plugins/gitea-release
+#    settings:
+#      api_key:
+#        from_secret: docker_password
+#      base_url: ${DRONE_REPO_LINK}
+#      files: /drone/src/dist/Whispering Tiger
+#    when:
+#      event:
+#        - tag
+#    depends_on:
+#      - build-linux
 
 trigger:
   #  event:
