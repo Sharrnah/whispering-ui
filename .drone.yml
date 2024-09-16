@@ -14,6 +14,27 @@ steps:
       - echo "$${TEST_RESULT}"
       - test -z $${TEST_RESULT}
 
+  - name: build-fyne-cli
+    image: golang:1.23.1-bookworm
+    #image: fyneio/fyne-cross-images:linux
+    environment:
+      CGO_ENABLED: 1
+      CC: "gcc"
+      GOOS: linux
+      GOARCH: amd64
+      GOBIN: /drone/src/bin/
+    commands:
+      - mkdir -p mkdir -p /drone/src/dist/
+      - apt-get update
+      - apt-get install -y -q gcc build-essential libgl1-mesa-dev xorg-dev libfuse2
+      - go get fyne.io/fyne/v2@latest
+      - go install fyne.io/fyne/v2/cmd/fyne@latest
+    when:
+      status:
+        - success
+    depends_on:
+      - lint-test
+
   - name: build-windows
     image: golang:1.23.1-bookworm
     #image: fyneio/fyne-cross-images:windows
@@ -22,19 +43,17 @@ steps:
       CC: "gcc"
       GOOS: windows
       GOARCH: amd64
-      #GOBIN: /drone/src/dist/
+      GOBIN: /drone/src/bin/
     commands:
       - mkdir -p /drone/src/dist/
       - apt-get update
       - apt-get install -y -q --no-install-recommends gcc build-essential libgl1-mesa-dev xorg-dev libfuse2
-      - go get fyne.io/fyne/v2@latest
-      - go install fyne.io/fyne/v2/cmd/fyne@latest
-      - $$GOPATH/bin/fyne package --release --executable "/drone/src/dist/windows/Whispering Tiger.exe"
+      - $$GOBIN/fyne package --release --executable "/drone/src/dist/windows/Whispering Tiger.exe"
     when:
       status:
         - success
     depends_on:
-      - lint-test
+      - build-fyne-cli
 
   - name: build-linux
     image: golang:1.23.1-bookworm
@@ -44,19 +63,17 @@ steps:
       CC: "gcc"
       GOOS: linux
       GOARCH: amd64
-      #GOBIN: /drone/src/dist/
+      GOBIN: /drone/src/bin/
     commands:
       - mkdir -p mkdir -p /drone/src/dist/
       - apt-get update
       - apt-get install -y -q gcc build-essential libgl1-mesa-dev xorg-dev libfuse2
-      - go get fyne.io/fyne/v2@latest
-      - go install fyne.io/fyne/v2/cmd/fyne@latest
-      - $$GOPATH/bin/fyne package --release --executable "/drone/src/dist/linux/Whispering Tiger"
+      - $$GOBIN/fyne package --release --executable "/drone/src/dist/linux/Whispering Tiger"
     when:
       status:
         - success
     depends_on:
-      - lint-test
+      - build-fyne-cli
 
   #- name: unit-test
   #  image: golang:1.20
