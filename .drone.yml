@@ -19,13 +19,17 @@ steps:
     #image: fyneio/fyne-cross-images:windows
     environment:
       CGO_ENABLED: 1
-      GOBIN: /drone/src/dist/
+      CC: "gcc"
+      GOOS: windows
+      GOARCH: amd64
+      #GOBIN: /drone/src/dist/
     commands:
       - mkdir -p /drone/src/dist/
       - apt-get update
       - apt-get install -y -q --no-install-recommends gcc build-essential libgl1-mesa-dev xorg-dev libfuse2
+      - go get fyne.io/fyne/v2@latest
       - go install fyne.io/fyne/v2/cmd/fyne@latest
-      - fyne package --release --executable "/drone/src/dist/windows/Whispering Tiger.exe"
+      - $$GOPATH/bin/fyne package --release --executable "/drone/src/dist/windows/Whispering Tiger.exe"
     when:
       status:
         - success
@@ -37,13 +41,17 @@ steps:
     #image: fyneio/fyne-cross-images:linux
     environment:
       CGO_ENABLED: 1
-      GOBIN: /drone/src/dist/
+      CC: "gcc"
+      GOOS: linux
+      GOARCH: amd64
+      #GOBIN: /drone/src/dist/
     commands:
       - mkdir -p mkdir -p /drone/src/dist/
       - apt-get update
-      - apt-get install -y -q --no-install-recommends gcc build-essential libgl1-mesa-dev xorg-dev libfuse2
+      - apt-get install -y -q gcc build-essential libgl1-mesa-dev xorg-dev libfuse2
+      - go get fyne.io/fyne/v2@latest
       - go install fyne.io/fyne/v2/cmd/fyne@latest
-      - fyne package --release --executable "/drone/src/dist/linux/Whispering Tiger"
+      - $$GOPATH/bin/fyne package --release --executable "/drone/src/dist/linux/Whispering Tiger"
     when:
       status:
         - success
