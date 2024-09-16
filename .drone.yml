@@ -73,6 +73,7 @@ steps:
       - apt-get update
       - apt-get install -y -q gcc build-essential libgl1-mesa-dev xorg-dev libfuse2
       - $$GOBIN/fyne package --release --executable "/drone/src/dist/linux/Whispering Tiger"
+      - ls /drone/src/dist/linux/
     when:
       status:
         - success
@@ -80,14 +81,6 @@ steps:
         - tag
     depends_on:
       - build-fyne-cli
-
-  #- name: unit-test
-  #  image: golang:1.20
-  #  environment:
-  #    CGO_ENABLED: 1
-  #  commands:
-  #    - PACKAGE_PREFIX=$(go list -m -f '{{.Path}}')
-  #    - go test -v $(go list $${PACKAGE_PREFIX}/... | grep -v /vendor/)
 
   - name: upload-build-s3
     image: minio/mc
@@ -126,12 +119,14 @@ steps:
 #      - build-windows
 
   - name: git-release-linux
-    image: plugins/gitea-release
+    #image: plugins/gitea-release
+    image: woodpeckerci/plugin-release
     settings:
       api_key:
         from_secret: docker_password
       base_url: ${DRONE_REPO_LINK}
-      files: "/drone/src/dist/Whispering Tiger"
+      files:
+        - '/drone/src/dist/linux/Whispering Tiger*'
     when:
       event:
         - tag
