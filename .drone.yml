@@ -96,7 +96,7 @@ steps:
       - mc alias set s3_alias $${MINIO_HOST} $${MINIO_ACCESS_KEY} $${MINIO_SECRET_KEY}
       - DIST_DIR="./dist"
       #- mc cp "$${SRCDIR}/Whispering Tiger.exe" s3_alias/projects/whispering-ui/
-      - mc cp "$${SRCDIR}/Whispering Tiger" s3_alias/projects/whispering-ui/
+      - mc cp "$${SRCDIR}/Whispering Tiger.tar.xz" s3_alias/projects/whispering-ui/
     when:
       event:
         - tag
@@ -125,7 +125,7 @@ steps:
         from_secret: docker_password
       base_url: ${DRONE_REPO_LINK}
       files:
-        - '/drone/src/Whispering Tiger'
+        - '/drone/src/Whispering Tiger.tar.xz'
     when:
       event:
         - tag
