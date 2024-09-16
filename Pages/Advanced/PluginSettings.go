@@ -761,17 +761,9 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 
 			var audioInputDevices = Utilities.AudioDeviceMemory{}
 			var audioOutputDevices = Utilities.AudioDeviceMemory{}
-			switch strings.ToLower(Settings.Config.Audio_api) {
-			case "wasapi":
-				audioInputDevices = Utilities.AudioInputDevicesListWASAPI
-				audioOutputDevices = Utilities.AudioOutputDevicesListWASAPI
-			case "mme":
-				audioInputDevices = Utilities.AudioInputDevicesListMME
-				audioOutputDevices = Utilities.AudioOutputDevicesListMME
-			case "directsound":
-				audioInputDevices = Utilities.AudioInputDevicesListDirectSound
-				audioOutputDevices = Utilities.AudioOutputDevicesListDirectSound
-			}
+
+			audioInputDevices = Utilities.AudioInputDeviceList[strings.ToLower(Settings.Config.Audio_api)]
+			audioOutputDevices = Utilities.AudioOutputDeviceList[strings.ToLower(Settings.Config.Audio_api)]
 
 			selectEntries = audioInputDevices.WidgetOptions
 			selectEntries = append(selectEntries, audioOutputDevices.WidgetOptions...)
@@ -780,81 +772,51 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 
 			if deviceApi, ok := v["device_api"].(string); ok {
 				selectedDeviceApi = strings.ToLower(deviceApi)
-				if strings.ToLower(deviceApi) == "wasapi" {
-					selectEntries = Utilities.AudioInputDevicesListWASAPI.WidgetOptions
-					selectEntries = append(selectEntries, Utilities.AudioOutputDevicesListWASAPI.WidgetOptions...)
-				}
-				if strings.ToLower(deviceApi) == "mme" {
-					selectEntries = Utilities.AudioInputDevicesListMME.WidgetOptions
-					selectEntries = append(selectEntries, Utilities.AudioOutputDevicesListMME.WidgetOptions...)
-				}
-				if strings.ToLower(deviceApi) == "directsound" {
-					selectEntries = Utilities.AudioInputDevicesListDirectSound.WidgetOptions
-					selectEntries = append(selectEntries, Utilities.AudioOutputDevicesListDirectSound.WidgetOptions...)
-				}
+				selectEntries = Utilities.AudioInputDeviceList[selectedDeviceApi].WidgetOptions
+				selectEntries = append(selectEntries, Utilities.AudioOutputDeviceList[selectedDeviceApi].WidgetOptions...)
+
 				if strings.ToLower(deviceApi) == "all" {
-					selectEntries = []CustomWidget.TextValueOption{
-						{Text: "==========[WASAPI]==========", Value: ""},
+					selectEntries = []CustomWidget.TextValueOption{}
+
+					for index := range Utilities.AudioInputDeviceList {
+						selectEntries = append(selectEntries,
+							CustomWidget.TextValueOption{Text: "==========[" + strings.ToUpper(index) + "]==========", Value: ""},
+						)
+						selectEntries = append(selectEntries, Utilities.AudioInputDeviceList[index].WidgetOptions...)
+						selectEntries = append(selectEntries, Utilities.AudioOutputDeviceList[index].WidgetOptions...)
 					}
-					selectEntries = append(selectEntries, Utilities.AudioInputDevicesListWASAPI.WidgetOptions...)
-					selectEntries = append(selectEntries, Utilities.AudioOutputDevicesListWASAPI.WidgetOptions...)
-					selectEntries = append(selectEntries,
-						CustomWidget.TextValueOption{Text: "==========[MME]==========", Value: ""},
-					)
-					selectEntries = append(selectEntries, Utilities.AudioInputDevicesListMME.WidgetOptions...)
-					selectEntries = append(selectEntries, Utilities.AudioOutputDevicesListMME.WidgetOptions...)
-					selectEntries = append(selectEntries,
-						CustomWidget.TextValueOption{Text: "==========[DirectSound]==========", Value: ""},
-					)
-					selectEntries = append(selectEntries, Utilities.AudioInputDevicesListDirectSound.WidgetOptions...)
-					selectEntries = append(selectEntries, Utilities.AudioOutputDevicesListDirectSound.WidgetOptions...)
 				}
 			}
 
 			if deviceType, ok := v["device_type"].(string); ok {
+
 				if strings.ToLower(deviceType) == "input" {
 					selectEntries = audioInputDevices.WidgetOptions
-					if selectedDeviceApi == "wasapi" {
-						selectEntries = Utilities.AudioInputDevicesListWASAPI.WidgetOptions
-					} else if selectedDeviceApi == "mme" {
-						selectEntries = Utilities.AudioInputDevicesListMME.WidgetOptions
-					} else if selectedDeviceApi == "directsound" {
-						selectEntries = Utilities.AudioInputDevicesListDirectSound.WidgetOptions
+					if selectedDeviceApi != "all" && selectedDeviceApi != "" && len(Utilities.AudioInputDeviceList[selectedDeviceApi].WidgetOptions) > 0 {
+						selectEntries = Utilities.AudioInputDeviceList[selectedDeviceApi].WidgetOptions
 					} else if selectedDeviceApi == "all" {
-						selectEntries = []CustomWidget.TextValueOption{
-							{Text: "==========[WASAPI]==========", Value: ""},
+						selectEntries = []CustomWidget.TextValueOption{}
+
+						for index := range Utilities.AudioInputDeviceList {
+							selectEntries = append(selectEntries,
+								CustomWidget.TextValueOption{Text: "==========[" + strings.ToUpper(index) + "]==========", Value: ""},
+							)
+							selectEntries = append(selectEntries, Utilities.AudioInputDeviceList[index].WidgetOptions...)
 						}
-						selectEntries = append(selectEntries, Utilities.AudioInputDevicesListWASAPI.WidgetOptions...)
-						selectEntries = append(selectEntries,
-							CustomWidget.TextValueOption{Text: "==========[MME]==========", Value: ""},
-						)
-						selectEntries = append(selectEntries, Utilities.AudioInputDevicesListMME.WidgetOptions...)
-						selectEntries = append(selectEntries,
-							CustomWidget.TextValueOption{Text: "==========[DirectSound]==========", Value: ""},
-						)
-						selectEntries = append(selectEntries, Utilities.AudioInputDevicesListDirectSound.WidgetOptions...)
 					}
 				} else if strings.ToLower(deviceType) == "output" {
 					selectEntries = audioOutputDevices.WidgetOptions
-					if selectedDeviceApi == "wasapi" {
-						selectEntries = Utilities.AudioOutputDevicesListWASAPI.WidgetOptions
-					} else if selectedDeviceApi == "mme" {
-						selectEntries = Utilities.AudioOutputDevicesListMME.WidgetOptions
-					} else if selectedDeviceApi == "directsound" {
-						selectEntries = Utilities.AudioOutputDevicesListDirectSound.WidgetOptions
+					if selectedDeviceApi != "all" && selectedDeviceApi != "" && len(Utilities.AudioOutputDeviceList[selectedDeviceApi].WidgetOptions) > 0 {
+						selectEntries = Utilities.AudioOutputDeviceList[selectedDeviceApi].WidgetOptions
 					} else if selectedDeviceApi == "all" {
-						selectEntries = []CustomWidget.TextValueOption{
-							{Text: "==========[WASAPI]==========", Value: ""},
+						selectEntries = []CustomWidget.TextValueOption{}
+
+						for index := range Utilities.AudioOutputDeviceList {
+							selectEntries = append(selectEntries,
+								CustomWidget.TextValueOption{Text: "==========[" + strings.ToUpper(index) + "]==========", Value: ""},
+							)
+							selectEntries = append(selectEntries, Utilities.AudioOutputDeviceList[index].WidgetOptions...)
 						}
-						selectEntries = append(selectEntries, Utilities.AudioOutputDevicesListWASAPI.WidgetOptions...)
-						selectEntries = append(selectEntries,
-							CustomWidget.TextValueOption{Text: "==========[MME]==========", Value: ""},
-						)
-						selectEntries = append(selectEntries, Utilities.AudioOutputDevicesListMME.WidgetOptions...)
-						selectEntries = append(selectEntries,
-							CustomWidget.TextValueOption{Text: "==========[DirectSound]==========", Value: ""},
-						)
-						selectEntries = append(selectEntries, Utilities.AudioOutputDevicesListDirectSound.WidgetOptions...)
 					}
 				}
 			}

@@ -31,6 +31,7 @@ import (
 	"whispering-tiger-ui/Resources"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
+	"whispering-tiger-ui/Utilities/AudioAPI"
 	"whispering-tiger-ui/Utilities/Hardwareinfo"
 )
 
@@ -349,8 +350,8 @@ func GetAudioDevices(audioApi malgo.Backend, deviceTypes []malgo.DeviceType, dev
 	deviceList := make([]Utilities.AudioDevice, 0)
 
 	for _, deviceType := range deviceTypes {
-		// skip loopback devices for all apis except wasapi
-		if audioApi != malgo.BackendWasapi && deviceType == malgo.Loopback {
+		// skip loopback devices for all apis except wasapi or linux audio APIs like PulseAudio and ALSA
+		if audioApi != malgo.BackendWasapi && audioApi != malgo.BackendPulseaudio && audioApi != malgo.BackendAlsa && deviceType == malgo.Loopback {
 			continue
 		}
 		deviceListPart, _ := Utilities.GetAudioDevices(audioApi, deviceType, len(deviceList)+deviceIndexStartPoint)
@@ -378,38 +379,22 @@ func GetAudioDevices(audioApi malgo.Backend, deviceTypes []malgo.DeviceType, dev
 }
 
 func fillAudioDeviceLists() {
-	audioInputDevicesOptionsWASAPI, audioInputDevicesWASAPI, _ := GetAudioDevices(malgo.BackendWasapi, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0, "#|wasapi,input", " - API: WASAPI")
-	audioOutputDevicesOptionsWASAPI, audioOutputDevicesWASAPI, _ := GetAudioDevices(malgo.BackendWasapi, []malgo.DeviceType{malgo.Playback}, len(audioInputDevicesOptionsWASAPI), "#|wasapi,output", " - API: WASAPI")
-	Utilities.AudioInputDevicesListWASAPI.Backend = malgo.BackendWasapi
-	Utilities.AudioInputDevicesListWASAPI.Devices = audioInputDevicesWASAPI
-	Utilities.AudioInputDevicesListWASAPI.WidgetOptions = audioInputDevicesOptionsWASAPI
+	// loop through AudioBackends
+	for _, backendItem := range AudioAPI.AudioBackends {
+		audioInputDevicesOptions, audioInputDevices, _ := GetAudioDevices(backendItem.Backend, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0, "#|"+backendItem.Id+",input", " - API: "+backendItem.Name)
+		audioOutputDevicesOptions, audioOutputDevices, _ := GetAudioDevices(backendItem.Backend, []malgo.DeviceType{malgo.Playback}, len(audioInputDevicesOptions), "#|"+backendItem.Id+",output", " - API: "+backendItem.Name)
 
-	Utilities.AudioOutputDevicesListWASAPI.Backend = malgo.BackendWasapi
-	Utilities.AudioOutputDevicesListWASAPI.Devices = audioOutputDevicesWASAPI
-	Utilities.AudioOutputDevicesListWASAPI.WidgetOptions = audioOutputDevicesOptionsWASAPI
-
-	// fill other lists
-	audioInputDevicesOptionsMme, audioInputDevicesMme, _ := GetAudioDevices(malgo.BackendWinmm, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0, "#|mme,input", " - API: MME")
-	audioOutputDevicesOptionsMme, audioOutputDevicesMme, _ := GetAudioDevices(malgo.BackendWinmm, []malgo.DeviceType{malgo.Playback}, len(audioInputDevicesOptionsMme), "#|mme,output", " - API: MME")
-
-	Utilities.AudioInputDevicesListMME.Backend = malgo.BackendWinmm
-	Utilities.AudioInputDevicesListMME.Devices = audioInputDevicesMme
-	Utilities.AudioInputDevicesListMME.WidgetOptions = audioInputDevicesOptionsMme
-
-	Utilities.AudioOutputDevicesListMME.Backend = malgo.BackendWinmm
-	Utilities.AudioOutputDevicesListMME.Devices = audioOutputDevicesMme
-	Utilities.AudioOutputDevicesListMME.WidgetOptions = audioOutputDevicesOptionsMme
-
-	audioInputDevicesOptionsDsound, audioInputDevicesDsound, _ := GetAudioDevices(malgo.BackendDsound, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0, "#|directsound,input", " - API: DirectSound")
-	audioOutputDevicesOptionsDsound, audioOutputDevicesDsound, _ := GetAudioDevices(malgo.BackendDsound, []malgo.DeviceType{malgo.Playback}, len(audioInputDevicesOptionsDsound), "#|directsound,output", " - API: DirectSound")
-
-	Utilities.AudioInputDevicesListDirectSound.Backend = malgo.BackendDsound
-	Utilities.AudioInputDevicesListDirectSound.Devices = audioInputDevicesDsound
-	Utilities.AudioInputDevicesListDirectSound.WidgetOptions = audioInputDevicesOptionsDsound
-
-	Utilities.AudioOutputDevicesListDirectSound.Backend = malgo.BackendDsound
-	Utilities.AudioOutputDevicesListDirectSound.Devices = audioOutputDevicesDsound
-	Utilities.AudioOutputDevicesListDirectSound.WidgetOptions = audioOutputDevicesOptionsDsound
+		Utilities.AudioInputDeviceList[backendItem.Id] = Utilities.AudioDeviceMemory{
+			Backend:       backendItem.Backend,
+			Devices:       audioInputDevices,
+			WidgetOptions: audioInputDevicesOptions,
+		}
+		Utilities.AudioOutputDeviceList[backendItem.Id] = Utilities.AudioDeviceMemory{
+			Backend:       backendItem.Backend,
+			Devices:       audioOutputDevices,
+			WidgetOptions: audioOutputDevicesOptions,
+		}
+	}
 }
 
 func appendWidgetToForm(form *widget.Form, text string, itemWidget fyne.CanvasObject, hintText string) {
@@ -530,7 +515,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 	playBackDevice := CurrentPlaybackDevice{}
 
-	playBackDevice.AudioAPI = malgo.BackendWasapi
+	playBackDevice.AudioAPI = AudioAPI.AudioBackends[0].Backend
 	go playBackDevice.Init()
 
 	audioInputDevicesOptions, _, _ := GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0, "", "")
@@ -563,22 +548,19 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		},
 		0)
 
+	var audioOptions []CustomWidget.TextValueOption
+	for _, backend := range AudioAPI.AudioBackends {
+		audioOptions = append(audioOptions, CustomWidget.TextValueOption{
+			Text:  backend.Name,
+			Value: backend.Name,
+		})
+	}
+
 	audioApiSelect := CustomWidget.NewTextValueSelect("audio_api",
-		[]CustomWidget.TextValueOption{
-			{Text: "MME", Value: "MME"},
-			{Text: "DirectSound", Value: "DirectSound"},
-			{Text: "WASAPI", Value: "WASAPI"},
-		},
+		audioOptions,
 		func(s CustomWidget.TextValueOption) {
-			var value malgo.Backend = malgo.BackendWinmm
-			switch s.Value {
-			case "MME":
-				value = malgo.BackendWinmm
-			case "DirectSound":
-				value = malgo.BackendDsound
-			case "WASAPI":
-				value = malgo.BackendWasapi
-			}
+			var value malgo.Backend = AudioAPI.AudioBackends[0].Backend
+			value = AudioAPI.GetAudioBackendByName(s.Value).Backend
 			if playBackDevice.AudioAPI != value && playBackDevice.AudioAPI != malgo.BackendNull {
 				oldAudioInputSelection := audioInputSelect.GetSelected()
 				oldAudioOutputSelection := audioOutputSelect.GetSelected()

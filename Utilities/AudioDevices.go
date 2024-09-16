@@ -24,17 +24,8 @@ type AudioDeviceMemory struct {
 	WidgetOptions []CustomWidget.TextValueOption
 }
 
-// WASAPI device lists
-var AudioInputDevicesListWASAPI AudioDeviceMemory
-var AudioOutputDevicesListWASAPI AudioDeviceMemory
-
-// MME device lists
-var AudioInputDevicesListMME AudioDeviceMemory
-var AudioOutputDevicesListMME AudioDeviceMemory
-
-// DirectSound device lists
-var AudioInputDevicesListDirectSound AudioDeviceMemory
-var AudioOutputDevicesListDirectSound AudioDeviceMemory
+var AudioInputDeviceList = make(map[string]AudioDeviceMemory)
+var AudioOutputDeviceList = make(map[string]AudioDeviceMemory)
 
 func InitMalgo(audioAPI malgo.Backend) (*malgo.AllocatedContext, error) {
 	defer PanicLogger()
