@@ -7,7 +7,7 @@ steps:
   - name: lint-test
     image: golang:1.23.1
     environment:
-      CGO_ENABLED: 0
+      CGO_ENABLED: 1
     commands:
       - TEST_RESULT=$(gofmt -l ./)
       - printf "Test Result:\n"
@@ -15,9 +15,10 @@ steps:
       - test -z $${TEST_RESULT}
 
   - name: build-windows
-    #image: golang:1.23.1-bookworm
-    image: fyneio/fyne-cross-images:windows
+    image: golang:1.23.1-bookworm
+    #image: fyneio/fyne-cross-images:windows
     environment:
+      CGO_ENABLED: 1
       GOBIN: /drone/src/dist/
     commands:
       - mkdir -p /drone/src/dist/
@@ -32,9 +33,10 @@ steps:
       - lint-test
 
   - name: build-linux
-    #image: golang:1.23.1-bookworm
-    image: fyneio/fyne-cross-images:linux
+    image: golang:1.23.1-bookworm
+    #image: fyneio/fyne-cross-images:linux
     environment:
+      CGO_ENABLED: 1
       GOBIN: /drone/src/dist/
     commands:
       - mkdir -p mkdir -p /drone/src/dist/
