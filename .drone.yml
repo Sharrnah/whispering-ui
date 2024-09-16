@@ -72,8 +72,8 @@ steps:
       - mkdir -p mkdir -p /drone/src/dist/
       - apt-get update
       - apt-get install -y -q gcc build-essential libgl1-mesa-dev xorg-dev libfuse2
-      - $$GOBIN/fyne package --release --executable "/drone/src/dist/linux/Whispering Tiger"
-      - ls /drone/src/dist/linux/
+      - $$GOBIN/fyne package --release
+      - ls -lah /drone/src/
     when:
       status:
         - success
@@ -86,7 +86,6 @@ steps:
     image: minio/mc
     environment:
       SRCDIR: /drone/src
-      DIST_DIR: ./dist
       MINIO_HOST:
         from_secret: s3-endpoint-s3
       MINIO_ACCESS_KEY:
@@ -96,8 +95,8 @@ steps:
     commands:
       - mc alias set s3_alias $${MINIO_HOST} $${MINIO_ACCESS_KEY} $${MINIO_SECRET_KEY}
       - DIST_DIR="./dist"
-      #- mc cp "$${SRCDIR}$${DIST_DIR##.}/windows/Whispering Tiger.exe" s3_alias/projects/whispering-ui/
-      - mc cp "$${SRCDIR}$${DIST_DIR##.}/linux/Whispering Tiger" s3_alias/projects/whispering-ui/
+      #- mc cp "$${SRCDIR}/Whispering Tiger.exe" s3_alias/projects/whispering-ui/
+      - mc cp "$${SRCDIR}/Whispering Tiger" s3_alias/projects/whispering-ui/
     when:
       event:
         - tag
@@ -119,14 +118,14 @@ steps:
 #      - build-windows
 
   - name: git-release-linux
-    #image: plugins/gitea-release
-    image: woodpeckerci/plugin-release
+    image: plugins/gitea-release
+    #image: woodpeckerci/plugin-release
     settings:
       api_key:
         from_secret: docker_password
       base_url: ${DRONE_REPO_LINK}
       files:
-        - '/drone/src/dist/linux/Whispering Tiger*'
+        - '/drone/src/Whispering Tiger'
     when:
       event:
         - tag
