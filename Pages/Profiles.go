@@ -120,6 +120,7 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 	captureDevices, err := c.Context.Devices(malgo.Capture)
 	if err != nil {
 		fmt.Println(err)
+		return err
 	}
 
 	isLoopback := false
@@ -319,7 +320,8 @@ func (c *CurrentPlaybackDevice) Init() {
 	})
 	if err != nil {
 		fmt.Println(err)
-		os.Exit(1)
+		return
+		//os.Exit(1)
 	}
 	defer func() {
 		if c.Context != nil {
@@ -347,6 +349,7 @@ func (c *CurrentPlaybackDevice) Init() {
 func GetAudioDevices(audioApi malgo.Backend, deviceTypes []malgo.DeviceType, deviceIndexStartPoint int, specialValueSuffix string, specialTextSuffix string) ([]CustomWidget.TextValueOption, []Utilities.AudioDevice, error) {
 	defer Utilities.PanicLogger()
 
+	devicesOptions := make([]CustomWidget.TextValueOption, 0)
 	deviceList := make([]Utilities.AudioDevice, 0)
 
 	for _, deviceType := range deviceTypes {
@@ -363,11 +366,10 @@ func GetAudioDevices(audioApi malgo.Backend, deviceTypes []malgo.DeviceType, dev
 		deviceList = append(deviceList, deviceListPart...)
 	}
 
-	if deviceList == nil {
-		return nil, nil, fmt.Errorf("no devices found")
+	if deviceList == nil || len(deviceList) == 0 {
+		return devicesOptions, nil, fmt.Errorf("no devices found")
 	}
 
-	devicesOptions := make([]CustomWidget.TextValueOption, 0)
 	for _, device := range deviceList {
 		devicesOptions = append(devicesOptions, CustomWidget.TextValueOption{
 			Text:  device.Name + specialTextSuffix,

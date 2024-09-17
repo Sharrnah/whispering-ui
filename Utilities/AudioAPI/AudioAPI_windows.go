@@ -7,6 +7,7 @@ import (
 )
 
 var AudioBackends = []AudioBackend{
+	//{malgo.BackendNull, "null", "Null"},
 	{malgo.BackendWasapi, "wasapi", "WASAPI"},
 	{malgo.BackendWinmm, "mme", "MME"},
 	{malgo.BackendDsound, "directsound", "DirectSound"},
