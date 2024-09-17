@@ -355,7 +355,11 @@ func GetAudioDevices(audioApi malgo.Backend, deviceTypes []malgo.DeviceType, dev
 		if audioApi != malgo.BackendWasapi && deviceType == malgo.Loopback {
 			continue
 		}
-		deviceListPart, _ := Utilities.GetAudioDevices(audioApi, deviceType, len(deviceList)+deviceIndexStartPoint)
+		deviceListPart, err := Utilities.GetAudioDevices(audioApi, deviceType, len(deviceList)+deviceIndexStartPoint)
+		if err != nil {
+			fmt.Printf("Error getting audio devices: %v\n", err)
+			continue
+		}
 		deviceList = append(deviceList, deviceListPart...)
 	}
 

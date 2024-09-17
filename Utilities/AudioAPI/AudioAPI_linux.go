@@ -7,6 +7,6 @@ import (
 )
 
 var AudioBackends = []AudioBackend{
-	{malgo.BackendPulseaudio, "pulseaudio", "PulseAudio"},
 	{malgo.BackendAlsa, "alsa", "ALSA"},
+	{malgo.BackendPulseaudio, "pulseaudio", "PulseAudio"},
 }
