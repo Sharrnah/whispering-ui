@@ -534,10 +534,15 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	audioInputSelect := CustomWidget.NewTextValueSelect("device_index", audioInputDevicesOptions,
 		func(s CustomWidget.TextValueOption) {
 			println(s.Value)
-			playBackDevice.InputDeviceName = s.Text
-			err := playBackDevice.InitDevices(false)
-			if err != nil {
-				var newError = fmt.Errorf("audio Input (mic): %v", err)
+			if s.Text != "" {
+				playBackDevice.InputDeviceName = s.Text
+				err := playBackDevice.InitDevices(false)
+				if err != nil {
+					var newError = fmt.Errorf("audio Input (mic): %v", err)
+					dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
+				}
+			} else {
+				var newError = fmt.Errorf("audio Input (mic): No device selected")
 				dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 		},
@@ -546,10 +551,15 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	audioOutputSelect := CustomWidget.NewTextValueSelect("device_out_index", audioOutputDevicesOptions,
 		func(s CustomWidget.TextValueOption) {
 			println(s.Value)
-			playBackDevice.OutputDeviceName = s.Text
-			err := playBackDevice.InitDevices(false)
-			if err != nil {
-				var newError = fmt.Errorf("audio Output (speaker): %v", err)
+			if s.Text != "" {
+				playBackDevice.OutputDeviceName = s.Text
+				err := playBackDevice.InitDevices(false)
+				if err != nil {
+					var newError = fmt.Errorf("audio Output (speaker): %v", err)
+					dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
+				}
+			} else {
+				var newError = fmt.Errorf("audio Output (speaker): No device selected")
 				dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 		},

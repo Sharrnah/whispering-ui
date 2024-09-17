@@ -1,6 +1,9 @@
 package ProfileSettings
 
-import "whispering-tiger-ui/Settings"
+import (
+	"whispering-tiger-ui/Settings"
+	"whispering-tiger-ui/Utilities/AudioAPI"
+)
 
 var DefaultProfileSetting = Settings.Conf{
 	SettingsFilename:         "",
@@ -9,7 +12,7 @@ var DefaultProfileSetting = Settings.Conf{
 	Run_backend:              true,
 	Device_index:             -1,
 	Device_out_index:         -1,
-	Audio_api:                "WASAPI",
+	Audio_api:                AudioAPI.AudioBackends[0].Name,
 	Audio_input_device:       "",
 	Audio_output_device:      "",
 	Ai_device:                "cpu",

@@ -11,6 +11,8 @@ type AudioBackend struct {
 	Name    string
 }
 
+// var AudioBackends first API in slice is default
+
 func GetAudioBackendByID(id string) AudioBackend {
 	for _, backend := range AudioBackends {
 		if strings.ToLower(backend.Id) == strings.ToLower(id) {
