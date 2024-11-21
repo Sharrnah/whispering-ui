@@ -620,15 +620,27 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	GPUMemoryBar := widget.NewProgressBar()
 	totalGPUMemory := int64(0)
 	var ComputeCapability float32 = 0.0
-	if Hardwareinfo.HasNVIDIACard() {
-		_, totalGPUMemory = Hardwareinfo.GetGPUMemory()
-		GPUMemoryBar.Max = float64(totalGPUMemory)
+	go func() {
+		if Hardwareinfo.HasNVIDIACard() {
+			_, totalGPUMemory = Hardwareinfo.GetGPUMemory()
+			if totalGPUMemory <= 0 {
+				// fall back to registry reading of Video Memory
+				foundGPU, _ := Hardwareinfo.FindDedicatedGPUByVendor([]string{"nvidia"})
+				if foundGPU != nil && len(foundGPU) > 0 {
+					totalGPUMemory = foundGPU[0].MemoryMB
+				}
+			}
+			GPUMemoryBar.Max = float64(totalGPUMemory)
 
-		ComputeCapability = Hardwareinfo.GetGPUComputeCapability()
-	} else {
-		_, totalGPUMemory = Hardwareinfo.GetWinGPUMemory("")
-		GPUMemoryBar.Max = float64(totalGPUMemory)
-	}
+			ComputeCapability = Hardwareinfo.GetGPUComputeCapability()
+		} else {
+			foundGPU, _ := Hardwareinfo.FindDedicatedGPUByVendor([]string{"nvidia", "amd", "intel"})
+			if foundGPU != nil && len(foundGPU) > 0 {
+				totalGPUMemory = foundGPU[0].MemoryMB
+			}
+			GPUMemoryBar.Max = float64(totalGPUMemory)
+		}
+	}()
 
 	GPUMemoryBar.TextFormatter = func() string {
 		if totalGPUMemory == 0 {
