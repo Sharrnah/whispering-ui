@@ -992,6 +992,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Large V1", Value: "large-v1"},
 			{Text: "Large V2", Value: "large-v2"},
 			{Text: "Large V3", Value: "large-v3"},
+			{Text: "Large V3 Turbo", Value: "large-v3-turbo"},
 		}
 
 		medusaWhisperModelList := []CustomWidget.TextValueOption{
@@ -1011,6 +1012,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Large V1", Value: "large-v1"},
 			{Text: "Large V2", Value: "large-v2"},
 			{Text: "Large V3", Value: "large-v3"},
+			{Text: "Large V3 Turbo", Value: "large-v3-turbo"},
 			{Text: "Medium Distilled (English)", Value: "medium-distilled.en"},
 			{Text: "Large V2 Distilled (English)", Value: "large-distilled-v2.en"},
 			{Text: "Large V3 Distilled (English)", Value: "large-distilled-v3.en"},
@@ -1486,19 +1488,27 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		profileForm.Append("", layout.NewSpacer())
 
-		profileForm.Append(lang.L("Integrated Text-to-Speech"), widget.NewCheck("", func(b bool) {
-			enabledType := "N"
-			if b {
-				enabledType = "O"
+		ttsTypeSelect := CustomWidget.NewTextValueSelect("stt_type", []CustomWidget.TextValueOption{
+			{Text: "Silero", Value: "silero"},
+			{Text: "F5/E2", Value: "f5_e2"},
+			{Text: lang.L("Disabled"), Value: ""},
+		}, func(s CustomWidget.TextValueOption) {}, 0)
+
+		ttsTypeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+			AIModelType := "disabled"
+			if s.Value != "" {
+				AIModelType = s.Value
 			}
 			// calculate memory consumption
 			AIModel := ProfileAIModelOption{
-				AIModel:     "Silero",
-				AIModelType: enabledType,
+				AIModel:     "ttsType-",
+				AIModelType: AIModelType,
 				Precision:   Hardwareinfo.Float32,
 			}
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
-		}))
+		}
+
+		profileForm.Append(lang.L("Integrated Text-to-Speech"), container.NewGridWithColumns(2, ttsTypeSelect))
 
 		profileForm.Append(lang.L("A.I. Device for Text-to-Speech"), CustomWidget.NewTextValueSelect("tts_ai_device", []CustomWidget.TextValueOption{
 			{Text: "CUDA", Value: "cuda"},
@@ -1511,7 +1521,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			}
 			// calculate memory consumption
 			AIModel := ProfileAIModelOption{
-				AIModel:   "Silero",
+				AIModel:   "ttsType-",
 				Device:    s.Value,
 				Precision: Hardwareinfo.Float32,
 			}
@@ -1735,7 +1745,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileForm.Items[19].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_size)
 		profileForm.Items[19].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_precision)
 		// spacer (19)
-		profileForm.Items[21].Widget.(*widget.Check).SetChecked(profileSettings.Tts_enabled)
+		//profileForm.Items[21].Widget.(*widget.Check).SetChecked(profileSettings.Tts_enabled)
+		profileForm.Items[21].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Tts_type)
 		profileForm.Items[22].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Tts_ai_device)
 
 		profileForm.OnSubmit = func() {
@@ -1772,7 +1783,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			profileSettings.Txt_translator_size = profileForm.Items[19].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
 			profileSettings.Txt_translator_precision = profileForm.Items[19].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected().Value
 
-			profileSettings.Tts_enabled = profileForm.Items[21].Widget.(*widget.Check).Checked
+			profileSettings.Tts_type = profileForm.Items[21].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
 			profileSettings.Tts_ai_device = profileForm.Items[22].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
 
 			// update existing settings or create new one if it does not exist yet
@@ -1811,7 +1822,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					Txt_translator_precision: profileSettings.Txt_translator_precision,
 					Txt_translator:           profileSettings.Txt_translator,
 
-					Tts_enabled:   profileSettings.Tts_enabled,
+					//Tts_enabled:   profileSettings.Tts_enabled,
+					Tts_type:      profileSettings.Tts_type,
 					Tts_ai_device: profileSettings.Tts_ai_device,
 
 					Osc_ip:   profileSettings.Osc_ip,

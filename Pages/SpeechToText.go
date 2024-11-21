@@ -12,6 +12,7 @@ import (
 	"image/color"
 	"os"
 	"path/filepath"
+	"strings"
 	"time"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Settings"
@@ -36,6 +37,13 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 	}
 	if Settings.Config.Stt_type == "mms" {
 		speechTaskWidgetLabel.SetText("")
+		speechTaskWidget.(*widget.Select).Hide()
+	}
+	if (Settings.Config.Stt_type == "faster_whisper" || Settings.Config.Stt_type == "transformer_whisper" || Settings.Config.Stt_type == "original_whisper") &&
+		strings.HasSuffix(Settings.Config.Model, "-turbo") {
+		speechTaskWidgetLabel.SetText("")
+		speechTaskWidget.(*widget.Select).SetSelected("transcribe")
+		Settings.Config.Whisper_task = "transcribe"
 		speechTaskWidget.(*widget.Select).Hide()
 	}
 

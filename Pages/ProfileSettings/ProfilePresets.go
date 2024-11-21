@@ -23,7 +23,8 @@ var DefaultProfileSetting = Settings.Conf{
 	Txt_translator_precision: "float32",
 	Txt_translate_realtime:   false,
 
-	Tts_enabled:      true,
+	//Tts_enabled:      true,
+	Tts_type:         "silero",
 	Tts_ai_device:    "cpu",
 	Current_language: "",
 
@@ -127,7 +128,7 @@ var Presets = map[string]Settings.Conf{
 		profile.Whisper_num_workers = 5
 		profile.Word_timestamps = false
 
-		profile.Tts_enabled = true
+		profile.Tts_type = "silero"
 		profile.Txt_translate_realtime = false
 
 		profile.Temperature_fallback = true
@@ -159,7 +160,7 @@ var Presets = map[string]Settings.Conf{
 		profile.Whisper_num_workers = 5
 		profile.Word_timestamps = false
 
-		profile.Tts_enabled = true
+		profile.Tts_type = "silero"
 		profile.Txt_translate_realtime = false
 
 		profile.Temperature_fallback = true
@@ -195,7 +196,7 @@ var Presets = map[string]Settings.Conf{
 		profile.Whisper_num_workers = 5
 		profile.Word_timestamps = false
 
-		profile.Tts_enabled = false
+		profile.Tts_type = ""
 		profile.Txt_translate_realtime = true
 
 		profile.Temperature_fallback = false
@@ -231,7 +232,7 @@ var Presets = map[string]Settings.Conf{
 		profile.Whisper_num_workers = 5
 		profile.Word_timestamps = false
 
-		profile.Tts_enabled = false
+		profile.Tts_type = ""
 		profile.Txt_translate_realtime = true
 
 		profile.Temperature_fallback = false
@@ -263,7 +264,7 @@ var Presets = map[string]Settings.Conf{
 		profile.Whisper_num_workers = 5
 		profile.Word_timestamps = false
 
-		profile.Tts_enabled = true
+		profile.Tts_type = "silero"
 		profile.Txt_translate_realtime = false
 
 		profile.Temperature_fallback = true
@@ -295,7 +296,7 @@ var Presets = map[string]Settings.Conf{
 		profile.Whisper_num_workers = 5
 		profile.Word_timestamps = false
 
-		profile.Tts_enabled = true
+		profile.Tts_type = "silero"
 		profile.Txt_translate_realtime = false
 
 		profile.Temperature_fallback = true
@@ -331,7 +332,7 @@ var Presets = map[string]Settings.Conf{
 		profile.Whisper_num_workers = 5
 		profile.Word_timestamps = false
 
-		profile.Tts_enabled = false
+		profile.Tts_type = ""
 		profile.Txt_translate_realtime = true
 
 		profile.Temperature_fallback = false
@@ -367,7 +368,7 @@ var Presets = map[string]Settings.Conf{
 		profile.Whisper_num_workers = 5
 		profile.Word_timestamps = false
 
-		profile.Tts_enabled = false
+		profile.Tts_type = ""
 		profile.Txt_translate_realtime = true
 
 		profile.Temperature_fallback = false
@@ -399,7 +400,7 @@ var Presets = map[string]Settings.Conf{
 		profile.Whisper_num_workers = 5
 		profile.Word_timestamps = false
 
-		profile.Tts_enabled = true
+		profile.Tts_type = "silero"
 		profile.Txt_translate_realtime = false
 
 		profile.Temperature_fallback = false
@@ -431,7 +432,7 @@ var Presets = map[string]Settings.Conf{
 		profile.Whisper_num_workers = 5
 		profile.Word_timestamps = false
 
-		profile.Tts_enabled = true
+		profile.Tts_type = "silero"
 		profile.Txt_translate_realtime = false
 
 		profile.Temperature_fallback = false

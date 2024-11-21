@@ -32,10 +32,14 @@ func (res TtsLanguagesListing) Update() *TtsLanguagesListing {
 	for _, languageItem := range res.Languages {
 		//elementName := languageItem.Language
 		for _, modelItem := range languageItem.Models {
-			if strings.Contains(modelItem, "v3") || strings.Contains(modelItem, "v4") {
-				Fields.Field.TtsModelCombo.Options = append(Fields.Field.TtsModelCombo.Options, modelItem)
+			if Settings.Config.Tts_type == "silero" {
+				if strings.Contains(modelItem, "v3") || strings.Contains(modelItem, "v4") {
+					Fields.Field.TtsModelCombo.Options = append(Fields.Field.TtsModelCombo.Options, modelItem)
+				}
+			} else {
+				modelEntry := modelItem + " (" + languageItem.Language + ")"
+				Fields.Field.TtsModelCombo.Options = append(Fields.Field.TtsModelCombo.Options, modelEntry)
 			}
-
 		}
 	}
 	return &res
@@ -50,6 +54,10 @@ type TtsVoicesListing struct {
 var TtsVoices TtsVoicesListing
 
 func (res TtsVoicesListing) Update() *TtsVoicesListing {
+	lastSelectedVoice := ""
+	if len(Fields.Field.TtsVoiceCombo.Options) > 0 {
+		lastSelectedVoice = Fields.Field.TtsVoiceCombo.Selected
+	}
 	Fields.Field.TtsVoiceCombo.Options = nil
 	Fields.Field.TtsVoiceCombo.Options = append(Fields.Field.TtsVoiceCombo.Options, res.Voices...)
 
@@ -61,6 +69,13 @@ func (res TtsVoicesListing) Update() *TtsVoicesListing {
 			break
 		}
 	}
+	voicesListContainsComboboxSelectedVoice := false
+	for _, voiceOption := range Fields.Field.TtsVoiceCombo.Options {
+		if voiceOption == lastSelectedVoice {
+			voicesListContainsComboboxSelectedVoice = true
+			break
+		}
+	}
 	// only set new tts voice if select is not received tts_voice and
 	// if select is not empty and does not contain only one empty element
 	if !voicesListContainsSelectedVoice && Fields.Field.TtsVoiceCombo.Options != nil && (len(Fields.Field.TtsVoiceCombo.Options) > 0 &&
@@ -69,6 +84,9 @@ func (res TtsVoicesListing) Update() *TtsVoicesListing {
 	}
 	if Settings.Config.Tts_voice != "" && voicesListContainsSelectedVoice {
 		Fields.Field.TtsVoiceCombo.SetSelected(Settings.Config.Tts_voice)
+	}
+	if lastSelectedVoice != "" && voicesListContainsComboboxSelectedVoice {
+		Fields.Field.TtsVoiceCombo.SetSelected(lastSelectedVoice)
 	}
 
 	return &res

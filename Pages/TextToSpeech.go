@@ -17,6 +17,7 @@ import (
 	"time"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
 )
 
@@ -171,6 +172,14 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 		sendMessage.SendMessage()
 		Fields.Field.TtsVoiceCombo.SetSelected("last")
 	})
+	if Settings.Config.Tts_type == "f5_e2" {
+		saveRandomVoiceButton = widget.NewButtonWithIcon("", theme.ViewRefreshIcon(), func() {
+			sendMessage := Fields.SendMessageStruct{
+				Type: "tts_voice_reload_req",
+			}
+			sendMessage.SendMessage()
+		})
+	}
 	ttsVoices := container.New(layout.NewFormLayout(), widget.NewLabel(lang.L("Voice")+":"), Fields.Field.TtsVoiceCombo)
 
 	ttsVoicesSaveBtnLayout := container.NewBorder(nil, nil, nil, saveRandomVoiceButton, ttsVoices)

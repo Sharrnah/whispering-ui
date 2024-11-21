@@ -39,7 +39,7 @@ type Profile struct {
 	Run_Backend              bool        `yaml:"run_backend"`
 	Osc_ip                   string      `yaml:"osc_ip"`
 	Osc_port                 int         `yaml:"osc_port"`
-	Tts_enabled              bool        `yaml:"tts_enabled"`
+	Tts_type                 string      `yaml:"tts_type"`
 	Tts_ai_device            string      `yaml:"tts_ai_device"`
 	Whisper_precision        string      `yaml:"whisper_precision"`
 	Stt_type                 string      `yaml:"stt_type"`

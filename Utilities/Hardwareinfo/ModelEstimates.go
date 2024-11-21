@@ -61,8 +61,9 @@ var Models = []AIModel{
 	{"TxtTranslatorSeamless_M4T_medium", 6250.0},
 	{"TxtTranslatorSeamless_M4T_large", 10518.0},
 	{"TxtTranslatorSeamless_M4T_large-v2", 10518.0},
-	// Silero TTS
-	{"SileroO_", 1533.0},
+	// TTS types
+	{"ttsType-silero_", 1533.0},
+	{"ttsType-f5_e2_", 1200.0},
 }
 
 const (

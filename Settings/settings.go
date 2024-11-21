@@ -152,7 +152,8 @@ type Conf struct {
 	Ocr_window_name  string `yaml:"ocr_window_name" json:"ocr_window_name"`
 
 	// TTS settings
-	Tts_enabled                   bool     `yaml:"tts_enabled" json:"tts_enabled"`
+	//Tts_enabled                   bool     `yaml:"tts_enabled" json:"tts_enabled"`
+	Tts_type                      string   `yaml:"tts_type" json:"tts_type"`
 	Tts_ai_device                 string   `yaml:"tts_ai_device" json:"tts_ai_device"`
 	Tts_answer                    bool     `yaml:"tts_answer" json:"tts_answer"`
 	Tts_model                     []string `yaml:"tts_model" json:"tts_model"`
