@@ -117,6 +117,10 @@ type Conf struct {
 	Txt_translator_precision string `yaml:"txt_translator_precision" json:"txt_translator_precision"`
 	Txt_translate_realtime   bool   `yaml:"txt_translate_realtime" json:"txt_translate_realtime"`
 
+	Txt_second_translation_enabled   bool   `yaml:"txt_second_translation_enabled" json:"txt_second_translation_enabled"`
+	Txt_second_translation_languages string `yaml:"txt_second_translation_languages" json:"txt_second_translation_languages"`
+	Txt_second_translation_wrap      string `yaml:"txt_second_translation_wrap" json:"txt_second_translation_wrap"`
+
 	// websocket settings
 	Websocket_ip          string `yaml:"websocket_ip" json:"websocket_ip"`
 	Websocket_port        int    `yaml:"websocket_port" json:"websocket_port"`

@@ -23,6 +23,10 @@ var DefaultProfileSetting = Settings.Conf{
 	Txt_translator_precision: "float32",
 	Txt_translate_realtime:   false,
 
+	Txt_second_translation_enabled:   false,
+	Txt_second_translation_languages: "eng_Latn",
+	Txt_second_translation_wrap:      " | ",
+
 	//Tts_enabled:      true,
 	Tts_type:         "silero",
 	Tts_ai_device:    "cpu",
