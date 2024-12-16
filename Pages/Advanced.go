@@ -96,7 +96,8 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 			time.Sleep(2 * time.Second)
 			RuntimeBackend.BackendsList[0].Start()
 			infinityProcessDialog.Hide()
-			Fields.Field.SttEnabled.SetChecked(true)
+			//Fields.Field.SttEnabled.SetChecked(true)
+			Fields.DataBindings.SpeechToTextEnabledDataBinding.Set(true)
 		}
 	})
 

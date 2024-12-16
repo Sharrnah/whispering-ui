@@ -139,5 +139,21 @@ var OSCSettingsMapping = SettingsMapping{
 				return widget.NewCheck("", func(b bool) {})
 			},
 		},
+		{
+			SettingsName:         "OSC sync STT with mute",
+			SettingsInternalName: "osc_sync_mute",
+			SettingsDescription:  "Synchronizes the Speech-to-Text state with the mute state of VRChat",
+			_widget: func() fyne.CanvasObject {
+				return widget.NewCheck("", func(b bool) {})
+			},
+		},
+		{
+			SettingsName:         "OSC sync STT with AFK",
+			SettingsInternalName: "osc_sync_afk",
+			SettingsDescription:  "Synchronizes the Speech-to-Text state with the AFK state of VRChat",
+			_widget: func() fyne.CanvasObject {
+				return widget.NewCheck("", func(b bool) {})
+			},
+		},
 	},
 }

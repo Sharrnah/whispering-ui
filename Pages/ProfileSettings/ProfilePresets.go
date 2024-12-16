@@ -51,6 +51,11 @@ var DefaultProfileSetting = Settings.Conf{
 	Osc_delay_until_audio_playback_tag: "tts",
 	Osc_delay_timeout:                  10.0,
 
+	Osc_server_ip:   "127.0.0.1",
+	Osc_server_port: 9001,
+	Osc_sync_mute:   false,
+	Osc_sync_afk:    false,
+
 	Ocr_window_name: "VRChat",
 	Ocr_lang:        "en",
 

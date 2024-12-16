@@ -149,6 +149,11 @@ type Conf struct {
 	Osc_delay_until_audio_playback_tag string  `yaml:"osc_delay_until_audio_playback_tag" json:"osc_delay_until_audio_playback_tag"`
 	Osc_delay_timeout                  float64 `yaml:"osc_delay_timeout" json:"osc_delay_timeout"`
 
+	Osc_server_ip   string `yaml:"osc_server_ip" json:"osc_server_ip"`
+	Osc_server_port int    `yaml:"osc_server_port" json:"osc_server_port"`
+	Osc_sync_mute   bool   `yaml:"osc_sync_mute" json:"osc_sync_mute"`
+	Osc_sync_afk    bool   `yaml:"osc_sync_afk" json:"osc_sync_afk"`
+
 	// OCR settings
 	Ocr_txt_src_lang string `yaml:"ocr_txt_src_lang" json:"ocr_txt_src_lang"`
 	Ocr_txt_trg_lang string `yaml:"ocr_txt_trg_lang" json:"ocr_txt_trg_lang"`
