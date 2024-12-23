@@ -10,11 +10,14 @@ import (
 	"strings"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/Pages/AdditionalTextTranslations"
 	"whispering-tiger-ui/Resources"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
 	"whispering-tiger-ui/Websocket/Messages"
 )
+
+var additionalTranslationWindow fyne.Window
 
 func CreateTextTranslateWindow() fyne.CanvasObject {
 	defer Utilities.PanicLogger()
@@ -49,7 +52,13 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 	switchButton.IconPlacement = widget.ButtonIconLeadingText
 	switchButtonAligner := container.NewCenter(switchButton)
 
-	languageRow := container.New(layout.NewGridLayout(2), sourceLanguageRow, targetLanguageRow)
+	additionalLanguagesMenuButton := widget.NewButtonWithIcon("", theme.ListIcon(), func() {
+		if additionalTranslationWindow != nil {
+			additionalTranslationWindow.Close()
+		}
+		additionalTranslationWindow = AdditionalTextTranslations.CreateLanguagesListWindow()
+	})
+	languageRow := container.NewBorder(nil, nil, nil, additionalLanguagesMenuButton, container.New(layout.NewGridLayout(2), sourceLanguageRow, targetLanguageRow))
 
 	transcriptionRow := container.New(layout.NewGridLayout(2),
 		container.NewBorder(nil, Fields.Field.TranscriptionInputHint, nil, nil, Fields.Field.TranscriptionInput),

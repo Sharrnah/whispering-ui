@@ -1488,29 +1488,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		profileForm.Append("", layout.NewSpacer())
 
-		ttsTypeSelect := CustomWidget.NewTextValueSelect("stt_type", []CustomWidget.TextValueOption{
-			{Text: "Silero", Value: "silero"},
-			{Text: "F5/E2", Value: "f5_e2"},
-			{Text: lang.L("Disabled"), Value: ""},
-		}, func(s CustomWidget.TextValueOption) {}, 0)
-
-		ttsTypeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
-			AIModelType := "disabled"
-			if s.Value != "" {
-				AIModelType = s.Value
-			}
-			// calculate memory consumption
-			AIModel := ProfileAIModelOption{
-				AIModel:     "ttsType-",
-				AIModelType: AIModelType,
-				Precision:   Hardwareinfo.Float32,
-			}
-			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
-		}
-
-		profileForm.Append(lang.L("Integrated Text-to-Speech"), container.NewGridWithColumns(2, ttsTypeSelect))
-
-		profileForm.Append(lang.L("A.I. Device for Text-to-Speech"), CustomWidget.NewTextValueSelect("tts_ai_device", []CustomWidget.TextValueOption{
+		ttsAiDeviceSelect := CustomWidget.NewTextValueSelect("tts_ai_device", []CustomWidget.TextValueOption{
 			{Text: "CUDA", Value: "cuda"},
 			{Text: "CPU", Value: "cpu"},
 			{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
@@ -1526,7 +1504,34 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				Precision: Hardwareinfo.Float32,
 			}
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
-		}, 0))
+		}, 0)
+
+		ttsTypeSelect := CustomWidget.NewTextValueSelect("tts_type", []CustomWidget.TextValueOption{
+			{Text: "Silero", Value: "silero"},
+			{Text: "F5/E2", Value: "f5_e2"},
+			{Text: lang.L("Disabled"), Value: ""},
+		}, func(s CustomWidget.TextValueOption) {}, 0)
+
+		ttsTypeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+			AIModelType := "disabled"
+			if s.Value != "" {
+				AIModelType = s.Value
+				ttsAiDeviceSelect.Enable()
+			} else {
+				ttsAiDeviceSelect.Disable()
+			}
+			// calculate memory consumption
+			AIModel := ProfileAIModelOption{
+				AIModel:     "ttsType-",
+				AIModelType: AIModelType,
+				Precision:   Hardwareinfo.Float32,
+			}
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
+		}
+
+		profileForm.Append(lang.L("Integrated Text-to-Speech"), container.NewGridWithColumns(2, ttsTypeSelect))
+
+		profileForm.Append(lang.L("A.I. Device for Text-to-Speech"), ttsAiDeviceSelect)
 
 		pushToTalkChanged := false
 		PushToTalkInput.OnChanged = func(s string) {

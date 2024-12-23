@@ -275,7 +275,7 @@ var Field = struct {
 	StatusRow:  nil,
 }
 
-func updateCompletionEntryBasedOnValue(completionEntryWidget *CustomWidget.CompletionEntry, value string) string {
+func UpdateCompletionEntryBasedOnValue(completionEntryWidget *CustomWidget.CompletionEntry, value string) string {
 	foundEntry := false
 	for _, option := range completionEntryWidget.Options {
 		if strings.HasPrefix(strings.ToLower(option), strings.ToLower(value)) {
@@ -341,7 +341,7 @@ func InitializeGlobalFields() {
 		Field.SourceLanguageCombo.ShowCompletion()
 	}
 	Field.SourceLanguageCombo.OnSubmitted = func(value string) {
-		value = updateCompletionEntryBasedOnValue(Field.SourceLanguageCombo, value)
+		value = UpdateCompletionEntryBasedOnValue(Field.SourceLanguageCombo, value)
 
 		valueObj := Field.SourceLanguageCombo.GetValueOptionEntryByText(value)
 
@@ -378,7 +378,7 @@ func InitializeGlobalFields() {
 	}
 	Field.TargetLanguageCombo.OnSubmitted = func(value string) {
 		// check if value is not in Options
-		value = updateCompletionEntryBasedOnValue(Field.TargetLanguageCombo, value)
+		value = UpdateCompletionEntryBasedOnValue(Field.TargetLanguageCombo, value)
 		valueObj := Field.TargetLanguageCombo.GetValueOptionEntryByText(value)
 
 		sendMessage := SendMessageStruct{
@@ -410,7 +410,7 @@ func InitializeGlobalFields() {
 	}
 	Field.SourceLanguageTxtTranslateCombo.OnSubmitted = func(value string) {
 		// check if value is not in Options
-		value = updateCompletionEntryBasedOnValue(Field.SourceLanguageTxtTranslateCombo, value)
+		value = UpdateCompletionEntryBasedOnValue(Field.SourceLanguageTxtTranslateCombo, value)
 
 		sendMessage := SendMessageStruct{
 			Type:  "setting_change",
@@ -437,7 +437,7 @@ func InitializeGlobalFields() {
 	}
 	Field.TargetLanguageTxtTranslateCombo.OnSubmitted = func(value string) {
 		// check if value is not in Options
-		value = updateCompletionEntryBasedOnValue(Field.TargetLanguageTxtTranslateCombo, value)
+		value = UpdateCompletionEntryBasedOnValue(Field.TargetLanguageTxtTranslateCombo, value)
 
 		sendMessage := SendMessageStruct{
 			Type:  "setting_change",
@@ -465,7 +465,7 @@ func InitializeGlobalFields() {
 	}
 	Field.TranscriptionSpeakerLanguageCombo.OnSubmitted = func(value string) {
 		// check if value is not in Options
-		value = updateCompletionEntryBasedOnValue(Field.TranscriptionSpeakerLanguageCombo, value)
+		value = UpdateCompletionEntryBasedOnValue(Field.TranscriptionSpeakerLanguageCombo, value)
 
 		sendMessage := SendMessageStruct{
 			Type:  "setting_change",
@@ -491,7 +491,7 @@ func InitializeGlobalFields() {
 	}
 	Field.TranscriptionTargetLanguageCombo.OnSubmitted = func(value string) {
 		// check if value is not in Options
-		value = updateCompletionEntryBasedOnValue(Field.TranscriptionTargetLanguageCombo, value)
+		value = UpdateCompletionEntryBasedOnValue(Field.TranscriptionTargetLanguageCombo, value)
 
 		sendMessage := SendMessageStruct{
 			Type:  "setting_change",
