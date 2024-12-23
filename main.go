@@ -197,6 +197,12 @@ func main() {
 					}
 				}
 			}
+
+			// tab refresh workaround for https://github.com/fyne-io/fyne/issues/5338
+			go func() {
+				time.Sleep(time.Millisecond * 50)
+				tab.Content.Refresh()
+			}()
 		}
 
 		Fields.Field.StatusText.Wrapping = fyne.TextTruncate
