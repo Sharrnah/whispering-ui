@@ -306,5 +306,21 @@
     "AMD / Intel, High Performance, Accuracy optimized": "AMD / Intel, Hoge Prestaties, Nauwkeurigheid geoptimaliseerd",
     "AMD / Intel, Low Performance, Accuracy optimized": "AMD / Intel, Lage Prestaties, Nauwkeurigheid geoptimaliseerd",
     "AMD / Intel, Low Performance, Realtime optimized": "AMD / Intel, Lage Prestaties, Realtime geoptimaliseerd",
-    "CPU, High Performance, Accuracy optimized": "CPU, Hoge Prestaties, Nauwkeurigheid geoptimaliseerd"
+    "CPU, High Performance, Accuracy optimized": "CPU, Hoge Prestaties, Nauwkeurigheid geoptimaliseerd",
+    "tts_type.Name": "Geïntegreerde Tekst-naar-Spraak",
+    "Default": "Standaard",
+    "NVIDIA, High Memory (>8GB), Accuracy optimized": "NVIDIA, Hoog geheugen (>8 GB), Nauwkeurigheid geoptimaliseerd",
+    "NVIDIA, Low Memory (<=8GB), Accuracy optimized": "NVIDIA, Laag geheugen (<=8GB), Nauwkeurigheid geoptimaliseerd",
+    "NVIDIA, High Memory (>8GB), Realtime optimized": "NVIDIA, Hoog geheugen (>8 GB), Realtime geoptimaliseerd",
+    "NVIDIA, Low Memory (<=8GB), Realtime optimized": "NVIDIA, Laag geheugen (<=8GB), Realtime geoptimaliseerd",
+    "AMD / Intel, High Memory (>8GB), Accuracy optimized": "AMD / Intel, Hoog geheugen (>8GB), Nauwkeurigheid geoptimaliseerd",
+    "AMD / Intel, Low Memory (<=8GB), Accuracy optimized": "AMD / Intel, Laag geheugen (<=8GB), Nauwkeurigheid geoptimaliseerd",
+    "AMD / Intel, High Memory (>8GB), Realtime optimized": "AMD / Intel, Hoog geheugen (>8GB), Realtime geoptimaliseerd",
+    "AMD / Intel, Low Memory (<=8GB), Realtime optimized": "AMD / Intel, Laag geheugen (<=8GB), Realtime geoptimaliseerd",
+    "CPU, High Memory (>8GB), Accuracy optimized": "CPU, hoog geheugen (>8 GB), nauwkeurigheid geoptimaliseerd",
+    "CPU, Low Memory (<=8GB), Accuracy optimized": "CPU, Laag geheugen (<=8GB), Nauwkeurigheid geoptimaliseerd",
+    "Additional Translation Languages": "Extra vertaaltalen",
+    "Additional Translation": "Extra vertaling",
+    "Enable Additional Translations": "Extra vertalingen inschakelen",
+    "tts_prosody_rate.Name": "Snelheid / Tempo"
 }
