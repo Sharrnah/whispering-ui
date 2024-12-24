@@ -3,6 +3,7 @@ package Pages
 import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
@@ -17,7 +18,7 @@ import (
 	"whispering-tiger-ui/Websocket/Messages"
 )
 
-var additionalTranslationWindow fyne.Window
+var additionalTranslationWindow dialog.Dialog
 
 func CreateTextTranslateWindow() fyne.CanvasObject {
 	defer Utilities.PanicLogger()
@@ -52,12 +53,14 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 	switchButton.IconPlacement = widget.ButtonIconLeadingText
 	switchButtonAligner := container.NewCenter(switchButton)
 
-	additionalLanguagesMenuButton := widget.NewButtonWithIcon("", theme.ListIcon(), func() {
+	numOfAdditionalLanguagesLabelText := AdditionalTextTranslations.AdditionalLanguagesCountString()
+	additionalLanguagesMenuButton := widget.NewButtonWithIcon(numOfAdditionalLanguagesLabelText, theme.ListIcon(), nil)
+	additionalLanguagesMenuButton.OnTapped = func() {
 		if additionalTranslationWindow != nil {
-			additionalTranslationWindow.Close()
+			additionalTranslationWindow.Hide()
 		}
-		additionalTranslationWindow = AdditionalTextTranslations.CreateLanguagesListWindow()
-	})
+		additionalTranslationWindow = AdditionalTextTranslations.CreateLanguagesListWindow(additionalLanguagesMenuButton)
+	}
 	languageRow := container.NewBorder(nil, nil, nil, additionalLanguagesMenuButton, container.New(layout.NewGridLayout(2), sourceLanguageRow, targetLanguageRow))
 
 	transcriptionRow := container.New(layout.NewGridLayout(2),

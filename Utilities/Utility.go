@@ -309,3 +309,16 @@ func GetCurrentMainWindow(windowTitleFallback string) fyne.Window {
 	newWindow.Show()
 	return newWindow
 }
+
+func GetInlineDialogSize(marginSize fyne.Size, minSize fyne.Size, fallbackSize fyne.Size) fyne.Size {
+	windowSize := fyne.NewSize(fallbackSize.Width, fallbackSize.Height)
+	mainWindow := GetCurrentMainWindow("")
+	newWindowSize := mainWindow.Canvas().Size()
+	if newWindowSize.Height > 1 && newWindowSize.Width > 1 {
+		if newWindowSize.Height-marginSize.Height >= minSize.Height && newWindowSize.Width-marginSize.Width >= minSize.Width {
+			windowSize.Height = newWindowSize.Height - marginSize.Height
+			windowSize.Width = newWindowSize.Width - marginSize.Width
+		}
+	}
+	return windowSize
+}

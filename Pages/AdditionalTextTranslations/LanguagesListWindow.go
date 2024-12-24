@@ -2,11 +2,15 @@ package AdditionalTextTranslations
 
 import (
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	dialog2 "fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"image/color"
+	"strconv"
 	"strings"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
@@ -15,15 +19,23 @@ import (
 	"whispering-tiger-ui/Websocket/Messages"
 )
 
-func CreateLanguagesListWindow() fyne.Window {
+func AdditionalLanguagesCountString() string {
+	// count additional languages
+	numOfAdditionalLanguages := 0
+	numOfAdditionalLanguagesLabelText := ""
+	for _, language := range strings.Split(Settings.Config.Txt_second_translation_languages, ",") {
+		if language != "" {
+			numOfAdditionalLanguages++
+		}
+	}
+	if Settings.Config.Txt_second_translation_enabled && numOfAdditionalLanguages > 0 {
+		numOfAdditionalLanguagesLabelText = "(+" + strconv.Itoa(numOfAdditionalLanguages) + ")"
+	}
+	return numOfAdditionalLanguagesLabelText
+}
+
+func CreateLanguagesListWindow(button *widget.Button) *dialog2.CustomDialog {
 	defer Utilities.PanicLogger()
-
-	languageListWindow := fyne.CurrentApp().NewWindow(lang.L("Additional Translation Languages"))
-
-	windowSize := fyne.NewSize(700, 500)
-	languageListWindow.Resize(windowSize)
-
-	languageListWindow.CenterOnScreen()
 
 	var activeLanguagesList []string
 
@@ -67,6 +79,8 @@ func CreateLanguagesListWindow() fyne.Window {
 					Value: Settings.Config.Txt_second_translation_languages,
 				}
 				sendMessage.SendMessage()
+
+				button.SetText(AdditionalLanguagesCountString())
 			}
 		},
 	)
@@ -80,7 +94,7 @@ func CreateLanguagesListWindow() fyne.Window {
 			Value: checked,
 		}
 		sendMessage.SendMessage()
-		print("txt_second_translation_enabled", checked)
+		button.SetText(AdditionalLanguagesCountString())
 	})
 	enableAdditionalTranslationCheckbox.Checked = Settings.Config.Txt_second_translation_enabled
 
@@ -123,18 +137,26 @@ func CreateLanguagesListWindow() fyne.Window {
 				Value: Settings.Config.Txt_second_translation_languages,
 			}
 			sendMessage.SendMessage()
+			button.SetText(AdditionalLanguagesCountString())
 		}
 	}
 
 	targetLanguageListRow := container.New(layout.NewFormLayout(), widget.NewLabel(lang.L("Additional Translation")+":"), languageListWidget)
 
-	content := container.NewBorder(container.NewVBox(enableAdditionalTranslationCheckbox, targetLanguageListRow), nil, nil, nil, activeLanguagesListWidget)
-	languageListWindow.SetContent(content)
+	beginLine := canvas.NewHorizontalGradient(&color.NRGBA{R: 198, G: 123, B: 0, A: 255}, &color.NRGBA{R: 198, G: 123, B: 0, A: 0})
+	beginLine.Resize(fyne.NewSize(Fields.Field.SttEnabled.Size().Width, 2))
 
-	// Show and run the window
-	languageListWindow.Show()
+	content := container.NewBorder(container.NewVBox(enableAdditionalTranslationCheckbox, targetLanguageListRow, container.NewGridWithColumns(2, beginLine)), nil, nil, nil, activeLanguagesListWidget)
+
+	mainWindow := Utilities.GetCurrentMainWindow("")
+	dialog := dialog2.NewCustom(lang.L("Additional Translation Languages"), lang.L("Close"), content, mainWindow)
+
+	windowSize := Utilities.GetInlineDialogSize(fyne.NewSize(300, 150), fyne.NewSize(100, 200), fyne.NewSize(700, 500))
+	dialog.Resize(windowSize)
+
+	dialog.Show()
 
 	content.Refresh()
 
-	return languageListWindow
+	return dialog
 }
