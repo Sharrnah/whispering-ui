@@ -318,5 +318,6 @@
     "AMD / Intel, Low Memory (<=8GB), Accuracy optimized": "AMD / Intel, Mémoire faible (<=8Go), Précision optimisée",
     "AMD / Intel, High Memory (>8GB), Realtime optimized": "AMD / Intel, Mémoire élevée (>8Go), Optimisé pour du temps réel",
     "AMD / Intel, Low Memory (<=8GB), Realtime optimized": "AMD / Intel, Mémoire faible (<=8Go), Optimisé pour du temps réel",
-    "CPU, High Memory (>8GB), Accuracy optimized": "CPU, mémoire élevée (>8GB), précision optimisée"
+    "CPU, High Memory (>8GB), Accuracy optimized": "CPU, mémoire élevée (>8Go), précision optimisée",
+    "CPU, Low Memory (<=8GB), Accuracy optimized": "CPU, Mémoire faible (<=8GB), Précision optimisée"
 }
