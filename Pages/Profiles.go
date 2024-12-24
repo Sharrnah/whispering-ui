@@ -993,6 +993,23 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Large V2", Value: "large-v2"},
 			{Text: "Large V3", Value: "large-v3"},
 			{Text: "Large V3 Turbo", Value: "large-v3-turbo"},
+			{Text: "Custom (Place in '.cache/whisper/custom' directory)", Value: "custom"},
+		}
+
+		transformerWhisperModelList := []CustomWidget.TextValueOption{
+			{Text: "Tiny", Value: "tiny"},
+			{Text: "Tiny (English only)", Value: "tiny.en"},
+			{Text: "Base", Value: "base"},
+			{Text: "Base (English only)", Value: "base.en"},
+			{Text: "Small", Value: "small"},
+			{Text: "Small (English only)", Value: "small.en"},
+			{Text: "Medium", Value: "medium"},
+			{Text: "Medium (English only)", Value: "medium.en"},
+			{Text: "Large V1", Value: "large-v1"},
+			{Text: "Large V2", Value: "large-v2"},
+			{Text: "Large V3", Value: "large-v3"},
+			{Text: "Large V3 Turbo", Value: "large-v3-turbo"},
+			{Text: "Custom (Place in '.cache/whisper-transformer/custom' directory)", Value: "custom"},
 		}
 
 		medusaWhisperModelList := []CustomWidget.TextValueOption{
@@ -1034,6 +1051,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Small (Chinese finetune)", Value: "small.zh"},
 			{Text: "Medium (Chinese finetune)", Value: "medium.zh"},
 			{Text: "Large V2 (Chinese finetune)", Value: "large-v2.zh"},
+			{Text: "Custom (Place in '.cache/whisper/custom-ct2' directory)", Value: "custom"},
 		}
 
 		originalSeamlessM4TModelList := []CustomWidget.TextValueOption{
@@ -1137,7 +1155,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				}
 				AIModelType = "O"
 			} else if s.Value == "transformer_whisper" {
-				sttModelSize.Options = originalWhisperModelList
+				sttModelSize.Options = transformerWhisperModelList
 				// unselect if not in list
 				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption, CustomWidget.CompareValue) {
 					sttModelSize.SetSelectedIndex(0)
