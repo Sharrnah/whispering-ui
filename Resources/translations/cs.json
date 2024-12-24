@@ -306,5 +306,8 @@
     "osc_send.option.Send Source Text": "Odeslat zdrojový text",
     "osc_send.option.Send both Source and Translation": "Odeslat „Zdroj i překlad“",
     "osc_send.option.Send both (inverted) Translation and Source": "Odeslat oba (obrácené) „Překlad a zdroj“",
-    "Select Folder": "Zvolte složku"
+    "Select Folder": "Zvolte složku",
+    "Additional Translation Languages": "Dodatečné jazyky překladu",
+    "Additional Translation": "Dodatečný překlad",
+    "Enable Additional Translations": "Povolení dodatečných překladů"
 }
