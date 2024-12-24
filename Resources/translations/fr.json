@@ -306,5 +306,11 @@
     "osc_type_transfer.Description": "Type de message OSC à envoyer.\nTraduction uniquement, les deux ou la source.",
     "osc_type_transfer_split.Name": "Fractionnement du transfert OSC",
     "whisper_apply_voice_markers.Name": "Appliquer des marqueurs vocaux à l'audio",
-    "realtime_temperature_fallback.Description": "Si activé, la température sera rétablie en cas de faible confiance.\n(désactivez-le pour un traitement plus rapide)"
+    "realtime_temperature_fallback.Description": "Si activé, la température sera rétablie en cas de faible confiance.\n(désactivez-le pour un traitement plus rapide)",
+    "tts_type.Name": "Synthèse vocale intégrée",
+    "NVIDIA, High Memory (>8GB), Accuracy optimized": "NVIDIA, mémoire élevée (>8Go), précision optimisée",
+    "Default": "Par défaut",
+    "tts_prosody_rate.Name": "Vitesse / Taux",
+    "NVIDIA, Low Memory (<=8GB), Accuracy optimized": "NVIDIA, mémoire faible (<=8Go), précision optimisée",
+    "NVIDIA, High Memory (>8GB), Realtime optimized": "NVIDIA, mémoire élevée (>8GB), temps réel optimisé"
 }
