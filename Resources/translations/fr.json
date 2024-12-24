@@ -315,5 +315,6 @@
     "NVIDIA, High Memory (>8GB), Realtime optimized": "NVIDIA, mémoire élevée (>8Go), temps réel optimisé",
     "AMD / Intel, High Memory (>8GB), Accuracy optimized": "AMD / Intel, Mémoire élevée (>8Go), Précision optimisée",
     "NVIDIA, Low Memory (<=8GB), Realtime optimized": "NVIDIA, mémoire faible (<=8Go), optimisé pour le temps réel",
-    "AMD / Intel, Low Memory (<=8GB), Accuracy optimized": "AMD / Intel, Mémoire faible (<=8GB), Précision optimisée"
+    "AMD / Intel, Low Memory (<=8GB), Accuracy optimized": "AMD / Intel, Mémoire faible (<=8Go), Précision optimisée",
+    "AMD / Intel, High Memory (>8GB), Realtime optimized": "AMD / Intel, Mémoire élevée (>8GB), Optimisé en temps réel"
 }
