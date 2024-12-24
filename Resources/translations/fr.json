@@ -312,5 +312,7 @@
     "Default": "Par défaut",
     "tts_prosody_rate.Name": "Vitesse / Taux",
     "NVIDIA, Low Memory (<=8GB), Accuracy optimized": "NVIDIA, mémoire faible (<=8Go), précision optimisée",
-    "NVIDIA, High Memory (>8GB), Realtime optimized": "NVIDIA, mémoire élevée (>8GB), temps réel optimisé"
+    "NVIDIA, High Memory (>8GB), Realtime optimized": "NVIDIA, mémoire élevée (>8Go), temps réel optimisé",
+    "AMD / Intel, High Memory (>8GB), Accuracy optimized": "AMD / Intel, Mémoire élevée (>8GB), Précision optimisée",
+    "NVIDIA, Low Memory (<=8GB), Realtime optimized": "NVIDIA, mémoire faible (<=8Go), optimisé pour le temps réel"
 }
