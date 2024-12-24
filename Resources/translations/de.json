@@ -306,5 +306,21 @@
     "osc_send.option.Send both Source and Translation": "Sende beides 'Ursprungstext und Übersetzung'",
     "osc_send.option.Send Source Text": "Sende Ursprungstext",
     "osc_send.option.Send both (inverted) Translation and Source": "Sende beides (umgekehrt) 'Übersetzung und Ursprungstext'",
-    "Select Folder": "Verzeichnis auswählen"
+    "Select Folder": "Verzeichnis auswählen",
+    "Default": "Standard",
+    "NVIDIA, Low Memory (<=8GB), Realtime optimized": "NVIDIA, Wenig Arbeitsspeicher (<=8GB), Echtzeit optimiert",
+    "AMD / Intel, Low Memory (<=8GB), Realtime optimized": "AMD / Intel, Wenig Arbeitsspeicher (<=8GB), Echtzeit optimiert",
+    "NVIDIA, High Memory (>8GB), Accuracy optimized": "NVIDIA, Viel Arbeitsspeicher (>8GB), Genauigkeit optimiert",
+    "tts_prosody_rate.Name": "Geschwindigkeit / Tempo",
+    "NVIDIA, Low Memory (<=8GB), Accuracy optimized": "NVIDIA, Wenig Arbeitsspeicher (<=8GB), Genauigkeit optimiert",
+    "NVIDIA, High Memory (>8GB), Realtime optimized": "NVIDIA, Viel Arbeitsspeicher (>8GB), Echtzeit optimiert",
+    "AMD / Intel, High Memory (>8GB), Accuracy optimized": "AMD / Intel, Viel Arbeitsspeicher (>8GB), Genauigkeit optimiert",
+    "AMD / Intel, Low Memory (<=8GB), Accuracy optimized": "AMD / Intel, Wenig Arbeitsspeicher (<=8GB), Genauigkeit optimiert",
+    "AMD / Intel, High Memory (>8GB), Realtime optimized": "AMD / Intel, Viel Arbeitsspeicher (>8GB), Echtzeit optimiert",
+    "CPU, High Memory (>8GB), Accuracy optimized": "CPU, Viel Arbeitsspeicher (>8GB), Genauigkeit optimiert",
+    "CPU, Low Memory (<=8GB), Accuracy optimized": "CPU, Wenig Arbeitsspeicher (<=8GB), Genauigkeit optimiert",
+    "Additional Translation Languages": "Zusätzliche Übersetzungssprachen",
+    "Additional Translation": "Zusätzliche Übersetzung",
+    "Enable Additional Translations": "Aktiviere Zusätzliche Übersetzungen",
+    "tts_type.Name": "Integriertes Text-zu-Sprache"
 }
