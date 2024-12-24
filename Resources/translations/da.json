@@ -1,1 +1,24 @@
-{}
+{
+    "Create Folder": "Opret mappe",
+    "Copy": "Kopiér",
+    "Cut": "Klip",
+    "Error": "Fejl",
+    "Cancel": "Annuller",
+    "Paste": "Indsæt",
+    "File": "Fil",
+    "Favourites": "Favoritter",
+    "Folder": "Mappe",
+    "No": "Nej",
+    "Enter filename": "Indtast filnavn",
+    "Quit": "Afslut",
+    "Save": "Gem",
+    "Select all": "Markér alt",
+    "Redo": "Annullér fortryd",
+    "Confirm": "Bekræft",
+    "New Folder": "Ny Mappe",
+    "OK": "OK",
+    "Show Hidden Files": "Vis Skjulte Filer",
+    "Yes": "Ja",
+    "Open": "Åben",
+    "Undo": "Fortryd"
+}
