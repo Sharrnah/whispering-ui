@@ -508,16 +508,16 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 	createProfilePresetSelect := CustomWidget.NewTextValueSelect("Profile Preset", []CustomWidget.TextValueOption{
 		{Text: lang.L("(Select Preset)"), Value: ""},
-		{Text: lang.L("NVIDIA, High Performance, Accuracy optimized"), Value: "NVIDIA-HighPerformance-Accuracy"},
-		{Text: lang.L("NVIDIA, Low Performance, Accuracy optimized"), Value: "NVIDIA-LowPerformance-Accuracy"},
-		{Text: lang.L("NVIDIA, High Performance, Realtime optimized"), Value: "NVIDIA-HighPerformance-Realtime"},
-		{Text: lang.L("NVIDIA, Low Performance, Realtime optimized"), Value: "NVIDIA-LowPerformance-Realtime"},
-		{Text: lang.L("AMD / Intel, High Performance, Accuracy optimized"), Value: "AMDIntel-HighPerformance-Accuracy"},
-		{Text: lang.L("AMD / Intel, Low Performance, Accuracy optimized"), Value: "AMDIntel-LowPerformance-Accuracy"},
-		{Text: lang.L("AMD / Intel, High Performance, Realtime optimized"), Value: "AMDIntel-HighPerformance-Realtime"},
-		{Text: lang.L("AMD / Intel, Low Performance, Realtime optimized"), Value: "AMDIntel-LowPerformance-Realtime"},
-		{Text: lang.L("CPU, High Performance, Accuracy optimized"), Value: "CPU-HighPerformance-Accuracy"},
-		{Text: lang.L("CPU, Low Performance, Accuracy optimized"), Value: "CPU-LowPerformance-Accuracy"},
+		{Text: lang.L("NVIDIA, High Memory (>8GB), Accuracy optimized"), Value: "NVIDIA-HighPerformance-Accuracy"},
+		{Text: lang.L("NVIDIA, Low Memory (<=8GB), Accuracy optimized"), Value: "NVIDIA-LowPerformance-Accuracy"},
+		{Text: lang.L("NVIDIA, High Memory (>8GB), Realtime optimized"), Value: "NVIDIA-HighPerformance-Realtime"},
+		{Text: lang.L("NVIDIA, Low Memory (<=8GB), Realtime optimized"), Value: "NVIDIA-LowPerformance-Realtime"},
+		{Text: lang.L("AMD / Intel, High Memory (>8GB), Accuracy optimized"), Value: "AMDIntel-HighPerformance-Accuracy"},
+		{Text: lang.L("AMD / Intel, Low Memory (<=8GB), Accuracy optimized"), Value: "AMDIntel-LowPerformance-Accuracy"},
+		{Text: lang.L("AMD / Intel, High Memory (>8GB), Realtime optimized"), Value: "AMDIntel-HighPerformance-Realtime"},
+		{Text: lang.L("AMD / Intel, Low Memory (<=8GB), Realtime optimized"), Value: "AMDIntel-LowPerformance-Realtime"},
+		{Text: lang.L("CPU, High Memory (>8GB), Accuracy optimized"), Value: "CPU-HighPerformance-Accuracy"},
+		{Text: lang.L("CPU, Low Memory (<=8GB), Accuracy optimized"), Value: "CPU-LowPerformance-Accuracy"},
 	}, nil, 0)
 
 	playBackDevice := CurrentPlaybackDevice{}
