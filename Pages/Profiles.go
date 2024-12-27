@@ -617,6 +617,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		return lang.L("Estimated CPU RAM Usage:") + " " + strconv.Itoa(int(CPUMemoryBar.Value)) + " / " + strconv.Itoa(int(CPUMemoryBar.Max)) + " MiB"
 	}
 
+	GPUInformationLabel := widget.NewLabel("Compute Capability: " + fmt.Sprintf("%.1f", 0.0))
+
 	GPUMemoryBar := widget.NewProgressBar()
 	totalGPUMemory := int64(0)
 	var ComputeCapability float32 = 0.0
@@ -631,8 +633,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				}
 			}
 			GPUMemoryBar.Max = float64(totalGPUMemory)
-
-			ComputeCapability = Hardwareinfo.GetGPUComputeCapability()
 		} else {
 			foundGPU, _ := Hardwareinfo.FindDedicatedGPUByVendor([]string{"nvidia", "amd", "intel"})
 			if foundGPU != nil && len(foundGPU) > 0 {
@@ -640,6 +640,13 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			}
 			GPUMemoryBar.Max = float64(totalGPUMemory)
 		}
+		ComputeCapability = Hardwareinfo.GetGPUComputeCapability()
+
+		// refresh GPU Compute Capability label
+		GPUInformationLabel.SetText("Compute Capability: " + fmt.Sprintf("%.1f", ComputeCapability))
+		// refresh memory consumption labels
+		AIModel := ProfileAIModelOption{}
+		AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 	}()
 
 	GPUMemoryBar.TextFormatter = func() string {
@@ -648,7 +655,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 		return lang.L("Estimated Video-RAM Usage:") + " " + strconv.Itoa(int(GPUMemoryBar.Value)) + " / " + strconv.Itoa(int(GPUMemoryBar.Max)) + " MiB"
 	}
-	GPUInformationLabel := widget.NewLabel("Compute Capability: " + fmt.Sprintf("%.1f", ComputeCapability))
 
 	isLoadingSettingsFile := false
 
