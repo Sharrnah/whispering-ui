@@ -12,11 +12,11 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 ## Content
 - [Features](#features)
 - [Download](#download)
+- [Documentation](doc/documentations/integrated-tts.md)
 - [Tutorials](#tutorials)
 - [Installation](#installation)
 - [Setup](#setup)
   - [Plugins Setup](#plugins-setup)
-  - [_Example Setup of Plugin VoiceVox (Japanese TTS)_](doc/plugin-example.md)
   - [Specific Audio configuration (TTS to Mic, Game Audio translation, etc.)](doc/audio-config.md)
   - [Realtime Configuration and speed improvements](doc/realtime-config.md)
 - [Advanced Features](#advanced-features)
@@ -115,7 +115,7 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 ### Plugins Setup
 - Install Plugins using the UI directly, or..
 - Install Plugins manually.
-   - Select your desired Plugin from the [list of Plugins here.](https://github.com/Sharrnah/whispering/blob/main/documentation/plugins.md)
+   - Select your desired Plugin from the [list of Plugins here.](https://github.com/Sharrnah/whispering-plugins/blob/main/README.md#list-of-plugins)
    - Download the `*.py` file and place it in the **Plugins** folder.
    - Restart the application.
    - The Plugin should now be available in the **Plugins** tab.
@@ -124,14 +124,13 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 > <br>
 > Most Plugins have specific settings that can be configured in the textboxes of the Plugin in the **Plugins** tab.
 
-> See also [**Example Setup of Plugin VoiceVox (Japanese TTS)**](doc/plugin-example.md) As example how to setup the VoiceVox Plugin.
-
 ### Specific Usage Setup
 - [**Audio configuration (TTS to Mic, Game Audio translation, etc.)**](doc/audio-config.md)
 - [**Realtime Configuration and speed improvements**](doc/realtime-config.md)
 
 ## Advanced Features
 - [**Larger UI Scaling (VR-Mode)**](doc/advanced.md#larger-ui-scaling--vr-mode-)
+- [**Overwrite UI Language**](doc/advanced.md#overwrite-ui-language)
 
 ## Additional Help
 For additional Help, you can join
