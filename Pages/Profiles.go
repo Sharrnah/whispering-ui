@@ -1542,6 +1542,27 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			if s.Value != "" {
 				AIModelType = s.Value
 				ttsAiDeviceSelect.Enable()
+
+				selectedDeviceOption := ttsAiDeviceSelect.GetSelected()
+
+				if s.Value == "f5_e2" {
+					ttsAiDeviceSelect.Options = []CustomWidget.TextValueOption{
+						{Text: "CUDA", Value: "cuda"},
+						{Text: "CPU", Value: "cpu"},
+					}
+				} else {
+					ttsAiDeviceSelect.Options = []CustomWidget.TextValueOption{
+						{Text: "CUDA", Value: "cuda"},
+						{Text: "CPU", Value: "cpu"},
+						{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
+						{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
+					}
+				}
+				if !ttsAiDeviceSelect.ContainsEntry(selectedDeviceOption, CustomWidget.CompareValue) {
+					ttsAiDeviceSelect.SetSelectedIndex(0)
+				}
+				ttsAiDeviceSelect.Refresh()
+
 			} else {
 				ttsAiDeviceSelect.Disable()
 			}
