@@ -42,6 +42,10 @@ func (res TtsLanguagesListing) Update() *TtsLanguagesListing {
 			}
 		}
 	}
+	if len(Settings.Config.Tts_model) > 0 {
+		Fields.Field.TtsModelCombo.Selected = Settings.Config.Tts_model[1]
+		Fields.Field.TtsModelCombo.Refresh()
+	}
 	return &res
 }
 
