@@ -171,6 +171,7 @@ type Conf struct {
 	Tts_prosody_pitch             string   `yaml:"tts_prosody_pitch" json:"tts_prosody_pitch"`
 	Tts_use_secondary_playback    bool     `yaml:"tts_use_secondary_playback" json:"tts_use_secondary_playback"`
 	Tts_secondary_playback_device int      `yaml:"tts_secondary_playback_device" json:"tts_secondary_playback_device"`
+	Tts_volume                    float64  `yaml:"tts_volume" json:"tts_volume"`
 
 	// Plugin Settings
 	Plugins              map[string]bool `yaml:"plugins,omitempty" json:"plugins,omitempty"`

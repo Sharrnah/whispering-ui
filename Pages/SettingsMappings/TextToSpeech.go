@@ -1,7 +1,9 @@
 package SettingsMappings
 
 import (
+	"fmt"
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
@@ -50,6 +52,20 @@ var TextToSpeechSettingsMapping = SettingsMapping{
 					{Text: "x-fast", Value: "x-fast"},
 				}, func(s CustomWidget.TextValueOption) {}, 0)
 				return settingWidget
+			},
+		},
+		{
+			SettingsName:         "Text-to-Speech Volume Adjustment",
+			SettingsInternalName: "tts_volume",
+			SettingsDescription:  "Adjust the volume of the text-to-speech output.\n1.0 = normal volume",
+			_widget: func() fyne.CanvasObject {
+				sliderWidget := widget.NewSlider(0.0, 2.0)
+				sliderState := widget.NewLabel(fmt.Sprintf("%.2f", sliderWidget.Min))
+				sliderWidget.Step = 0.01
+				sliderWidget.OnChanged = func(value float64) {
+					sliderState.SetText(fmt.Sprintf("%.2f", value))
+				}
+				return container.NewBorder(nil, nil, nil, sliderState, sliderWidget)
 			},
 		},
 		{

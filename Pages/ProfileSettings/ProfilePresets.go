@@ -30,6 +30,7 @@ var DefaultProfileSetting = Settings.Conf{
 	//Tts_enabled:      true,
 	Tts_type:         "silero",
 	Tts_ai_device:    "cpu",
+	Tts_volume:       1.0,
 	Current_language: "",
 
 	Osc_ip:                             "127.0.0.1",

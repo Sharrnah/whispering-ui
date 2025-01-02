@@ -293,6 +293,8 @@
     "osc_delay_until_audio_playback.Description": "Delays the OSC message until the audio playback started.\n(To better sync the audio with the text)\n(If no audio is played, the message will be delayed until a timeout is reached)",
     "tts_type.Name": "Integrated Text-to-Speech",
     "tts_prosody_rate.Name": "Speed / Rate",
+    "tts_volume.Name": "Text-to-Speech Volume Adjustment",
+    "tts_volume.Description": "Adjust the volume of the text-to-speech output.\n1.0 = normal volume",
     "tts_use_secondary_playback.Name": "Route text-to-speech to secondary audio device",
     "tts_use_secondary_playback.Description": "Play text-to-speech on a secondary audio device at the same time as the selected output device.\n(By default uses windows default audio device)",
     "txt_translate_realtime.Name": "Translate text in real-time",
