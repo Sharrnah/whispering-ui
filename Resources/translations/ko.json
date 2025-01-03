@@ -311,5 +311,7 @@
     "Enabled": "활성화됨",
     "Disabled": "장애인",
     "(Select one)": "(하나 선택)",
-    "Copy Log": "로그 복사"
+    "Copy Log": "로그 복사",
+    "tts_volume.Name": "텍스트 음성 변환 볼륨 조절",
+    "tts_volume.Description": "텍스트 음성 변환 출력의 볼륨을 조정합니다.\n1.0 = 일반 볼륨"
 }
