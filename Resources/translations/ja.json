@@ -311,5 +311,7 @@
     "Additional Translation Languages": "その他の翻訳言語",
     "Additional Translation": "追加翻訳",
     "Enable Additional Translations": "追加翻訳を有効にする",
-    "tts_type.Name": "統合音声合成"
+    "tts_type.Name": "統合音声合成",
+    "tts_volume.Description": "音声合成出力の音量を調整します。\n1.0 = 通常の音量",
+    "tts_volume.Name": "音声合成の音量調整"
 }
