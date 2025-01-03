@@ -278,7 +278,7 @@
     "osc_delay_until_audio_playback.Name": "OSC verzögern bis zur Audiowiedergabe",
     "osc_delay_until_audio_playback.Description": "Verzögert die OSC-Nachricht, bis die Audiowiedergabe beginnt.\n(Um den Ton besser mit dem Text zu synchronisieren)\n(Wenn kein Ton abgespielt wird, wird die Nachricht verzögert, bis ein Timeout erreicht wird)",
     "tts_enabled.Name": "Integriertes Text-zu-Sprache",
-    "tts_use_secondary_playback.Name": "Text-zu-Sprache an ein zweites Audiogerät weiterleiten",
+    "tts_use_secondary_playback.Name": "Text-zu-Sprache an zweites Audiogerät weiterleiten",
     "tts_use_secondary_playback.Description": "Wiedergabe von Text-zu-Sprache auf einem zweiten Audiogerät zur gleichen Zeit wie das ausgewählte Ausgabegerät.\n(Standardmäßig wird das Standard-Audiogerät von Windows verwendet)",
     "txt_translate_realtime.Name": "Text in Echtzeit übersetzen",
     "txt_translate_realtime.Description": "Übersetzt den Zwischentext im Echtzeitmodus der Spracherkennung.",
@@ -322,5 +322,7 @@
     "Additional Translation Languages": "Zusätzliche Übersetzungssprachen",
     "Additional Translation": "Zusätzliche Übersetzung",
     "Enable Additional Translations": "Aktiviere Zusätzliche Übersetzungen",
-    "tts_type.Name": "Integriertes Text-zu-Sprache"
+    "tts_type.Name": "Integriertes Text-zu-Sprache",
+    "tts_volume.Name": "Text-zu-Sprache Lautstärkeanpassung",
+    "tts_volume.Description": "Stellen Sie die Lautstärke der Text-zu-Sprache-Ausgabe ein.\n1.0 = normale Lautstärke"
 }
