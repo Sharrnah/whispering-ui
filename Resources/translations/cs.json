@@ -309,5 +309,20 @@
     "Select Folder": "Zvolte složku",
     "Additional Translation Languages": "Dodatečné jazyky překladu",
     "Additional Translation": "Dodatečný překlad",
-    "Enable Additional Translations": "Povolení dodatečných překladů"
+    "Enable Additional Translations": "Povolení dodatečných překladů",
+    "Default": "Výchozí",
+    "tts_volume.Name": "Nastavení hlasitosti převodu textu na řeč",
+    "tts_volume.Description": "Nastavení hlasitosti výstupu převodu textu na řeč.\n1,0 = normální hlasitost",
+    "NVIDIA, High Memory (>8GB), Accuracy optimized": "NVIDIA, vysoká paměť (>8 GB), optimalizovaná přesnost",
+    "NVIDIA, Low Memory (<=8GB), Accuracy optimized": "NVIDIA, nízká paměť (<=8GB), optimalizovaná přesnost",
+    "NVIDIA, High Memory (>8GB), Realtime optimized": "NVIDIA, vysoká paměť (>8 GB), optimalizováno pro reálný čas",
+    "NVIDIA, Low Memory (<=8GB), Realtime optimized": "NVIDIA, nízká paměť (<=8GB), optimalizováno pro reálný čas",
+    "AMD / Intel, High Memory (>8GB), Accuracy optimized": "AMD / Intel, vysoká paměť (>8 GB), optimalizovaná přesnost",
+    "AMD / Intel, Low Memory (<=8GB), Accuracy optimized": "AMD / Intel, nízká paměť (<=8GB), optimalizovaná přesnost",
+    "AMD / Intel, High Memory (>8GB), Realtime optimized": "AMD / Intel, vysoká paměť (>8 GB), optimalizováno pro reálný čas",
+    "AMD / Intel, Low Memory (<=8GB), Realtime optimized": "AMD / Intel, nízká paměť (<=8GB), optimalizováno pro reálný čas",
+    "CPU, High Memory (>8GB), Accuracy optimized": "CPU, vysoká paměť (>8 GB), optimalizovaná přesnost",
+    "CPU, Low Memory (<=8GB), Accuracy optimized": "CPU, nízká paměť (<=8GB), optimalizovaná přesnost",
+    "tts_prosody_rate.Name": "Rychlost / tempo",
+    "tts_type.Name": "Integrovaný převod textu na řeč"
 }
