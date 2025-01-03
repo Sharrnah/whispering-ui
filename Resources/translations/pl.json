@@ -311,5 +311,7 @@
     "Select a language": "Wybierz język",
     "Select language in image": "Wybór języka na obrazie",
     "Speech-to-Text": "Zamiana mowy na tekst",
-    "osc_type_transfer.Description": "Typ wysyłanego komunikatu OSC.\nTylko tłumaczenie, oba lub źródło."
+    "osc_type_transfer.Description": "Typ wysyłanego komunikatu OSC.\nTylko tłumaczenie, oba lub źródło.",
+    "tts_volume.Name": "Regulacja głośności zamiany tekstu na mowę",
+    "tts_volume.Description": "Regulacja głośności wyjścia zamiany tekstu na mowę.\n1.0 = normalna głośność"
 }
