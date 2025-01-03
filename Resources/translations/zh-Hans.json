@@ -311,5 +311,7 @@
     "Start downloads using the UI. (Recommended)": "使用用户界面开始下载。推荐",
     "Plugin Settings": "使用用户界面开始下载。推荐",
     "Cancel": "取消",
-    "Confirm": "确认"
+    "Confirm": "确认",
+    "tts_volume.Name": "文本到语音音量调节",
+    "tts_volume.Description": "调整文本到语音输出的音量。\n1.0 = 正常音量"
 }
