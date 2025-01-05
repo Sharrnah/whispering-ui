@@ -285,7 +285,7 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 							columnContainer := container.NewVBox(columnFields...)
 							columnContainers = append(columnContainers, columnContainer)
 						}
-						// Add all column VBoxes to an HBox
+						// Add all column VBoxes to a Grid columns container
 						groupContainer.Add(container.NewGridWithColumns(len(columnContainers), columnContainers...))
 					}
 				}
