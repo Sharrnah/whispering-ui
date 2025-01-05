@@ -2,12 +2,12 @@ package CustomWidget
 
 import (
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/driver/desktop"
 	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
 	"runtime"
 	"strings"
-	"sync"
 )
 
 var _ fyne.Widget = (*EntryWithPopupMenu)(nil)
@@ -20,10 +20,10 @@ type EntryWithPopupMenuShortcuts struct {
 
 type EntryWithPopupMenu struct {
 	widget.Entry
-	dirty        bool
-	text         *widget.RichText
-	impl         fyne.Widget
-	propertyLock sync.RWMutex
+	//dirty bool
+	//text         *widget.RichText
+	impl fyne.Widget
+	//propertyLock sync.RWMutex
 
 	popUp                   *widget.PopUpMenu
 	additionalMenuItems     []*fyne.MenuItem
@@ -40,6 +40,17 @@ func NewMultiLineEntry() *EntryWithPopupMenu {
 	e.Wrapping = fyne.TextTruncate
 	e.ExtendBaseWidget(e)
 	return e
+}
+func NewMultiLineEntryWithData(data binding.String) *EntryWithPopupMenu {
+	entry := NewMultiLineEntry()
+	entry.Bind(data)
+	return entry
+}
+func (e *EntryWithPopupMenu) Bind(data binding.String) {
+	e.Entry.Bind(data)
+}
+func (e *EntryWithPopupMenu) Unbind() {
+	e.Entry.Unbind()
 }
 
 func (e *EntryWithPopupMenu) requestFocus() {
