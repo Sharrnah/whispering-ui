@@ -222,14 +222,14 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 	// check if settings_groups exists
 	if groupData, exists := pluginSettings["settings_groups"]; exists && groupData != nil {
 		// create settings fields grouped by 'settings_groups'
-		var settingsGroups map[string][]string
+		var settingsGroups map[string]interface{}
 		settingsGroupsByte, _ := json.Marshal(groupData)
 		json.Unmarshal(settingsGroupsByte, &settingsGroups)
 
 		// Convert the map to a slice and sort
 		type kv struct {
 			Key   string
-			Value []string
+			Value interface{}
 		}
 
 		var settingsGroupList []kv
@@ -249,20 +249,48 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 		settingsGroupTabs := container.NewAppTabs()
 		for _, kv := range settingsGroupList {
 			groupName := kv.Key
-			settingsGroup := kv.Value
-
 			groupContainer := container.NewVBox()
 
-			sort.Strings(settingsGroup)
-
-			for _, settingName := range settingsGroup {
-				if _, ok := pluginSettings[settingName]; ok && settingName != "settings_groups" {
-					settingsFields := createSettingsFields(pluginSettings, settingName, &SettingsFile, pluginClassName, window)
-					for _, field := range settingsFields {
-						groupContainer.Add(field)
+			switch group := kv.Value.(type) {
+			case []interface{}:
+				// Check if it's a slice of strings (single column)
+				if len(group) > 0 {
+					if _, ok := group[0].(string); ok {
+						var settingsGroup []string
+						for _, item := range group {
+							settingsGroup = append(settingsGroup, item.(string))
+						}
+						sort.Strings(settingsGroup)
+						for _, settingName := range settingsGroup {
+							if _, ok := pluginSettings[settingName]; ok && settingName != "settings_groups" {
+								settingsFields := createSettingsFields(pluginSettings, settingName, &SettingsFile, pluginClassName, window)
+								for _, field := range settingsFields {
+									groupContainer.Add(field)
+								}
+							}
+						}
+					} else if _, ok := group[0].([]interface{}); ok {
+						// Handle multiple columns
+						columnContainers := []fyne.CanvasObject{}
+						for _, column := range group {
+							columnFields := []fyne.CanvasObject{}
+							for _, item := range column.([]interface{}) {
+								settingName := item.(string)
+								if _, ok := pluginSettings[settingName]; ok && settingName != "settings_groups" {
+									settingsFields := createSettingsFields(pluginSettings, settingName, &SettingsFile, pluginClassName, window)
+									columnFields = append(columnFields, settingsFields...)
+								}
+							}
+							// Create a VBox for each column
+							columnContainer := container.NewVBox(columnFields...)
+							columnContainers = append(columnContainers, columnContainer)
+						}
+						// Add all column VBoxes to an HBox
+						groupContainer.Add(container.NewGridWithColumns(len(columnContainers), columnContainers...))
 					}
 				}
 			}
+
 			settingsGroupTabs.Append(container.NewTabItem(groupName, groupContainer))
 		}
 
