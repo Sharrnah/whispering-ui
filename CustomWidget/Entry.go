@@ -20,10 +20,7 @@ type EntryWithPopupMenuShortcuts struct {
 
 type EntryWithPopupMenu struct {
 	widget.Entry
-	//dirty bool
-	//text         *widget.RichText
 	impl fyne.Widget
-	//propertyLock sync.RWMutex
 
 	popUp                   *widget.PopUpMenu
 	additionalMenuItems     []*fyne.MenuItem

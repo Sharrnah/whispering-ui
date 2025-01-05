@@ -13,14 +13,6 @@ import (
 
 var TextToSpeechSettingsMapping = SettingsMapping{
 	Mappings: []SettingMapping{
-		//{
-		//	SettingsName:         "Integrated Text-to-Speech",
-		//	SettingsInternalName: "tts_type",
-		//	SettingsDescription:  "",
-		//	_widget: func() fyne.CanvasObject {
-		//		return widget.NewCheck("", func(b bool) {})
-		//	},
-		//},
 		{
 			SettingsName:         "Integrated Text-to-Speech",
 			SettingsInternalName: "tts_type",

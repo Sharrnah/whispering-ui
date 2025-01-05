@@ -43,10 +43,10 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 		Fields.Field.TargetLanguageCombo.Text = sourceLanguage
 		Fields.Field.TargetLanguageCombo.Refresh()
 
-		sourceField := Fields.Field.TranscriptionInput.Text
-		targetField := Fields.Field.TranscriptionTranslationInput.Text
-		Fields.Field.TranscriptionInput.SetText(targetField)
-		Fields.Field.TranscriptionTranslationInput.SetText(sourceField)
+		sourceField, _ := Fields.DataBindings.TranscriptionInputBinding.Get()
+		targetField, _ := Fields.DataBindings.TranscriptionTranslationInputBinding.Get()
+		Fields.DataBindings.TranscriptionInputBinding.Set(targetField)
+		Fields.DataBindings.TranscriptionTranslationInputBinding.Set(sourceField)
 	})
 	switchButton.Importance = widget.LowImportance
 	switchButton.Alignment = widget.ButtonAlignCenter
@@ -64,8 +64,8 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 	languageRow := container.NewBorder(nil, nil, nil, additionalLanguagesMenuButton, container.New(layout.NewGridLayout(2), sourceLanguageRow, targetLanguageRow))
 
 	transcriptionRow := container.New(layout.NewGridLayout(2),
-		container.NewBorder(nil, Fields.Field.TranscriptionInputHint, nil, nil, Fields.Field.TranscriptionInput),
-		container.NewBorder(nil, Fields.Field.TranscriptionTranslationInputHint, nil, nil, Fields.Field.TranscriptionTranslationInput),
+		container.NewBorder(nil, Fields.Field.TranscriptionInputHintOnTxtTranslate, nil, nil, Fields.Field.TranscriptionTextTranslationInput),
+		container.NewBorder(nil, Fields.Field.TranscriptionTranslationInputHintOnTxtTranslate, nil, nil, Fields.Field.TranscriptionTranslationTextTranslationInput),
 	)
 
 	translateOnlyFunction := func() {
@@ -74,6 +74,7 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 			fromLang = "auto"
 		}
 		toLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.TargetLanguageCombo.Text)
+		text, _ := Fields.DataBindings.TranscriptionInputBinding.Get()
 		//goland:noinspection GoSnakeCaseUsage
 		sendMessage := Fields.SendMessageStruct{
 			Type: "translate_req",
@@ -84,7 +85,7 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 				To_romaji           bool   `json:"to_romaji"`
 				Ignore_send_options bool   `json:"ignore_send_options"`
 			}{
-				Text:                Fields.Field.TranscriptionInput.Text,
+				Text:                text,
 				From_lang:           fromLang,
 				To_lang:             toLang,
 				To_romaji:           Settings.Config.Txt_romaji,
@@ -101,6 +102,7 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 			fromLang = "auto"
 		}
 		toLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.TargetLanguageCombo.Text)
+		text, _ := Fields.DataBindings.TranscriptionInputBinding.Get()
 		//goland:noinspection GoSnakeCaseUsage
 		sendMessage := Fields.SendMessageStruct{
 			Type: "translate_req",
@@ -111,7 +113,7 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 				To_romaji           bool   `json:"to_romaji"`
 				Ignore_send_options bool   `json:"ignore_send_options"`
 			}{
-				Text:                Fields.Field.TranscriptionInput.Text,
+				Text:                text,
 				From_lang:           fromLang,
 				To_lang:             toLang,
 				To_romaji:           Settings.Config.Txt_romaji,
@@ -126,7 +128,7 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 	// quick options row
 	quickOptionsRow := container.New(
 		layout.NewVBoxLayout(),
-		Fields.Field.TtsEnabled,
+		Fields.Field.TtsEnabledOnTxtTranslate,
 		container.NewBorder(nil, nil, nil, Fields.Field.OscLimitHint, Fields.Field.OscEnabled),
 	)
 
@@ -153,7 +155,7 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 		Modifier: fyne.KeyModifierControl,
 		Handler:  translateFunction,
 	}
-	Fields.Field.TranscriptionInput.AddCustomShortcut(translateShortcut)
+	Fields.Field.TranscriptionTextTranslationInput.AddCustomShortcut(translateShortcut)
 
 	translateOnlyShortcut := CustomWidget.ShortcutEntrySubmit{
 		KeyName:  fyne.KeyReturn,
@@ -164,10 +166,10 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 			}
 		},
 	}
-	Fields.Field.TranscriptionInput.AddCustomShortcut(translateOnlyShortcut)
+	Fields.Field.TranscriptionTextTranslationInput.AddCustomShortcut(translateOnlyShortcut)
 
 	// add shortcuts to target text field
-	Fields.Field.TranscriptionTranslationInput.AddCustomShortcut(translateOnlyShortcut)
+	Fields.Field.TranscriptionTranslationTextTranslationInput.AddCustomShortcut(translateOnlyShortcut)
 
 	return mainContent
 }

@@ -5,6 +5,7 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -22,11 +23,11 @@ var OscLimitHintUpdateFunc = func() {}
 
 var fieldCreationFunctions = struct {
 	TranscriptionTaskCombo        func() *CustomWidget.TextValueSelect
-	TranscriptionInput            func() *CustomWidget.EntryWithPopupMenu
-	TranscriptionTranslationInput func() *CustomWidget.EntryWithPopupMenu
+	TranscriptionInput            func(dataBinding binding.String) *CustomWidget.EntryWithPopupMenu
+	TranscriptionTranslationInput func(dataBinding binding.String) *CustomWidget.EntryWithPopupMenu
 	TextTranslateEnabled          func() *widget.Check
 	SttEnabled                    func() *widget.Check
-	TtsEnabled                    func() *widget.Check
+	TtsEnabled                    func(dataBinding binding.Bool) *widget.Check
 	OscEnabled                    func() *widget.Check
 }{
 	TranscriptionTaskCombo: func() *CustomWidget.TextValueSelect {
@@ -54,8 +55,8 @@ var fieldCreationFunctions = struct {
 			sendMessage.SendMessage()
 		}, 0)
 	},
-	TranscriptionInput: func() *CustomWidget.EntryWithPopupMenu {
-		entry := CustomWidget.NewMultiLineEntry()
+	TranscriptionInput: func(dataBinding binding.String) *CustomWidget.EntryWithPopupMenu {
+		entry := CustomWidget.NewMultiLineEntryWithData(dataBinding)
 		entry.Wrapping = fyne.TextWrapWord
 
 		entry.AddAdditionalMenuItem(fyne.NewMenuItem(lang.L("Send to Text-to-Speech"), func() {
@@ -77,7 +78,6 @@ var fieldCreationFunctions = struct {
 		entry.AddAdditionalMenuItem(fyne.NewMenuItem(lang.L("Send to OSC (VRChat)"), func() {
 			sendMessage := SendMessageStruct{
 				Type: "send_osc",
-				//Value: &entry.Text,
 				Value: struct {
 					Text *string `json:"text"`
 				}{
@@ -113,8 +113,8 @@ var fieldCreationFunctions = struct {
 		}))
 		return entry
 	},
-	TranscriptionTranslationInput: func() *CustomWidget.EntryWithPopupMenu {
-		entry := CustomWidget.NewMultiLineEntry()
+	TranscriptionTranslationInput: func(dataBinding binding.String) *CustomWidget.EntryWithPopupMenu {
+		entry := CustomWidget.NewMultiLineEntryWithData(dataBinding)
 		entry.Wrapping = fyne.TextWrapWord
 
 		entry.AddAdditionalMenuItem(fyne.NewMenuItem(lang.L("Send to Text-to-Speech"), func() {
@@ -137,7 +137,6 @@ var fieldCreationFunctions = struct {
 
 			sendMessage := SendMessageStruct{
 				Type: "send_osc",
-				//Value: &entry.Text,
 				Value: struct {
 					Text *string `json:"text"`
 				}{
@@ -180,8 +179,8 @@ var fieldCreationFunctions = struct {
 	SttEnabled: func() *widget.Check {
 		return widget.NewCheckWithData(lang.L("Speech-to-Text Enabled"), DataBindings.SpeechToTextEnabledDataBinding)
 	},
-	TtsEnabled: func() *widget.Check {
-		return widget.NewCheckWithData(lang.L("Automatic Text-to-Speech"), DataBindings.TextToSpeechEnabledDataBinding)
+	TtsEnabled: func(dataBinding binding.Bool) *widget.Check {
+		return widget.NewCheckWithData(lang.L("Automatic Text-to-Speech"), dataBinding)
 	},
 	OscEnabled: func() *widget.Check {
 		return widget.NewCheckWithData(lang.L("Automatic OSC (VRChat)"), DataBindings.OSCEnabledDataBinding)
@@ -189,48 +188,58 @@ var fieldCreationFunctions = struct {
 }
 
 var Field = struct {
-	RealtimeResultLabel               *widget.Label // only displayed if realtime is enabled
-	ProcessingStatus                  *widget.ProgressBarInfinite
-	WhisperResultList                 *widget.List
-	TranscriptionTaskCombo            *CustomWidget.TextValueSelect
-	TranscriptionSpeakerLanguageCombo *CustomWidget.CompletionEntry
-	TranscriptionTargetLanguageCombo  *CustomWidget.CompletionEntry
-	TranscriptionInput                *CustomWidget.EntryWithPopupMenu
-	TranscriptionInputHint            *canvas.Text
-	TranscriptionTranslationInput     *CustomWidget.EntryWithPopupMenu
-	TranscriptionTranslationInputHint *canvas.Text
-	SourceLanguageCombo               *CustomWidget.CompletionEntry
-	TargetLanguageCombo               *CustomWidget.CompletionEntry
-	SourceLanguageTxtTranslateCombo   *CustomWidget.CompletionEntry // used in OCR tab
-	TargetLanguageTxtTranslateCombo   *CustomWidget.CompletionEntry // used in OCR tab
-	TtsModelCombo                     *widget.Select
-	TtsVoiceCombo                     *widget.Select
-	TextTranslateEnabled              *widget.Check
-	SttEnabled                        *widget.Check
-	TtsEnabled                        *widget.Check
-	OscEnabled                        *widget.Check
-	OscLimitHint                      *canvas.Text
-	OcrLanguageCombo                  *CustomWidget.CompletionEntry
-	OcrWindowCombo                    *CustomWidget.TappableSelect
-	OcrImageContainer                 *fyne.Container
-	LogText                           *terminal.Terminal
-	StatusBar                         *widget.ProgressBar
-	StatusText                        *widget.Label
-	StatusRow                         *fyne.Container
+	RealtimeResultLabel                             *widget.Label // only displayed if realtime is enabled
+	ProcessingStatus                                *widget.ProgressBarInfinite
+	WhisperResultList                               *widget.List
+	TranscriptionTaskCombo                          *CustomWidget.TextValueSelect
+	TranscriptionSpeakerLanguageCombo               *CustomWidget.CompletionEntry
+	TranscriptionTargetLanguageCombo                *CustomWidget.CompletionEntry
+	TranscriptionSpeechToTextInput                  *CustomWidget.EntryWithPopupMenu // Transcription (spoken source) textarea
+	TranscriptionTextTranslationInput               *CustomWidget.EntryWithPopupMenu
+	TranscriptionTextToSpeechInput                  *CustomWidget.EntryWithPopupMenu
+	TranscriptionOcrInput                           *CustomWidget.EntryWithPopupMenu
+	TranscriptionInputHint                          *canvas.Text
+	TranscriptionInputHintOnTxtTranslate            *canvas.Text
+	TranscriptionTranslationSpeechToTextInput       *CustomWidget.EntryWithPopupMenu // Translation Result textarea
+	TranscriptionTranslationTextTranslationInput    *CustomWidget.EntryWithPopupMenu
+	TranscriptionTranslationTextToSpeechInput       *CustomWidget.EntryWithPopupMenu
+	TranscriptionTranslationOcrInput                *CustomWidget.EntryWithPopupMenu
+	TranscriptionTranslationInputHint               *canvas.Text
+	TranscriptionTranslationInputHintOnTxtTranslate *canvas.Text
+	SourceLanguageCombo                             *CustomWidget.CompletionEntry
+	TargetLanguageCombo                             *CustomWidget.CompletionEntry
+	SourceLanguageTxtTranslateCombo                 *CustomWidget.CompletionEntry // used in OCR tab
+	TargetLanguageTxtTranslateCombo                 *CustomWidget.CompletionEntry // used in OCR tab
+	TtsModelCombo                                   *widget.Select
+	TtsVoiceCombo                                   *widget.Select
+	TextTranslateEnabled                            *widget.Check
+	SttEnabled                                      *widget.Check
+	TtsEnabledOnStt                                 *widget.Check
+	TtsEnabledOnTxtTranslate                        *widget.Check
+	OscEnabled                                      *widget.Check
+	OscLimitHint                                    *canvas.Text
+	OcrLanguageCombo                                *CustomWidget.CompletionEntry
+	OcrWindowCombo                                  *CustomWidget.TappableSelect
+	OcrImageContainer                               *fyne.Container
+	LogText                                         *terminal.Terminal
+	StatusBar                                       *widget.ProgressBar
+	StatusText                                      *widget.Label
+	StatusRow                                       *fyne.Container
 }{
-	RealtimeResultLabel:               widget.NewLabelWithData(DataBindings.WhisperResultIntermediateResult),
-	ProcessingStatus:                  nil,
-	WhisperResultList:                 nil,
-	TranscriptionTaskCombo:            nil,
-	TranscriptionSpeakerLanguageCombo: CustomWidget.NewCompletionEntry([]string{"Auto"}),
-	TranscriptionTargetLanguageCombo:  CustomWidget.NewCompletionEntry([]string{}),
-	TranscriptionInputHint:            canvas.NewText("0", color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}),
-	//TranscriptionTranslationInput:     *CustomWidget.EntryWithPopupMenu{},
-	TranscriptionTranslationInputHint: canvas.NewText("0", color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}),
-	SourceLanguageCombo:               CustomWidget.NewCompletionEntry([]string{"Auto"}),
-	TargetLanguageCombo:               CustomWidget.NewCompletionEntry([]string{"None"}),
-	SourceLanguageTxtTranslateCombo:   CustomWidget.NewCompletionEntry([]string{"Auto"}),
-	TargetLanguageTxtTranslateCombo:   CustomWidget.NewCompletionEntry([]string{"None"}),
+	RealtimeResultLabel:                             widget.NewLabelWithData(DataBindings.WhisperResultIntermediateResult),
+	ProcessingStatus:                                nil,
+	WhisperResultList:                               nil,
+	TranscriptionTaskCombo:                          nil,
+	TranscriptionSpeakerLanguageCombo:               CustomWidget.NewCompletionEntry([]string{"Auto"}),
+	TranscriptionTargetLanguageCombo:                CustomWidget.NewCompletionEntry([]string{}),
+	TranscriptionInputHint:                          canvas.NewText("0", color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}),
+	TranscriptionInputHintOnTxtTranslate:            canvas.NewText("0", color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}),
+	TranscriptionTranslationInputHint:               canvas.NewText("0", color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}),
+	TranscriptionTranslationInputHintOnTxtTranslate: canvas.NewText("0", color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}),
+	SourceLanguageCombo:                             CustomWidget.NewCompletionEntry([]string{"Auto"}),
+	TargetLanguageCombo:                             CustomWidget.NewCompletionEntry([]string{"None"}),
+	SourceLanguageTxtTranslateCombo:                 CustomWidget.NewCompletionEntry([]string{"Auto"}),
+	TargetLanguageTxtTranslateCombo:                 CustomWidget.NewCompletionEntry([]string{"None"}),
 	TtsModelCombo: widget.NewSelect([]string{}, func(value string) {
 		sendMessage := SendMessageStruct{
 			Type:  "setting_change",
@@ -252,10 +261,6 @@ var Field = struct {
 
 		log.Println("Select set to", value)
 	}),
-	//TextTranslateEnabled: widget.NewCheckWithData(lang.L("SttTextTranslateLabel", map[string]interface{}{"FromLang": "?", "ToLang": "?"}), DataBindings.TextTranslateEnabledDataBinding),
-	//SttEnabled:           widget.NewCheckWithData(lang.L("Speech-to-Text Enabled"), DataBindings.SpeechToTextEnabledDataBinding),
-	//TtsEnabled:           widget.NewCheckWithData(lang.L("Automatic Text-to-Speech"), DataBindings.TextToSpeechEnabledDataBinding),
-	//OscEnabled:           widget.NewCheckWithData(lang.L("Automatic OSC (VRChat)"), DataBindings.OSCEnabledDataBinding),
 	OscLimitHint: canvas.NewText(fmt.Sprintf(OscLimitLabelConst, 0, 0), color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}),
 
 	OcrLanguageCombo: CustomWidget.NewCompletionEntry([]string{}),
@@ -306,11 +311,18 @@ func UpdateCompletionEntryBasedOnValue(completionEntryWidget *CustomWidget.Compl
 
 func createFields() {
 	Field.TranscriptionTaskCombo = fieldCreationFunctions.TranscriptionTaskCombo()
-	Field.TranscriptionInput = fieldCreationFunctions.TranscriptionInput()
-	Field.TranscriptionTranslationInput = fieldCreationFunctions.TranscriptionTranslationInput()
+	Field.TranscriptionSpeechToTextInput = fieldCreationFunctions.TranscriptionInput(DataBindings.TranscriptionInputBinding)
+	Field.TranscriptionTextTranslationInput = fieldCreationFunctions.TranscriptionInput(DataBindings.TranscriptionInputBinding)
+	Field.TranscriptionTextToSpeechInput = fieldCreationFunctions.TranscriptionInput(DataBindings.TranscriptionInputBinding)
+	Field.TranscriptionOcrInput = fieldCreationFunctions.TranscriptionInput(DataBindings.TranscriptionInputBinding)
+	Field.TranscriptionTranslationSpeechToTextInput = fieldCreationFunctions.TranscriptionTranslationInput(DataBindings.TranscriptionTranslationInputBinding)
+	Field.TranscriptionTranslationTextTranslationInput = fieldCreationFunctions.TranscriptionTranslationInput(DataBindings.TranscriptionTranslationInputBinding)
+	Field.TranscriptionTranslationTextToSpeechInput = fieldCreationFunctions.TranscriptionTranslationInput(DataBindings.TranscriptionTranslationInputBinding)
+	Field.TranscriptionTranslationOcrInput = fieldCreationFunctions.TranscriptionTranslationInput(DataBindings.TranscriptionTranslationInputBinding)
 	Field.TextTranslateEnabled = fieldCreationFunctions.TextTranslateEnabled()
 	Field.SttEnabled = fieldCreationFunctions.SttEnabled()
-	Field.TtsEnabled = fieldCreationFunctions.TtsEnabled()
+	Field.TtsEnabledOnStt = fieldCreationFunctions.TtsEnabled(DataBindings.TextToSpeechEnabledDataBinding)
+	Field.TtsEnabledOnTxtTranslate = fieldCreationFunctions.TtsEnabled(DataBindings.TextToSpeechEnabledDataBinding)
 	Field.OscEnabled = fieldCreationFunctions.OscEnabled()
 }
 
@@ -518,7 +530,7 @@ func InitializeGlobalFields() {
 		}
 		sendMessage.SendMessage()
 	}
-	Field.TtsEnabled.OnChanged = func(value bool) {
+	Field.TtsEnabledOnStt.OnChanged = func(value bool) {
 		sendMessage := SendMessageStruct{
 			Type:  "setting_change",
 			Name:  "tts_answer",
@@ -564,17 +576,25 @@ func InitializeGlobalFields() {
 
 	Field.TranscriptionInputHint.TextSize = theme.CaptionTextSize()
 	Field.TranscriptionInputHint.Alignment = fyne.TextAlignLeading
-	Field.TranscriptionInput.OnChanged = func(value string) {
+	Field.TranscriptionInputHintOnTxtTranslate.TextSize = theme.CaptionTextSize()
+	Field.TranscriptionInputHintOnTxtTranslate.Alignment = fyne.TextAlignLeading
+	Field.TranscriptionSpeechToTextInput.OnChanged = func(value string) {
 		Field.TranscriptionInputHint.Text = fmt.Sprintf("%d", len([]rune(value)))
 		Field.TranscriptionInputHint.Refresh()
+		Field.TranscriptionInputHintOnTxtTranslate.Text = fmt.Sprintf("%d", len([]rune(value)))
+		Field.TranscriptionInputHintOnTxtTranslate.Refresh()
 
 		OscLimitHintUpdateFunc()
 	}
 	Field.TranscriptionTranslationInputHint.TextSize = theme.CaptionTextSize()
 	Field.TranscriptionTranslationInputHint.Alignment = fyne.TextAlignLeading
-	Field.TranscriptionTranslationInput.OnChanged = func(value string) {
+	Field.TranscriptionTranslationInputHintOnTxtTranslate.TextSize = theme.CaptionTextSize()
+	Field.TranscriptionTranslationInputHintOnTxtTranslate.Alignment = fyne.TextAlignLeading
+	Field.TranscriptionTranslationSpeechToTextInput.OnChanged = func(value string) {
 		Field.TranscriptionTranslationInputHint.Text = fmt.Sprintf("%d", len([]rune(value)))
 		Field.TranscriptionTranslationInputHint.Refresh()
+		Field.TranscriptionTranslationInputHintOnTxtTranslate.Text = fmt.Sprintf("%d", len([]rune(value)))
+		Field.TranscriptionTranslationInputHintOnTxtTranslate.Refresh()
 
 		OscLimitHintUpdateFunc()
 	}

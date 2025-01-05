@@ -70,6 +70,7 @@ func CreateOcrWindow() fyne.CanvasObject {
 			fromLang = "auto"
 		}
 		toLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.TargetLanguageTxtTranslateCombo.Text)
+		text, _ := Fields.DataBindings.TranscriptionInputBinding.Get()
 		//goland:noinspection GoSnakeCaseUsage
 		sendMessage := Fields.SendMessageStruct{
 			Type: "translate_req",
@@ -80,7 +81,7 @@ func CreateOcrWindow() fyne.CanvasObject {
 				To_romaji           bool   `json:"to_romaji"`
 				Ignore_send_options bool   `json:"ignore_send_options"`
 			}{
-				Text:                Fields.Field.TranscriptionInput.Text,
+				Text:                text,
 				From_lang:           fromLang,
 				To_lang:             toLang,
 				To_romaji:           Settings.Config.Txt_romaji,
@@ -180,7 +181,7 @@ func CreateOcrWindow() fyne.CanvasObject {
 		}
 		if clipboardFormat == clipboard.FmtText {
 			clipboardText := string(clipboardData)
-			Fields.Field.TranscriptionInput.SetText(clipboardText)
+			Fields.DataBindings.TranscriptionInputBinding.Set(clipboardText)
 			translateOnlyFunction()
 			Fields.Field.OcrImageContainer.RemoveAll()
 		}
@@ -208,10 +209,10 @@ func CreateOcrWindow() fyne.CanvasObject {
 		Fields.Field.TargetLanguageTxtTranslateCombo.Text = sourceLanguage
 		Fields.Field.TargetLanguageTxtTranslateCombo.Refresh()
 
-		sourceField := Fields.Field.TranscriptionInput.Text
-		targetField := Fields.Field.TranscriptionTranslationInput.Text
-		Fields.Field.TranscriptionInput.SetText(targetField)
-		Fields.Field.TranscriptionTranslationInput.SetText(sourceField)
+		sourceField, _ := Fields.DataBindings.TranscriptionInputBinding.Get()
+		targetField, _ := Fields.DataBindings.TranscriptionTranslationInputBinding.Get()
+		Fields.DataBindings.TranscriptionInputBinding.Set(targetField)
+		Fields.Field.TranscriptionTranslationSpeechToTextInput.SetText(sourceField)
 	})
 	switchButton.Importance = widget.LowImportance
 	switchButton.Alignment = widget.ButtonAlignCenter
@@ -222,7 +223,7 @@ func CreateOcrWindow() fyne.CanvasObject {
 	targetLanguageForm := container.New(layout.NewFormLayout(), widget.NewLabel(lang.L("Target Language")+":"), Fields.Field.TargetLanguageTxtTranslateCombo)
 	languageRow := container.New(layout.NewGridLayout(2), sourceLanguageForm, targetLanguageForm)
 
-	transcriptionRow := container.New(layout.NewGridLayout(2), Fields.Field.TranscriptionInput, Fields.Field.TranscriptionTranslationInput)
+	transcriptionRow := container.New(layout.NewGridLayout(2), Fields.Field.TranscriptionOcrInput, Fields.Field.TranscriptionTranslationOcrInput)
 
 	translateOnlyButton := widget.NewButtonWithIcon(lang.L("Translate Only"), theme.MenuExpandIcon(), translateOnlyFunction)
 

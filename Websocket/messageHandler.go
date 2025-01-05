@@ -298,9 +298,11 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		}
 	case "translate_result":
 		//Messages.LastTranslationResult = c.TranslateResult
-		Fields.Field.TranscriptionTranslationInput.SetText(c.TranslateResult)
+		//Fields.Field.TranscriptionTranslationSpeechToTextInput.SetText(c.TranslateResult)
+		Fields.DataBindings.TranscriptionTranslationInputBinding.Set(c.TranslateResult)
 		if c.OriginalText != "" {
-			Fields.Field.TranscriptionInput.SetText(c.OriginalText)
+			//Fields.Field.TranscriptionSpeechToTextInput.SetText(c.OriginalText)
+			Fields.DataBindings.TranscriptionInputBinding.Set(c.OriginalText)
 		}
 		if Fields.Field.SourceLanguageCombo.GetCurrentValueOptionEntry() != nil && Fields.Field.SourceLanguageCombo.GetCurrentValueOptionEntry().Value == "Auto" {
 			langName := Utilities.LanguageMapList.GetName(c.TxtFromLang)

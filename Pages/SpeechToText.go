@@ -59,8 +59,8 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 
 	transcriptionRow := container.New(
 		layout.NewGridLayout(2),
-		container.NewBorder(nil, Fields.Field.TranscriptionInputHint, nil, nil, Fields.Field.TranscriptionInput),
-		container.NewBorder(nil, Fields.Field.TranscriptionTranslationInputHint, nil, nil, Fields.Field.TranscriptionTranslationInput),
+		container.NewBorder(nil, Fields.Field.TranscriptionInputHint, nil, nil, Fields.Field.TranscriptionSpeechToTextInput),
+		container.NewBorder(nil, Fields.Field.TranscriptionTranslationInputHint, nil, nil, Fields.Field.TranscriptionTranslationSpeechToTextInput),
 	)
 
 	beginLine := canvas.NewHorizontalGradient(&color.NRGBA{R: 198, G: 123, B: 0, A: 255}, &color.NRGBA{R: 198, G: 123, B: 0, A: 0})
@@ -72,7 +72,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		Fields.Field.SttEnabled,
 		container.NewGridWithColumns(2, beginLine),
 		Fields.Field.TextTranslateEnabled,
-		Fields.Field.TtsEnabled,
+		Fields.Field.TtsEnabledOnStt,
 		container.NewHBox(
 			container.NewBorder(nil, nil, nil, Fields.Field.OscLimitHint, Fields.Field.OscEnabled),
 		),
@@ -151,14 +151,13 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 	)
 
 	Fields.Field.WhisperResultList.OnSelected = func(id widget.ListItemID) {
-		//whisperMessage, _ := Fields.DataBindings.WhisperResultsDataBinding.GetValue(id)
 		whisperMessage := Fields.DataBindings.WhisperResultsData[id]
 
-		Fields.Field.TranscriptionInput.SetText(whisperMessage.Text)
+		Fields.DataBindings.TranscriptionInputBinding.Set(whisperMessage.Text)
 		if whisperMessage.TxtTranslation != "" {
-			Fields.Field.TranscriptionTranslationInput.SetText(whisperMessage.TxtTranslation)
+			Fields.Field.TranscriptionTranslationSpeechToTextInput.SetText(whisperMessage.TxtTranslation)
 		} else {
-			Fields.Field.TranscriptionTranslationInput.SetText(whisperMessage.Text)
+			Fields.Field.TranscriptionTranslationSpeechToTextInput.SetText(whisperMessage.Text)
 		}
 
 		go func() {

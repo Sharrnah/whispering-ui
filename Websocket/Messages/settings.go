@@ -161,8 +161,12 @@ func (res TranslateSetting) Update() *TranslateSetting {
 		Fields.Field.OscLimitHint.Hide()
 	}
 	Fields.OscLimitHintUpdateFunc = func() {
-		transcriptionInputCount := Utilities.CountUTF16CodeUnits(Fields.Field.TranscriptionInput.Text)
-		transcriptionTranslationInputCount := Utilities.CountUTF16CodeUnits(Fields.Field.TranscriptionTranslationInput.Text)
+		//transcriptionInputCount := Utilities.CountUTF16CodeUnits(Fields.Field.TranscriptionSpeechToTextInput.Text)
+		transcriptionText, _ := Fields.DataBindings.TranscriptionInputBinding.Get()
+		transcriptionInputCount := Utilities.CountUTF16CodeUnits(transcriptionText)
+		//transcriptionTranslationInputCount := Utilities.CountUTF16CodeUnits(Fields.Field.TranscriptionTranslationSpeechToTextInput.Text)
+		transcriptionTranslationText, _ := Fields.DataBindings.TranscriptionTranslationInputBinding.Get()
+		transcriptionTranslationInputCount := Utilities.CountUTF16CodeUnits(transcriptionTranslationText)
 		oscSplitCount := Utilities.CountUTF16CodeUnits(Settings.Config.Osc_type_transfer_split)
 		maxCount := res.Conf.Osc_chat_limit
 

@@ -179,7 +179,6 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 		deviceConfig.Playback.DeviceID = playbackDevices[selectedPlaybackDeviceIndex].ID.Pointer()
 	}
 	deviceConfig.Playback.Channels = c.testAudioChannels
-	//deviceConfig.SampleRate = 44100
 	deviceConfig.SampleRate = c.testAudioSampleRate
 	deviceConfig.Alsa.NoMMap = 1
 
@@ -245,15 +244,6 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 				c.OutputWaveWidget.SetValue(currentVolume)
 			}
 		}
-
-		/*sampleCountCapture := framecount * deviceConfig.Capture.Channels * sizeInBytesCapture
-
-		newCapturedSampleCount := capturedSampleCount + sampleCountCapture
-
-		pCapturedSamples = append(pCapturedSamples, pInputSamples...)
-
-		capturedSampleCount = newCapturedSampleCount*/
-
 	}
 
 	fmt.Println("Recording...")
@@ -1226,7 +1216,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				if selectedPrecision == "int8" || selectedPrecision == "int16" {
 					sttPrecisionSelect.SetSelected("float32")
 				}
-				//sttPrecisionSelect.Disable()
 				AIModelType = "m4t"
 
 				if txtTranslatorTypeSelect.GetSelected().Value != "Seamless_M4T" && !isLoadingSettingsFile {
@@ -1309,7 +1298,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		}
 
-		//denoiseCheckbox := widget.NewCheck("A.I. Denoise", func(b bool) {})
 		profileForm.Append(lang.L("Speech-to-Text Type"), container.NewGridWithColumns(2, sttTypeSelect))
 
 		profileForm.Append(lang.L("A.I. Device for Speech-to-Text"), sttAiDeviceSelect)
@@ -1757,7 +1745,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileForm.Items[12].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Phrase_time_limit))
 
 		profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Stt_type)
-		//profileForm.Items[12].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Denoise_audio)
 
 		if profileSettings.Ai_device != nil {
 			profileForm.Items[14].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Ai_device.(string))
@@ -1796,7 +1783,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileForm.Items[19].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_size)
 		profileForm.Items[19].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_precision)
 		// spacer (19)
-		//profileForm.Items[21].Widget.(*widget.Check).SetChecked(profileSettings.Tts_enabled)
 		profileForm.Items[21].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Tts_type)
 		profileForm.Items[22].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Tts_ai_device)
 
@@ -1824,7 +1810,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			profileSettings.Phrase_time_limit = profileForm.Items[12].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value
 
 			profileSettings.Stt_type = profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
-			//profileSettings.Denoise_audio = profileForm.Items[12].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected().Value
 			profileSettings.Ai_device = profileForm.Items[14].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
 			profileSettings.Model = profileForm.Items[15].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
 			profileSettings.Whisper_precision = profileForm.Items[15].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected().Value
@@ -1873,7 +1858,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					Txt_translator_precision: profileSettings.Txt_translator_precision,
 					Txt_translator:           profileSettings.Txt_translator,
 
-					//Tts_enabled:   profileSettings.Tts_enabled,
 					Tts_type:      profileSettings.Tts_type,
 					Tts_ai_device: profileSettings.Tts_ai_device,
 

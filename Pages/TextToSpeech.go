@@ -89,15 +89,13 @@ func GetClipboardText() string {
 }
 
 func OnOpenTextToSpeechWindow(container fyne.CanvasObject) {
-	//mainContent := container.(*fyne.Container)
-	//clipboardText := Fields.Field.TranscriptionTranslationInput.Text
-	if Fields.Field.TranscriptionTranslationInput.FindAdditionalMenuItemByLabel("sep-tts") == nil {
+	if Fields.Field.TranscriptionTranslationTextToSpeechInput.FindAdditionalMenuItemByLabel("sep-tts") == nil {
 		seperatorMenuItem := fyne.NewMenuItemSeparator()
 		seperatorMenuItem.Label = "sep-tts"
-		Fields.Field.TranscriptionTranslationInput.AddAdditionalMenuItem(seperatorMenuItem)
+		Fields.Field.TranscriptionTranslationTextToSpeechInput.AddAdditionalMenuItem(seperatorMenuItem)
 	}
-	if Fields.Field.TranscriptionTranslationInput.FindAdditionalMenuItemByLabel(lang.L("Send to TTS from Clipboard")) == nil {
-		Fields.Field.TranscriptionTranslationInput.AddAdditionalMenuItem(fyne.NewMenuItem(lang.L("Send to TTS from Clipboard"), func() {
+	if Fields.Field.TranscriptionTranslationTextToSpeechInput.FindAdditionalMenuItemByLabel(lang.L("Send to TTS from Clipboard")) == nil {
+		Fields.Field.TranscriptionTranslationTextToSpeechInput.AddAdditionalMenuItem(fyne.NewMenuItem(lang.L("Send to TTS from Clipboard"), func() {
 			clipboardText := GetClipboardText()
 			if clipboardText == "" {
 				return
@@ -118,8 +116,8 @@ func OnOpenTextToSpeechWindow(container fyne.CanvasObject) {
 			sendMessage.SendMessage()
 		}))
 	}
-	if Fields.Field.TranscriptionTranslationInput.FindAdditionalMenuItemByLabel(lang.L("Export .wav from Clipboard")) == nil {
-		Fields.Field.TranscriptionTranslationInput.AddAdditionalMenuItem(fyne.NewMenuItem(lang.L("Export .wav from Clipboard"), func() {
+	if Fields.Field.TranscriptionTranslationTextToSpeechInput.FindAdditionalMenuItemByLabel(lang.L("Export .wav from Clipboard")) == nil {
+		Fields.Field.TranscriptionTranslationTextToSpeechInput.AddAdditionalMenuItem(fyne.NewMenuItem(lang.L("Export .wav from Clipboard"), func() {
 			clipboardText := GetClipboardText()
 			if clipboardText == "" {
 				return
@@ -146,17 +144,17 @@ func OnOpenTextToSpeechWindow(container fyne.CanvasObject) {
 }
 
 func OnCloseTextToSpeechWindow(container fyne.CanvasObject) {
-	seperatorMenuItem := Fields.Field.TranscriptionTranslationInput.FindAdditionalMenuItemByLabel("sep-tts")
+	seperatorMenuItem := Fields.Field.TranscriptionTranslationTextToSpeechInput.FindAdditionalMenuItemByLabel("sep-tts")
 	if seperatorMenuItem == nil {
-		Fields.Field.TranscriptionTranslationInput.RemoveAdditionalMenuItem(seperatorMenuItem)
+		Fields.Field.TranscriptionTranslationTextToSpeechInput.RemoveAdditionalMenuItem(seperatorMenuItem)
 	}
-	playFromClipboardMenuItem := Fields.Field.TranscriptionTranslationInput.FindAdditionalMenuItemByLabel(lang.L("Send to TTS from Clipboard"))
+	playFromClipboardMenuItem := Fields.Field.TranscriptionTranslationTextToSpeechInput.FindAdditionalMenuItemByLabel(lang.L("Send to TTS from Clipboard"))
 	if playFromClipboardMenuItem != nil {
-		Fields.Field.TranscriptionTranslationInput.RemoveAdditionalMenuItem(playFromClipboardMenuItem)
+		Fields.Field.TranscriptionTranslationTextToSpeechInput.RemoveAdditionalMenuItem(playFromClipboardMenuItem)
 	}
-	exportFromClipboardMenuItem := Fields.Field.TranscriptionTranslationInput.FindAdditionalMenuItemByLabel(lang.L("Export .wav from Clipboard"))
+	exportFromClipboardMenuItem := Fields.Field.TranscriptionTranslationTextToSpeechInput.FindAdditionalMenuItemByLabel(lang.L("Export .wav from Clipboard"))
 	if exportFromClipboardMenuItem != nil {
-		Fields.Field.TranscriptionTranslationInput.RemoveAdditionalMenuItem(exportFromClipboardMenuItem)
+		Fields.Field.TranscriptionTranslationTextToSpeechInput.RemoveAdditionalMenuItem(exportFromClipboardMenuItem)
 	}
 }
 
@@ -186,10 +184,11 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 
 	ttsModelVoiceRow := container.New(layout.NewGridLayout(2), ttsModels, ttsVoicesSaveBtnLayout)
 
-	transcriptionRow := container.New(layout.NewGridLayout(1), Fields.Field.TranscriptionTranslationInput)
+	transcriptionRow := container.New(layout.NewGridLayout(1), Fields.Field.TranscriptionTranslationTextToSpeechInput)
 
 	exportSpeechButton := widget.NewButtonWithIcon(lang.L("Export .wav"), theme.DocumentSaveIcon(), func() {
 		ShowSaveTTSWindow(func(s string) {
+			text, _ := Fields.DataBindings.TranscriptionTranslationInputBinding.Get()
 			sendMessage := Fields.SendMessageStruct{
 				Type: "tts_req",
 				Value: struct {
@@ -198,7 +197,7 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 					Download bool   `json:"download"`
 					Path     string `json:"path,omitempty"`
 				}{
-					Text:     Fields.Field.TranscriptionTranslationInput.Text,
+					Text:     text,
 					ToDevice: false,
 					Download: true,
 					Path:     s,
@@ -209,12 +208,13 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 	})
 
 	sendFunction := func() {
+		text, _ := Fields.DataBindings.TranscriptionTranslationInputBinding.Get()
 		valueData := struct {
 			Text     string `json:"text"`
 			ToDevice bool   `json:"to_device"`
 			Download bool   `json:"download"`
 		}{
-			Text:     Fields.Field.TranscriptionTranslationInput.Text,
+			Text:     text,
 			ToDevice: true,
 			Download: false,
 		}
@@ -228,13 +228,14 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 	sendButton.Importance = widget.HighImportance
 
 	testButton := widget.NewButton(lang.L("Test the Voice"), func() {
+		text, _ := Fields.DataBindings.TranscriptionTranslationInputBinding.Get()
 		valueData := struct {
 			Text        string      `json:"text"`
 			ToDevice    bool        `json:"to_device"`
 			DeviceIndex interface{} `json:"device_index"`
 			Download    bool        `json:"download"`
 		}{
-			Text:        Fields.Field.TranscriptionTranslationInput.Text,
+			Text:        text,
 			ToDevice:    true,
 			DeviceIndex: nil, // send to default device
 			Download:    false,
@@ -278,19 +279,22 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 		KeyName:  fyne.KeyReturn,
 		Modifier: fyne.KeyModifierControl,
 		Handler: func() {
+			text, _ := Fields.DataBindings.TranscriptionTranslationInputBinding.Get()
 			if mainContent.Visible() {
 				sendFunction()
 			} else {
-				if Fields.Field.TtsEnabled.Checked {
+				ttsEnabled, _ := Fields.DataBindings.TextToSpeechEnabledDataBinding.Get()
+				oscEnabled, _ := Fields.DataBindings.OSCEnabledDataBinding.Get()
+				if ttsEnabled {
 					sendFunction()
 				}
-				if Fields.Field.OscEnabled.Checked {
+				if oscEnabled {
 					sendMessage := Fields.SendMessageStruct{
 						Type: "send_osc",
 						Value: struct {
-							Text *string `json:"text"`
+							Text string `json:"text"`
 						}{
-							Text: &Fields.Field.TranscriptionTranslationInput.Text,
+							Text: text,
 						},
 					}
 					sendMessage.SendMessage()
@@ -298,7 +302,7 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 			}
 		},
 	}
-	Fields.Field.TranscriptionTranslationInput.AddCustomShortcut(sendShortcut)
+	Fields.Field.TranscriptionTranslationTextToSpeechInput.AddCustomShortcut(sendShortcut)
 
 	return mainContent
 }

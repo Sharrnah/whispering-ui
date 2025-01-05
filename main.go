@@ -87,9 +87,6 @@ func main() {
 	}
 	lang.AddTranslationsFS(Resources.Translations, "translations")
 
-	// initialize global fields (so they can use initialized languages)
-	Fields.InitializeGlobalFields()
-
 	a := app.NewWithID("io.github.whispering-tiger")
 	a.SetIcon(Resources.ResourceAppIconPng)
 
@@ -101,6 +98,9 @@ func main() {
 	w := a.NewWindow("Whispering Tiger")
 	w.SetMaster()
 	w.CenterOnScreen()
+
+	// initialize global fields (so they can use initialized languages)
+	Fields.InitializeGlobalFields()
 
 	w.SetOnClosed(func() {
 		fyne.CurrentApp().Preferences().SetFloat("MainWindowWidth", float64(w.Canvas().Size().Width))
@@ -197,12 +197,6 @@ func main() {
 					}
 				}
 			}
-
-			// tab refresh workaround for https://github.com/fyne-io/fyne/issues/5338
-			go func() {
-				time.Sleep(time.Millisecond * 50)
-				tab.Content.Refresh()
-			}()
 		}
 
 		Fields.Field.StatusText.Wrapping = fyne.TextTruncate
