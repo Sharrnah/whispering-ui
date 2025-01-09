@@ -55,47 +55,48 @@ type Conf struct {
 	Max_speakers         int     `yaml:"max_speakers" json:"max_speakers"`
 
 	// Whisper Settings
-	Stt_enabled                   bool        `yaml:"stt_enabled" json:"stt_enabled"`
-	Ai_device                     interface{} `yaml:"ai_device" json:"ai_device"`
-	Whisper_task                  string      `yaml:"whisper_task" json:"whisper_task"`
-	Current_language              string      `yaml:"current_language" json:"current_language"`
-	Target_language               string      `yaml:"target_language" json:"target_language"`
-	Model                         string      `yaml:"model" json:"model"`
-	Condition_on_previous_text    bool        `yaml:"condition_on_previous_text" json:"condition_on_previous_text"`
-	Prompt_reset_on_temperature   float64     `yaml:"prompt_reset_on_temperature" json:"prompt_reset_on_temperature"`
-	Initial_prompt                string      `yaml:"initial_prompt" json:"initial_prompt"`
-	Logprob_threshold             string      `yaml:"logprob_threshold" json:"logprob_threshold"`     // string formatted float or "none" / ""
-	No_speech_threshold           string      `yaml:"no_speech_threshold" json:"no_speech_threshold"` // string formatted float or "none" / ""
-	Whisper_precision             string      `yaml:"whisper_precision" json:"whisper_precision"`
-	Stt_type                      string      `yaml:"stt_type" json:"stt_type"`
-	Temperature_fallback          bool        `yaml:"temperature_fallback" json:"temperature_fallback"` // enables/disables temperature fallback (to prevent multiple whisper loops in a row)
-	Beam_size                     int         `yaml:"beam_size" json:"beam_size"`
-	Length_penalty                float64     `yaml:"length_penalty" json:"length_penalty"`
-	Beam_search_patience          float64     `yaml:"beam_search_patience" json:"beam_search_patience"`
-	Repetition_penalty            float64     `yaml:"repetition_penalty" json:"repetition_penalty"`
-	No_repeat_ngram_size          int         `yaml:"no_repeat_ngram_size" json:"no_repeat_ngram_size"`
-	Whisper_cpu_threads           int         `yaml:"whisper_cpu_threads" json:"whisper_cpu_threads"`
-	Whisper_num_workers           int         `yaml:"whisper_num_workers" json:"whisper_num_workers"`
-	Realtime                      bool        `yaml:"realtime" json:"realtime"`
-	Realtime_frame_multiply       int         `yaml:"realtime_frame_multiply" json:"realtime_frame_multiply"`
-	Realtime_frequency_time       float64     `yaml:"realtime_frequency_time" json:"realtime_frequency_time"`
-	Realtime_whisper_model        string      `yaml:"realtime_whisper_model" json:"realtime_whisper_model"`
-	Realtime_whisper_precision    string      `yaml:"realtime_whisper_precision" json:"realtime_whisper_precision"`
-	Realtime_whisper_beam_size    int         `yaml:"realtime_whisper_beam_size" json:"realtime_whisper_beam_size"`
-	Realtime_temperature_fallback bool        `yaml:"realtime_temperature_fallback" json:"realtime_temperature_fallback"`
-	Push_to_talk_key              string      `yaml:"push_to_talk_key" json:"push_to_talk_key"`
-	Word_timestamps               bool        `yaml:"word_timestamps" json:"word_timestamps"`                           // if enabled, Whisper will add timestamps to the transcribed text.
-	Faster_without_timestamps     bool        `yaml:"faster_without_timestamps" json:"faster_without_timestamps"`       // if enabled, faster whisper will only sample text tokens. (only when using stt_type=faster_whisper)
-	Denoise_audio                 string      `yaml:"denoise_audio" json:"denoise_audio"`                               // if enabled, audio will be de-noised before processing. (Can be empty, "deepfilter" or "noise_reduce")
-	Denoise_audio_post_filter     bool        `yaml:"denoise_audio_post_filter" json:"denoise_audio_post_filter"`       // Enable post filter for some minor, extra noise reduction.
-	Denoise_audio_before_trigger  bool        `yaml:"denoise_audio_before_trigger" json:"denoise_audio_before_trigger"` // if enabled, noise cancellation will be applied on the audio chunks before recording trigger conditions are detected.
-	Whisper_apply_voice_markers   bool        `yaml:"whisper_apply_voice_markers" json:"whisper_apply_voice_markers"`
-	Max_sentence_repetition       int         `yaml:"max_sentence_repetition" json:"max_sentence_repetition"`
-	Thread_per_transcription      bool        `yaml:"thread_per_transcription" json:"thread_per_transcription"` // Enable a new thread for each transcription. (can improve speed)
+	Stt_enabled                           bool        `yaml:"stt_enabled" json:"stt_enabled"`
+	Ai_device                             interface{} `yaml:"ai_device" json:"ai_device"`
+	Whisper_task                          string      `yaml:"whisper_task" json:"whisper_task"`
+	Current_language                      string      `yaml:"current_language" json:"current_language"`
+	Target_language                       string      `yaml:"target_language" json:"target_language"`
+	Model                                 string      `yaml:"model" json:"model"`
+	Condition_on_previous_text            bool        `yaml:"condition_on_previous_text" json:"condition_on_previous_text"`
+	Prompt_reset_on_temperature           float64     `yaml:"prompt_reset_on_temperature" json:"prompt_reset_on_temperature"`
+	Initial_prompt                        string      `yaml:"initial_prompt" json:"initial_prompt"`
+	Logprob_threshold                     string      `yaml:"logprob_threshold" json:"logprob_threshold"`     // string formatted float or "none" / ""
+	No_speech_threshold                   string      `yaml:"no_speech_threshold" json:"no_speech_threshold"` // string formatted float or "none" / ""
+	Whisper_precision                     string      `yaml:"whisper_precision" json:"whisper_precision"`
+	Stt_type                              string      `yaml:"stt_type" json:"stt_type"`
+	Temperature_fallback                  bool        `yaml:"temperature_fallback" json:"temperature_fallback"` // enables/disables temperature fallback (to prevent multiple whisper loops in a row)
+	Beam_size                             int         `yaml:"beam_size" json:"beam_size"`
+	Length_penalty                        float64     `yaml:"length_penalty" json:"length_penalty"`
+	Beam_search_patience                  float64     `yaml:"beam_search_patience" json:"beam_search_patience"`
+	Repetition_penalty                    float64     `yaml:"repetition_penalty" json:"repetition_penalty"`
+	No_repeat_ngram_size                  int         `yaml:"no_repeat_ngram_size" json:"no_repeat_ngram_size"`
+	Whisper_cpu_threads                   int         `yaml:"whisper_cpu_threads" json:"whisper_cpu_threads"`
+	Whisper_num_workers                   int         `yaml:"whisper_num_workers" json:"whisper_num_workers"`
+	Realtime                              bool        `yaml:"realtime" json:"realtime"`
+	Realtime_frame_multiply               int         `yaml:"realtime_frame_multiply" json:"realtime_frame_multiply"`
+	Realtime_frequency_time               float64     `yaml:"realtime_frequency_time" json:"realtime_frequency_time"`
+	Realtime_whisper_model                string      `yaml:"realtime_whisper_model" json:"realtime_whisper_model"`
+	Realtime_whisper_precision            string      `yaml:"realtime_whisper_precision" json:"realtime_whisper_precision"`
+	Realtime_whisper_beam_size            int         `yaml:"realtime_whisper_beam_size" json:"realtime_whisper_beam_size"`
+	Realtime_temperature_fallback         bool        `yaml:"realtime_temperature_fallback" json:"realtime_temperature_fallback"`
+	Push_to_talk_key                      string      `yaml:"push_to_talk_key" json:"push_to_talk_key"`
+	Word_timestamps                       bool        `yaml:"word_timestamps" json:"word_timestamps"`                           // if enabled, Whisper will add timestamps to the transcribed text.
+	Faster_without_timestamps             bool        `yaml:"faster_without_timestamps" json:"faster_without_timestamps"`       // if enabled, faster whisper will only sample text tokens. (only when using stt_type=faster_whisper)
+	Denoise_audio                         string      `yaml:"denoise_audio" json:"denoise_audio"`                               // if enabled, audio will be de-noised before processing. (Can be empty, "deepfilter" or "noise_reduce")
+	Denoise_audio_post_filter             bool        `yaml:"denoise_audio_post_filter" json:"denoise_audio_post_filter"`       // Enable post filter for some minor, extra noise reduction.
+	Denoise_audio_before_trigger          bool        `yaml:"denoise_audio_before_trigger" json:"denoise_audio_before_trigger"` // if enabled, noise cancellation will be applied on the audio chunks before recording trigger conditions are detected.
+	Whisper_apply_voice_markers           bool        `yaml:"whisper_apply_voice_markers" json:"whisper_apply_voice_markers"`
+	Max_sentence_repetition               int         `yaml:"max_sentence_repetition" json:"max_sentence_repetition"`
+	Thread_per_transcription              bool        `yaml:"thread_per_transcription" json:"thread_per_transcription"`                           // Enable a new thread for each transcription. (can improve speed)
+	Only_no_speech_threshold_for_segments bool        `yaml:"only_no_speech_threshold_for_segments" json:"only_no_speech_threshold_for_segments"` //  if enabled, only use no_speech_threshold for silence detection in segments.
 
-	Transcription_auto_save_file           string `yaml:"transcription_auto_save_file" json:"transcription_auto_save_file"`
-	Transcription_auto_save_continous_text bool   `yaml:"transcription_auto_save_continous_text" json:"transcription_auto_save_continous_text"`
-	Transcription_save_audio_dir           string `yaml:"transcription_save_audio_dir" json:"transcription_save_audio_dir"`
+	Transcription_auto_save_file            string `yaml:"transcription_auto_save_file" json:"transcription_auto_save_file"`
+	Transcription_auto_save_continuous_text bool   `yaml:"transcription_auto_save_continuous_text" json:"transcription_auto_save_continuous_text"`
+	Transcription_save_audio_dir            string `yaml:"transcription_save_audio_dir" json:"transcription_save_audio_dir"`
 
 	Silence_cutting_enabled   bool    `yaml:"silence_cutting_enabled" json:"silence_cutting_enabled"`
 	Silence_offset            float64 `yaml:"silence_offset" json:"silence_offset"`
