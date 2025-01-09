@@ -322,7 +322,7 @@
     "Additional Translation Languages": "Extra vertaaltalen",
     "Additional Translation": "Extra vertaling",
     "Enable Additional Translations": "Extra vertalingen inschakelen",
-    "tts_prosody_rate.Name": "Snelheid / Tempo",
+    "tts_prosody_rate.Name": "Snelheid / Frequentie",
     "tts_volume.Name": "Tekst-naar-spraak volumeregeling",
     "tts_volume.Description": "Het volume van de tekst-naar-spraakuitvoer aanpassen.\n1.0 = normaal volume"
 }
