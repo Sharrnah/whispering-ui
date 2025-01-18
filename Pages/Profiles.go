@@ -565,38 +565,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 	audioApiSelect := CustomWidget.NewTextValueSelect("audio_api",
 		audioOptions,
-		func(s CustomWidget.TextValueOption) {
-			var value malgo.Backend = AudioAPI.AudioBackends[0].Backend
-			value = AudioAPI.GetAudioBackendByName(s.Value).Backend
-			if playBackDevice.AudioAPI != value && playBackDevice.AudioAPI != malgo.BackendNull {
-				oldAudioInputSelection := audioInputSelect.GetSelected()
-				oldAudioOutputSelection := audioOutputSelect.GetSelected()
-
-				playBackDevice.Stop()
-				time.Sleep(1 * time.Second)
-				playBackDevice.AudioAPI = value
-
-				audioInputDevicesOptions, _, _ = GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0, "", "")
-				audioOutputDevicesOptions, _, _ = GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Playback}, len(audioInputDevicesOptions), "", "")
-
-				go playBackDevice.Init()
-
-				playBackDevice.WaitUntilInitialized(5)
-
-				audioInputSelect.Options = audioInputDevicesOptions
-				if audioInputSelect.ContainsEntry(oldAudioInputSelection, CustomWidget.CompareText) {
-					audioInputSelect.SetSelectedByText(oldAudioInputSelection.Text)
-				} else {
-					audioInputSelect.SetSelectedIndex(0)
-				}
-				audioOutputSelect.Options = audioOutputDevicesOptions
-				if audioOutputSelect.ContainsEntry(oldAudioOutputSelection, CustomWidget.CompareText) {
-					audioOutputSelect.SetSelectedByText(oldAudioOutputSelection.Text)
-				} else {
-					audioOutputSelect.SetSelectedIndex(0)
-				}
-			}
-		},
+		func(s CustomWidget.TextValueOption) {},
 		2)
 
 	// show memory usage
@@ -696,22 +665,43 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		pushToTalkBlock := container.NewBorder(nil, nil, container.NewHBox(widget.NewLabel(lang.L("Push to Talk")), widget.NewIcon(theme.ComputerIcon())), nil, PushToTalkInput)
 
-		vadEnableCheckbox := widget.NewCheck(lang.L("Enable"), func(b bool) {
-			if b {
-				vadConfidenceSliderWidget.Show()
-				// vadOnFullClipCheckbox.Show()
-				vadRealtimeCheckbox.Show()
-				pushToTalkBlock.Show()
-			} else {
-				vadConfidenceSliderWidget.Hide()
-				vadOnFullClipCheckbox.Hide()
-				vadRealtimeCheckbox.Hide()
-				pushToTalkBlock.Hide()
-				if audioApiSelect.Selected != "MME" {
-					dialog.ShowInformation(lang.L("Information"), lang.L("Disabled VAD is only supported with MME Audio API. Please make sure MME is selected as audio API. (Enabling VAD is highly recommended)"), fyne.CurrentApp().Driver().AllWindows()[1])
+		vadEnableCheckbox := widget.NewCheck(lang.L("Enable"), func(b bool) {})
+
+		audioApiSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+			var value malgo.Backend = AudioAPI.AudioBackends[0].Backend
+			value = AudioAPI.GetAudioBackendByName(s.Value).Backend
+			if value != malgo.BackendWinmm && !vadEnableCheckbox.Checked {
+				dialog.ShowInformation(lang.L("Information"), lang.L("Disabled VAD is only supported with MME Audio API. Please make sure MME is selected as audio API. (Enabling VAD is highly recommended)"), fyne.CurrentApp().Driver().AllWindows()[1])
+			}
+			if playBackDevice.AudioAPI != value && playBackDevice.AudioAPI != malgo.BackendNull {
+				oldAudioInputSelection := audioInputSelect.GetSelected()
+				oldAudioOutputSelection := audioOutputSelect.GetSelected()
+
+				playBackDevice.Stop()
+				time.Sleep(1 * time.Second)
+				playBackDevice.AudioAPI = value
+
+				audioInputDevicesOptions, _, _ = GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0, "", "")
+				audioOutputDevicesOptions, _, _ = GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Playback}, len(audioInputDevicesOptions), "", "")
+
+				go playBackDevice.Init()
+
+				playBackDevice.WaitUntilInitialized(5)
+
+				audioInputSelect.Options = audioInputDevicesOptions
+				if audioInputSelect.ContainsEntry(oldAudioInputSelection, CustomWidget.CompareText) {
+					audioInputSelect.SetSelectedByText(oldAudioInputSelection.Text)
+				} else {
+					audioInputSelect.SetSelectedIndex(0)
+				}
+				audioOutputSelect.Options = audioOutputDevicesOptions
+				if audioOutputSelect.ContainsEntry(oldAudioOutputSelection, CustomWidget.CompareText) {
+					audioOutputSelect.SetSelectedByText(oldAudioOutputSelection.Text)
+				} else {
+					audioOutputSelect.SetSelectedIndex(0)
 				}
 			}
-		})
+		}
 
 		appendWidgetToForm(profileForm, lang.L("VAD (Voice activity detection)"), container.NewGridWithColumns(3, vadEnableCheckbox, vadOnFullClipCheckbox, vadRealtimeCheckbox, pushToTalkBlock), lang.L("Press ESC in Push to Talk field to clear the keybinding."))
 		appendWidgetToForm(profileForm, lang.L("vad_confidence_threshold.Name"), container.NewBorder(nil, nil, nil, vadConfidenceSliderState, vadConfidenceSliderWidget), lang.L("The confidence level required to detect speech."))
@@ -816,6 +806,38 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			phraseLimitSliderState.SetText(fmt.Sprintf("%.1f", value))
 		}
 		appendWidgetToForm(profileForm, lang.L("phrase_time_limit.Name"), container.NewBorder(nil, nil, nil, phraseLimitSliderState, phraseLimitSliderWidget), lang.L("phrase_time_limit.Description"))
+
+		vadEnableCheckbox.OnChanged = func(b bool) {
+			if b {
+				pauseSliderWidget.Min = 0.0
+				phraseLimitSliderWidget.Min = 0.0
+
+				vadConfidenceSliderWidget.Show()
+				// vadOnFullClipCheckbox.Show()
+				vadRealtimeCheckbox.Show()
+				pushToTalkBlock.Show()
+			} else {
+				vadConfidenceSliderWidget.Hide()
+				vadOnFullClipCheckbox.Hide()
+				vadRealtimeCheckbox.Hide()
+				pushToTalkBlock.Hide()
+				if audioApiSelect.Selected != "MME" {
+					dialog.ShowInformation(lang.L("Information"), lang.L("Disabled VAD is only supported with MME Audio API. Please make sure MME is selected as audio API. (Enabling VAD is highly recommended)"), fyne.CurrentApp().Driver().AllWindows()[1])
+				}
+				if pauseSliderWidget.Value == 0 || phraseLimitSliderWidget.Value == 0 {
+					dialog.ShowInformation(lang.L("Information"), lang.L("You disabled VAD but have set the pause or phrase limit to 0. This is not supported. Setting Pause and Phrase limits to non-zero values."), fyne.CurrentApp().Driver().AllWindows()[1])
+					if pauseSliderWidget.Value == 0 {
+						pauseSliderWidget.SetValue(1.2)
+					}
+					if phraseLimitSliderWidget.Value == 0 {
+						phraseLimitSliderWidget.SetValue(30)
+					}
+				}
+				// set min values for pause and phrase limit for non VAD mode
+				pauseSliderWidget.Min = 0.1
+				phraseLimitSliderWidget.Min = 0.1
+			}
+		}
 
 		txtTranslatorSizeSelect := CustomWidget.NewTextValueSelect("txt_translator_size", []CustomWidget.TextValueOption{
 			{Text: "Small", Value: "small"},
