@@ -9,6 +9,7 @@ import (
 	"fyne.io/fyne/v2/widget"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Settings"
+	"whispering-tiger-ui/Utilities"
 )
 
 var TextToSpeechSettingsMapping = SettingsMapping{
@@ -24,7 +25,7 @@ var TextToSpeechSettingsMapping = SettingsMapping{
 					{Text: lang.L("Disabled"), Value: ""},
 				}, func(s CustomWidget.TextValueOption) {
 					if Settings.Config.Tts_type != s.Value {
-						dialog.ShowInformation(lang.L("App restart required"), lang.L("Changing the TTS Type requires a restart of the application to take effect."), fyne.CurrentApp().Driver().AllWindows()[1])
+						dialog.ShowInformation(lang.L("App restart required"), lang.L("Changing the TTS Type requires a restart of the application to take effect."), Utilities.GetCurrentMainWindow("Settings"))
 					}
 				}, 0)
 				return settingWidget
