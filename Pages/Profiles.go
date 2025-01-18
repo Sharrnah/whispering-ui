@@ -670,7 +670,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		audioApiSelect.OnChanged = func(s CustomWidget.TextValueOption) {
 			var value malgo.Backend = AudioAPI.AudioBackends[0].Backend
 			value = AudioAPI.GetAudioBackendByName(s.Value).Backend
-			if value != malgo.BackendWinmm && !vadEnableCheckbox.Checked {
+			if value != malgo.BackendWinmm && !vadEnableCheckbox.Checked && !isLoadingSettingsFile {
 				dialog.ShowInformation(lang.L("Information"), lang.L("Disabled VAD is only supported with MME Audio API. Please make sure MME is selected as audio API. (Enabling VAD is highly recommended)"), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 			if playBackDevice.AudioAPI != value && playBackDevice.AudioAPI != malgo.BackendNull {
@@ -821,10 +821,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				vadOnFullClipCheckbox.Hide()
 				vadRealtimeCheckbox.Hide()
 				pushToTalkBlock.Hide()
-				if audioApiSelect.Selected != "MME" {
+				if audioApiSelect.Selected != "MME" && !isLoadingSettingsFile {
 					dialog.ShowInformation(lang.L("Information"), lang.L("Disabled VAD is only supported with MME Audio API. Please make sure MME is selected as audio API. (Enabling VAD is highly recommended)"), fyne.CurrentApp().Driver().AllWindows()[1])
 				}
-				if pauseSliderWidget.Value == 0 || phraseLimitSliderWidget.Value == 0 {
+				if pauseSliderWidget.Value == 0 || phraseLimitSliderWidget.Value == 0 && !isLoadingSettingsFile {
 					dialog.ShowInformation(lang.L("Information"), lang.L("You disabled VAD but have set the pause or phrase limit to 0. This is not supported. Setting Pause and Phrase limits to non-zero values."), fyne.CurrentApp().Driver().AllWindows()[1])
 					if pauseSliderWidget.Value == 0 {
 						pauseSliderWidget.SetValue(1.2)
