@@ -19,7 +19,7 @@ const rootCacheFolder = ".cache"
 
 func DownloadFile(urls []string, targetDir string, checksum string, title string, extractFormat string) error {
 	// find active window
-	window := Utilities.GetCurrentMainWindow("Downloading " + title)
+	window, _ := Utilities.GetCurrentMainWindow("Downloading " + title)
 
 	// select download url
 	randomUrlIndex := rand.Int() % len(urls)
@@ -192,7 +192,7 @@ func (c *modelNameLinksMap) DownloadModel(modelName string, modelType string) er
 	modelChecksum := modelLinks.checksum
 
 	// find active window
-	window := Utilities.GetCurrentMainWindow("Downloading " + modelName + " " + modelType)
+	window, _ := Utilities.GetCurrentMainWindow("Downloading " + modelName + " " + modelType)
 
 	err := DownloadFile(modelLinks.urls, modelCachePath, modelChecksum, modelName+" "+modelType, "")
 	if err != nil {

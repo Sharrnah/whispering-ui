@@ -23,7 +23,7 @@ import (
 
 func ShowSaveTTSWindow(saveFunc func(string)) {
 	// find active window
-	window := Utilities.GetCurrentMainWindow(lang.L("Save TTS File"))
+	window, _ := Utilities.GetCurrentMainWindow(lang.L("Save TTS File"))
 
 	fileSaveDialog := dialog.NewFileSave(func(writer fyne.URIWriteCloser, err error) {
 		if writer == nil {

@@ -433,7 +433,8 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		err = json.Unmarshal(c.Raw, &ttsSpeechAudio)
 		if err != nil {
 			if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
-				dialog.ShowError(err, Utilities.GetCurrentMainWindow(""))
+				currentMainWindow, _ := Utilities.GetCurrentMainWindow("")
+				dialog.ShowError(err, currentMainWindow)
 			}
 		}
 		if err == nil && len(ttsSpeechAudio.WavData) > 0 {
@@ -444,7 +445,8 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		err = json.Unmarshal(c.Raw, &download)
 		if err != nil {
 			if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
-				dialog.ShowError(err, Utilities.GetCurrentMainWindow(""))
+				currentMainWindow, _ := Utilities.GetCurrentMainWindow("")
+				dialog.ShowError(err, currentMainWindow)
 			}
 			return
 		}
@@ -452,12 +454,14 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			err = dl_.StartDownload()
 			if err != nil {
 				if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
-					dialog.ShowError(err, Utilities.GetCurrentMainWindow(""))
+					currentMainWindow, _ := Utilities.GetCurrentMainWindow("")
+					dialog.ShowError(err, currentMainWindow)
 				}
 				return
 			}
 			if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
-				Utilities.GetCurrentMainWindow("").Canvas().Content().Refresh()
+				currentMainWindow, _ := Utilities.GetCurrentMainWindow("")
+				currentMainWindow.Canvas().Content().Refresh()
 			}
 		}(download)
 	}

@@ -4,7 +4,10 @@ import (
 	"encoding/json"
 	"errors"
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/lang"
+	"fyne.io/fyne/v2/widget"
 	"io"
 	"log"
 	"os"
@@ -199,7 +202,8 @@ func (c *WhisperProcessConfig) processErrorOutputLine(line string, isUpdating bo
 				lastTraceback = exceptionMessage.Traceback[len(exceptionMessage.Traceback)-1]
 			}
 			// Handle error message
-			dialog.ShowError(errors.New(exceptionMessage.Error+"\n\n"+lastTraceback), Utilities.GetCurrentMainWindow(""))
+			currentMainWindow, _ := Utilities.GetCurrentMainWindow("")
+			dialog.ShowError(errors.New(exceptionMessage.Error+"\n\n"+lastTraceback), currentMainWindow)
 		}
 
 		// Try to decode the line as loading JSON message
@@ -349,4 +353,36 @@ func (c *WhisperProcessConfig) Start() {
 			return
 		}
 	}(stdoutTee)
+}
+
+func RestartBackend(confirmation bool, confirmationText string) {
+	currentMainWindow, isNewWindow := Utilities.GetCurrentMainWindow(lang.L("Restart Backend"))
+
+	restartFunction := func() {
+		// close running backend process
+		if len(BackendsList) > 0 && BackendsList[0].IsRunning() {
+			infinityProcessDialog := dialog.NewCustom(lang.L("Restarting Backend"), lang.L("OK"), container.NewVBox(widget.NewLabel(lang.L("Restarting Backend")+"..."), widget.NewProgressBarInfinite()), currentMainWindow)
+			infinityProcessDialog.Show()
+			infinityProcessDialog.SetOnClosed(func() {
+				if isNewWindow {
+					currentMainWindow.Close()
+				}
+			})
+			BackendsList[0].Stop()
+			time.Sleep(2 * time.Second)
+			BackendsList[0].Start()
+			infinityProcessDialog.Hide()
+			Fields.DataBindings.SpeechToTextEnabledDataBinding.Set(true)
+		}
+	}
+	if confirmation {
+		confirmationDialog := dialog.NewConfirm(lang.L("Restart Backend"), confirmationText, func(b bool) {
+			if b {
+				restartFunction()
+			}
+		}, currentMainWindow)
+		confirmationDialog.Show()
+	} else {
+		restartFunction()
+	}
 }

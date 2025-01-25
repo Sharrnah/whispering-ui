@@ -104,6 +104,7 @@ type TtsSpeechAudio struct {
 }
 
 func (res TtsSpeechAudio) SaveWav() {
+	currentMainWindow, _ := Utilities.GetCurrentMainWindow("Save TTS Wav")
 	fileSaveDialog := dialog.NewFileSave(func(writer fyne.URIWriteCloser, err error) {
 		if writer == nil {
 			return
@@ -117,7 +118,7 @@ func (res TtsSpeechAudio) SaveWav() {
 
 		fyne.CurrentApp().Preferences().SetString("LastTTSSavePath", filepath.Dir(writer.URI().Path()))
 
-	}, Utilities.GetCurrentMainWindow("Save TTS Wav"))
+	}, currentMainWindow)
 
 	fileSaveDialog.SetFilter(storage.NewExtensionFileFilter([]string{".wav"}))
 	fileSaveDialog.SetFileName("tts_" + time.Now().Format("2006-01-02_15-04-05") + ".wav")

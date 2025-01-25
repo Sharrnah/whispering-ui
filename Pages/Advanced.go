@@ -4,7 +4,6 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -12,7 +11,6 @@ import (
 	"net/url"
 	"path/filepath"
 	"strings"
-	"time"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Resources"
 	"whispering-tiger-ui/RuntimeBackend"
@@ -88,16 +86,7 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 	settingsTabContent := container.NewVScroll(Settings.Form)
 
 	RestartBackendButton := widget.NewButton(lang.L("Restart backend"), func() {
-		// close running backend process
-		if len(RuntimeBackend.BackendsList) > 0 && RuntimeBackend.BackendsList[0].IsRunning() {
-			infinityProcessDialog := dialog.NewCustom(lang.L("Restarting Backend"), lang.L("OK"), container.NewVBox(widget.NewLabel(lang.L("Restarting Backend")+"..."), widget.NewProgressBarInfinite()), fyne.CurrentApp().Driver().AllWindows()[0])
-			infinityProcessDialog.Show()
-			RuntimeBackend.BackendsList[0].Stop()
-			time.Sleep(2 * time.Second)
-			RuntimeBackend.BackendsList[0].Start()
-			infinityProcessDialog.Hide()
-			Fields.DataBindings.SpeechToTextEnabledDataBinding.Set(true)
-		}
+		RuntimeBackend.RestartBackend(false, lang.L("Are you sure you want to restart the backend?"))
 	})
 
 	copyLogButton := widget.NewButtonWithIcon(lang.L("Copy Log"), theme.ContentCopyIcon(), func() {

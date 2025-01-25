@@ -4,12 +4,11 @@ import (
 	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
 	"whispering-tiger-ui/CustomWidget"
+	"whispering-tiger-ui/RuntimeBackend"
 	"whispering-tiger-ui/Settings"
-	"whispering-tiger-ui/Utilities"
 )
 
 var TextToSpeechSettingsMapping = SettingsMapping{
@@ -24,10 +23,13 @@ var TextToSpeechSettingsMapping = SettingsMapping{
 					{Text: "F5/E2", Value: "f5_e2"},
 					{Text: lang.L("Disabled"), Value: ""},
 				}, func(s CustomWidget.TextValueOption) {
-					if Settings.Config.Tts_type != s.Value {
-						dialog.ShowInformation(lang.L("App restart required"), lang.L("Changing the TTS Type requires a restart of the application to take effect."), Utilities.GetCurrentMainWindow("Settings"))
-					}
 				}, 0)
+				confirmationFunction := func(s CustomWidget.TextValueOption) {
+					if Settings.Config.Tts_type != s.Value {
+						RuntimeBackend.RestartBackend(true, lang.L("Restarting backend required to apply changes. Are you sure you want to restart the backend?"))
+					}
+				}
+				settingWidget.OnChanged = confirmationFunction
 				return settingWidget
 			},
 		},

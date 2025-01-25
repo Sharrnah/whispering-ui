@@ -148,7 +148,7 @@ func CreateLanguagesListWindow(button *widget.Button) *dialog2.CustomDialog {
 
 	content := container.NewBorder(container.NewVBox(enableAdditionalTranslationCheckbox, targetLanguageListRow, container.NewGridWithColumns(2, beginLine)), nil, nil, nil, activeLanguagesListWidget)
 
-	mainWindow := Utilities.GetCurrentMainWindow("")
+	mainWindow, _ := Utilities.GetCurrentMainWindow("")
 	dialog := dialog2.NewCustom(lang.L("Additional Translation Languages"), lang.L("Close"), content, mainWindow)
 
 	windowSize := Utilities.GetInlineDialogSize(fyne.NewSize(300, 150), fyne.NewSize(100, 200), fyne.NewSize(700, 500))

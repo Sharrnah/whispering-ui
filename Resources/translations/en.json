@@ -140,6 +140,7 @@
     "New Plugins Installed": "New Plugins Installed",
     "Would you like to restart Whispering Tiger now? (Required for new Plugins to load.)": "Would you like to restart Whispering Tiger now?\n(Required for new Plugins to load.)",
     "Restarting Backend": "Restarting Backend",
+    "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "Restarting backend required to apply changes.\nAre you sure you want to restart the backend?",
     "Check all Plugins for Updates": "Check all Plugins for Updates",
     "Newest V": "Newest V",
     "Current V": "Current V",

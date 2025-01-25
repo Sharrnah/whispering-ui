@@ -300,19 +300,19 @@ func ParseProgressFromString(s string) (float64, error) {
 	return 0, fmt.Errorf("no progress percentage found in the string")
 }
 
-func GetCurrentMainWindow(windowTitleFallback string) fyne.Window {
+func GetCurrentMainWindow(windowTitleFallback string) (window fyne.Window, isNewWindow bool) {
 	if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
-		return fyne.CurrentApp().Driver().AllWindows()[0]
+		return fyne.CurrentApp().Driver().AllWindows()[0], false
 	}
 	// if no window found, make a new window.
 	newWindow := fyne.CurrentApp().NewWindow(windowTitleFallback)
 	newWindow.Show()
-	return newWindow
+	return newWindow, true
 }
 
 func GetInlineDialogSize(marginSize fyne.Size, minSize fyne.Size, fallbackSize fyne.Size) fyne.Size {
 	windowSize := fyne.NewSize(fallbackSize.Width, fallbackSize.Height)
-	mainWindow := GetCurrentMainWindow("")
+	mainWindow, _ := GetCurrentMainWindow("")
 	newWindowSize := mainWindow.Canvas().Size()
 	if newWindowSize.Height > 1 && newWindowSize.Width > 1 {
 		if newWindowSize.Height-marginSize.Height >= minSize.Height && newWindowSize.Width-marginSize.Width >= minSize.Width {
