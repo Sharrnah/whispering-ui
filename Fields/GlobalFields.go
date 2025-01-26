@@ -58,6 +58,7 @@ var fieldCreationFunctions = struct {
 	TranscriptionInput: func(dataBinding binding.String) *CustomWidget.EntryWithPopupMenu {
 		entry := CustomWidget.NewMultiLineEntryWithData(dataBinding)
 		entry.Wrapping = fyne.TextWrapWord
+		entry.Validator = nil
 
 		entry.AddAdditionalMenuItem(fyne.NewMenuItem(lang.L("Send to Text-to-Speech"), func() {
 			valueData := struct {
@@ -116,6 +117,7 @@ var fieldCreationFunctions = struct {
 	TranscriptionTranslationInput: func(dataBinding binding.String) *CustomWidget.EntryWithPopupMenu {
 		entry := CustomWidget.NewMultiLineEntryWithData(dataBinding)
 		entry.Wrapping = fyne.TextWrapWord
+		entry.Validator = nil
 
 		entry.AddAdditionalMenuItem(fyne.NewMenuItem(lang.L("Send to Text-to-Speech"), func() {
 			valueData := struct {
