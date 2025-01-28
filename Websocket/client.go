@@ -22,7 +22,7 @@ import (
 )
 
 const (
-	maxMessageSize = 8192
+	maxMessageSize = 10 / Utilities.MiB
 )
 
 type Client struct {
@@ -101,7 +101,7 @@ func (c *Client) Start() {
 	previouslyConnected = true
 
 	defer c.Conn.Close()
-	//c.Conn.SetReadLimit(maxMessageSize)
+	c.Conn.SetReadLimit(maxMessageSize)
 
 	done := make(chan struct{})
 
