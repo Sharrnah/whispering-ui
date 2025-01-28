@@ -12,14 +12,14 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 ## Content
 - [Features](#features)
 - [Download](#download)
-- Documentations
-  - [Integrated Text-to-Speech](doc/documentations/integrated-tts.md)
 - [Tutorials](#tutorials)
 - [Installation](#installation)
 - [Setup](#setup)
   - [Plugins Setup](#plugins-setup)
   - [Specific Audio configuration (TTS to Mic, Game Audio translation, etc.)](doc/audio-config.md)
   - [Realtime Configuration and speed improvements](doc/realtime-config.md)
+- Documentations
+  - [Integrated Text-to-Speech](doc/documentations/integrated-tts.md)
 - [Advanced Features](#advanced-features)
 - [Additional Help (Discord)](#additional-help)
 - [Screenshots](#screenshots)
