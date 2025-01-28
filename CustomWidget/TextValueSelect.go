@@ -36,7 +36,7 @@ func NewTextValueSelect(name string, options []TextValueOption, changed func(Tex
 	s.Options = options
 	s.PlaceHolder = lang.L("(Select one)")
 
-	if defaultIndex > -1 && defaultIndex <= len(s.Options) && len(s.Options) > 0 {
+	if defaultIndex > -1 && defaultIndex < len(s.Options) && len(s.Options) > 0 {
 		s.Selected = s.Options[defaultIndex].Text
 	}
 
