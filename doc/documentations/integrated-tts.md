@@ -11,7 +11,7 @@ Supported Tags are:
 - s `<s>text</s>` Represents a sentence, equivalent to strong pause.
 
 ## F5-TTS / E2-TTS
-Is a TTS Model that supports voice cloning based on an audio sample with fast inference and Multi-Style / Multi-Speaker Generation.
+F5-TTS is a TTS Model that supports voice cloning based on an audio sample with fast inference and Multi-Style / Multi-Speaker Generation.
 
 The speed can be set globally in the Settings.
 
