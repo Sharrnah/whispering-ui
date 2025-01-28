@@ -566,7 +566,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	audioApiSelect := CustomWidget.NewTextValueSelect("audio_api",
 		audioOptions,
 		func(s CustomWidget.TextValueOption) {},
-		2)
+		0)
 
 	// show memory usage
 	CPUMemoryBar := widget.NewProgressBar()
