@@ -12,7 +12,8 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 ## Content
 - [Features](#features)
 - [Download](#download)
-- [Documentation](doc/documentations/integrated-tts.md)
+- Documentations
+  - [Integrated Text-to-Speech](doc/documentations/integrated-tts.md)
 - [Tutorials](#tutorials)
 - [Installation](#installation)
 - [Setup](#setup)
