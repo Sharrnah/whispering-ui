@@ -163,14 +163,22 @@ func CreatePluginListWindow(closeFunction func(), backendRunning bool) {
 
 		row.Widgets.UpdateButton = titleButton
 
-		descriptionText := strings.ReplaceAll(row.Description, "</br>", "\n")
+		descriptionText := strings.ReplaceAll(row.Description, "<sub>", "\n<sub>")
+		descriptionText = strings.ReplaceAll(descriptionText, "</sub>", "</sub>")
+		descriptionText = strings.ReplaceAll(descriptionText, "</br>", "\n")
 		descriptionText = strings.ReplaceAll(descriptionText, "<br>", "\n")
 		descriptionText = strings.ReplaceAll(descriptionText, "<br/>", "\n")
+		descriptionText = strings.ReplaceAll(descriptionText, "<ul>", "\n")
+		descriptionText = strings.ReplaceAll(descriptionText, "</ul>", "\n")
+		descriptionText = strings.ReplaceAll(descriptionText, "<li>", " - ")
+		descriptionText = strings.ReplaceAll(descriptionText, "</li>", "\n")
+		descriptionText = Utilities.ParseEmojisMarkdown(descriptionText)
+
 		// remove html tags from description using regex
 		re := regexp.MustCompile("<.*?>")
 		descriptionText = re.ReplaceAllString(descriptionText, "")
 
-		descriptionLabel := widget.NewLabel(descriptionText)
+		descriptionLabel := widget.NewRichTextFromMarkdown(descriptionText)
 		descriptionLabel.Wrapping = fyne.TextWrapWord
 
 		grid.Add(container.NewVBox(row.Widgets.UpdateButton, row.Widgets.RemoteVersion, row.Widgets.CurrentVersion))
