@@ -313,5 +313,8 @@
     "Speech-to-Text": "Zamiana mowy na tekst",
     "osc_type_transfer.Description": "Typ wysyłanego komunikatu OSC.\nTylko tłumaczenie, oba lub źródło.",
     "tts_volume.Name": "Regulacja głośności zamiany tekstu na mowę",
-    "tts_volume.Description": "Regulacja głośności wyjścia zamiany tekstu na mowę.\n1.0 = normalna głośność"
+    "tts_volume.Description": "Regulacja głośności wyjścia zamiany tekstu na mowę.\n1.0 = normalna głośność",
+    "You disabled VAD but have set the pause or phrase limit to 0. This is not supported. Setting Pause and Phrase limits to non-zero values.": "Wyłączono funkcję VAD, ale ustawiono limit pauzy lub frazy na 0. Nie jest to obsługiwane. Ustawianie limitów pauzy i frazy na wartości niezerowe.",
+    "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "Do zastosowania zmian wymagane jest ponowne uruchomienie backendu.\nCzy na pewno chcesz ponownie uruchomić backend?",
+    "Export Last Generation": "Eksport ostatniej generacji"
 }
