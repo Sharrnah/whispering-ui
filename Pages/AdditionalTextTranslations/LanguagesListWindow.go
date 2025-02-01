@@ -55,20 +55,21 @@ func CreateLanguagesListWindow(button *widget.Button) *dialog2.CustomDialog {
 				nil,
 				nil,
 				nil,
-				widget.NewButtonWithIcon("", theme.ContentRemoveIcon(), func() {
-				}),
+				container.NewHBox(widget.NewButtonWithIcon("", theme.MoveUpIcon(), func() {}), widget.NewButtonWithIcon("", theme.MoveDownIcon(), func() {}), widget.NewSeparator(), widget.NewButtonWithIcon("", theme.ContentRemoveIcon(), func() {})),
 				widget.NewLabel("template"),
 			)
 		},
 		func(i widget.ListItemID, o fyne.CanvasObject) {
 			mainContainer := o.(*fyne.Container)
 			languageLabel := mainContainer.Objects[0].(*widget.Label)
-			removeButton := mainContainer.Objects[1].(*widget.Button)
 
-			languageLabel.SetText(Messages.InstalledLanguages.GetNameByCode(activeLanguagesList[i]))
-			removeButton.OnTapped = func() {
-				// Remove language from activeLanguagesList
-				activeLanguagesList = append(activeLanguagesList[:i], activeLanguagesList[i+1:]...)
+			buttonsContainer := mainContainer.Objects[1].(*fyne.Container)
+			upButton := buttonsContainer.Objects[0].(*widget.Button)
+			downButton := buttonsContainer.Objects[1].(*widget.Button)
+			//  separator 2
+			removeButton := buttonsContainer.Objects[3].(*widget.Button)
+
+			updateNewListFunc := func() {
 				activeLanguagesListWidget.Refresh()
 
 				Settings.Config.Txt_second_translation_languages = strings.Join(activeLanguagesList, ",")
@@ -81,6 +82,28 @@ func CreateLanguagesListWindow(button *widget.Button) *dialog2.CustomDialog {
 				sendMessage.SendMessage()
 
 				button.SetText(AdditionalLanguagesCountString())
+			}
+
+			languageLabel.SetText(Messages.InstalledLanguages.GetNameByCode(activeLanguagesList[i]))
+
+			upButton.OnTapped = func() {
+				if i > 0 {
+					activeLanguagesList[i], activeLanguagesList[i-1] = activeLanguagesList[i-1], activeLanguagesList[i]
+					updateNewListFunc()
+				}
+			}
+
+			downButton.OnTapped = func() {
+				if i < len(activeLanguagesList)-1 {
+					activeLanguagesList[i], activeLanguagesList[i+1] = activeLanguagesList[i+1], activeLanguagesList[i]
+					updateNewListFunc()
+				}
+			}
+
+			removeButton.OnTapped = func() {
+				// Remove language from activeLanguagesList
+				activeLanguagesList = append(activeLanguagesList[:i], activeLanguagesList[i+1:]...)
+				updateNewListFunc()
 			}
 		},
 	)
