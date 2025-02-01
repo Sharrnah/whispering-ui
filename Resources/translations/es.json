@@ -311,5 +311,10 @@
     "CPU, Low Memory (<=8GB), Accuracy optimized": "CPU, poca memoria (<=8 GB), precisión optimizada",
     "Additional Translation Languages": "Idiomas de traducción adicionales",
     "Additional Translation": "Traducción adicional",
-    "Enable Additional Translations": "Activar traducciones adicionales"
+    "Enable Additional Translations": "Activar traducciones adicionales",
+    "You disabled VAD but have set the pause or phrase limit to 0. This is not supported. Setting Pause and Phrase limits to non-zero values.": "Ha desactivado VAD pero ha establecido el límite de pausa o frase en 0. Esto no es compatible. Configurar los límites de pausa y frase a valores distintos de cero.",
+    "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "Es necesario reiniciar el backend para aplicar los cambios.\n¿Está seguro de que desea reiniciar el backend?",
+    "Export Last Generation": "Exportar última generación",
+    "tts_volume.Name": "Ajuste del volumen de texto a voz",
+    "tts_volume.Description": "Ajuste el volumen de la salida de texto a voz.\n1,0 = volumen normal"
 }
