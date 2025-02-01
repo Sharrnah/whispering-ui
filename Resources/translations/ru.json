@@ -311,5 +311,10 @@
     "CPU, Low Memory (<=8GB), Accuracy optimized": "Процессор, мало памяти (<=8 Гб), оптимизированная точность",
     "Additional Translation Languages": "Дополнительные языки перевода",
     "Additional Translation": "Дополнительный перевод",
-    "Enable Additional Translations": "Включить дополнительные переводы"
+    "Enable Additional Translations": "Включить дополнительные переводы",
+    "You disabled VAD but have set the pause or phrase limit to 0. This is not supported. Setting Pause and Phrase limits to non-zero values.": "Вы отключили VAD, но установили ограничение паузы или фразы на 0. Это не поддерживается. Установка пределов паузы и фразы в ненулевые значения.",
+    "Export Last Generation": "Экспорт последнего поколения",
+    "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "Для применения изменений требуется перезапуск бэкенда.\nВы уверены, что хотите перезапустить бэкэнд?",
+    "tts_volume.Name": "Регулировка громкости преобразования текста в речь",
+    "tts_volume.Description": "Настройка громкости вывода текста в речь.\n1.0 = нормальная громкость"
 }
