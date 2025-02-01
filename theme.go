@@ -13,6 +13,7 @@ var (
 	colorDarkHover             = color.NRGBA{R: 0xff, G: 0xff, B: 0xff, A: 0x0f}
 	colorDarkDisabled          = color.NRGBA{R: 80, G: 80, B: 81, A: 255}
 	colorDarkInputBackground   = color.NRGBA{R: 0x25, G: 0x25, B: 0x28, A: 0xff}
+	ColorSeparator             = color.NRGBA{R: 120, G: 120, B: 120, A: 255}
 )
 
 type AppTheme struct{}
@@ -33,6 +34,8 @@ func (m AppTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) col
 		return colorDarkDisabled
 	case theme.ColorNameInputBackground:
 		return colorDarkInputBackground
+	case theme.ColorNameSeparator:
+		return ColorSeparator
 	}
 
 	variant = theme.VariantDark
