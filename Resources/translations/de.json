@@ -324,5 +324,8 @@
     "Enable Additional Translations": "Aktiviere Zusätzliche Übersetzungen",
     "tts_type.Name": "Integriertes Text-zu-Sprache",
     "tts_volume.Name": "Text-zu-Sprache Lautstärkeanpassung",
-    "tts_volume.Description": "Stellen Sie die Lautstärke der Text-zu-Sprache-Ausgabe ein.\n1.0 = normale Lautstärke"
+    "tts_volume.Description": "Stellen Sie die Lautstärke der Text-zu-Sprache-Ausgabe ein.\n1.0 = normale Lautstärke",
+    "You disabled VAD but have set the pause or phrase limit to 0. This is not supported. Setting Pause and Phrase limits to non-zero values.": "Sie haben VAD deaktiviert, aber das Pausen- oder Phrasenlimit auf 0 gesetzt. Dies wird nicht unterstützt. Pausen- und Phrasengrenzen auf Werte ungleich Null gesetzt.",
+    "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "Neustart des Backends erforderlich, um Änderungen zu übernehmen.\nSind Sie sicher, dass Sie das Backend neu starten wollen?",
+    "Export Last Generation": "Letzte Generation exportieren"
 }
