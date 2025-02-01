@@ -186,6 +186,25 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 
 	transcriptionRow := container.New(layout.NewGridLayout(1), Fields.Field.TranscriptionTranslationTextToSpeechInput)
 
+	exportLastSpeechButton := widget.NewButton(lang.L("Export Last Generation"), func() {
+		ShowSaveTTSWindow(func(s string) {
+			sendMessage := Fields.SendMessageStruct{
+				Type: "tts_req_last",
+				Value: struct {
+					ToDevice bool   `json:"to_device"`
+					Download bool   `json:"download"`
+					Path     string `json:"path,omitempty"`
+				}{
+					ToDevice: false,
+					Download: true,
+					Path:     s,
+				},
+			}
+			sendMessage.SendMessage()
+		})
+	})
+	exportLastSpeechButton.Disable()
+
 	exportSpeechButton := widget.NewButtonWithIcon(lang.L("Export .wav"), theme.DocumentSaveIcon(), func() {
 		ShowSaveTTSWindow(func(s string) {
 			text, _ := Fields.DataBindings.TranscriptionTranslationInputBinding.Get()
@@ -204,6 +223,8 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 				},
 			}
 			sendMessage.SendMessage()
+
+			exportLastSpeechButton.Enable()
 		})
 	})
 
@@ -223,6 +244,7 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 			Value: valueData,
 		}
 		sendMessage.SendMessage()
+		exportLastSpeechButton.Enable()
 	}
 	sendButton := widget.NewButtonWithIcon(lang.L("Send to Text-to-Speech"), theme.MediaPlayIcon(), sendFunction)
 	sendButton.Importance = widget.HighImportance
@@ -245,6 +267,7 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 			Value: valueData,
 		}
 		sendMessage.SendMessage()
+		exportLastSpeechButton.Enable()
 	})
 
 	stopPlayButton := widget.NewButtonWithIcon(lang.L("Stop playing"), theme.MediaStopIcon(), func() {
@@ -257,6 +280,7 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 
 	buttonRow := container.NewHBox(
 		exportSpeechButton,
+		exportLastSpeechButton,
 		layout.NewSpacer(),
 		testButton,
 		sendButton,
