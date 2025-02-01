@@ -313,5 +313,8 @@
     "Cancel": "取消",
     "Confirm": "确认",
     "tts_volume.Name": "文本到语音音量调节",
-    "tts_volume.Description": "调整文本到语音输出的音量。\n1.0 = 正常音量"
+    "tts_volume.Description": "调整文本到语音输出的音量。\n1.0 = 正常音量",
+    "You disabled VAD but have set the pause or phrase limit to 0. This is not supported. Setting Pause and Phrase limits to non-zero values.": "您禁用了 VAD，但将暂停或短语限制设置为 0。将暂停和短语限制设置为非零值。",
+    "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "需要重启后台才能应用更改。\n您确定要重启后台吗？",
+    "Export Last Generation": "输出最后一代"
 }
