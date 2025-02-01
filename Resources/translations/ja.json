@@ -313,5 +313,8 @@
     "Enable Additional Translations": "追加翻訳を有効にする",
     "tts_type.Name": "統合音声合成",
     "tts_volume.Description": "音声合成出力の音量を調整します。\n1.0 = 通常の音量",
-    "tts_volume.Name": "音声合成の音量調整"
+    "tts_volume.Name": "音声合成の音量調整",
+    "Export Last Generation": "最終世代をエクスポート",
+    "You disabled VAD but have set the pause or phrase limit to 0. This is not supported. Setting Pause and Phrase limits to non-zero values.": "VAD を無効にしているが、ポーズまたはフレーズのリミットを 0 に設定している。ポーズリミットとフレーズリミットをゼロ以外の値に設定する。",
+    "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "変更を適用するにはバックエンドの再起動が必要です。\n本当にバックエンドを再起動しますか？"
 }
