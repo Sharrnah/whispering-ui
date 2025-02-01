@@ -324,5 +324,8 @@
     "Additional Translation": "Traduction additionnelle",
     "Enable Additional Translations": "Activer les traductions additionnelles",
     "tts_volume.Name": "Réglage du volume de la synthèse vocale",
-    "tts_volume.Description": "Permet de régler le volume de la synthèse vocale.\n1.0 = volume normal"
+    "tts_volume.Description": "Permet de régler le volume de la synthèse vocale.\n1.0 = volume normal",
+    "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "Le redémarrage du backend est nécessaire pour appliquer les changements.\nÊtes-vous sûr de vouloir redémarrer le backend ?",
+    "You disabled VAD but have set the pause or phrase limit to 0. This is not supported. Setting Pause and Phrase limits to non-zero values.": "Vous avez désactivé la VAD, mais vous avez fixé la limite de pause ou de phrase à 0, ce qui n'est pas possible. Réglage des limites de pause et de phrase à des valeurs non nulles.",
+    "Export Last Generation": "Exporter la dernière génération"
 }
