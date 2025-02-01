@@ -324,5 +324,8 @@
     "CPU, High Memory (>8GB), Accuracy optimized": "CPU, vysoká paměť (>8 GB), optimalizovaná přesnost",
     "CPU, Low Memory (<=8GB), Accuracy optimized": "CPU, nízká paměť (<=8GB), optimalizovaná přesnost",
     "tts_prosody_rate.Name": "Rychlost / tempo",
-    "tts_type.Name": "Integrovaný převod textu na řeč"
+    "tts_type.Name": "Integrovaný převod textu na řeč",
+    "Export Last Generation": "Export poslední generace",
+    "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "K uplatnění změn je nutné restartovat backend.\nOpravdu chcete restartovat backend?",
+    "You disabled VAD but have set the pause or phrase limit to 0. This is not supported. Setting Pause and Phrase limits to non-zero values.": "Zakázali jste VAD, ale nastavili jste limit pauzy nebo fráze na 0. To není podporováno. Nastavení limitů pauzy a fráze na nenulové hodnoty."
 }
