@@ -311,5 +311,10 @@
     "CPU, Low Memory (<=8GB), Accuracy optimized": "Процесор, мало пам'яті (<=8 ГБ), оптимізовано точність",
     "Additional Translation Languages": "Додаткові мови перекладу",
     "Additional Translation": "Додатковий переклад",
-    "Enable Additional Translations": "Увімкнути додаткові переклади"
+    "Enable Additional Translations": "Увімкнути додаткові переклади",
+    "You disabled VAD but have set the pause or phrase limit to 0. This is not supported. Setting Pause and Phrase limits to non-zero values.": "Ви вимкнули VAD, але встановили ліміт паузи або фрази на 0. Ця функція не підтримується. Встановлення ненульових значень для лімітів пауз і фраз.",
+    "Export Last Generation": "Експорт останнього покоління",
+    "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "Щоб застосувати зміни, потрібно перезапустити бекенд.\nВи впевнені, що хочете перезапустити бекенд?",
+    "tts_volume.Name": "Регулювання гучності перетворення тексту в мовлення",
+    "tts_volume.Description": "Налаштуйте гучність перетворення тексту на мовлення.\n1.0 = нормальна гучність"
 }
