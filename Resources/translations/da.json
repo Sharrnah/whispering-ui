@@ -311,5 +311,10 @@
     "Realtime": "Realtid",
     "Push to Talk": "Tryk for at tale",
     "Select File": "Vælg fil",
-    "osc_delay_until_audio_playback.Name": "OSC-forsinkelse indtil lydafspilning"
+    "osc_delay_until_audio_playback.Name": "OSC-forsinkelse indtil lydafspilning",
+    "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "Genstart af backend nødvendig for at anvende ændringer.\nEr du sikker på, at du vil genstarte backend?",
+    "You disabled VAD but have set the pause or phrase limit to 0. This is not supported. Setting Pause and Phrase limits to non-zero values.": "Du har deaktiveret VAD, men har sat pause- eller sætningsgrænsen til 0. Dette understøttes ikke. Indstilling af pause- og sætningsgrænser til værdier, der ikke er nul.",
+    "Export Last Generation": "Eksporter sidste generation",
+    "tts_volume.Name": "Justering af lydstyrke for tekst-til-tale",
+    "tts_volume.Description": "Juster lydstyrken på tekst-til-tale-outputtet.\n1.0 = normal lydstyrke"
 }
