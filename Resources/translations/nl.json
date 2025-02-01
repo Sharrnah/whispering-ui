@@ -324,5 +324,8 @@
     "Enable Additional Translations": "Extra vertalingen inschakelen",
     "tts_prosody_rate.Name": "Snelheid / Frequentie",
     "tts_volume.Name": "Tekst-naar-spraak volumeregeling",
-    "tts_volume.Description": "Het volume van de tekst-naar-spraakuitvoer aanpassen.\n1.0 = normaal volume"
+    "tts_volume.Description": "Het volume van de tekst-naar-spraakuitvoer aanpassen.\n1.0 = normaal volume",
+    "You disabled VAD but have set the pause or phrase limit to 0. This is not supported. Setting Pause and Phrase limits to non-zero values.": "U hebt VAD uitgeschakeld maar de pauze- of zinsdeellimiet ingesteld op 0. Dit wordt niet ondersteund. Pauze- en zinsdeellimieten instellen op waarden die niet nul zijn.",
+    "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "Backend opnieuw opstarten vereist om wijzigingen toe te passen.\nWeet je zeker dat je de backend opnieuw wilt opstarten?",
+    "Export Last Generation": "Laatste generatie exporteren"
 }
