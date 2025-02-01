@@ -313,5 +313,8 @@
     "(Select one)": "(하나 선택)",
     "Copy Log": "로그 복사",
     "tts_volume.Name": "텍스트 음성 변환 볼륨 조절",
-    "tts_volume.Description": "텍스트 음성 변환 출력의 볼륨을 조정합니다.\n1.0 = 일반 볼륨"
+    "tts_volume.Description": "텍스트 음성 변환 출력의 볼륨을 조정합니다.\n1.0 = 일반 볼륨",
+    "Export Last Generation": "마지막 세대 내보내기",
+    "You disabled VAD but have set the pause or phrase limit to 0. This is not supported. Setting Pause and Phrase limits to non-zero values.": "VAD를 비활성화했지만 일시 정지 또는 구문 제한을 0으로 설정한 경우 이 기능은 지원되지 않습니다. 일시 정지 및 구문 제한을 0이 아닌 값으로 설정합니다.",
+    "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "변경 사항을 적용하려면 백엔드를 다시 시작해야 합니다.\n백엔드를 다시 시작하시겠습니까?"
 }
