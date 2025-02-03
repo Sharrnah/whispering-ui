@@ -16,6 +16,7 @@ import (
 	"time"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
 )
@@ -185,7 +186,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		fileDialog := dialog.NewFileSave(func(writer fyne.URIWriteCloser, err error) {
 			if err == nil && writer != nil {
 				filePath := writer.URI().Path()
-				sendMessage := Fields.SendMessageStruct{
+				sendMessage := SendMessageChannel.SendMessageStruct{
 					Type:  "save_transcription",
 					Value: filePath,
 				}

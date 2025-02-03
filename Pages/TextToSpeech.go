@@ -17,6 +17,7 @@ import (
 	"time"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
 )
@@ -109,7 +110,7 @@ func OnOpenTextToSpeechWindow(container fyne.CanvasObject) {
 				ToDevice: true,
 				Download: false,
 			}
-			sendMessage := Fields.SendMessageStruct{
+			sendMessage := SendMessageChannel.SendMessageStruct{
 				Type:  "tts_req",
 				Value: valueData,
 			}
@@ -123,7 +124,7 @@ func OnOpenTextToSpeechWindow(container fyne.CanvasObject) {
 				return
 			}
 			ShowSaveTTSWindow(func(s string) {
-				sendMessage := Fields.SendMessageStruct{
+				sendMessage := SendMessageChannel.SendMessageStruct{
 					Type: "tts_req",
 					Value: struct {
 						Text     string `json:"text"`
@@ -164,7 +165,7 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 	ttsModels := container.New(layout.NewFormLayout(), widget.NewLabel(lang.L("Model")+":"), Fields.Field.TtsModelCombo)
 
 	saveRandomVoiceButton := widget.NewButtonWithIcon(lang.L("Save Random Voice"), theme.DocumentSaveIcon(), func() {
-		sendMessage := Fields.SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type: "tts_voice_save_req",
 		}
 		sendMessage.SendMessage()
@@ -172,7 +173,7 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 	})
 	if Settings.Config.Tts_type == "f5_e2" {
 		saveRandomVoiceButton = widget.NewButtonWithIcon("", theme.ViewRefreshIcon(), func() {
-			sendMessage := Fields.SendMessageStruct{
+			sendMessage := SendMessageChannel.SendMessageStruct{
 				Type: "tts_voice_reload_req",
 			}
 			sendMessage.SendMessage()
@@ -188,7 +189,7 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 
 	exportLastSpeechButton := widget.NewButton(lang.L("Export Last Generation"), func() {
 		ShowSaveTTSWindow(func(s string) {
-			sendMessage := Fields.SendMessageStruct{
+			sendMessage := SendMessageChannel.SendMessageStruct{
 				Type: "tts_req_last",
 				Value: struct {
 					ToDevice bool   `json:"to_device"`
@@ -208,7 +209,7 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 	exportSpeechButton := widget.NewButtonWithIcon(lang.L("Export .wav"), theme.DocumentSaveIcon(), func() {
 		ShowSaveTTSWindow(func(s string) {
 			text, _ := Fields.DataBindings.TranscriptionTranslationInputBinding.Get()
-			sendMessage := Fields.SendMessageStruct{
+			sendMessage := SendMessageChannel.SendMessageStruct{
 				Type: "tts_req",
 				Value: struct {
 					Text     string `json:"text"`
@@ -239,7 +240,7 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 			ToDevice: true,
 			Download: false,
 		}
-		sendMessage := Fields.SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "tts_req",
 			Value: valueData,
 		}
@@ -262,7 +263,7 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 			DeviceIndex: nil, // send to default device
 			Download:    false,
 		}
-		sendMessage := Fields.SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "tts_req",
 			Value: valueData,
 		}
@@ -271,7 +272,7 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 	})
 
 	stopPlayButton := widget.NewButtonWithIcon(lang.L("Stop playing"), theme.MediaStopIcon(), func() {
-		sendMessage := Fields.SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "audio_stop",
 			Value: "tts",
 		}
@@ -313,7 +314,7 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 					sendFunction()
 				}
 				if oscEnabled {
-					sendMessage := Fields.SendMessageStruct{
+					sendMessage := SendMessageChannel.SendMessageStruct{
 						Type: "send_osc",
 						Value: struct {
 							Text string `json:"text"`

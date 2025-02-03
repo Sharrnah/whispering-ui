@@ -13,6 +13,7 @@ import (
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Pages/AdditionalTextTranslations"
 	"whispering-tiger-ui/Resources"
+	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
 	"whispering-tiger-ui/Websocket/Messages"
@@ -53,7 +54,7 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 	switchButton.IconPlacement = widget.ButtonIconLeadingText
 	switchButtonAligner := container.NewCenter(switchButton)
 
-	numOfAdditionalLanguagesLabelText := AdditionalTextTranslations.AdditionalLanguagesCountString()
+	numOfAdditionalLanguagesLabelText := Fields.AdditionalLanguagesCountString("", "()")
 	additionalLanguagesMenuButton := widget.NewButtonWithIcon(numOfAdditionalLanguagesLabelText, theme.ListIcon(), nil)
 	additionalLanguagesMenuButton.OnTapped = func() {
 		if additionalTranslationWindow != nil {
@@ -76,7 +77,7 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 		toLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.TargetLanguageCombo.Text)
 		text, _ := Fields.DataBindings.TranscriptionInputBinding.Get()
 		//goland:noinspection GoSnakeCaseUsage
-		sendMessage := Fields.SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type: "translate_req",
 			Value: struct {
 				Text                string `json:"text"`
@@ -104,7 +105,7 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 		toLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.TargetLanguageCombo.Text)
 		text, _ := Fields.DataBindings.TranscriptionInputBinding.Get()
 		//goland:noinspection GoSnakeCaseUsage
-		sendMessage := Fields.SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type: "translate_req",
 			Value: struct {
 				Text                string `json:"text"`

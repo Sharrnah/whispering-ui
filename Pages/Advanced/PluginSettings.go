@@ -23,7 +23,7 @@ import (
 	"strconv"
 	"strings"
 	"whispering-tiger-ui/CustomWidget"
-	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
 )
@@ -189,7 +189,7 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 	// plugin enabled checkbox
 	pluginEnabledCheckbox := widget.NewCheck(lang.L("pluginClass enabled", map[string]interface{}{"PluginClass": pluginClassName}), func(enabled bool) {
 		Settings.Config.Plugins[pluginClassName] = enabled
-		sendMessage := Fields.SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "setting_change",
 			Name:  "plugins",
 			Value: Settings.Config.Plugins,
@@ -580,7 +580,7 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 		if v["type"] == "button" {
 			label := v["label"].(string)
 			button := widget.NewButton(label, func() {
-				sendMessage := Fields.SendMessageStruct{
+				sendMessage := SendMessageChannel.SendMessageStruct{
 					Type:  "plugin_button_press",
 					Name:  pluginClassName,
 					Value: settingName,
@@ -956,7 +956,7 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 // Helper function to update settings
 func updateSettings(SettingsFile Settings.Conf, pluginClassName string, pluginSettings map[string]interface{}) {
 	SettingsFile.Plugin_settings.(map[string]interface{})[pluginClassName] = pluginSettings
-	sendMessage := Fields.SendMessageStruct{
+	sendMessage := SendMessageChannel.SendMessageStruct{
 		Type:  "setting_change",
 		Name:  "plugin_settings",
 		Value: SettingsFile.Plugin_settings,

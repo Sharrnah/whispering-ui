@@ -12,6 +12,7 @@ import (
 	"strings"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Resources"
+	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
 	"whispering-tiger-ui/Websocket/Messages"
@@ -72,7 +73,7 @@ func CreateOcrWindow() fyne.CanvasObject {
 		toLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.TargetLanguageTxtTranslateCombo.Text)
 		text, _ := Fields.DataBindings.TranscriptionInputBinding.Get()
 		//goland:noinspection GoSnakeCaseUsage
-		sendMessage := Fields.SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type: "translate_req",
 			Value: struct {
 				Text                string `json:"text"`
@@ -111,7 +112,7 @@ func CreateOcrWindow() fyne.CanvasObject {
 			valueIso = Messages.OcrLanguagesList.GetCodeByName(value)
 		}
 
-		sendMessage := Fields.SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "setting_change",
 			Name:  "ocr_lang",
 			Value: valueIso,
@@ -134,7 +135,7 @@ func CreateOcrWindow() fyne.CanvasObject {
 
 		toLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.TargetLanguageTxtTranslateCombo.Text)
 		//goland:noinspection GoSnakeCaseUsage
-		sendMessage := Fields.SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type: "ocr_req",
 			Value: struct {
 				Ocr_lang  string `json:"ocr_lang"`
@@ -163,7 +164,7 @@ func CreateOcrWindow() fyne.CanvasObject {
 		toLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.TargetLanguageTxtTranslateCombo.Text)
 		if clipboardFormat == clipboard.FmtImage {
 			//goland:noinspection GoSnakeCaseUsage
-			sendMessage := Fields.SendMessageStruct{
+			sendMessage := SendMessageChannel.SendMessageStruct{
 				Type: "ocr_req",
 				Value: struct {
 					Image     []byte `json:"image"`

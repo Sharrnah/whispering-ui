@@ -1,4 +1,4 @@
-package Fields
+package SendMessageChannel
 
 // sending Message
 

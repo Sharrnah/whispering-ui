@@ -105,7 +105,7 @@ func (res TranslateSetting) Update() *TranslateSetting {
 	Fields.Field.TextTranslateEnabled.Text = lang.L("SttTextTranslateLabel", map[string]interface{}{
 		"FromLang": Fields.Field.SourceLanguageCombo.Text,
 		"ToLang":   Fields.Field.TargetLanguageCombo.Text,
-	})
+	}) + Fields.AdditionalLanguagesCountString(" ", "[]")
 	Fields.Field.TextTranslateEnabled.Refresh()
 
 	checkValue, _ := Fields.DataBindings.SpeechToTextEnabledDataBinding.Get()

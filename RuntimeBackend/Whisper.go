@@ -17,6 +17,7 @@ import (
 	"syscall"
 	"time"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Utilities"
 )
 
@@ -99,7 +100,7 @@ func (c *WhisperProcessConfig) Stop() {
 	if c.Program != nil && c.Program.Process != nil {
 		println("Terminating process")
 
-		sendMessage := Fields.SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "quit",
 			Name:  "quit",
 			Value: "",

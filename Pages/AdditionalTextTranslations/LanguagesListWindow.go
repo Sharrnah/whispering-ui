@@ -10,29 +10,14 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"image/color"
-	"strconv"
 	"strings"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
 	"whispering-tiger-ui/Websocket/Messages"
 )
-
-func AdditionalLanguagesCountString() string {
-	// count additional languages
-	numOfAdditionalLanguages := 0
-	numOfAdditionalLanguagesLabelText := ""
-	for _, language := range strings.Split(Settings.Config.Txt_second_translation_languages, ",") {
-		if language != "" {
-			numOfAdditionalLanguages++
-		}
-	}
-	if Settings.Config.Txt_second_translation_enabled && numOfAdditionalLanguages > 0 {
-		numOfAdditionalLanguagesLabelText = "(+" + strconv.Itoa(numOfAdditionalLanguages) + ")"
-	}
-	return numOfAdditionalLanguagesLabelText
-}
 
 func CreateLanguagesListWindow(button *widget.Button) *dialog2.CustomDialog {
 	defer Utilities.PanicLogger()
@@ -74,14 +59,21 @@ func CreateLanguagesListWindow(button *widget.Button) *dialog2.CustomDialog {
 
 				Settings.Config.Txt_second_translation_languages = strings.Join(activeLanguagesList, ",")
 				// send new list
-				sendMessage := Fields.SendMessageStruct{
+				sendMessage := SendMessageChannel.SendMessageStruct{
 					Type:  "setting_change",
 					Name:  "txt_second_translation_languages",
 					Value: Settings.Config.Txt_second_translation_languages,
 				}
 				sendMessage.SendMessage()
 
-				button.SetText(AdditionalLanguagesCountString())
+				button.SetText(Fields.AdditionalLanguagesCountString("", "()"))
+
+				// Update the label of the TextTranslateEnabled field
+				Fields.Field.TextTranslateEnabled.Text = lang.L("SttTextTranslateLabel", map[string]interface{}{
+					"FromLang": Fields.Field.SourceLanguageCombo.Text,
+					"ToLang":   Fields.Field.TargetLanguageCombo.Text,
+				}) + Fields.AdditionalLanguagesCountString(" ", "[]")
+				Fields.Field.TextTranslateEnabled.Refresh()
 			}
 
 			languageLabel.SetText(Messages.InstalledLanguages.GetNameByCode(activeLanguagesList[i]))
@@ -111,13 +103,20 @@ func CreateLanguagesListWindow(button *widget.Button) *dialog2.CustomDialog {
 	// Create window content
 	enableAdditionalTranslationCheckbox := widget.NewCheck(lang.L("Enable Additional Translations"), func(checked bool) {
 		Settings.Config.Txt_second_translation_enabled = checked
-		sendMessage := Fields.SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "setting_change",
 			Name:  "txt_second_translation_enabled",
 			Value: checked,
 		}
 		sendMessage.SendMessage()
-		button.SetText(AdditionalLanguagesCountString())
+		button.SetText(Fields.AdditionalLanguagesCountString("", "()"))
+
+		// Update the label of the TextTranslateEnabled field
+		Fields.Field.TextTranslateEnabled.Text = lang.L("SttTextTranslateLabel", map[string]interface{}{
+			"FromLang": Fields.Field.SourceLanguageCombo.Text,
+			"ToLang":   Fields.Field.TargetLanguageCombo.Text,
+		}) + Fields.AdditionalLanguagesCountString(" ", "[]")
+		Fields.Field.TextTranslateEnabled.Refresh()
 	})
 	enableAdditionalTranslationCheckbox.Checked = Settings.Config.Txt_second_translation_enabled
 
@@ -154,13 +153,20 @@ func CreateLanguagesListWindow(button *widget.Button) *dialog2.CustomDialog {
 
 			activeLanguagesListWidget.Refresh()
 
-			sendMessage := Fields.SendMessageStruct{
+			sendMessage := SendMessageChannel.SendMessageStruct{
 				Type:  "setting_change",
 				Name:  "txt_second_translation_languages",
 				Value: Settings.Config.Txt_second_translation_languages,
 			}
 			sendMessage.SendMessage()
-			button.SetText(AdditionalLanguagesCountString())
+			button.SetText(Fields.AdditionalLanguagesCountString("", "()"))
+
+			// Update the label of the TextTranslateEnabled field
+			Fields.Field.TextTranslateEnabled.Text = lang.L("SttTextTranslateLabel", map[string]interface{}{
+				"FromLang": Fields.Field.SourceLanguageCombo.Text,
+				"ToLang":   Fields.Field.TargetLanguageCombo.Text,
+			}) + Fields.AdditionalLanguagesCountString(" ", "[]")
+			Fields.Field.TextTranslateEnabled.Refresh()
 		}
 	}
 

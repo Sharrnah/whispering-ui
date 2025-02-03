@@ -10,6 +10,7 @@ import (
 	"sync"
 	"time"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
 	"whispering-tiger-ui/Websocket/Messages"
@@ -190,7 +191,7 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		Fields.Field.TargetLanguageTxtTranslateCombo.ResetOptionsFilter()
 
 		// set auto text translate checkbox label
-		Fields.Field.TextTranslateEnabled.Text = lang.L("SttTextTranslateLabel", map[string]interface{}{"FromLang": Messages.InstalledLanguages.GetNameByCode(srcLang), "ToLang": Messages.InstalledLanguages.GetNameByCode(trgLang)})
+		Fields.Field.TextTranslateEnabled.Text = lang.L("SttTextTranslateLabel", map[string]interface{}{"FromLang": Messages.InstalledLanguages.GetNameByCode(srcLang), "ToLang": Messages.InstalledLanguages.GetNameByCode(trgLang)}) + Fields.AdditionalLanguagesCountString(" ", "[]")
 		Fields.Field.TextTranslateEnabled.Refresh()
 	case "available_tts_models":
 		err = json.Unmarshal(c.Raw, &Messages.TtsLanguages)
@@ -482,7 +483,7 @@ func (c *MessageStruct) HandleReceiveMessage() {
 
 }
 
-func HandleSendMessage(sendMessage *Fields.SendMessageStruct) {
+func HandleSendMessage(sendMessage *SendMessageChannel.SendMessageStruct) {
 	defer Utilities.PanicLogger()
 
 	switch sendMessage.Type {

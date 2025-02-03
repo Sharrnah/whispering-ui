@@ -16,7 +16,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
-	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Utilities"
 )
 
@@ -545,7 +545,7 @@ func BuildSettingsForm(includeConfigFields []string, settingsFile string) fyne.C
 					}
 					if preChangeOption != sendValue {
 						needsSettingUpdate = true
-						sendMessage := Fields.SendMessageStruct{
+						sendMessage := SendMessageChannel.SendMessageStruct{
 							Type:  "setting_change",
 							Name:  item.Text,
 							Value: sendValue,
@@ -558,7 +558,7 @@ func BuildSettingsForm(includeConfigFields []string, settingsFile string) fyne.C
 				}
 			}
 			if needsSettingUpdate {
-				sendMessage := Fields.SendMessageStruct{
+				sendMessage := SendMessageChannel.SendMessageStruct{
 					Type: "setting_update_req",
 				}
 				sendMessage.SendMessage()

@@ -16,7 +16,7 @@ import (
 	"os"
 	"os/signal"
 	"time"
-	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
 )
@@ -28,7 +28,7 @@ const (
 type Client struct {
 	Addr            string
 	Conn            *websocket.Conn
-	sendMessageChan chan Fields.SendMessageStruct
+	sendMessageChan chan SendMessageChannel.SendMessageStruct
 	InterruptChan   chan os.Signal
 }
 
@@ -37,7 +37,7 @@ func NewClient(addr string) *Client {
 		Addr: addr,
 		Conn: nil,
 		//SendMessageChan: make(chan Fields.SendMessageStruct),
-		sendMessageChan: Fields.SendMessageChannel,
+		sendMessageChan: SendMessageChannel.SendMessageChannel,
 		InterruptChan:   make(chan os.Signal, 1),
 	}
 }
@@ -109,13 +109,13 @@ func (c *Client) Start() {
 		// send remote settings request if running remote backend
 		if runBackend {
 			// send info that backend is running locally
-			sendMessage := Fields.SendMessageStruct{
+			sendMessage := SendMessageChannel.SendMessageStruct{
 				Type:  "ui_connected",
 				Value: true,
 			}
 			sendMessage.SendMessage()
 		} else {
-			sendMessage := Fields.SendMessageStruct{
+			sendMessage := SendMessageChannel.SendMessageStruct{
 				Type: "setting_update_req",
 			}
 			sendMessage.SendMessage()
@@ -140,13 +140,13 @@ func (c *Client) Start() {
 				if runBackend {
 					log.Println("send ui_connected")
 					// send info that backend is running locally
-					sendMessage := Fields.SendMessageStruct{
+					sendMessage := SendMessageChannel.SendMessageStruct{
 						Type:  "ui_connected",
 						Value: true,
 					}
 					sendMessage.SendMessage()
 				} else {
-					sendMessage := Fields.SendMessageStruct{
+					sendMessage := SendMessageChannel.SendMessageStruct{
 						Type: "setting_update_req",
 					}
 					sendMessage.SendMessage()

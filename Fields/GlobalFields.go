@@ -14,6 +14,7 @@ import (
 	"log"
 	"strings"
 	"whispering-tiger-ui/CustomWidget"
+	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Utilities"
 )
 
@@ -47,7 +48,7 @@ var fieldCreationFunctions = struct {
 			case "translate (to English)": // deprecated
 				value = "translate"
 			}
-			sendMessage := SendMessageStruct{
+			sendMessage := SendMessageChannel.SendMessageStruct{
 				Type:  "setting_change",
 				Name:  "whisper_task",
 				Value: value,
@@ -70,14 +71,14 @@ var fieldCreationFunctions = struct {
 				ToDevice: true,
 				Download: false,
 			}
-			sendMessage := SendMessageStruct{
+			sendMessage := SendMessageChannel.SendMessageStruct{
 				Type:  "tts_req",
 				Value: valueData,
 			}
 			sendMessage.SendMessage()
 		}))
 		entry.AddAdditionalMenuItem(fyne.NewMenuItem(lang.L("Send to OSC (VRChat)"), func() {
-			sendMessage := SendMessageStruct{
+			sendMessage := SendMessageChannel.SendMessageStruct{
 				Type: "send_osc",
 				Value: struct {
 					Text *string `json:"text"`
@@ -97,12 +98,12 @@ var fieldCreationFunctions = struct {
 				ToDevice: true,
 				Download: false,
 			}
-			sendMessageTts := SendMessageStruct{
+			sendMessageTts := SendMessageChannel.SendMessageStruct{
 				Type:  "tts_req",
 				Value: valueData,
 			}
 			sendMessageTts.SendMessage()
-			sendMessageOsc := SendMessageStruct{
+			sendMessageOsc := SendMessageChannel.SendMessageStruct{
 				Type: "send_osc",
 				Value: struct {
 					Text *string `json:"text"`
@@ -129,7 +130,7 @@ var fieldCreationFunctions = struct {
 				ToDevice: true,
 				Download: false,
 			}
-			sendMessage := SendMessageStruct{
+			sendMessage := SendMessageChannel.SendMessageStruct{
 				Type:  "tts_req",
 				Value: valueData,
 			}
@@ -137,7 +138,7 @@ var fieldCreationFunctions = struct {
 		}))
 		entry.AddAdditionalMenuItem(fyne.NewMenuItem(lang.L("Send to OSC (VRChat)"), func() {
 
-			sendMessage := SendMessageStruct{
+			sendMessage := SendMessageChannel.SendMessageStruct{
 				Type: "send_osc",
 				Value: struct {
 					Text *string `json:"text"`
@@ -157,12 +158,12 @@ var fieldCreationFunctions = struct {
 				ToDevice: true,
 				Download: false,
 			}
-			sendMessageTts := SendMessageStruct{
+			sendMessageTts := SendMessageChannel.SendMessageStruct{
 				Type:  "tts_req",
 				Value: valueData,
 			}
 			sendMessageTts.SendMessage()
-			sendMessageOsc := SendMessageStruct{
+			sendMessageOsc := SendMessageChannel.SendMessageStruct{
 				Type: "send_osc",
 				Value: struct {
 					Text *string `json:"text"`
@@ -176,7 +177,7 @@ var fieldCreationFunctions = struct {
 	},
 
 	TextTranslateEnabled: func() *widget.Check {
-		return widget.NewCheckWithData(lang.L("SttTextTranslateLabel", map[string]interface{}{"FromLang": "?", "ToLang": "?"}), DataBindings.TextTranslateEnabledDataBinding)
+		return widget.NewCheckWithData(lang.L("SttTextTranslateLabel", map[string]interface{}{"FromLang": "?", "ToLang": "?"})+AdditionalLanguagesCountString(" ", "[]"), DataBindings.TextTranslateEnabledDataBinding)
 	},
 	SttEnabled: func() *widget.Check {
 		return widget.NewCheckWithData(lang.L("Speech-to-Text Enabled"), DataBindings.SpeechToTextEnabledDataBinding)
@@ -243,7 +244,7 @@ var Field = struct {
 	SourceLanguageTxtTranslateCombo:                 CustomWidget.NewCompletionEntry([]string{"Auto"}),
 	TargetLanguageTxtTranslateCombo:                 CustomWidget.NewCompletionEntry([]string{"None"}),
 	TtsModelCombo: widget.NewSelect([]string{}, func(value string) {
-		sendMessage := SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "setting_change",
 			Name:  "tts_model",
 			Value: value,
@@ -254,7 +255,7 @@ var Field = struct {
 	}),
 	TtsVoiceCombo: widget.NewSelect([]string{}, func(value string) {
 
-		sendMessage := SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "setting_change",
 			Name:  "tts_voice",
 			Value: value,
@@ -267,7 +268,7 @@ var Field = struct {
 
 	OcrLanguageCombo: CustomWidget.NewCompletionEntry([]string{}),
 	OcrWindowCombo: CustomWidget.NewSelect([]string{}, func(value string) {
-		sendMessage := SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "setting_change",
 			Name:  "ocr_window_name",
 			Value: value,
@@ -363,14 +364,14 @@ func InitializeGlobalFields() {
 			value = ""
 		}
 
-		sendMessage := SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "setting_change",
 			Name:  "src_lang",
 			Value: value,
 		}
 		sendMessage.SendMessage()
 
-		Field.TextTranslateEnabled.Text = lang.L("SttTextTranslateLabel", map[string]interface{}{"FromLang": valueObj.Text, "ToLang": Field.TargetLanguageCombo.Text})
+		Field.TextTranslateEnabled.Text = lang.L("SttTextTranslateLabel", map[string]interface{}{"FromLang": valueObj.Text, "ToLang": Field.TargetLanguageCombo.Text}) + AdditionalLanguagesCountString(" ", "[]")
 		Field.TextTranslateEnabled.Refresh()
 
 		log.Println("Select set to", value)
@@ -395,14 +396,14 @@ func InitializeGlobalFields() {
 		value = UpdateCompletionEntryBasedOnValue(Field.TargetLanguageCombo, value)
 		valueObj := Field.TargetLanguageCombo.GetValueOptionEntryByText(value)
 
-		sendMessage := SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "setting_change",
 			Name:  "trg_lang",
 			Value: value,
 		}
 		sendMessage.SendMessage()
 
-		Field.TextTranslateEnabled.Text = lang.L("SttTextTranslateLabel", map[string]interface{}{"FromLang": Field.SourceLanguageCombo.Text, "ToLang": valueObj.Text})
+		Field.TextTranslateEnabled.Text = lang.L("SttTextTranslateLabel", map[string]interface{}{"FromLang": Field.SourceLanguageCombo.Text, "ToLang": valueObj.Text}) + AdditionalLanguagesCountString(" ", "[]")
 		Field.TextTranslateEnabled.Refresh()
 
 		log.Println("Select set to", value)
@@ -426,7 +427,7 @@ func InitializeGlobalFields() {
 		// check if value is not in Options
 		value = UpdateCompletionEntryBasedOnValue(Field.SourceLanguageTxtTranslateCombo, value)
 
-		sendMessage := SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "setting_change",
 			Name:  "ocr_txt_src_lang",
 			Value: value,
@@ -453,7 +454,7 @@ func InitializeGlobalFields() {
 		// check if value is not in Options
 		value = UpdateCompletionEntryBasedOnValue(Field.TargetLanguageTxtTranslateCombo, value)
 
-		sendMessage := SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "setting_change",
 			Name:  "ocr_txt_trg_lang",
 			Value: value,
@@ -481,7 +482,7 @@ func InitializeGlobalFields() {
 		// check if value is not in Options
 		value = UpdateCompletionEntryBasedOnValue(Field.TranscriptionSpeakerLanguageCombo, value)
 
-		sendMessage := SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "setting_change",
 			Name:  "current_language",
 			Value: value,
@@ -507,7 +508,7 @@ func InitializeGlobalFields() {
 		// check if value is not in Options
 		value = UpdateCompletionEntryBasedOnValue(Field.TranscriptionTargetLanguageCombo, value)
 
-		sendMessage := SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "setting_change",
 			Name:  "target_language",
 			Value: value,
@@ -516,7 +517,7 @@ func InitializeGlobalFields() {
 	}
 
 	Field.TextTranslateEnabled.OnChanged = func(value bool) {
-		sendMessage := SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "setting_change",
 			Name:  "txt_translate",
 			Value: value,
@@ -525,7 +526,7 @@ func InitializeGlobalFields() {
 	}
 
 	Field.SttEnabled.OnChanged = func(value bool) {
-		sendMessage := SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "setting_change",
 			Name:  "stt_enabled",
 			Value: value,
@@ -533,7 +534,7 @@ func InitializeGlobalFields() {
 		sendMessage.SendMessage()
 	}
 	Field.TtsEnabledOnStt.OnChanged = func(value bool) {
-		sendMessage := SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "setting_change",
 			Name:  "tts_answer",
 			Value: value,
@@ -546,7 +547,7 @@ func InitializeGlobalFields() {
 		} else {
 			Field.OscLimitHint.Hide()
 		}
-		sendMessage := SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "setting_change",
 			Name:  "osc_auto_processing_enabled",
 			Value: value,
@@ -568,7 +569,7 @@ func InitializeGlobalFields() {
 		Field.OcrLanguageCombo.ShowCompletion()
 	}
 	Field.OcrWindowCombo.UpdateBeforeOpenFunc = func() {
-		sendMessage := SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type: "get_windows_list",
 		}
 		sendMessage.SendMessage()

@@ -17,7 +17,7 @@ import (
 	"sync"
 	"time"
 	"whispering-tiger-ui/CustomWidget"
-	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
 )
@@ -57,7 +57,7 @@ func (s *SettingMapping) SendUpdatedValue(value interface{}) {
 
 	// If the value is a boolean, send the update immediately
 	if v, ok := value.(bool); ok {
-		sendMessage := Fields.SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "setting_change",
 			Name:  s.SettingsInternalName,
 			Value: v,
@@ -75,7 +75,7 @@ func (s *SettingMapping) SendUpdatedValue(value interface{}) {
 
 	// Set up a new timer that calls the actual message sending after debounceDuration
 	debounceTimers[s.SettingsInternalName] = time.AfterFunc(debounceDuration, func() {
-		sendMessage := Fields.SendMessageStruct{
+		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "setting_change",
 			Name:  s.SettingsInternalName,
 			Value: value,
