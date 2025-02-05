@@ -179,6 +179,16 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		Fields.Field.RealtimeResultLabel,
 	)
 
+	clearResultListButton := widget.NewButton(lang.L("Clear"), func() {
+		Fields.DataBindings.WhisperResultsData = []Fields.WhisperResult{}
+		Fields.Field.WhisperResultList.Refresh()
+		sendMessage := SendMessageChannel.SendMessageStruct{
+			Type:  "clear_transcription",
+			Value: true,
+		}
+		sendMessage.SendMessage()
+	})
+
 	saveCsvButton := widget.NewButton(lang.L("Save CSV"), func() {
 		dialogSize := fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size()
 		dialogSize.Height = dialogSize.Height - 80
@@ -219,7 +229,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 
 		fileDialog.Show()
 	})
-	lastResultLine := container.NewBorder(nil, nil, saveCsvButton, nil, Fields.Field.ProcessingStatus)
+	lastResultLine := container.NewBorder(nil, nil, saveCsvButton, clearResultListButton, Fields.Field.ProcessingStatus)
 
 	whisperResultContainer := container.NewStack(
 		container.NewBorder(
