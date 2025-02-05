@@ -13,6 +13,7 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/gen2brain/malgo"
+	"github.com/getsentry/sentry-go"
 	"github.com/youpy/go-wav"
 	"image/color"
 	"io"
@@ -26,6 +27,7 @@ import (
 	"strings"
 	"time"
 	"whispering-tiger-ui/CustomWidget"
+	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/Pages/ProfileSettings"
 	"whispering-tiger-ui/Profiles"
 	"whispering-tiger-ui/Resources"
@@ -91,7 +93,9 @@ func (c *CurrentPlaybackDevice) InitTestAudio() (*bytes.Reader, *wav.Reader) {
 }
 
 func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
-	defer Utilities.PanicLogger()
+	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+		scope.SetTag("GoRoutine", "Pages\\Profiles->InitDevices")
+	})
 
 	byteReader, testAudioReader := c.InitTestAudio()
 
@@ -286,7 +290,9 @@ func (c *CurrentPlaybackDevice) WaitUntilInitialized(timeout time.Duration) {
 }
 
 func (c *CurrentPlaybackDevice) Init() {
-	defer Utilities.PanicLogger()
+	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+		scope.SetTag("GoRoutine", "Pages\\Profiles->Init")
+	})
 
 	if c.OutputWaveWidget == nil {
 		c.OutputWaveWidget = widget.NewProgressBar()
@@ -337,7 +343,9 @@ func (c *CurrentPlaybackDevice) Init() {
 }
 
 func GetAudioDevices(audioApi malgo.Backend, deviceTypes []malgo.DeviceType, deviceIndexStartPoint int, specialValueSuffix string, specialTextSuffix string) ([]CustomWidget.TextValueOption, []Utilities.AudioDevice, error) {
-	defer Utilities.PanicLogger()
+	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+		scope.SetTag("GoRoutine", "Pages\\Profiles->GetAudioDevices")
+	})
 
 	devicesOptions := make([]CustomWidget.TextValueOption, 0)
 	deviceList := make([]Utilities.AudioDevice, 0)
@@ -400,7 +408,9 @@ func appendWidgetToForm(form *widget.Form, text string, itemWidget fyne.CanvasOb
 }
 
 func stopAndClose(playBackDevice CurrentPlaybackDevice, onClose func()) {
-	defer Utilities.PanicLogger()
+	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+		scope.SetTag("GoRoutine", "Pages\\Profiles->stopAndClose")
+	})
 
 	// Pause a bit until the server is closed
 	time.Sleep(1 * time.Second)
@@ -494,7 +504,9 @@ const energyDetectionTime = 10
 const EnergySliderMax = 2000
 
 func CreateProfileWindow(onClose func()) fyne.CanvasObject {
-	defer Utilities.PanicLogger()
+	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+		scope.SetTag("GoRoutine", "Pages\\Profiles->CreateProfileWindow")
+	})
 
 	createProfilePresetSelect := CustomWidget.NewTextValueSelect("Profile Preset", []CustomWidget.TextValueOption{
 		{Text: lang.L("(Select Preset)"), Value: ""},
@@ -582,24 +594,43 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	totalGPUMemory := int64(0)
 	var ComputeCapability float32 = 0.0
 	go func() {
-		if Hardwareinfo.HasNVIDIACard() {
+		foundGPUVendorName := "Unknown"
+		foundGPUAdapterName := ""
+
+		gpuDeviceInfo := Hardwareinfo.GetGPUCard()
+		if gpuDeviceInfo != nil {
+			foundGPUAdapterName = gpuDeviceInfo.Product.Name
+		}
+		if Hardwareinfo.IsNVIDIACard(gpuDeviceInfo) {
+			foundGPUVendorName = "NVIDIA"
 			_, totalGPUMemory = Hardwareinfo.GetGPUMemory()
 			if totalGPUMemory <= 0 {
 				// fall back to registry reading of Video Memory
 				foundGPU, _ := Hardwareinfo.FindDedicatedGPUByVendor([]string{"nvidia"})
 				if foundGPU != nil && len(foundGPU) > 0 {
+					foundGPUAdapterName = foundGPU[0].AdapterName
 					totalGPUMemory = foundGPU[0].MemoryMB
 				}
 			}
 			GPUMemoryBar.Max = float64(totalGPUMemory)
 		} else {
+			foundGPUVendorName = "Other"
 			foundGPU, _ := Hardwareinfo.FindDedicatedGPUByVendor([]string{"nvidia", "amd", "intel"})
 			if foundGPU != nil && len(foundGPU) > 0 {
+				foundGPUVendorName = foundGPU[0].VendorName
+				foundGPUAdapterName = foundGPU[0].AdapterName
 				totalGPUMemory = foundGPU[0].MemoryMB
 			}
 			GPUMemoryBar.Max = float64(totalGPUMemory)
 		}
 		ComputeCapability = Hardwareinfo.GetGPUComputeCapability()
+
+		Logging.ConfigureScope(sentry.CurrentHub(), func(scope *sentry.Scope) {
+			scope.SetTag("GPU Vendor", foundGPUVendorName)
+			scope.SetTag("GPU Adapter", foundGPUAdapterName)
+			scope.SetTag("GPU Memory", strconv.FormatInt(totalGPUMemory, 10))
+			scope.SetTag("GPU Compute Capability", fmt.Sprintf("%.1f", ComputeCapability))
+		})
 
 		// refresh GPU Compute Capability label
 		GPUInformationLabel.SetText("Compute Capability: " + fmt.Sprintf("%.1f", ComputeCapability))
@@ -905,7 +936,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
 		sttAiDeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {
-			if !Hardwareinfo.HasNVIDIACard() && s.Value == "cuda" {
+			if !Hardwareinfo.IsNVIDIACard(nil) && s.Value == "cuda" {
 				dialog.ShowInformation(lang.L("No NVIDIA Card found"), lang.L("No NVIDIA Card found. You might need to use CPU instead for it to work."), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 			if s.Value == "cpu" && (sttPrecisionSelect.GetSelected().Value == "float16" || sttPrecisionSelect.GetSelected().Value == "int8_float16") {
@@ -1331,7 +1362,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileForm.Append(lang.L("Text-Translation Type"), container.NewGridWithColumns(2, txtTranslatorTypeSelect))
 
 		txtTranslatorDeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {
-			if !Hardwareinfo.HasNVIDIACard() && s.Value == "cuda" {
+			if !Hardwareinfo.IsNVIDIACard(nil) && s.Value == "cuda" {
 				dialog.ShowInformation(lang.L("No NVIDIA Card found"), lang.L("No NVIDIA Card found. You might need to use CPU instead for it to work."), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 			if s.Value == "cpu" && txtTranslatorPrecisionSelect.GetSelected() != nil && (txtTranslatorPrecisionSelect.GetSelected().Value == "float16" || txtTranslatorPrecisionSelect.GetSelected().Value == "int8_float16") {
@@ -1529,7 +1560,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
 			{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
 		}, func(s CustomWidget.TextValueOption) {
-			if !Hardwareinfo.HasNVIDIACard() && s.Value == "cuda" {
+			if !Hardwareinfo.IsNVIDIACard(nil) && s.Value == "cuda" {
 				dialog.ShowInformation(lang.L("No NVIDIA Card found"), lang.L("No NVIDIA Card found. You might need to use CPU instead for it to work."), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 			// calculate memory consumption

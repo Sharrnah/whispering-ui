@@ -5,11 +5,13 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/lang"
+	"github.com/getsentry/sentry-go"
 	"log"
 	"strings"
 	"sync"
 	"time"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
@@ -135,7 +137,9 @@ var processingStatusMutex sync.Mutex
 // Handle the different receiving message types
 
 func (c *MessageStruct) HandleReceiveMessage() {
-	defer Utilities.PanicLogger()
+	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+		scope.SetTag("GoRoutine", "Websocket\\messageHandler->HandleReceiveMessage")
+	})
 	var err error = nil
 
 	switch c.Type {
@@ -484,7 +488,9 @@ func (c *MessageStruct) HandleReceiveMessage() {
 }
 
 func HandleSendMessage(sendMessage *SendMessageChannel.SendMessageStruct) {
-	defer Utilities.PanicLogger()
+	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+		scope.SetTag("GoRoutine", "Websocket\\messageHandler->HandleSendMessage")
+	})
 
 	switch sendMessage.Type {
 	case "setting_change":

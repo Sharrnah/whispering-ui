@@ -4,14 +4,17 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"github.com/getsentry/sentry-go"
 	"io"
 	"net/url"
 	"path/filepath"
 	"strings"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/Resources"
 	"whispering-tiger-ui/RuntimeBackend"
 	"whispering-tiger-ui/Settings"
@@ -79,7 +82,9 @@ func buildAboutInfo() fyne.CanvasObject {
 }
 
 func CreateAdvancedWindow() fyne.CanvasObject {
-	defer Utilities.PanicLogger()
+	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+		scope.SetTag("GoRoutine", "Pages\\Advanced->CreateAdvancedWindow")
+	})
 
 	Settings.Form = Settings.BuildSettingsForm(nil, filepath.Join(Settings.GetConfProfileDir(), Settings.Config.SettingsFilename)).(*widget.Form)
 
@@ -100,7 +105,52 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 	})
 	writeLogFileCheckbox.Checked = fyne.CurrentApp().Preferences().BoolWithFallback("WriteLogfile", false)
 
-	logTabContent := container.NewBorder(nil, container.NewHBox(RestartBackendButton, writeLogFileCheckbox, copyLogButton), nil, nil, container.NewScroll(Fields.Field.LogText))
+	sendErrorReportButton := widget.NewButtonWithIcon(lang.L("Send error report"), theme.UploadIcon(), func() {
+		infoTitle := widget.NewLabel(lang.L("Please enter a description of the error."))
+		attachLogCheckbox := widget.NewCheck(lang.L("Attach log file"), nil)
+		attachLogCheckbox.SetChecked(true)
+		attachHardwareCheckbox := widget.NewCheck(lang.L("Attach hardware information (GPU Memory, GPU Vendor, GPU Adapter)"), nil)
+		attachHardwareCheckbox.SetChecked(true)
+		emailEntry := widget.NewEntry()
+		emailEntry.PlaceHolder = lang.L("E-Mail Address (Optional)")
+		textErrorReportInput := widget.NewMultiLineEntry()
+		errorReportWindow, _ := Utilities.GetCurrentMainWindow("Error Report")
+		errorReportDialog := dialog.NewCustomConfirm(lang.L("Send error report"), lang.L("Send"), lang.L("Cancel"),
+			container.NewBorder(container.NewVBox(emailEntry, infoTitle), container.NewVBox(attachLogCheckbox, attachHardwareCheckbox), nil, nil, textErrorReportInput),
+			func(confirm bool) {
+				if confirm {
+					// Send error to Server
+					localHub := Logging.CloneHub()
+					logfile := "-"
+					if attachLogCheckbox.Checked {
+						logfile = strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\n")
+					}
+					localHub.WithScope(func(scope *sentry.Scope) {
+						scope.SetTag("report_type", "User Report")
+						if !attachHardwareCheckbox.Checked {
+							scope.RemoveTag("GPU Memory")
+							scope.RemoveTag("GPU Vendor")
+							scope.RemoveTag("GPU Adapter")
+							scope.RemoveTag("GPU Compute Capability")
+						}
+						scope.SetUser(sentry.User{Email: emailEntry.Text})
+						scope.SetContext("report", map[string]interface{}{
+							"log": logfile,
+						})
+						localHub.CaptureMessage(textErrorReportInput.Text)
+					})
+					localHub.Flush(Logging.FlushTimeoutDefault)
+					dialog.NewInformation(lang.L("Error Report Sent"), lang.L("Your error report has been sent."), errorReportWindow).Show()
+				}
+			},
+			errorReportWindow,
+		)
+		windowSize := Utilities.GetInlineDialogSize(errorReportWindow, fyne.NewSize(100, 200), fyne.NewSize(200, 200), errorReportWindow.Canvas().Size())
+		errorReportDialog.Resize(windowSize)
+		errorReportDialog.Show()
+	})
+
+	logTabContent := container.NewBorder(nil, container.NewHBox(RestartBackendButton, writeLogFileCheckbox, copyLogButton, sendErrorReportButton), nil, nil, container.NewScroll(Fields.Field.LogText))
 
 	tabs := container.NewAppTabs(
 		container.NewTabItem(lang.L("About Whispering Tiger"), buildAboutInfo()),
@@ -125,7 +175,9 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 	// Log logText updater thread
 	Fields.Field.LogText.Resize(fyne.NewSize(1200, 800))
 	go func(writer io.WriteCloser, reader io.Reader) {
-		defer Utilities.PanicLogger()
+		defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+			scope.SetTag("GoRoutine", "Pages\\Advanced->CreateAdvancedWindow#LogTextUpdaterThread")
+		})
 		_ = Fields.Field.LogText.RunWithConnection(writer, reader)
 	}(RuntimeBackend.BackendsList[0].WriterBackend, RuntimeBackend.BackendsList[0].ReaderBackend)
 

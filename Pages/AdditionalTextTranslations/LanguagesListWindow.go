@@ -9,10 +9,12 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"github.com/getsentry/sentry-go"
 	"image/color"
 	"strings"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
@@ -20,7 +22,9 @@ import (
 )
 
 func CreateLanguagesListWindow(button *widget.Button) *dialog2.CustomDialog {
-	defer Utilities.PanicLogger()
+	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+		scope.SetTag("GoRoutine", "Pages\\AdditionalTextTranslations\\LanguagesListWindow->CreateLanguagesListWindow")
+	})
 
 	var activeLanguagesList []string
 
@@ -180,7 +184,7 @@ func CreateLanguagesListWindow(button *widget.Button) *dialog2.CustomDialog {
 	mainWindow, _ := Utilities.GetCurrentMainWindow("")
 	dialog := dialog2.NewCustom(lang.L("Additional Translation Languages"), lang.L("Close"), content, mainWindow)
 
-	windowSize := Utilities.GetInlineDialogSize(fyne.NewSize(300, 150), fyne.NewSize(100, 200), fyne.NewSize(700, 500))
+	windowSize := Utilities.GetInlineDialogSize(mainWindow, fyne.NewSize(300, 150), fyne.NewSize(100, 200), fyne.NewSize(700, 500))
 	dialog.Resize(windowSize)
 
 	dialog.Show()

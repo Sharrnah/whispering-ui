@@ -23,7 +23,10 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
-require golang.design/x/clipboard v0.7.0
+require (
+	github.com/getsentry/sentry-go v0.31.1
+	golang.design/x/clipboard v0.7.0
+)
 
 require (
 	fyne.io/systray v1.11.0 // indirect

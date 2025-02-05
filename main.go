@@ -17,6 +17,7 @@ import (
 	"strings"
 	"time"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/Pages"
 	"whispering-tiger-ui/Pages/Advanced"
 	"whispering-tiger-ui/Resources"
@@ -72,8 +73,6 @@ func determineWindowsFont(fontsDir string) string {
 }
 
 func main() {
-	defer Utilities.PanicLogger()
-
 	// main application
 	val, ok := os.LookupEnv("WT_SCALE")
 	if ok {
@@ -233,6 +232,21 @@ func main() {
 
 	profileWindow.CenterOnScreen()
 	profileWindow.Show()
+
+	if !fyne.CurrentApp().Preferences().BoolWithFallback("SendErrorsToServerInit", false) {
+		confirmErrorReportingDialog := dialog.NewConfirm(lang.L("Automatically Report Errors"), lang.L("Do you want to automatically report errors?"),
+			func(b bool) {
+				Logging.EnableReporting(b)
+				fyne.CurrentApp().Preferences().SetBool("SendErrorsToServerInit", true) // Set Init to mark that it was already shown
+			},
+			profileWindow)
+		confirmErrorReportingDialog.Show()
+	}
+	SendErrorsToServerSetting := fyne.CurrentApp().Preferences().BoolWithFallback("SendErrorsToServer", false)
+	Logging.EnableReporting(SendErrorsToServerSetting)
+
+	Logging.ErrorHandlerInit(Utilities.AppVersion + "." + Utilities.AppBuild)
+	defer Logging.ErrorHandlerRecover()
 
 	// check for updates
 	if fyne.CurrentApp().Preferences().BoolWithFallback("CheckForUpdateAtStartup", true) || (!Utilities.FileExists("audioWhisper/audioWhisper.exe") && !Utilities.FileExists("audioWhisper.py")) {

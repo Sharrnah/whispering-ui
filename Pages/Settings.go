@@ -4,12 +4,15 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/lang"
+	"github.com/getsentry/sentry-go"
+	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/Pages/SettingsMappings"
-	"whispering-tiger-ui/Utilities"
 )
 
 func CreateSettingsWindow() fyne.CanvasObject {
-	defer Utilities.PanicLogger()
+	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+		scope.SetTag("GoRoutine", "Pages\\Settings->CreateSettingsWindow")
+	})
 
 	settingsFormTabs := container.NewAppTabs(
 		container.NewTabItem(lang.L("Application Options"), SettingsMappings.CreateSettingsFormByMapping(SettingsMappings.ApplicationSettingsMapping)),

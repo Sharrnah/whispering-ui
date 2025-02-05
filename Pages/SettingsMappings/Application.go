@@ -6,6 +6,7 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
+	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/Pages/Advanced"
 	"whispering-tiger-ui/UpdateUtility"
 )
@@ -122,6 +123,20 @@ var ApplicationSettingsMapping = SettingsMapping{
 				})
 
 				return container.NewHBox(widgetCheckbox, checkForUpdatesButton)
+			},
+		},
+		{
+			SettingsName:         "Automatically Report Errors",
+			SettingsInternalName: "",
+			SettingsDescription:  "",
+			DoNotSendToBackend:   true,
+			_widget: func() fyne.CanvasObject {
+				widgetCheckbox := widget.NewCheck("", func(b bool) {
+					Logging.EnableReporting(b)
+				})
+				widgetCheckbox.Checked = fyne.CurrentApp().Preferences().BoolWithFallback("SendErrorsToServer", false)
+
+				return widgetCheckbox
 			},
 		},
 	},

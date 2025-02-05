@@ -13,6 +13,7 @@ import (
 	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"github.com/getsentry/sentry-go"
 	"gopkg.in/yaml.v3"
 	"image/color"
 	"net/url"
@@ -23,6 +24,7 @@ import (
 	"strconv"
 	"strings"
 	"whispering-tiger-ui/CustomWidget"
+	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
@@ -369,7 +371,9 @@ func BuildPluginSettingsAccordion(window fyne.Window) (fyne.CanvasObject, int) {
 }
 
 func CreatePluginSettingsPage() fyne.CanvasObject {
-	defer Utilities.PanicLogger()
+	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+		scope.SetTag("GoRoutine", "Pages\\Advanced\\PluginSettings->CreatePluginSettingsPage")
+	})
 
 	pluginAccordion, pluginFilesCount := BuildPluginSettingsAccordion(nil)
 

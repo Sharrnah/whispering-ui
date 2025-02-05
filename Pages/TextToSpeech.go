@@ -9,6 +9,7 @@ import (
 	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"github.com/getsentry/sentry-go"
 	"golang.design/x/clipboard"
 	"log"
 	"os"
@@ -17,6 +18,7 @@ import (
 	"time"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
@@ -160,7 +162,9 @@ func OnCloseTextToSpeechWindow(container fyne.CanvasObject) {
 }
 
 func CreateTextToSpeechWindow() fyne.CanvasObject {
-	defer Utilities.PanicLogger()
+	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+		scope.SetTag("GoRoutine", "Pages\\TextToSpeech->CreateTextToSpeechWindow")
+	})
 
 	ttsModels := container.New(layout.NewFormLayout(), widget.NewLabel(lang.L("Model")+":"), Fields.Field.TtsModelCombo)
 

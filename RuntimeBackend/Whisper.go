@@ -8,6 +8,7 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
+	"github.com/getsentry/sentry-go"
 	"io"
 	"log"
 	"os"
@@ -17,13 +18,14 @@ import (
 	"syscall"
 	"time"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Utilities"
 )
 
 var BackendsList []WhisperProcessConfig
 
-const MaxClipboardLogLines = 2000
+const MaxClipboardLogLines = 4000
 
 // RunWithStreams ComposeWithStreams executes a command
 // stdin/stdout/stderr
@@ -204,7 +206,21 @@ func (c *WhisperProcessConfig) processErrorOutputLine(line string, isUpdating bo
 			}
 			// Handle error message
 			currentMainWindow, _ := Utilities.GetCurrentMainWindow("")
-			dialog.ShowError(errors.New(exceptionMessage.Error+"\n\n"+lastTraceback), currentMainWindow)
+			newError := errors.New(exceptionMessage.Error + "\n\n" + lastTraceback)
+
+			// Send error to Server
+			if Logging.IsReportingEnabled() {
+				localHub := Logging.CloneHub()
+				localHub.WithScope(func(scope *sentry.Scope) {
+					scope.SetTag("report_type", "Process Error")
+					scope.SetContext("report", map[string]interface{}{
+						"log": strings.Join(append(c.RecentLog, line), "\n"),
+					})
+					localHub.CaptureException(newError)
+				})
+				localHub.Flush(Logging.FlushTimeoutDefault)
+			}
+			dialog.ShowError(newError, currentMainWindow)
 		}
 
 		// Try to decode the line as loading JSON message
@@ -303,7 +319,9 @@ func (c *WhisperProcessConfig) SetOutputHandling(stderr io.Reader, processLineFu
 }
 
 func (c *WhisperProcessConfig) Start() {
-	defer Utilities.PanicLogger()
+	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+		scope.SetTag("GoRoutine", "RuntimeBackend\\Whisper->Start")
+	})
 
 	// Create a pipe to capture the output from the process
 	_, pw := io.Pipe()
@@ -315,7 +333,9 @@ func (c *WhisperProcessConfig) Start() {
 	stdoutTee := io.TeeReader(c.ReaderBackend, multiWriter)
 
 	go func(stdOut io.Reader) {
-		defer Utilities.PanicLogger()
+		defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+			scope.SetTag("GoRoutine", "RuntimeBackend\\Whisper->Start->func(stdOut io.Reader)")
+		})
 
 		var tmpReader io.Reader
 		var err error

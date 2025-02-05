@@ -9,6 +9,7 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/widget"
+	"github.com/getsentry/sentry-go"
 	"image/color"
 	"os"
 	"path/filepath"
@@ -16,13 +17,15 @@ import (
 	"time"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Settings"
-	"whispering-tiger-ui/Utilities"
 )
 
 func CreateSpeechToTextWindow() fyne.CanvasObject {
-	defer Utilities.PanicLogger()
+	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+		scope.SetTag("GoRoutine", "Pages\\SpeechToText->CreateSpeechToTextWindow")
+	})
 
 	speechLanguageLabel := widget.NewLabel(lang.L("Speech Language") + ":")
 

@@ -16,7 +16,6 @@ import (
 	"os"
 	"reflect"
 	"regexp"
-	"runtime/debug"
 	"strconv"
 	"strings"
 	"time"
@@ -33,27 +32,6 @@ const (
 
 var AppVersion = "0.0.1"
 var AppBuild = "1"
-
-func PanicLogger() {
-	if r := recover(); r != nil {
-		// 2. Create a log file when a crash occurs
-		logFile, err := os.OpenFile("error_ui.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0644)
-		if err != nil {
-			fmt.Printf("Failed to create log file: %v\n", err)
-			os.Exit(1)
-		}
-		defer logFile.Close()
-
-		// Use logFile as the output for the log package
-		log.SetOutput(logFile)
-
-		// 3. Capture the stack trace and log the error details
-		stackTrace := debug.Stack()
-		log.Printf("Panic occurred: %v\nStack trace:\n%s", r, stackTrace)
-
-		fmt.Println("A crash occurred. Check the error_ui.log file for more information.")
-	}
-}
 
 func Contains(s []string, str string) bool {
 	for _, v := range s {
@@ -310,10 +288,9 @@ func GetCurrentMainWindow(windowTitleFallback string) (window fyne.Window, isNew
 	return newWindow, true
 }
 
-func GetInlineDialogSize(marginSize fyne.Size, minSize fyne.Size, fallbackSize fyne.Size) fyne.Size {
+func GetInlineDialogSize(window fyne.Window, marginSize fyne.Size, minSize fyne.Size, fallbackSize fyne.Size) fyne.Size {
 	windowSize := fyne.NewSize(fallbackSize.Width, fallbackSize.Height)
-	mainWindow, _ := GetCurrentMainWindow("")
-	newWindowSize := mainWindow.Canvas().Size()
+	newWindowSize := window.Canvas().Size()
 	if newWindowSize.Height > 1 && newWindowSize.Width > 1 {
 		if newWindowSize.Height-marginSize.Height >= minSize.Height && newWindowSize.Width-marginSize.Width >= minSize.Width {
 			windowSize.Height = newWindowSize.Height - marginSize.Height

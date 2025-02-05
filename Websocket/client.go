@@ -9,6 +9,7 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
+	"github.com/getsentry/sentry-go"
 	"github.com/gorilla/websocket"
 	"io"
 	"log"
@@ -16,6 +17,7 @@ import (
 	"os"
 	"os/signal"
 	"time"
+	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
@@ -49,7 +51,9 @@ func (c *Client) Close() {
 // Websocket Client
 
 func (c *Client) Start() {
-	defer Utilities.PanicLogger()
+	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+		scope.SetTag("GoRoutine", "Websocket\\client->Start")
+	})
 
 	previouslyConnected := false
 
@@ -212,7 +216,9 @@ func (c *Client) Start() {
 	}()
 
 	go func() {
-		defer Utilities.PanicLogger()
+		defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+			scope.SetTag("GoRoutine", "Websocket\\client->Start#sendMessageChannelRoutine")
+		})
 		for {
 			select {
 			//case <-done:

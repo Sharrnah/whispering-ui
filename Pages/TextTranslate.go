@@ -8,9 +8,11 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"github.com/getsentry/sentry-go"
 	"strings"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/Pages/AdditionalTextTranslations"
 	"whispering-tiger-ui/Resources"
 	"whispering-tiger-ui/SendMessageChannel"
@@ -22,7 +24,9 @@ import (
 var additionalTranslationWindow dialog.Dialog
 
 func CreateTextTranslateWindow() fyne.CanvasObject {
-	defer Utilities.PanicLogger()
+	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+		scope.SetTag("GoRoutine", "Pages\\TextTranslate->CreateTextTranslateWindow")
+	})
 
 	sourceLanguageRow := container.New(layout.NewFormLayout(), widget.NewLabel(lang.L("Source Language")+":"), Fields.Field.SourceLanguageCombo)
 	targetLanguageRow := container.New(layout.NewFormLayout(), widget.NewLabel(lang.L("Target Language")+":"), Fields.Field.TargetLanguageCombo)

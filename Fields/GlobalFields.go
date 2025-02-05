@@ -10,12 +10,13 @@ import (
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/fyne-io/terminal"
+	"github.com/getsentry/sentry-go"
 	"image/color"
 	"log"
 	"strings"
 	"whispering-tiger-ui/CustomWidget"
+	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/SendMessageChannel"
-	"whispering-tiger-ui/Utilities"
 )
 
 const OscLimitLabelConst = "[%d / %d]"
@@ -330,7 +331,9 @@ func createFields() {
 }
 
 func InitializeGlobalFields() {
-	defer Utilities.PanicLogger()
+	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+		scope.SetTag("GoRoutine", "Fields\\GlobalFields->InitializeGlobalFields")
+	})
 
 	createFields()
 

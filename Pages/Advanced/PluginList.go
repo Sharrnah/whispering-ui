@@ -10,6 +10,7 @@ import (
 	"fyne.io/fyne/v2/storage"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"github.com/getsentry/sentry-go"
 	"image/color"
 	"log"
 	"os"
@@ -17,6 +18,7 @@ import (
 	"strings"
 	"time"
 	"whispering-tiger-ui/CustomWidget"
+	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/RuntimeBackend"
 	"whispering-tiger-ui/UpdateUtility"
 	"whispering-tiger-ui/Utilities"
@@ -25,7 +27,9 @@ import (
 var FreshInstalledPlugins []string
 
 func CreatePluginListWindow(closeFunction func(), backendRunning bool) {
-	defer Utilities.PanicLogger()
+	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+		scope.SetTag("GoRoutine", "Pages\\Advanced\\PluginList->CreatePluginListWindow")
+	})
 
 	md, err := UpdateUtility.DownloadFile(UpdateUtility.PluginListUrl)
 	if err != nil {

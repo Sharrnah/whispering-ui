@@ -4,6 +4,7 @@ import (
 	"encoding/xml"
 	"fmt"
 	"github.com/jaypipes/ghw"
+	"github.com/jaypipes/ghw/pkg/pci"
 	"os/exec"
 	"strconv"
 	"strings"
@@ -19,22 +20,50 @@ type gpu struct {
 	MemoryTotal string `xml:"fb_memory_usage>total"`
 }
 
-func HasNVIDIACard() bool {
+func GetGPUCard() *pci.Device {
 	gpu, err := ghw.GPU()
 	if err != nil {
 		fmt.Printf("Error getting GPU info: %v", err)
-		return false
+		return nil
 	}
 
 	fmt.Printf("GPU: %v\n", gpu)
+	var foundGpuDevice *pci.Device = nil
 	if gpu != nil {
 		for _, card := range gpu.GraphicsCards {
+			if foundGpuDevice == nil {
+				foundGpuDevice = card.DeviceInfo
+			}
 			fmt.Printf(" %v\n", card)
 			if strings.ToLower(card.DeviceInfo.Vendor.Name) == strings.ToLower("NVIDIA") {
 				fmt.Printf("NVIDIA Card found.\n")
-				return true
+				return card.DeviceInfo
 			}
 		}
+		for _, card := range gpu.GraphicsCards {
+			fmt.Printf(" %v\n", card)
+			if strings.ToLower(card.DeviceInfo.Vendor.Name) == strings.ToLower("AMD") {
+				fmt.Printf("AMD Card found.\n")
+				return card.DeviceInfo
+			}
+		}
+		for _, card := range gpu.GraphicsCards {
+			fmt.Printf(" %v\n", card)
+			if strings.ToLower(card.DeviceInfo.Vendor.Name) == strings.ToLower("Intel") {
+				fmt.Printf("Intel Card found.\n")
+				return card.DeviceInfo
+			}
+		}
+	}
+	return foundGpuDevice
+}
+
+func IsNVIDIACard(device *pci.Device) bool {
+	if device == nil {
+		device = GetGPUCard()
+	}
+	if strings.ToLower(device.Vendor.Name) == strings.ToLower("NVIDIA") {
+		return true
 	}
 	return false
 }

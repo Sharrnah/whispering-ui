@@ -10,6 +10,7 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
+	"github.com/getsentry/sentry-go"
 	"image/color"
 	"reflect"
 	"strconv"
@@ -17,9 +18,9 @@ import (
 	"sync"
 	"time"
 	"whispering-tiger-ui/CustomWidget"
+	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Settings"
-	"whispering-tiger-ui/Utilities"
 )
 
 var timerLock sync.Mutex
@@ -246,7 +247,9 @@ func (s *SettingMapping) processWidget(settingsValue interface{}, settingWidget 
 }
 
 func CreateSettingsFormByMapping(mappings SettingsMapping) *container.Scroll {
-	defer Utilities.PanicLogger()
+	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+		scope.SetTag("GoRoutine", "Pages\\SettingsMappings\\SettingsMappingStruct->CreateSettingsFormByMapping")
+	})
 
 	settingsForm := widget.NewForm()
 

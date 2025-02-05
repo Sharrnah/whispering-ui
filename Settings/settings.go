@@ -7,6 +7,7 @@ import (
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
+	"github.com/getsentry/sentry-go"
 	"golang.org/x/text/cases"
 	"golang.org/x/text/language"
 	"gopkg.in/yaml.v3"
@@ -16,6 +17,7 @@ import (
 	"reflect"
 	"strconv"
 	"strings"
+	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Utilities"
 )
@@ -378,7 +380,9 @@ func MergeSettings(firstConf Conf, secondConf Conf) Conf {
 }
 
 func BuildSettingsForm(includeConfigFields []string, settingsFile string) fyne.CanvasObject {
-	defer Utilities.PanicLogger()
+	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+		scope.SetTag("GoRoutine", "Settings\\settings->BuildSettingsForm")
+	})
 
 	settingsForm := widget.NewForm()
 

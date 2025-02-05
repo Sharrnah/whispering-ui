@@ -3,7 +3,9 @@ package Utilities
 import (
 	"fmt"
 	"github.com/gen2brain/malgo"
+	"github.com/getsentry/sentry-go"
 	"whispering-tiger-ui/CustomWidget"
+	"whispering-tiger-ui/Logging"
 )
 
 type AudioDevice struct {
@@ -28,7 +30,9 @@ var AudioInputDeviceList = make(map[string]AudioDeviceMemory)
 var AudioOutputDeviceList = make(map[string]AudioDeviceMemory)
 
 func InitMalgo(audioAPI malgo.Backend) (*malgo.AllocatedContext, error) {
-	defer PanicLogger()
+	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+		scope.SetTag("GoRoutine", "Utilities\\AudioDevices->InitMalgo")
+	})
 
 	// initialize malgo
 	var backends = []malgo.Backend{audioAPI}
@@ -45,7 +49,9 @@ func InitMalgo(audioAPI malgo.Backend) (*malgo.AllocatedContext, error) {
 }
 
 func GetAudioDevices(audioAPI malgo.Backend, deviceType malgo.DeviceType, deviceIndexStartPoint int) ([]AudioDevice, error) {
-	defer PanicLogger()
+	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+		scope.SetTag("GoRoutine", "Utilities\\AudioDevices->GetAudioDevices")
+	})
 	//a.DeviceType = deviceType
 	ctx, err := InitMalgo(audioAPI)
 	if err != nil {
