@@ -327,5 +327,19 @@
     "tts_type.Name": "Integrovaný převod textu na řeč",
     "Export Last Generation": "Export poslední generace",
     "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "K uplatnění změn je nutné restartovat backend.\nOpravdu chcete restartovat backend?",
-    "You disabled VAD but have set the pause or phrase limit to 0. This is not supported. Setting Pause and Phrase limits to non-zero values.": "Zakázali jste VAD, ale nastavili jste limit pauzy nebo fráze na 0. To není podporováno. Nastavení limitů pauzy a fráze na nenulové hodnoty."
+    "You disabled VAD but have set the pause or phrase limit to 0. This is not supported. Setting Pause and Phrase limits to non-zero values.": "Zakázali jste VAD, ale nastavili jste limit pauzy nebo fráze na 0. To není podporováno. Nastavení limitů pauzy a fráze na nenulové hodnoty.",
+    "Send": "Odeslat",
+    "osc_sync_mute.Name": "OSC synchronizace STT se ztlumením",
+    "osc_sync_mute.Description": "Synchronizuje stav převodu řeči na text se stavem ztlumení VRChat.",
+    "osc_sync_afk.Name": "OSC synchronizuje STT s AFK",
+    "osc_sync_afk.Description": "Synchronizuje stav převodu řeči na text se stavem AFK služby VRChat.",
+    "Do you want to automatically report errors?": "Chcete automaticky hlásit chyby?",
+    "Send error report": "Odeslat chybové hlášení",
+    "Please enter a description of the error.": "Zadejte popis chyby.",
+    "Attach log file": "Připojte soubor protokolu",
+    "Attach hardware information (GPU Memory, GPU Vendor, GPU Adapter)": "Připojte informace o hardwaru (paměť GPU, výrobce GPU, adaptér GPU)",
+    "E-Mail Address (Optional)": "E-mailová adresa (nepovinné)",
+    "Error Report Sent": "Odeslané hlášení o chybě",
+    "Your error report has been sent.": "Vaše chybové hlášení bylo odesláno.",
+    "Automatically Report Errors": "Automatické hlášení chyb"
 }
