@@ -327,5 +327,19 @@
     "tts_volume.Description": "Stellen Sie die Lautstärke der Text-zu-Sprache-Ausgabe ein.\n1.0 = normale Lautstärke",
     "You disabled VAD but have set the pause or phrase limit to 0. This is not supported. Setting Pause and Phrase limits to non-zero values.": "Sie haben VAD deaktiviert, aber das Pausen- oder Phrasenlimit auf 0 gesetzt. Dies wird nicht unterstützt. Pausen- und Phrasengrenzen auf Werte ungleich Null gesetzt.",
     "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "Neustart des Backends erforderlich, um Änderungen zu übernehmen.\nSind Sie sicher, dass Sie das Backend neu starten wollen?",
-    "Export Last Generation": "Letzte Generation exportieren"
+    "Export Last Generation": "Letzte Generation exportieren",
+    "osc_sync_mute.Name": "OSC sync STT mit Stummschaltung",
+    "osc_sync_mute.Description": "Synchronisiert den Speech-to-Text-Status mit dem Mute-Status von VRChat",
+    "Automatically Report Errors": "Automatisch Fehler melden",
+    "Attach hardware information (GPU Memory, GPU Vendor, GPU Adapter)": "Anhängen von Hardware-Informationen (GPU-Speicher, GPU-Hersteller, GPU-Adapter)",
+    "Send": "Senden",
+    "osc_sync_afk.Name": "OSC sync STT mit AFK",
+    "osc_sync_afk.Description": "Synchronisiert den Speech-to-Text-Status mit dem AFK-Status von VRChat",
+    "Do you want to automatically report errors?": "Möchten Sie Fehler automatisch melden?",
+    "Send error report": "Fehlerbericht senden",
+    "Please enter a description of the error.": "Bitte geben Sie eine Beschreibung des Fehlers ein.",
+    "Attach log file": "Protokolldatei anhängen",
+    "E-Mail Address (Optional)": "E-Mail Adresse (optional)",
+    "Error Report Sent": "Fehlerbericht gesendet",
+    "Your error report has been sent.": "Ihr Fehlerbericht wurde gesendet."
 }
