@@ -327,5 +327,19 @@
     "tts_volume.Description": "Het volume van de tekst-naar-spraakuitvoer aanpassen.\n1.0 = normaal volume",
     "You disabled VAD but have set the pause or phrase limit to 0. This is not supported. Setting Pause and Phrase limits to non-zero values.": "U hebt VAD uitgeschakeld maar de pauze- of zinsdeellimiet ingesteld op 0. Dit wordt niet ondersteund. Pauze- en zinsdeellimieten instellen op waarden die niet nul zijn.",
     "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "Backend opnieuw opstarten vereist om wijzigingen toe te passen.\nWeet je zeker dat je de backend opnieuw wilt opstarten?",
-    "Export Last Generation": "Laatste generatie exporteren"
+    "Export Last Generation": "Laatste generatie exporteren",
+    "osc_sync_mute.Name": "OSC sync STT met dempen",
+    "osc_sync_mute.Description": "Synchroniseert de Speech-to-Text status met de mute-status van VRChat.",
+    "osc_sync_afk.Name": "OSC synchroniseer STT met AFK",
+    "osc_sync_afk.Description": "Synchroniseert de Speech-to-Text status met de AFK status van VRChat.",
+    "Please enter a description of the error.": "Voer een beschrijving van de fout in.",
+    "Attach hardware information (GPU Memory, GPU Vendor, GPU Adapter)": "Voeg hardware-informatie toe (GPU-geheugen, GPU-leverancier, GPU-adapter)",
+    "E-Mail Address (Optional)": "E-mailadres (optioneel)",
+    "Error Report Sent": "Foutrapport verzonden",
+    "Your error report has been sent.": "Je foutenrapport is verzonden.",
+    "Send": "Stuur",
+    "Automatically Report Errors": "Fouten automatisch rapporteren",
+    "Do you want to automatically report errors?": "Wil je automatisch fouten melden?",
+    "Send error report": "Foutrapport verzenden",
+    "Attach log file": "Logbestand bijvoegen"
 }
