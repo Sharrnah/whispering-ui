@@ -316,5 +316,19 @@
     "tts_volume.Description": "텍스트 음성 변환 출력의 볼륨을 조정합니다.\n1.0 = 일반 볼륨",
     "Export Last Generation": "마지막 세대 내보내기",
     "You disabled VAD but have set the pause or phrase limit to 0. This is not supported. Setting Pause and Phrase limits to non-zero values.": "VAD를 비활성화했지만 일시 정지 또는 구문 제한을 0으로 설정한 경우 이 기능은 지원되지 않습니다. 일시 정지 및 구문 제한을 0이 아닌 값으로 설정합니다.",
-    "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "변경 사항을 적용하려면 백엔드를 다시 시작해야 합니다.\n백엔드를 다시 시작하시겠습니까?"
+    "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "변경 사항을 적용하려면 백엔드를 다시 시작해야 합니다.\n백엔드를 다시 시작하시겠습니까?",
+    "osc_sync_afk.Description": "음성-텍스트 변환 상태를 VRChat의 AFK 상태와 동기화합니다.",
+    "Send error report": "오류 보고서 보내기",
+    "Please enter a description of the error.": "오류에 대한 설명을 입력하세요.",
+    "Attach log file": "로그 파일 첨부",
+    "Attach hardware information (GPU Memory, GPU Vendor, GPU Adapter)": "하드웨어 정보 첨부(GPU 메모리, GPU 공급업체, GPU 어댑터)",
+    "E-Mail Address (Optional)": "이메일 주소(선택 사항)",
+    "Error Report Sent": "오류 보고서 전송",
+    "Your error report has been sent.": "오류 보고서가 전송되었습니다.",
+    "Send": "보내기",
+    "osc_sync_mute.Name": "OSC 음소거와 STT 동기화",
+    "osc_sync_mute.Description": "음성-텍스트 변환 상태를 VRChat의 음소거 상태와 동기화합니다.",
+    "osc_sync_afk.Name": "OSC 동기화 STT와 AFK",
+    "Automatically Report Errors": "오류 자동 보고",
+    "Do you want to automatically report errors?": "자동으로 오류를 신고하시겠습니까?"
 }
