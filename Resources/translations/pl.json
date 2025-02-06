@@ -316,5 +316,19 @@
     "tts_volume.Description": "Regulacja głośności wyjścia zamiany tekstu na mowę.\n1.0 = normalna głośność",
     "You disabled VAD but have set the pause or phrase limit to 0. This is not supported. Setting Pause and Phrase limits to non-zero values.": "Wyłączono funkcję VAD, ale ustawiono limit pauzy lub frazy na 0. Nie jest to obsługiwane. Ustawianie limitów pauzy i frazy na wartości niezerowe.",
     "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "Do zastosowania zmian wymagane jest ponowne uruchomienie backendu.\nCzy na pewno chcesz ponownie uruchomić backend?",
-    "Export Last Generation": "Eksport ostatniej generacji"
+    "Export Last Generation": "Eksport ostatniej generacji",
+    "osc_sync_mute.Name": "Synchronizacja OSC STT z wyciszeniem",
+    "osc_sync_mute.Description": "Synchronizuje stan zamiany mowy na tekst ze stanem wyciszenia VRChat.",
+    "osc_sync_afk.Name": "OSC synchronizuje STT z AFK",
+    "osc_sync_afk.Description": "Synchronizuje stan zamiany mowy na tekst ze stanem AFK VRChat.",
+    "Do you want to automatically report errors?": "Czy chcesz automatycznie zgłaszać błędy?",
+    "Send error report": "Wyślij raport o błędzie",
+    "Please enter a description of the error.": "Wprowadź opis błędu.",
+    "Attach log file": "Załącz plik dziennika",
+    "Attach hardware information (GPU Memory, GPU Vendor, GPU Adapter)": "Dołącz informacje o sprzęcie (pamięć GPU, dostawca GPU, karta GPU)",
+    "E-Mail Address (Optional)": "Adres e-mail (opcjonalnie)",
+    "Error Report Sent": "Wysłano raport o błędzie",
+    "Your error report has been sent.": "Raport o błędzie został wysłany.",
+    "Send": "Wyślij",
+    "Automatically Report Errors": "Automatyczne zgłaszanie błędów"
 }
