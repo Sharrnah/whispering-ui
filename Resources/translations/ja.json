@@ -316,5 +316,19 @@
     "tts_volume.Name": "音声合成の音量調整",
     "Export Last Generation": "最終世代をエクスポート",
     "You disabled VAD but have set the pause or phrase limit to 0. This is not supported. Setting Pause and Phrase limits to non-zero values.": "VAD を無効にしているが、ポーズまたはフレーズのリミットを 0 に設定している。ポーズリミットとフレーズリミットをゼロ以外の値に設定する。",
-    "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "変更を適用するにはバックエンドの再起動が必要です。\n本当にバックエンドを再起動しますか？"
+    "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "変更を適用するにはバックエンドの再起動が必要です。\n本当にバックエンドを再起動しますか？",
+    "osc_sync_mute.Description": "Speech-to-Textの状態とVRChatのミュート状態を同期させる。",
+    "osc_sync_afk.Name": "OSCがSTTとAFKを同期",
+    "osc_sync_afk.Description": "Speech-to-Textの状態をVRChatのAFK状態と同期させる。",
+    "Please enter a description of the error.": "エラーの説明を入力してください。",
+    "Attach hardware information (GPU Memory, GPU Vendor, GPU Adapter)": "ハードウェア情報（GPUメモリ、GPUベンダー、GPUアダプター）を添付する。",
+    "Error Report Sent": "エラーレポート送信",
+    "Your error report has been sent.": "エラー報告が送信されました。",
+    "Send": "送信",
+    "osc_sync_mute.Name": "ミュート付きOSCシンクSTT",
+    "Automatically Report Errors": "エラーを自動的に報告",
+    "Do you want to automatically report errors?": "エラーを自動的に報告しますか？",
+    "Send error report": "エラーレポートを送信する",
+    "Attach log file": "ログファイルを添付する",
+    "E-Mail Address (Optional)": "Eメールアドレス（オプション）"
 }
