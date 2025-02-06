@@ -316,5 +316,19 @@
     "tts_volume.Description": "调整文本到语音输出的音量。\n1.0 = 正常音量",
     "You disabled VAD but have set the pause or phrase limit to 0. This is not supported. Setting Pause and Phrase limits to non-zero values.": "您禁用了 VAD，但将暂停或短语限制设置为 0。将暂停和短语限制设置为非零值。",
     "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "需要重启后台才能应用更改。\n您确定要重启后台吗？",
-    "Export Last Generation": "输出最后一代"
+    "Export Last Generation": "输出最后一代",
+    "osc_sync_mute.Name": "带静音的 OSC 同步 STT",
+    "osc_sync_mute.Description": "使语音到文本状态与 VRChat 的静音状态同步",
+    "osc_sync_afk.Name": "OSC 与 AFK 同步 STT",
+    "osc_sync_afk.Description": "将语音到文本状态与 VRChat 的 AFK 状态同步",
+    "Automatically Report Errors": "自动报告错误",
+    "Do you want to automatically report errors?": "您想自动报告错误吗？",
+    "Send error report": "发送错误报告",
+    "Please enter a description of the error.": "请输入错误描述。",
+    "Attach log file": "附加日志文件",
+    "Attach hardware information (GPU Memory, GPU Vendor, GPU Adapter)": "附加硬件信息（GPU 内存、GPU 供应商、GPU 适配器）",
+    "E-Mail Address (Optional)": "电子邮件地址（可选）",
+    "Error Report Sent": "已发送错误报告",
+    "Your error report has been sent.": "您的错误报告已发送。",
+    "Send": "发送"
 }
