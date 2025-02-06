@@ -36,7 +36,7 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 - **Loopback audio device** support to capture PC audio without additional tools
 - **Save** and **load** configurations
 - **Preview** if your selected Audio devices are working
-- **Plugin** support for **additional features** ([Find a list of Plugins here](https://github.com/Sharrnah/whispering/blob/main/documentation/plugins.md))
+- **Plugin** support for **additional features** ([Find a list of Plugins here](https://github.com/Sharrnah/whispering-plugins/blob/main/README.md))
   - *Realtime Subtitles Plugin*
   - *Many Text2Speech Plugins*
   - *Emotion Prediction Plugin*
