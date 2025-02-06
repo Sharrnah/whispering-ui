@@ -316,5 +316,19 @@
     "You disabled VAD but have set the pause or phrase limit to 0. This is not supported. Setting Pause and Phrase limits to non-zero values.": "Du har deaktiveret VAD, men har sat pause- eller sætningsgrænsen til 0. Dette understøttes ikke. Indstilling af pause- og sætningsgrænser til værdier, der ikke er nul.",
     "Export Last Generation": "Eksporter sidste generation",
     "tts_volume.Name": "Justering af lydstyrke for tekst-til-tale",
-    "tts_volume.Description": "Juster lydstyrken på tekst-til-tale-outputtet.\n1.0 = normal lydstyrke"
+    "tts_volume.Description": "Juster lydstyrken på tekst-til-tale-outputtet.\n1.0 = normal lydstyrke",
+    "Send": "Send",
+    "osc_sync_mute.Description": "Synkroniserer tale-til-tekst-tilstanden med mute-tilstanden i VRChat",
+    "osc_sync_afk.Name": "OSC synkroniserer STT med AFK",
+    "osc_sync_mute.Name": "OSC-synkronisering STT med mute",
+    "osc_sync_afk.Description": "Synkroniserer tale-til-tekst-tilstanden med AFK-tilstanden i VRChat",
+    "Automatically Report Errors": "Rapporter automatisk fejl",
+    "Do you want to automatically report errors?": "Vil du automatisk rapportere fejl?",
+    "Send error report": "Send fejlrapport",
+    "Please enter a description of the error.": "Indtast venligst en beskrivelse af fejlen.",
+    "Attach log file": "Vedhæft logfil",
+    "Attach hardware information (GPU Memory, GPU Vendor, GPU Adapter)": "Vedhæft hardwareoplysninger (GPU-hukommelse, GPU-forhandler, GPU-adapter)",
+    "E-Mail Address (Optional)": "E-mail-adresse (valgfrit)",
+    "Error Report Sent": "Fejlrapport sendt",
+    "Your error report has been sent.": "Din fejlrapport er blevet sendt."
 }
