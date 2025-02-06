@@ -316,5 +316,19 @@
     "Export Last Generation": "Экспорт последнего поколения",
     "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "Для применения изменений требуется перезапуск бэкенда.\nВы уверены, что хотите перезапустить бэкэнд?",
     "tts_volume.Name": "Регулировка громкости преобразования текста в речь",
-    "tts_volume.Description": "Настройка громкости вывода текста в речь.\n1.0 = нормальная громкость"
+    "tts_volume.Description": "Настройка громкости вывода текста в речь.\n1.0 = нормальная громкость",
+    "osc_sync_mute.Name": "Синхронизация OSC STT с отключением звука",
+    "osc_sync_mute.Description": "Синхронизирует состояние Speech-to-Text с состоянием отключения звука VRChat.",
+    "osc_sync_afk.Name": "OSC синхронизирует STT с AFK",
+    "osc_sync_afk.Description": "Синхронизирует состояние Speech-to-Text с состоянием AFK в VRChat.",
+    "Automatically Report Errors": "Автоматически сообщайте об ошибках",
+    "Do you want to automatically report errors?": "Хотите ли вы автоматически сообщать об ошибках?",
+    "Send error report": "Отправить отчет об ошибке",
+    "Please enter a description of the error.": "Пожалуйста, введите описание ошибки.",
+    "Attach log file": "Прикрепите файл журнала",
+    "Attach hardware information (GPU Memory, GPU Vendor, GPU Adapter)": "Прикрепите информацию об оборудовании (память GPU, поставщик GPU, адаптер GPU).",
+    "E-Mail Address (Optional)": "Адрес электронной почты (необязательно)",
+    "Error Report Sent": "Отправлен отчет об ошибке",
+    "Your error report has been sent.": "Ваш отчет об ошибке отправлен.",
+    "Send": "Отправить"
 }
