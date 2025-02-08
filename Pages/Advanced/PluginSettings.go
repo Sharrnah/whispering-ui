@@ -591,7 +591,8 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 				}
 				sendMessage.SendMessage()
 			})
-			if v["style"] == "primary" {
+
+			if buttonStyle, ok := v["style"].(string); ok && buttonStyle == "primary" {
 				button.Importance = widget.HighImportance
 			} else {
 				button.Importance = widget.MediumImportance
@@ -636,6 +637,66 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 			})
 			selectEntry.Selected = v["value"].(string)
 			settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, selectEntry))
+		} else if v["type"] == "select_textvalue" {
+			var options []CustomWidget.TextValueOption
+			if v["values"] != nil {
+				for _, val := range v["values"].([]interface{}) {
+					if pair, ok := val.([]interface{}); ok && len(pair) == 2 {
+						text := fmt.Sprintf("%v", pair[0])
+						value := fmt.Sprintf("%v", pair[1])
+						options = append(options, CustomWidget.TextValueOption{Text: text, Value: value})
+					}
+				}
+			}
+			selectEntry := CustomWidget.NewTextValueSelect(settingName, options, func(value CustomWidget.TextValueOption) {
+				v["value"] = value.Text
+				v["_value_real"] = value.Value
+				pluginSettings[settingName] = v
+				updateSettings(*SettingsFile, pluginClassName, pluginSettings)
+			}, 0)
+			selectEntry.Selected = v["value"].(string)
+			selectEntry.Refresh()
+			settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, selectEntry))
+		} else if v["type"] == "select_completion" {
+			var options []CustomWidget.TextValueOption
+			if v["values"] != nil {
+				for _, val := range v["values"].([]interface{}) {
+					if pair, ok := val.([]interface{}); ok && len(pair) == 2 {
+						text := fmt.Sprintf("%v", pair[0])
+						value := fmt.Sprintf("%v", pair[1])
+						options = append(options, CustomWidget.TextValueOption{Text: text, Value: value})
+					}
+				}
+			}
+			selectCompletionEntry := CustomWidget.NewCompletionEntry([]string{})
+			selectCompletionEntry.SetValueOptions(options)
+			selectCompletionEntry.Text = v["value"].(string)
+
+			selectCompletionEntry.ShowAllEntryText = lang.L("... show all")
+			selectCompletionEntry.Entry.PlaceHolder = lang.L("Select a language")
+			selectCompletionEntry.OnChanged = func(value string) {
+				// filter out the values of Options that do not contain the value
+				var filteredValues []string
+				for i := 0; i < len(selectCompletionEntry.Options); i++ {
+					if len(selectCompletionEntry.Options) > i && strings.Contains(strings.ToLower(selectCompletionEntry.Options[i]), strings.ToLower(value)) {
+						filteredValues = append(filteredValues, selectCompletionEntry.Options[i])
+					}
+				}
+
+				selectCompletionEntry.SetOptionsFilter(filteredValues)
+				selectCompletionEntry.ShowCompletion()
+			}
+			selectCompletionEntry.OnSubmitted = func(value string) {
+				// check if value is not in Options
+				value = selectCompletionEntry.UpdateCompletionEntryBasedOnValue(value)
+
+				v["value"] = value
+				v["_value_real"] = selectCompletionEntry.GetValueOptionEntryByText(value).Value
+				pluginSettings[settingName] = v
+				updateSettings(*SettingsFile, pluginClassName, pluginSettings)
+			}
+
+			settingsFields = append(settingsFields, container.NewBorder(nil, nil, widget.NewLabel(settingName), nil, selectCompletionEntry))
 		} else if v["type"] == "textarea" {
 			entry := widget.NewMultiLineEntry()
 			entry.SetText(v["value"].(string))

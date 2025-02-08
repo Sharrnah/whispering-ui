@@ -295,6 +295,35 @@ func (c *CompletionEntry) setTextFromMenu(s string) {
 	}
 }
 
+func (c *CompletionEntry) UpdateCompletionEntryBasedOnValue(value string) string {
+	foundEntry := false
+	for _, option := range c.Options {
+		if strings.HasPrefix(strings.ToLower(option), strings.ToLower(value)) {
+			c.SelectItemByValue(option)
+			value = option
+			c.Text = value
+			c.Entry.CursorColumn = len(c.Text)
+			c.Refresh()
+			foundEntry = true
+			break
+		}
+	}
+	if !foundEntry {
+		for _, option := range c.Options {
+			if strings.Contains(strings.ToLower(option), strings.ToLower(value)) {
+				c.SelectItemByValue(option)
+				value = option
+				c.Text = value
+				c.Entry.CursorColumn = len(c.Text)
+				c.Refresh()
+				foundEntry = true
+				break
+			}
+		}
+	}
+	return value
+}
+
 type navigableList struct {
 	widget.List
 	entry           *widget.Entry

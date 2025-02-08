@@ -144,7 +144,7 @@ func CreateLanguagesListWindow(button *widget.Button) *dialog2.CustomDialog {
 	}
 	languageListWidget.OnSubmitted = func(value string) {
 		// check if value is not in Options
-		value = Fields.UpdateCompletionEntryBasedOnValue(languageListWidget, value)
+		value = languageListWidget.UpdateCompletionEntryBasedOnValue(value)
 		value = Messages.InstalledLanguages.GetCodeByName(value)
 		if value == "" {
 			return

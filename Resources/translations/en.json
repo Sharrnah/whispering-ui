@@ -29,6 +29,7 @@
         "other": "Parent"
     },
     "Default": "Default",
+    "Clear": "Clear",
     "WebsiteUrl": "https://whispering-tiger.github.io",
     "Select an existing Profile or create a new one. Click Save and Load Profile.": "Select an existing Profile or create a new one.\n\nClick \"Save and Load Profile\".\n\n",
     "Save and Load Profile": "Save and Load Profile",
@@ -324,7 +325,7 @@
     "Enable Additional Translations": "Enable Additional Translations",
     "Automatically Report Errors": "Automatically Report Errors",
     "Do you want to automatically report errors?": "Do you want to automatically report errors?",
-    "Send error report": "Send error report",
+    "Send error report": "Send Error Report",
     "Please enter a description of the error.": "Please enter a description of the error.",
     "Attach log file": "Attach log file",
     "Attach hardware information (GPU Memory, GPU Vendor, GPU Adapter)": "Attach hardware information (GPU Memory, GPU Vendor, GPU Adapter)",
