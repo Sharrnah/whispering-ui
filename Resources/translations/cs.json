@@ -341,5 +341,6 @@
     "E-Mail Address (Optional)": "E-mailová adresa (nepovinné)",
     "Error Report Sent": "Odeslané hlášení o chybě",
     "Your error report has been sent.": "Vaše chybové hlášení bylo odesláno.",
-    "Automatically Report Errors": "Automatické hlášení chyb"
+    "Automatically Report Errors": "Automatické hlášení chyb",
+    "Clear": "Vymazat"
 }
