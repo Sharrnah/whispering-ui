@@ -8,6 +8,7 @@ import (
 	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/storage"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/getsentry/sentry-go"
 	"image/color"
@@ -179,7 +180,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		Fields.Field.RealtimeResultLabel,
 	)
 
-	clearResultListButton := widget.NewButton(lang.L("Clear"), func() {
+	clearResultListButton := widget.NewButtonWithIcon(lang.L("Clear"), theme.ContentClearIcon(), func() {
 		Fields.DataBindings.WhisperResultsData = []Fields.WhisperResult{}
 		Fields.Field.WhisperResultList.Refresh()
 		sendMessage := SendMessageChannel.SendMessageStruct{

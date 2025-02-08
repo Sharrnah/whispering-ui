@@ -105,7 +105,7 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 	})
 	writeLogFileCheckbox.Checked = fyne.CurrentApp().Preferences().BoolWithFallback("WriteLogfile", false)
 
-	sendErrorReportButton := widget.NewButtonWithIcon(lang.L("Send error report"), theme.UploadIcon(), func() {
+	sendErrorReportButton := widget.NewButtonWithIcon(lang.L("Send error report"), theme.MailSendIcon(), func() {
 		infoTitle := widget.NewLabel(lang.L("Please enter a description of the error."))
 		attachLogCheckbox := widget.NewCheck(lang.L("Attach log file"), nil)
 		attachLogCheckbox.SetChecked(true)

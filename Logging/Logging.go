@@ -67,8 +67,9 @@ func ErrorHandlerInit(version string) {
 
 func GoRoutineErrorHandler(scopeConfig func(scope *sentry.Scope)) {
 	defer ErrorHandlerRecover()
-	localHub := sentry.CurrentHub().Clone()
-	ConfigureScope(localHub, scopeConfig)
+	localHub := CloneHub()
+	localHub.WithScope(scopeConfig)
+	//ConfigureScope(localHub, scopeConfig)
 }
 
 func CurrentHub() *sentry.Hub {

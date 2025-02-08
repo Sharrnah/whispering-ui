@@ -138,6 +138,10 @@ var onlyShowEnabledPlugins bool
 var openPluginItem = -1
 
 func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widget.AccordionItem, pluginAccordion *widget.Accordion, window fyne.Window) fyne.CanvasObject {
+	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+		scope.SetTag("GoRoutine", "Pages\\Advanced\\PluginSettings->BuildSinglePluginSettings")
+	})
+
 	// load settings file for plugin settings
 	SettingsFile := Settings.Conf{}
 	err := SettingsFile.LoadYamlSettings(filepath.Join(Settings.GetConfProfileDir(), Settings.Config.SettingsFilename))
@@ -332,6 +336,9 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 }
 
 func BuildPluginSettingsAccordion(window fyne.Window) (fyne.CanvasObject, int) {
+	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
+		scope.SetTag("GoRoutine", "Pages\\Advanced\\PluginSettings->BuildPluginSettingsAccordion")
+	})
 
 	// build plugins list
 	var pluginFiles []string
