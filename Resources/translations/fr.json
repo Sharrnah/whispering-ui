@@ -330,9 +330,9 @@
     "Export Last Generation": "Exporter la dernière génération",
     "Send": "Envoyer",
     "osc_sync_mute.Name": "Synchronisation OSC STT avec mute",
-    "osc_sync_mute.Description": "Synchronise l'état de la synthèse vocale avec l'état de la mise en sourdine de VRChat",
+    "osc_sync_mute.Description": "Synchronise l'état de la synthèse vocale avec l'état de la mise en sourdine de VRChat.",
     "osc_sync_afk.Name": "OSC sync STT avec AFK",
-    "osc_sync_afk.Description": "Synchronise l'état Speech-to-Text avec l'état AFK de VRChat",
+    "osc_sync_afk.Description": "Synchronise l'état Speech-to-Text avec l'état AFK de VRChat.",
     "Automatically Report Errors": "Signaler automatiquement les erreurs",
     "Do you want to automatically report errors?": "Souhaitez-vous que les erreurs soient automatiquement signalées ?",
     "Send error report": "Envoyer un rapport d'erreur",
@@ -341,5 +341,6 @@
     "Attach hardware information (GPU Memory, GPU Vendor, GPU Adapter)": "Joindre des informations sur le matériel (mémoire GPU, fournisseur GPU, adaptateur GPU)",
     "E-Mail Address (Optional)": "Adresse électronique (facultatif)",
     "Error Report Sent": "Rapport d'erreur envoyé",
-    "Your error report has been sent.": "Votre rapport d'erreur a été envoyé."
+    "Your error report has been sent.": "Votre rapport d'erreur a été envoyé.",
+    "Clear": "Effacer"
 }
