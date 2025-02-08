@@ -317,9 +317,9 @@
     "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "Щоб застосувати зміни, потрібно перезапустити бекенд.\nВи впевнені, що хочете перезапустити бекенд?",
     "tts_volume.Name": "Регулювання гучності перетворення тексту в мовлення",
     "tts_volume.Description": "Налаштуйте гучність перетворення тексту на мовлення.\n1.0 = нормальна гучність",
-    "osc_sync_mute.Description": "Синхронізує стан перетворення мови на текст зі станом вимкнення звуку у VRChat",
+    "osc_sync_mute.Description": "Синхронізує стан перетворення мови на текст зі станом вимкнення звуку у VRChat.",
     "osc_sync_afk.Name": "OSC синхронізує STT з AFK",
-    "osc_sync_afk.Description": "Синхронізує стан Speech-to-Text зі станом AFK у VRChat",
+    "osc_sync_afk.Description": "Синхронізує стан Speech-to-Text зі станом AFK у VRChat.",
     "Automatically Report Errors": "Автоматично повідомляти про помилки",
     "Do you want to automatically report errors?": "Ви хочете автоматично повідомляти про помилки?",
     "Please enter a description of the error.": "Будь ласка, введіть опис помилки.",
@@ -330,5 +330,6 @@
     "Your error report has been sent.": "Ваш звіт про помилку надіслано.",
     "Send": "Надіслати",
     "osc_sync_mute.Name": "OSC синхронізує STT з вимкненим звуком",
-    "Send error report": "Надіслати звіт про помилку"
+    "Send error report": "Надіслати звіт про помилку",
+    "Clear": "Очистити"
 }
