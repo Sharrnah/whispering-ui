@@ -414,10 +414,15 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			Fields.Field.RealtimeResultLabel.Show()
 			//Fields.Field.RealtimeResultLabel.SetText(processingData)
 			//Fields.Field.RealtimeResultLabel.Refresh()
+
+			// Attempt to send to resetRealtimeLabelHideTimer
 			select {
-			// reset hide realtime label timer
 			case resetRealtimeLabelHideTimer <- true:
-			// reset processing status timer
+			default:
+			}
+
+			// Attempt to send to resetProcessingStopTimer
+			select {
 			case resetProcessingStopTimer <- true:
 			default:
 			}
