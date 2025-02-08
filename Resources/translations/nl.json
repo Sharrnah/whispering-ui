@@ -341,5 +341,6 @@
     "Automatically Report Errors": "Fouten automatisch rapporteren",
     "Do you want to automatically report errors?": "Wil je automatisch fouten melden?",
     "Send error report": "Foutrapport verzenden",
-    "Attach log file": "Logbestand bijvoegen"
+    "Attach log file": "Logbestand bijvoegen",
+    "Clear": "Leeg"
 }
