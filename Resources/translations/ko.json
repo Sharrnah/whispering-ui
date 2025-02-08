@@ -82,7 +82,7 @@
     "This will detect the current noise level.": "현재 소음 수준을 감지합니다.",
     "This will record for energyDetectionTime seconds and sets the energy to the max detected level. Please behave normally (breathing etc.) but don't say anything. This value can later be fine-tuned without restarting by setting the energy value in Advanced-Settings.": "그러면 {{.EnergyDetectionTime}} 에 기록되고 에너지가 최대 감지 수준으로 설정됩니다.\n호흡 등 정상적으로 행동하되 아무 말도 하지 마세요.\n\n이 값은 나중에 고급-> 설정에서 \"음성 볼륨 레벨\" 값을 설정하여 다시 시작하지 않고도 미세 조정할 수 있습니다.",
     "TimeSeconds": {
-        "one": "{{.RecordingTime}} second",
+        "one": "{{.RecordingTime}} 초",
         "other": "{{.RecordingTime}} 초"
     },
     "Please behave normally (breathing etc.) but don't say anything for around energyDetectionTime seconds to have it record only your noise level.": "정상적인 행동(호흡 등)을 하되, 소음 수준만 녹음되도록 {{.EnergyDetectionTime}} 정도는 아무 말도 하지 마세요.",
