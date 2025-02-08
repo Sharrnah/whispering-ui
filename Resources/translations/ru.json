@@ -326,9 +326,10 @@
     "Send error report": "Отправить отчет об ошибке",
     "Please enter a description of the error.": "Пожалуйста, введите описание ошибки.",
     "Attach log file": "Прикрепите файл журнала",
-    "Attach hardware information (GPU Memory, GPU Vendor, GPU Adapter)": "Прикрепите информацию об оборудовании (память GPU, поставщик GPU, адаптер GPU).",
+    "Attach hardware information (GPU Memory, GPU Vendor, GPU Adapter)": "Прикрепите информацию об оборудовании (память GPU, поставщик GPU, адаптер GPU)",
     "E-Mail Address (Optional)": "Адрес электронной почты (необязательно)",
     "Error Report Sent": "Отправлен отчет об ошибке",
     "Your error report has been sent.": "Ваш отчет об ошибке отправлен.",
-    "Send": "Отправить"
+    "Send": "Отправить",
+    "Clear": "Очистить"
 }
