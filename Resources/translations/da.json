@@ -318,10 +318,10 @@
     "tts_volume.Name": "Justering af lydstyrke for tekst-til-tale",
     "tts_volume.Description": "Juster lydstyrken på tekst-til-tale-outputtet.\n1.0 = normal lydstyrke",
     "Send": "Send",
-    "osc_sync_mute.Description": "Synkroniserer tale-til-tekst-tilstanden med mute-tilstanden i VRChat",
+    "osc_sync_mute.Description": "Synkroniserer tale-til-tekst-tilstanden med mute-tilstanden i VRChat.",
     "osc_sync_afk.Name": "OSC synkroniserer STT med AFK",
     "osc_sync_mute.Name": "OSC-synkronisering STT med mute",
-    "osc_sync_afk.Description": "Synkroniserer tale-til-tekst-tilstanden med AFK-tilstanden i VRChat",
+    "osc_sync_afk.Description": "Synkroniserer tale-til-tekst-tilstanden med AFK-tilstanden i VRChat.",
     "Automatically Report Errors": "Rapporter automatisk fejl",
     "Do you want to automatically report errors?": "Vil du automatisk rapportere fejl?",
     "Send error report": "Send fejlrapport",
@@ -330,5 +330,6 @@
     "Attach hardware information (GPU Memory, GPU Vendor, GPU Adapter)": "Vedhæft hardwareoplysninger (GPU-hukommelse, GPU-forhandler, GPU-adapter)",
     "E-Mail Address (Optional)": "E-mail-adresse (valgfrit)",
     "Error Report Sent": "Fejlrapport sendt",
-    "Your error report has been sent.": "Din fejlrapport er blevet sendt."
+    "Your error report has been sent.": "Din fejlrapport er blevet sendt.",
+    "Clear": "Ryd"
 }
