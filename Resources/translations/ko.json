@@ -330,5 +330,6 @@
     "osc_sync_mute.Description": "음성-텍스트 변환 상태를 VRChat의 음소거 상태와 동기화합니다.",
     "osc_sync_afk.Name": "OSC 동기화 STT와 AFK",
     "Automatically Report Errors": "오류 자동 보고",
-    "Do you want to automatically report errors?": "자동으로 오류를 신고하시겠습니까?"
+    "Do you want to automatically report errors?": "자동으로 오류를 신고하시겠습니까?",
+    "Clear": "비우기"
 }
