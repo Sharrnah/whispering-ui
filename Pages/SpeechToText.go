@@ -96,7 +96,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		),
 	)
 
-	Fields.Field.ProcessingStatus = widget.NewProgressBarInfinite()
+	Fields.Field.ProcessingStatus = widget.NewActivity()
 
 	Fields.Field.WhisperResultList = widget.NewList(
 		func() int {

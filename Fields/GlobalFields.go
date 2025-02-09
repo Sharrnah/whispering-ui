@@ -193,7 +193,7 @@ var fieldCreationFunctions = struct {
 
 var Field = struct {
 	RealtimeResultLabel                             *widget.Label // only displayed if realtime is enabled
-	ProcessingStatus                                *widget.ProgressBarInfinite
+	ProcessingStatus                                *widget.Activity
 	WhisperResultList                               *widget.List
 	TranscriptionTaskCombo                          *CustomWidget.TextValueSelect
 	TranscriptionSpeakerLanguageCombo               *CustomWidget.CompletionEntry
