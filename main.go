@@ -245,7 +245,7 @@ func main() {
 	SendErrorsToServerSetting := fyne.CurrentApp().Preferences().BoolWithFallback("SendErrorsToServer", false)
 	Logging.EnableReporting(SendErrorsToServerSetting)
 
-	Logging.ErrorHandlerInit(Utilities.AppVersion + "." + Utilities.AppBuild)
+	Logging.ErrorHandlerInit(Utilities.AppVersion+"."+Utilities.AppBuild, UpdateUtility.GetCurrentPlatformVersion())
 	defer Logging.ErrorHandlerRecover()
 
 	// check for updates

@@ -172,6 +172,18 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 	return nil
 }
 
+func GetCurrentPlatformVersion() string {
+	if Utilities.FileExists(".current_platform.yaml") {
+		currentPlatformVersion := Updater.UpdateInfo{}
+		data, err := os.ReadFile(".current_platform.yaml")
+		if err == nil {
+			_ = currentPlatformVersion.ReadYaml(data)
+			return currentPlatformVersion.Version
+		}
+	}
+	return ""
+}
+
 func VersionCheck(window fyne.Window, startBackend bool) bool {
 	updateAvailable := false
 
@@ -184,15 +196,9 @@ func VersionCheck(window fyne.Window, startBackend bool) bool {
 	// check platform version
 	platformFileWithoutVersion := !Utilities.FileExists(".current_platform.yaml") && (Utilities.FileExists("audioWhisper/audioWhisper.exe") || Utilities.FileExists("audioWhisper.py"))
 	platformRequiresUpdate := false
-	if Utilities.FileExists(".current_platform.yaml") {
-		currentPlatformVersion := Updater.UpdateInfo{}
-		data, err := os.ReadFile(".current_platform.yaml")
-		if err == nil {
-			_ = currentPlatformVersion.ReadYaml(data)
-			if currentPlatformVersion.Version != updater.Packages["ai_platform"].Version {
-				platformRequiresUpdate = true
-			}
-		}
+
+	if GetCurrentPlatformVersion() != updater.Packages["ai_platform"].Version {
+		platformRequiresUpdate = true
 	}
 
 	platformUpdateTitle := lang.L("Platform Update available")

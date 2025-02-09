@@ -45,12 +45,15 @@ func PanicLogger() {
 	}
 }
 
-func ErrorHandlerInit(version string) {
+func ErrorHandlerInit(AppVersion string, BackendVersion string) {
 	//if ReportingEnabled {
 	err := sentry.Init(sentry.ClientOptions{
 		Dsn:              Dsn,
-		Release:          version,
+		Release:          AppVersion,
 		AttachStacktrace: true,
+		Tags: map[string]string{
+			"backend_version": BackendVersion,
+		},
 	})
 	if err != nil {
 		log.Printf("sentry.Init: %s", err)
