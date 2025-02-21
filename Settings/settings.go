@@ -239,6 +239,7 @@ func confLoader(c interface{}, configFile string) interface{} {
 	} else {
 		err := fmt.Errorf("Config file %s not found", configFile)
 		log.Printf("Error: %v", err)
+		Logging.CaptureException(err)
 		dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[0])
 	}
 

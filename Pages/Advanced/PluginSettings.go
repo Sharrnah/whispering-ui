@@ -466,6 +466,7 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 			err := fyne.CurrentApp().OpenURL(uiPluginsFolder)
 			if err != nil {
 				println(err)
+				Logging.CaptureException(err)
 				dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[0])
 			}
 		})

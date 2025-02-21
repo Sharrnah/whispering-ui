@@ -33,6 +33,7 @@ func CreatePluginListWindow(closeFunction func(), backendRunning bool) {
 
 	md, err := UpdateUtility.DownloadFile(UpdateUtility.PluginListUrl)
 	if err != nil {
+		Logging.CaptureException(err)
 		print(err)
 		return
 	}
@@ -190,6 +191,7 @@ func CreatePluginListWindow(closeFunction func(), backendRunning bool) {
 		openPageButton := widget.NewButton(lang.L("Open Webpage"), func() {
 			err := fyne.CurrentApp().OpenURL(parseURL(titleLink))
 			if err != nil {
+				Logging.CaptureException(err)
 				dialog.ShowError(err, pluginListWindow)
 			}
 		})

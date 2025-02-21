@@ -124,6 +124,7 @@ func (c *MessageStruct) GetMessage(messageData []byte) *MessageStruct {
 	c.Raw = messageData
 	msgStruct, err := messageLoader(c, messageData)
 	if err != nil {
+		Logging.CaptureException(err)
 		log.Println(err)
 		return nil
 	}
@@ -444,6 +445,7 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		if err != nil {
 			if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
 				currentMainWindow, _ := Utilities.GetCurrentMainWindow("")
+				Logging.CaptureException(err)
 				dialog.ShowError(err, currentMainWindow)
 			}
 		}
@@ -456,6 +458,7 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		if err != nil {
 			if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
 				currentMainWindow, _ := Utilities.GetCurrentMainWindow("")
+				Logging.CaptureException(err)
 				dialog.ShowError(err, currentMainWindow)
 			}
 			return

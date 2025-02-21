@@ -13,6 +13,7 @@ import (
 	"os"
 	"path/filepath"
 	"time"
+	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/RuntimeBackend"
 	"whispering-tiger-ui/Updater"
 	"whispering-tiger-ui/Utilities"
@@ -106,6 +107,7 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 	statusBarContainer.Refresh()
 	err := downloader.DownloadFile(3)
 	if err != nil {
+		Logging.CaptureException(err)
 		dialog.ShowError(err, window)
 		return err
 	}
@@ -115,6 +117,7 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 	statusBarContainer.Add(widget.NewLabel(lang.L("Checking checksum...")))
 	if err := Updater.CheckFileHash(filename, updater.Packages[packageName].SHA256); err != nil {
 		fmt.Printf("Error: %s\n", err.Error())
+		Logging.CaptureException(err)
 		dialog.ShowError(err, window)
 		checksumCheckFailLabel := widget.NewLabel(lang.L("Checksum check failed. Please delete temporary file and download again. If it still fails, please contact support."))
 		checksumCheckFailLabel.Wrapping = fyne.TextWrapWord
@@ -143,11 +146,13 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 	statusBarContainer.Refresh()
 	err = Updater.Unzip(filename, filepath.Dir(appExec))
 	if err != nil {
+		Logging.CaptureException(err)
 		dialog.ShowError(err, window)
 		return err
 	}
 	err = os.Remove(filename)
 	if err != nil {
+		Logging.CaptureException(err)
 		dialog.ShowError(err, window)
 		return err
 	}
@@ -222,6 +227,7 @@ func VersionCheck(window fyne.Window, startBackend bool) bool {
 						oldVersionDir := filepath.Join(filepath.Dir(appExec), "audioWhisper")
 						err := os.RemoveAll(oldVersionDir)
 						if err != nil {
+							Logging.CaptureException(err)
 							dialog.ShowError(err, window)
 						}
 					}

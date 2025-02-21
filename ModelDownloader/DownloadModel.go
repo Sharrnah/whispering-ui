@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"strings"
 	"time"
+	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/Updater"
 	"whispering-tiger-ui/Utilities"
 )
@@ -196,6 +197,7 @@ func (c *modelNameLinksMap) DownloadModel(modelName string, modelType string) er
 
 	err := DownloadFile(modelLinks.urls, modelCachePath, modelChecksum, modelName+" "+modelType, "")
 	if err != nil {
+		Logging.CaptureException(err)
 		dialog.ShowError(err, window)
 	}
 

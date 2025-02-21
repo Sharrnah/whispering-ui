@@ -52,6 +52,7 @@ func GetClipboardImage() ([]byte, clipboard.Format) {
 	var clipboardBinary []byte
 	err := clipboard.Init()
 	if err == nil {
+		Logging.CaptureException(err)
 		clipboardBinary = clipboard.Read(clipboard.FmtImage)
 		if clipboardBinary != nil {
 			return clipboardBinary, clipboard.FmtImage

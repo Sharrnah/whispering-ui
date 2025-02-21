@@ -44,11 +44,13 @@ func buildAboutInfo() fyne.CanvasObject {
 	heartButton := widget.NewButtonWithIcon(lang.L("Support me on Ko-Fi", map[string]interface{}{"KofiUrl": lang.L("KofiUrl")}), Resources.ResourceHeartPng, func() {
 		u, err := url.Parse(lang.L("KofiUrl"))
 		if err != nil {
+			Logging.CaptureException(err)
 			return
 		}
 		if u != nil {
 			err := fyne.CurrentApp().OpenURL(u)
 			if err != nil {
+				Logging.CaptureException(err)
 				fyne.LogError("Failed to open url", err)
 			}
 		}

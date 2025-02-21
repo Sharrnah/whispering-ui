@@ -541,10 +541,12 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				err := playBackDevice.InitDevices(false)
 				if err != nil {
 					var newError = fmt.Errorf("audio Input (mic): %v", err)
+					Logging.CaptureException(newError)
 					dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
 				}
 			} else {
 				var newError = fmt.Errorf("audio Input (mic): No device selected")
+				Logging.CaptureException(newError)
 				dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 		},
@@ -558,10 +560,12 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				err := playBackDevice.InitDevices(false)
 				if err != nil {
 					var newError = fmt.Errorf("audio Output (speaker): %v", err)
+					Logging.CaptureException(newError)
 					dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
 				}
 			} else {
 				var newError = fmt.Errorf("audio Output (speaker): No device selected")
+				Logging.CaptureException(newError)
 				dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 		},
@@ -768,6 +772,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					Utilities.ProcessHideWindowAttr(cmd)
 					out, err := cmd.Output()
 					if err != nil {
+						Logging.CaptureException(err)
 						dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
 						return
 					}
@@ -1714,6 +1719,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		if Utilities.FileExists(filepath.Join(profilesDir, settingsFiles[id])) {
 			err = profileSettings.LoadYamlSettings(filepath.Join(profilesDir, settingsFiles[id]))
 			if err != nil {
+				Logging.CaptureException(err)
 				dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 		}
@@ -1955,6 +1961,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					}
 					if err != nil {
 						fmt.Printf("Failed to send quit message: %v\n", err)
+						Logging.CaptureException(err)
 						dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
 					} else {
 						stopAndClose(playBackDevice, onClose)
@@ -1983,6 +1990,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		err = playBackDevice.InitDevices(false)
 		if err != nil {
+			Logging.CaptureException(err)
 			dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
 		}
 		isLoadingSettingsFile = false
