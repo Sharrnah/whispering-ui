@@ -231,7 +231,7 @@ var Field = struct {
 	StatusRow                                       *fyne.Container
 }{
 	RealtimeResultLabel:                             widget.NewLabelWithData(DataBindings.WhisperResultIntermediateResult),
-	ProcessingStatus:                                nil,
+	ProcessingStatus:                                widget.NewActivity(),
 	WhisperResultList:                               nil,
 	TranscriptionTaskCombo:                          nil,
 	TranscriptionSpeakerLanguageCombo:               CustomWidget.NewCompletionEntry([]string{"Auto"}),

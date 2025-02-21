@@ -96,8 +96,6 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		),
 	)
 
-	Fields.Field.ProcessingStatus = widget.NewActivity()
-
 	Fields.Field.WhisperResultList = widget.NewList(
 		func() int {
 			return len(Fields.DataBindings.WhisperResultsData)
@@ -230,7 +228,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 
 		fileDialog.Show()
 	})
-	lastResultLine := container.NewBorder(nil, nil, saveCsvButton, clearResultListButton, Fields.Field.ProcessingStatus)
+	lastResultLine := container.NewBorder(nil, nil, saveCsvButton, clearResultListButton)
 
 	whisperResultContainer := container.NewStack(
 		container.NewBorder(

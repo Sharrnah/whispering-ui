@@ -7,6 +7,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/lang"
+	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"log"
@@ -155,7 +156,12 @@ func main() {
 			return ""
 		}
 
-		Fields.Field.StatusRow = container.NewStack(Fields.Field.StatusBar, Fields.Field.StatusText)
+		//activitySpacer := layout.NewSpacer()
+		activitySpacer := &layout.Spacer{
+			FixHorizontal: true,
+		}
+		//activitySpacer.FixHotWidth(10)
+		Fields.Field.StatusRow = container.NewStack(Fields.Field.StatusBar, container.NewBorder(nil, nil, nil, container.NewBorder(nil, nil, nil, activitySpacer, Fields.Field.ProcessingStatus), Fields.Field.StatusText))
 
 		// initialize main window
 		appTabs := container.NewAppTabs(
