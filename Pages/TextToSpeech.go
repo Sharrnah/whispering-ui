@@ -168,14 +168,18 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 
 	ttsModels := container.New(layout.NewFormLayout(), widget.NewLabel(lang.L("Model")+":"), Fields.Field.TtsModelCombo)
 
-	saveRandomVoiceButton := widget.NewButtonWithIcon(lang.L("Save Random Voice"), theme.DocumentSaveIcon(), func() {
-		sendMessage := SendMessageChannel.SendMessageStruct{
-			Type: "tts_voice_save_req",
-		}
-		sendMessage.SendMessage()
-		Fields.Field.TtsVoiceCombo.SetSelected("last")
-	})
-	if Settings.Config.Tts_type == "f5_e2" {
+	var saveRandomVoiceButton fyne.CanvasObject
+	var advancedSettings fyne.CanvasObject
+	switch Settings.Config.Tts_type {
+	case "silero":
+		saveRandomVoiceButton = widget.NewButtonWithIcon(lang.L("Save Random Voice"), theme.DocumentSaveIcon(), func() {
+			sendMessage := SendMessageChannel.SendMessageStruct{
+				Type: "tts_voice_save_req",
+			}
+			sendMessage.SendMessage()
+			Fields.Field.TtsVoiceCombo.SetSelected("last")
+		})
+	case "f5_e2", "zonos":
 		saveRandomVoiceButton = widget.NewButtonWithIcon("", theme.ViewRefreshIcon(), func() {
 			sendMessage := SendMessageChannel.SendMessageStruct{
 				Type: "tts_voice_reload_req",
@@ -292,6 +296,11 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 		stopPlayButton,
 	)
 
+	bottomButtonPart := container.New(layout.NewVBoxLayout(), buttonRow)
+	if advancedSettings != nil {
+		bottomButtonPart.Add(advancedSettings)
+	}
+
 	mainContent := container.NewBorder(
 		container.New(layout.NewVBoxLayout(),
 			ttsModelVoiceRow,
@@ -299,7 +308,7 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 		nil, nil, nil,
 		container.NewVSplit(
 			transcriptionRow,
-			container.New(layout.NewVBoxLayout(), buttonRow),
+			bottomButtonPart,
 		),
 	)
 

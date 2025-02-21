@@ -27,11 +27,12 @@ var DefaultProfileSetting = Settings.Conf{
 	Txt_second_translation_languages: "eng_Latn",
 	Txt_second_translation_wrap:      " | ",
 
-	//Tts_enabled:      true,
-	Tts_type:         "silero",
-	Tts_ai_device:    "cpu",
-	Tts_volume:       1.0,
-	Current_language: "",
+	Tts_type:                "silero",
+	Tts_ai_device:           "cpu",
+	Tts_volume:              1.0,
+	Tts_streamed_playback:   false,
+	Tts_streamed_chunk_size: 400,
+	Current_language:        "",
 
 	Osc_ip:                             "127.0.0.1",
 	Osc_port:                           9000,

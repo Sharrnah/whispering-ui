@@ -64,6 +64,28 @@ var TextToSpeechSettingsMapping = SettingsMapping{
 			},
 		},
 		{
+			SettingsName:         "Streamed playback if supported",
+			SettingsInternalName: "tts_streamed_playback",
+			SettingsDescription:  "Play text-to-speech by streaming audio if it is supported by the TTS service.",
+			_widget: func() fyne.CanvasObject {
+				return widget.NewCheck("", func(b bool) {})
+			},
+		},
+		{
+			SettingsName:         "Streamed playback chunk size",
+			SettingsInternalName: "tts_streamed_chunk_size",
+			SettingsDescription:  "Chunk size for streaming audio in bytes.",
+			_widget: func() fyne.CanvasObject {
+				sliderWidget := widget.NewSlider(40, 2000)
+				sliderState := widget.NewLabel(fmt.Sprintf("%.0f", sliderWidget.Min))
+				sliderWidget.Step = 1
+				sliderWidget.OnChanged = func(value float64) {
+					sliderState.SetText(fmt.Sprintf("%.0f", value))
+				}
+				return container.NewBorder(nil, nil, nil, sliderState, sliderWidget)
+			},
+		},
+		{
 			SettingsName:         "Route text-to-speech to secondary audio device",
 			SettingsInternalName: "tts_use_secondary_playback",
 			SettingsDescription:  "Play text-to-speech on a secondary audio device at the same time as the selected output device.\n(By default uses windows default audio device)",

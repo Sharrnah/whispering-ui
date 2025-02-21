@@ -165,7 +165,6 @@ type Conf struct {
 	Ocr_window_name  string `yaml:"ocr_window_name" json:"ocr_window_name"`
 
 	// TTS settings
-	//Tts_enabled                   bool     `yaml:"tts_enabled" json:"tts_enabled"`
 	Tts_type                      string   `yaml:"tts_type" json:"tts_type"`
 	Tts_ai_device                 string   `yaml:"tts_ai_device" json:"tts_ai_device"`
 	Tts_answer                    bool     `yaml:"tts_answer" json:"tts_answer"`
@@ -176,6 +175,8 @@ type Conf struct {
 	Tts_use_secondary_playback    bool     `yaml:"tts_use_secondary_playback" json:"tts_use_secondary_playback"`
 	Tts_secondary_playback_device int      `yaml:"tts_secondary_playback_device" json:"tts_secondary_playback_device"`
 	Tts_volume                    float64  `yaml:"tts_volume" json:"tts_volume"`
+	Tts_streamed_playback         bool     `yaml:"tts_streamed_playback" json:"tts_streamed_playback"`
+	Tts_streamed_chunk_size       int      `yaml:"tts_streamed_chunk_size" json:"tts_streamed_chunk_size"`
 
 	// Plugin Settings
 	Plugins              map[string]bool `yaml:"plugins,omitempty" json:"plugins,omitempty"`
