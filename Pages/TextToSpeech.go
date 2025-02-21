@@ -19,6 +19,7 @@ import (
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Logging"
+	"whispering-tiger-ui/Pages/SpecialTextToSpeechSettings"
 	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
@@ -186,6 +187,10 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 			}
 			sendMessage.SendMessage()
 		})
+
+		if Settings.Config.Tts_type == "zonos" {
+			advancedSettings = SpecialTextToSpeechSettings.BuildZonosSpecialSettings()
+		}
 	}
 	ttsVoices := container.New(layout.NewFormLayout(), widget.NewLabel(lang.L("Voice")+":"), Fields.Field.TtsVoiceCombo)
 

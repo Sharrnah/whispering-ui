@@ -21,6 +21,7 @@ var TextToSpeechSettingsMapping = SettingsMapping{
 				settingWidget := CustomWidget.NewTextValueSelect("tts_type", []CustomWidget.TextValueOption{
 					{Text: "Silero", Value: "silero"},
 					{Text: "F5/E2", Value: "f5_e2"},
+					{Text: "Zonos", Value: "zonos"},
 					{Text: lang.L("Disabled"), Value: ""},
 				}, func(s CustomWidget.TextValueOption) {
 				}, 0)
