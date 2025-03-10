@@ -37,6 +37,33 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		speechTaskWidgetLabel.SetText(lang.L("Target Language") + ":")
 		speechTaskWidget = Fields.Field.TranscriptionTargetLanguageCombo
 	}
+	if Settings.Config.Stt_type == "phi4" {
+		speechLanguageLabel.Text = lang.L("Target Language") + ":"
+
+		speechTaskWidget.(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{{
+			Text:  lang.L("transcribe"),
+			Value: "transcribe",
+		}, {
+			Text:  lang.L("translate"),
+			Value: "translate",
+		}, {
+			Text:  lang.L("transcribe & translate"),
+			Value: "transcribe_translate",
+		}, {
+			Text:  lang.L("question & answering"),
+			Value: "question_answering",
+		}}
+
+		oldOnChangeFunc := speechTaskWidget.(*CustomWidget.TextValueSelect).OnChanged
+		speechTaskWidget.(*CustomWidget.TextValueSelect).OnChanged = func(s CustomWidget.TextValueOption) {
+			if s.Value == "transcribe" || s.Value == "question_answering" {
+				Fields.Field.TranscriptionSpeakerLanguageCombo.Disable()
+			} else {
+				Fields.Field.TranscriptionSpeakerLanguageCombo.Enable()
+			}
+			oldOnChangeFunc(s)
+		}
+	}
 	if Settings.Config.Stt_type == "wav2vec_bert" {
 		speechTaskWidgetLabel.SetText("")
 		speechTaskWidget.Hide()

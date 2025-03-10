@@ -937,6 +937,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Speech T5 (English only)", Value: "speech_t5"},
 			{Text: "Wav2Vec Bert 2.0", Value: "wav2vec_bert"},
 			{Text: "NeMo Canary", Value: "nemo_canary"},
+			{Text: "Phi-4", Value: "phi4"},
 			{Text: lang.L("Disabled"), Value: ""},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
@@ -1581,6 +1582,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Silero", Value: "silero"},
 			{Text: "F5/E2", Value: "f5_e2"},
 			{Text: "Zonos", Value: "zonos"},
+			{Text: "Kokoro", Value: "kokoro"},
 			{Text: lang.L("Disabled"), Value: ""},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 

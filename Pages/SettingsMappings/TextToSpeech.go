@@ -22,6 +22,7 @@ var TextToSpeechSettingsMapping = SettingsMapping{
 					{Text: "Silero", Value: "silero"},
 					{Text: "F5/E2", Value: "f5_e2"},
 					{Text: "Zonos", Value: "zonos"},
+					{Text: "Kokoro", Value: "kokoro"},
 					{Text: lang.L("Disabled"), Value: ""},
 				}, func(s CustomWidget.TextValueOption) {
 				}, 0)
@@ -75,9 +76,9 @@ var TextToSpeechSettingsMapping = SettingsMapping{
 		{
 			SettingsName:         "Streamed playback chunk size",
 			SettingsInternalName: "tts_streamed_chunk_size",
-			SettingsDescription:  "Chunk size for streaming audio in bytes.",
+			SettingsDescription:  "Chunk size for streaming audio (If supported by the TTS service)",
 			_widget: func() fyne.CanvasObject {
-				sliderWidget := widget.NewSlider(40, 2000)
+				sliderWidget := widget.NewSlider(20, 2000)
 				sliderState := widget.NewLabel(fmt.Sprintf("%.0f", sliderWidget.Min))
 				sliderWidget.Step = 1
 				sliderWidget.OnChanged = func(value float64) {
