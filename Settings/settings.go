@@ -159,6 +159,7 @@ type Conf struct {
 	Osc_sync_afk    bool   `yaml:"osc_sync_afk" json:"osc_sync_afk"`
 
 	// OCR settings
+	Ocr_type         string `yaml:"ocr_type" json:"ocr_type"`
 	Ocr_txt_src_lang string `yaml:"ocr_txt_src_lang" json:"ocr_txt_src_lang"`
 	Ocr_txt_trg_lang string `yaml:"ocr_txt_trg_lang" json:"ocr_txt_trg_lang"`
 	Ocr_lang         string `yaml:"ocr_lang" json:"ocr_lang"`

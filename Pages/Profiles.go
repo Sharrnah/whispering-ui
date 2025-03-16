@@ -938,6 +938,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Wav2Vec Bert 2.0", Value: "wav2vec_bert"},
 			{Text: "NeMo Canary", Value: "nemo_canary"},
 			{Text: "Phi-4", Value: "phi4"},
+			//{Text: "Phi-4 ONNX", Value: "phi4-onnx"},
 			{Text: lang.L("Disabled"), Value: ""},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
@@ -1321,6 +1322,25 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				sttPrecisionSelect.SetSelected("float32") // only available in float32
 				sttModelSize.Disable()
 				AIModelType = "nemo-canary"
+			} else if s.Value == "phi4" {
+				sttModelSize.Disable()
+				AIModelType = "Phi4"
+
+				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
+					{Text: "float32 " + lang.L("precision"), Value: "float32"},
+					{Text: "float16 " + lang.L("precision"), Value: "float16"},
+					{Text: "bfloat16 " + lang.L("precision"), Value: "bfloat16"},
+				}
+				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "bfloat16" || selectedPrecision == "int8_bfloat16" {
+					sttPrecisionSelect.SetSelected("float16")
+				}
+
+				AIModel := ProfileAIModelOption{
+					AIModel:     "Whisper",
+					AIModelType: AIModelType,
+					AIModelSize: "large",
+				}
+				AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 			} else {
 				sttPrecisionSelect.Disable()
 				sttModelSize.Disable()
@@ -1628,6 +1648,15 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		profileForm.Append(lang.L("A.I. Device for Text-to-Speech"), ttsAiDeviceSelect)
 
+		ocrTypeSelect := CustomWidget.NewTextValueSelect("ocr_type", []CustomWidget.TextValueOption{
+			{Text: "Easy OCR", Value: "easyocr"},
+			{Text: "GOT OCR 2.0", Value: "got_ocr_20"},
+			{Text: lang.L("Disabled"), Value: ""},
+		}, func(s CustomWidget.TextValueOption) {}, 0)
+
+		profileForm.Append("", layout.NewSpacer())
+		profileForm.Append(lang.L("Integrated Image-to-Text"), ocrTypeSelect)
+
 		pushToTalkChanged := false
 		PushToTalkInput.OnChanged = func(s string) {
 			if s != "" && !isLoadingSettingsFile {
@@ -1847,6 +1876,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		// spacer (19)
 		profileForm.Items[21].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Tts_type)
 		profileForm.Items[22].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Tts_ai_device)
+		// spacer (23)
+		profileForm.Items[24].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Ocr_type)
 
 		profileForm.OnSubmit = func() {
 			profileSettings.Websocket_ip = profileForm.Items[0].Widget.(*fyne.Container).Objects[0].(*widget.Entry).Text
@@ -1883,6 +1914,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 			profileSettings.Tts_type = profileForm.Items[21].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
 			profileSettings.Tts_ai_device = profileForm.Items[22].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+
+			profileSettings.Ocr_type = profileForm.Items[24].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
 
 			// update existing settings or create new one if it does not exist yet
 			if Utilities.FileExists(filepath.Join(profilesDir, settingsFiles[id])) {
@@ -1925,6 +1958,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 					Osc_ip:   profileSettings.Osc_ip,
 					Osc_port: profileSettings.Osc_port,
+					Ocr_type: profileSettings.Ocr_type,
 				}
 				newProfileEntry.Save(filepath.Join(profilesDir, settingsFiles[id]))
 			}

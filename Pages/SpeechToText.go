@@ -28,6 +28,8 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		scope.SetTag("GoRoutine", "Pages\\SpeechToText->CreateSpeechToTextWindow")
 	})
 
+	var additionalWidgets fyne.CanvasObject
+
 	speechLanguageLabel := widget.NewLabel(lang.L("Speech Language") + ":")
 
 	speechTaskWidgetLabel := widget.NewLabel(lang.L("Speech Task") + ":")
@@ -37,7 +39,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		speechTaskWidgetLabel.SetText(lang.L("Target Language") + ":")
 		speechTaskWidget = Fields.Field.TranscriptionTargetLanguageCombo
 	}
-	if Settings.Config.Stt_type == "phi4" {
+	if Settings.Config.Stt_type == "phi4" || Settings.Config.Stt_type == "phi4-onnx" {
 		speechLanguageLabel.Text = lang.L("Target Language") + ":"
 
 		speechTaskWidget.(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{{
@@ -54,6 +56,14 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 			Value: "question_answering",
 		}}
 
+		// set initial task to value of loaded profile configuration
+		settingsTask := speechTaskWidget.(*CustomWidget.TextValueSelect).GetEntry(&CustomWidget.TextValueOption{
+			Value: Settings.Config.Whisper_task,
+		}, CustomWidget.CompareValue)
+		if settingsTask != nil {
+			speechTaskWidget.(*CustomWidget.TextValueSelect).Selected = settingsTask.Text
+		}
+
 		oldOnChangeFunc := speechTaskWidget.(*CustomWidget.TextValueSelect).OnChanged
 		speechTaskWidget.(*CustomWidget.TextValueSelect).OnChanged = func(s CustomWidget.TextValueOption) {
 			if s.Value == "transcribe" || s.Value == "question_answering" {
@@ -61,7 +71,30 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 			} else {
 				Fields.Field.TranscriptionSpeakerLanguageCombo.Enable()
 			}
+			additionalWidgets.Hide()
+			if s.Value == "question_answering" || s.Value == "chat" {
+				additionalWidgets.Show()
+			}
 			oldOnChangeFunc(s)
+		}
+
+		additionalWidgets = container.New(
+			layout.NewGridLayout(2),
+			widget.NewButtonWithIcon(lang.L("Chat"), theme.MailSendIcon(), func() {
+				text, _ := Fields.DataBindings.TranscriptionInputBinding.Get()
+				sendMessage := SendMessageChannel.SendMessageStruct{
+					Type: "chat_req",
+					Value: struct {
+						Text *string `json:"text"`
+					}{
+						Text: &text,
+					},
+				}
+				sendMessage.SendMessage()
+			}),
+		)
+		if Settings.Config.Whisper_task != "question_answering" && Settings.Config.Whisper_task != "chat" {
+			additionalWidgets.Hide()
 		}
 	}
 	if Settings.Config.Stt_type == "wav2vec_bert" {
@@ -102,14 +135,19 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 	// quick options row
 	quickOptionsRow := container.New(
 		layout.NewVBoxLayout(),
-		Fields.Field.SttEnabled,
-		container.NewGridWithColumns(2, beginLine),
-		Fields.Field.TextTranslateEnabled,
-		Fields.Field.TtsEnabledOnStt,
-		container.NewHBox(
-			container.NewBorder(nil, nil, nil, Fields.Field.OscLimitHint, Fields.Field.OscEnabled),
-		),
 	)
+
+	if additionalWidgets != nil {
+		quickOptionsRow.Add(additionalWidgets)
+	}
+
+	quickOptionsRow.Add(Fields.Field.SttEnabled)
+	quickOptionsRow.Add(container.NewGridWithColumns(2, beginLine))
+	quickOptionsRow.Add(Fields.Field.TextTranslateEnabled)
+	quickOptionsRow.Add(Fields.Field.TtsEnabledOnStt)
+	quickOptionsRow.Add(container.NewHBox(
+		container.NewBorder(nil, nil, nil, Fields.Field.OscLimitHint, Fields.Field.OscEnabled),
+	))
 
 	// main layout
 	leftVerticalLayout := container.NewBorder(

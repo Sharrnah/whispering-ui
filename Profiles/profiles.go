@@ -27,6 +27,8 @@ type Profile struct {
 	Denoise_audio                string `yaml:"denoise_audio"`
 	Denoise_audio_before_trigger bool   `yaml:"denoise_audio_before_trigger"`
 
+	Ocr_type string `yaml:"ocr_type"`
+
 	// Whisper Settings
 	Ai_device                interface{} `yaml:"ai_device"`
 	Model                    string      `yaml:"model"`

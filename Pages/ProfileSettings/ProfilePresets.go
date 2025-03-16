@@ -58,6 +58,7 @@ var DefaultProfileSetting = Settings.Conf{
 	Osc_sync_mute:   false,
 	Osc_sync_afk:    false,
 
+	Ocr_type:        "easyocr",
 	Ocr_window_name: "VRChat",
 	Ocr_lang:        "en",
 
