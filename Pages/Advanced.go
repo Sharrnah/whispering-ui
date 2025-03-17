@@ -25,6 +25,7 @@ func parseURL(urlStr string) *url.URL {
 	link, err := url.Parse(urlStr)
 	if err != nil {
 		fyne.LogError("Could not parse URL", err)
+		Logging.CaptureException(err)
 	}
 
 	return link

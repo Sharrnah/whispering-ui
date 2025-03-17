@@ -51,17 +51,20 @@ func guessTranslationFromLanguage(ocrLanguageCode string) string {
 func GetClipboardImage() ([]byte, clipboard.Format) {
 	var clipboardBinary []byte
 	err := clipboard.Init()
-	if err == nil {
+	if err != nil {
 		Logging.CaptureException(err)
-		clipboardBinary = clipboard.Read(clipboard.FmtImage)
-		if clipboardBinary != nil {
-			return clipboardBinary, clipboard.FmtImage
-		}
-		clipboardBinary = clipboard.Read(clipboard.FmtText)
-		if clipboardBinary != nil {
-			return clipboardBinary, clipboard.FmtText
-		}
+		return nil, -1
 	}
+
+	clipboardBinary = clipboard.Read(clipboard.FmtImage)
+	if clipboardBinary != nil {
+		return clipboardBinary, clipboard.FmtImage
+	}
+	clipboardBinary = clipboard.Read(clipboard.FmtText)
+	if clipboardBinary != nil {
+		return clipboardBinary, clipboard.FmtText
+	}
+
 	return nil, -1
 }
 
@@ -240,6 +243,9 @@ func CreateOcrWindow() fyne.CanvasObject {
 		Fields.Field.SourceLanguageTxtTranslateCombo.Refresh()
 
 		switchButton.Disable()
+	}
+	if Settings.Config.Ocr_type == "phi4" || Settings.Config.Ocr_type == "got_ocr_20" {
+		Fields.Field.OcrLanguageCombo.Disable()
 	}
 
 	ocrContent := container.New(layout.NewVBoxLayout(),

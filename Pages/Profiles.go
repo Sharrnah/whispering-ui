@@ -83,6 +83,8 @@ func (c *CurrentPlaybackDevice) InitTestAudio() (*bytes.Reader, *wav.Reader) {
 	testAudioFormat, err := testAudioReader.Format()
 	if err != nil {
 		fmt.Println(err)
+		Logging.CaptureException(err)
+		Logging.Flush(Logging.FlushTimeoutDefault)
 		os.Exit(1)
 	}
 
@@ -124,6 +126,7 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 	captureDevices, err := c.Context.Devices(malgo.Capture)
 	if err != nil {
 		fmt.Println(err)
+		Logging.CaptureException(err)
 		return err
 	}
 
@@ -141,6 +144,7 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 		captureLoopbackDevices, err := c.Context.Devices(malgo.Loopback)
 		if err != nil {
 			fmt.Println(err)
+			Logging.CaptureException(err)
 		}
 		for index, deviceInfo := range captureLoopbackDevices {
 			if deviceInfo.Name()+" [Loopback]" == c.InputDeviceName {
@@ -316,6 +320,8 @@ func (c *CurrentPlaybackDevice) Init() {
 	})
 	if err != nil {
 		fmt.Println(err)
+		Logging.CaptureException(err)
+		Logging.Flush(Logging.FlushTimeoutDefault)
 		return
 		//os.Exit(1)
 	}
@@ -386,8 +392,14 @@ func GetAudioDevices(audioApi malgo.Backend, deviceTypes []malgo.DeviceType, dev
 func fillAudioDeviceLists() {
 	// loop through AudioBackends
 	for _, backendItem := range AudioAPI.AudioBackends {
-		audioInputDevicesOptions, audioInputDevices, _ := GetAudioDevices(backendItem.Backend, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0, "#|"+backendItem.Id+",input", " - API: "+backendItem.Name)
-		audioOutputDevicesOptions, audioOutputDevices, _ := GetAudioDevices(backendItem.Backend, []malgo.DeviceType{malgo.Playback}, len(audioInputDevicesOptions), "#|"+backendItem.Id+",output", " - API: "+backendItem.Name)
+		audioInputDevicesOptions, audioInputDevices, err := GetAudioDevices(backendItem.Backend, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0, "#|"+backendItem.Id+",input", " - API: "+backendItem.Name)
+		if err != nil {
+			Logging.CaptureException(err)
+		}
+		audioOutputDevicesOptions, audioOutputDevices, err := GetAudioDevices(backendItem.Backend, []malgo.DeviceType{malgo.Playback}, len(audioInputDevicesOptions), "#|"+backendItem.Id+",output", " - API: "+backendItem.Name)
+		if err != nil {
+			Logging.CaptureException(err)
+		}
 
 		Utilities.AudioInputDeviceList[backendItem.Id] = Utilities.AudioDeviceMemory{
 			Backend:       backendItem.Backend,
@@ -527,8 +539,14 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	playBackDevice.AudioAPI = AudioAPI.AudioBackends[0].Backend
 	go playBackDevice.Init()
 
-	audioInputDevicesOptions, _, _ := GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0, "", "")
-	audioOutputDevicesOptions, _, _ := GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Playback}, len(audioInputDevicesOptions), "", "")
+	audioInputDevicesOptions, _, err := GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0, "", "")
+	if err != nil {
+		Logging.CaptureException(err)
+	}
+	audioOutputDevicesOptions, _, err := GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Playback}, len(audioInputDevicesOptions), "", "")
+	if err != nil {
+		Logging.CaptureException(err)
+	}
 
 	// fill audio device lists for later access
 	fillAudioDeviceLists()
@@ -716,8 +734,14 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				time.Sleep(1 * time.Second)
 				playBackDevice.AudioAPI = value
 
-				audioInputDevicesOptions, _, _ = GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0, "", "")
-				audioOutputDevicesOptions, _, _ = GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Playback}, len(audioInputDevicesOptions), "", "")
+				audioInputDevicesOptions, _, err = GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0, "", "")
+				if err != nil {
+					Logging.CaptureException(err)
+				}
+				audioOutputDevicesOptions, _, err = GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Playback}, len(audioInputDevicesOptions), "", "")
+				if err != nil {
+					Logging.CaptureException(err)
+				}
 
 				go playBackDevice.Init()
 

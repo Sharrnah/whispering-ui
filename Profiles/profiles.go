@@ -4,6 +4,7 @@ import (
 	"gopkg.in/yaml.v3"
 	"log"
 	"os"
+	"whispering-tiger-ui/Logging"
 )
 
 //goland:noinspection GoSnakeCaseUsage
@@ -56,6 +57,8 @@ func (p *Profile) Load(fileName string) {
 	}
 	err = yaml.Unmarshal(yamlFile, &p)
 	if err != nil {
+		Logging.CaptureException(err)
+		Logging.Flush(Logging.FlushTimeoutDefault)
 		log.Fatalf("Unmarshal: %v", err)
 	}
 }

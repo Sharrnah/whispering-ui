@@ -8,6 +8,7 @@ import (
 	"image/color"
 	"log"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
 )
@@ -55,22 +56,26 @@ var OcrResult OcrResultData
 
 func (res OcrResultData) Update() *OcrResultData {
 	decodedBytes, err := base64.StdEncoding.DecodeString(res.ImageData)
-	if err == nil {
-		img, _, err := image.Decode(bytes.NewReader(decodedBytes))
-		if err != nil {
-			log.Println(err)
-			return &res
-		}
-
-		drawnImage := Utilities.DrawRect(img, res.BoundingBoxes, 2, color.RGBA{R: 255, G: 0, B: 0, A: 255})
-
-		ocrResultImage := canvas.NewImageFromImage(drawnImage)
-		ocrResultImage.ScaleMode = canvas.ImageScaleFastest
-		ocrResultImage.FillMode = canvas.ImageFillContain
-		Fields.Field.OcrImageContainer.RemoveAll()
-		Fields.Field.OcrImageContainer.Add(ocrResultImage)
-		ocrResultImage.Refresh()
+	if err != nil {
+		Logging.CaptureException(err)
+		return &res
 	}
+
+	img, _, err := image.Decode(bytes.NewReader(decodedBytes))
+	if err != nil {
+		Logging.CaptureException(err)
+		log.Println(err)
+		return &res
+	}
+
+	drawnImage := Utilities.DrawRect(img, res.BoundingBoxes, 2, color.RGBA{R: 255, G: 0, B: 0, A: 255})
+
+	ocrResultImage := canvas.NewImageFromImage(drawnImage)
+	ocrResultImage.ScaleMode = canvas.ImageScaleFastest
+	ocrResultImage.FillMode = canvas.ImageFillContain
+	Fields.Field.OcrImageContainer.RemoveAll()
+	Fields.Field.OcrImageContainer.Add(ocrResultImage)
+	ocrResultImage.Refresh()
 
 	return &res
 }

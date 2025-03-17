@@ -9,6 +9,7 @@ import (
 	"io"
 	"os"
 	"time"
+	"whispering-tiger-ui/Logging"
 )
 
 type TtsResultRaw struct {
@@ -19,6 +20,7 @@ func (res *TtsResultRaw) PlayWAVFromBase64() error {
 	// Decode the base64-encoded string into a byte slice
 	decodedBytes, err := base64.StdEncoding.DecodeString(res.WavData)
 	if err != nil {
+		Logging.CaptureException(err)
 		return err
 	}
 
@@ -51,6 +53,8 @@ func (res *TtsResultRaw) PlayWAVFromBase64() error {
 	})
 	if err != nil {
 		fmt.Println(err)
+		Logging.CaptureException(err)
+		Logging.Flush(Logging.FlushTimeoutDefault)
 		os.Exit(1)
 	}
 	defer func() {

@@ -146,6 +146,8 @@ func CreatePluginListWindow(closeFunction func(), backendRunning bool) {
 			// write the file to disk
 			err := os.WriteFile(pluginFileName, fileContent, 0644)
 			if err != nil {
+				window, _ := Utilities.GetCurrentMainWindow("Error writing file")
+				dialog.ShowError(err, window)
 				log.Fatalf("Error writing file: %v", err)
 			}
 

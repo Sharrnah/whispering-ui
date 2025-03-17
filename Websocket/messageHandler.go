@@ -110,6 +110,8 @@ func processingStopTimer() {
 func messageLoader(c interface{}, message []byte) (interface{}, error) {
 	err := json.Unmarshal(message, c)
 	if err != nil {
+		Logging.CaptureException(err)
+		Logging.Flush(Logging.FlushTimeoutDefault)
 		log.Fatalf("Unmarshal: %v", err)
 		return nil, err
 	}
@@ -148,6 +150,7 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		errorMessage := Messages.ExceptionMessage{}
 		err = json.Unmarshal(c.Raw, &errorMessage)
 		if err != nil {
+			Logging.CaptureException(err)
 			log.Println(err)
 			return
 		}

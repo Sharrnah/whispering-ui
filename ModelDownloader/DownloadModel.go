@@ -112,6 +112,7 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 	statusBarContainer.Refresh()
 	err := downloader.DownloadFile(3)
 	if err != nil {
+		Logging.CaptureException(err)
 		dialog.ShowError(err, window)
 		return err
 	}
