@@ -688,6 +688,24 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			}
 		})
 
+		ocrAiDeviceSelect := CustomWidget.NewTextValueSelect("ocr_ai_device", []CustomWidget.TextValueOption{
+			{Text: "CPU", Value: "cpu"},
+			{Text: "CUDA", Value: "cuda"},
+		}, func(s CustomWidget.TextValueOption) {}, 0)
+
+		ocrTypeSelect := CustomWidget.NewTextValueSelect("ocr_type", []CustomWidget.TextValueOption{
+			{Text: "Easy OCR", Value: "easyocr"},
+			{Text: "GOT OCR 2.0", Value: "got_ocr_20"},
+			{Text: "Phi-4", Value: "phi4"},
+			{Text: lang.L("Disabled"), Value: ""},
+		}, func(s CustomWidget.TextValueOption) {}, 0)
+
+		ocrPrecisionSelect := CustomWidget.NewTextValueSelect("ocr_precision", []CustomWidget.TextValueOption{
+			{Text: "float32 " + lang.L("precision"), Value: "float32"},
+			{Text: "float16 " + lang.L("precision"), Value: "float16"},
+			{Text: "bfloat16 " + lang.L("precision"), Value: "bfloat16"},
+		}, func(s CustomWidget.TextValueOption) {}, 0)
+
 		appendWidgetToForm(profileForm, lang.L("Websocket IP + Port"), container.NewGridWithColumns(3, websocketIp, websocketPort, runBackendCheckbox), lang.L("IP + Port of the websocket server the backend will start and the UI will connect to."))
 		profileForm.Append("", layout.NewSpacer())
 
@@ -919,23 +937,23 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Faster NLLB200 (200 languages)", Value: "NLLB200_CT2"},
 			{Text: "Original NLLB200 (200 languages)", Value: "NLLB200"},
 			{Text: "M2M100 (100 languages)", Value: "M2M100"},
-			{Text: "Seamless M4T (101 languages)", Value: "Seamless_M4T"},
-			{Text: "Phi4 (23 languages)", Value: "phi4"},
+			{Text: "Seamless M4T (101 languages)", Value: "seamless_m4t"},
+			{Text: "Phi-4 (23 languages)", Value: "phi4"},
 			{Text: lang.L("Disabled"), Value: ""},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
 		txtTranslatorDeviceSelect := CustomWidget.NewTextValueSelect("txt_translator_device", []CustomWidget.TextValueOption{
 			{Text: "CUDA", Value: "cuda"},
 			{Text: "CPU", Value: "cpu"},
-			{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
-			{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
+			//{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
+			//{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
 		sttAiDeviceSelect := CustomWidget.NewTextValueSelect("ai_device", []CustomWidget.TextValueOption{
 			{Text: "CUDA", Value: "cuda"},
 			{Text: "CPU", Value: "cpu"},
-			{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
-			{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
+			//{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
+			//{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
 		sttPrecisionSelect := CustomWidget.NewTextValueSelect("Precision", []CustomWidget.TextValueOption{
@@ -987,7 +1005,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			/**
 			special case for Seamless M4T since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
 			*/
-			if txtTranslatorTypeSelect.GetSelected().Value == "Seamless_M4T" && sttTypeSelect.GetSelected().Value == "seamless_m4t" || txtTranslatorTypeSelect.GetSelected().Value == "phi4" && sttTypeSelect.GetSelected().Value == "phi4" {
+			if txtTranslatorTypeSelect.GetSelected().Value == "seamless_m4t" && sttTypeSelect.GetSelected().Value == "seamless_m4t" || txtTranslatorTypeSelect.GetSelected().Value == "phi4" && sttTypeSelect.GetSelected().Value == "phi4" {
 				txtTranslatorSizeSelect.SetSelected(s.Value)
 				if txtTranslatorPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
 					txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
@@ -1002,6 +1020,20 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				txtTranslatorSizeSelect.Enable()
 				txtTranslatorPrecisionSelect.Enable()
 				txtTranslatorDeviceSelect.Enable()
+			}
+
+			if sttTypeSelect.GetSelected().Value == ocrTypeSelect.GetSelected().Value {
+				ocrAiDeviceSelect.Disable()
+				if ocrAiDeviceSelect.ContainsEntry(sttAiDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
+					ocrAiDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
+				}
+				ocrPrecisionSelect.Disable()
+				if ocrPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
+					ocrPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
+				}
+			} else if ocrTypeSelect.GetSelected().Value != "" {
+				ocrAiDeviceSelect.Enable()
+				ocrPrecisionSelect.Enable()
 			}
 		}
 
@@ -1051,7 +1083,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			/**
 			special case for Seamless M4T since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
 			*/
-			if txtTranslatorTypeSelect.GetSelected().Value == "Seamless_M4T" && sttTypeSelect.GetSelected().Value == "seamless_m4t" || txtTranslatorTypeSelect.GetSelected().Value == "phi4" && sttTypeSelect.GetSelected().Value == "phi4" {
+			if sttTypeSelect.GetSelected().Value == "seamless_m4t" && txtTranslatorTypeSelect.GetSelected().Value == "seamless_m4t" || sttTypeSelect.GetSelected().Value == "phi4" && txtTranslatorTypeSelect.GetSelected().Value == "phi4" {
 				txtTranslatorSizeSelect.SetSelected(s.Value)
 				if txtTranslatorPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
 					txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
@@ -1066,6 +1098,20 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				txtTranslatorSizeSelect.Enable()
 				txtTranslatorPrecisionSelect.Enable()
 				txtTranslatorDeviceSelect.Enable()
+			}
+
+			if sttTypeSelect.GetSelected().Value == ocrTypeSelect.GetSelected().Value {
+				ocrAiDeviceSelect.Disable()
+				if ocrAiDeviceSelect.ContainsEntry(sttAiDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
+					ocrAiDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
+				}
+				ocrPrecisionSelect.Disable()
+				if ocrPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
+					ocrPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
+				}
+			} else if ocrTypeSelect.GetSelected().Value != "" {
+				ocrAiDeviceSelect.Enable()
+				ocrPrecisionSelect.Enable()
 			}
 		}
 
@@ -1172,10 +1218,14 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			/**
 			special case for Seamless M4T since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
 			*/
-			if txtTranslatorTypeSelect.GetSelected().Value == "Seamless_M4T" && sttTypeSelect.GetSelected().Value == "seamless_m4t" {
+			if txtTranslatorTypeSelect.GetSelected().Value == "seamless_m4t" && sttTypeSelect.GetSelected().Value == "seamless_m4t" {
 				txtTranslatorSizeSelect.SetSelected(s.Value)
-				txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
-				txtTranslatorDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
+				if txtTranslatorPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
+					txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
+				}
+				if txtTranslatorDeviceSelect.ContainsEntry(sttAiDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
+					txtTranslatorDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
+				}
 				txtTranslatorSizeSelect.Disable()
 				txtTranslatorPrecisionSelect.Disable()
 				txtTranslatorDeviceSelect.Disable()
@@ -1183,6 +1233,20 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				txtTranslatorSizeSelect.Enable()
 				txtTranslatorPrecisionSelect.Enable()
 				txtTranslatorDeviceSelect.Enable()
+			}
+
+			if sttTypeSelect.GetSelected().Value == ocrTypeSelect.GetSelected().Value {
+				ocrAiDeviceSelect.Disable()
+				if ocrAiDeviceSelect.ContainsEntry(sttAiDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
+					ocrAiDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
+				}
+				ocrPrecisionSelect.Disable()
+				if ocrPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
+					ocrPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
+				}
+			} else if ocrTypeSelect.GetSelected().Value != "" {
+				ocrAiDeviceSelect.Enable()
+				ocrPrecisionSelect.Enable()
 			}
 		}, 0)
 
@@ -1202,8 +1266,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			sttAiDeviceSelect.Options = []CustomWidget.TextValueOption{
 				{Text: "CUDA", Value: "cuda"},
 				{Text: "CPU", Value: "cpu"},
-				{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
-				{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
+				//{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
+				//{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
 			}
 
 			if s.Value == "faster_whisper" {
@@ -1311,10 +1375,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				}
 				AIModelType = "m4t"
 
-				if txtTranslatorTypeSelect.GetSelected().Value != "Seamless_M4T" && !isLoadingSettingsFile {
+				if txtTranslatorTypeSelect.GetSelected().Value != "seamless_m4t" && !isLoadingSettingsFile {
 					dialog.NewConfirm(lang.L("Usage of Multi-Modal Model."), lang.L("Use Multi-Modal model for Text-Translation as well?"), func(b bool) {
 						if b {
-							txtTranslatorTypeSelect.SetSelected("Seamless_M4T")
+							txtTranslatorTypeSelect.SetSelected("seamless_m4t")
 						}
 					}, fyne.CurrentApp().Driver().AllWindows()[1]).Show()
 				}
@@ -1382,6 +1446,13 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 						}
 					}, fyne.CurrentApp().Driver().AllWindows()[1]).Show()
 				}
+				if ocrTypeSelect.GetSelected().Value != "phi4" && !isLoadingSettingsFile {
+					dialog.NewConfirm(lang.L("Usage of Multi-Modal Model."), lang.L("Use Multi-Modal model for Image-to-Text as well?"), func(b bool) {
+						if b {
+							ocrTypeSelect.SetSelected("phi4")
+						}
+					}, fyne.CurrentApp().Driver().AllWindows()[1]).Show()
+				}
 			} else {
 				sttPrecisionSelect.Disable()
 				sttModelSize.Disable()
@@ -1390,11 +1461,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			}
 
 			sttAiDeviceSelect.Refresh()
-
 			/**
 			special case for Seamless M4T or Phi4 since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
 			*/
-			if txtTranslatorTypeSelect.GetSelected().Value == "Seamless_M4T" && s.Value == "seamless_m4t" || txtTranslatorTypeSelect.GetSelected().Value == "phi4" && s.Value == "phi4" {
+			if s.Value == "seamless_m4t" && txtTranslatorTypeSelect.GetSelected().Value == "seamless_m4t" || s.Value == "phi4" && txtTranslatorTypeSelect.GetSelected().Value == "phi4" {
 				if txtTranslatorSizeSelect.ContainsEntry(sttModelSize.GetSelected(), CustomWidget.CompareValue) {
 					txtTranslatorSizeSelect.SetSelected(sttModelSize.GetSelected().Value)
 				}
@@ -1411,6 +1481,20 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				txtTranslatorSizeSelect.Enable()
 				txtTranslatorPrecisionSelect.Enable()
 				txtTranslatorDeviceSelect.Enable()
+			}
+
+			if s.Value == ocrTypeSelect.GetSelected().Value {
+				ocrAiDeviceSelect.Disable()
+				if ocrAiDeviceSelect.ContainsEntry(sttAiDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
+					ocrAiDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
+				}
+				ocrPrecisionSelect.Disable()
+				if ocrPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
+					ocrPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
+				}
+			} else if ocrTypeSelect.GetSelected().Value != "" {
+				ocrAiDeviceSelect.Enable()
+				ocrPrecisionSelect.Enable()
 			}
 
 			// calculate memory consumption
@@ -1529,8 +1613,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			txtTranslatorDeviceSelect.Options = []CustomWidget.TextValueOption{
 				{Text: "CUDA", Value: "cuda"},
 				{Text: "CPU", Value: "cpu"},
-				{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
-				{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
+				//{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
+				//{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
 			}
 
 			if s.Value == "NLLB200" {
@@ -1556,7 +1640,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					{Text: "CUDA", Value: "cuda"},
 					{Text: "CPU", Value: "cpu"},
 				}
-			} else if s.Value == "Seamless_M4T" {
+			} else if s.Value == "seamless_m4t" {
 				txtTranslatorPrecisionSelect.Options = []CustomWidget.TextValueOption{
 					{Text: "float32 " + lang.L("precision"), Value: "float32"},
 					{Text: "float16 " + lang.L("precision"), Value: "float16"},
@@ -1593,7 +1677,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					{Text: "Medium", Value: "medium"},
 					{Text: "Large", Value: "large"},
 				}
-			} else if s.Value == "Seamless_M4T" {
+			} else if s.Value == "seamless_m4t" {
 				txtTranslatorSizeSelect.Options = []CustomWidget.TextValueOption{
 					{Text: "Medium", Value: "medium"},
 					{Text: "Large", Value: "large"},
@@ -1615,7 +1699,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			/**
 			special case for Seamless M4T or Phi4 since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
 			*/
-			if s.Value == "Seamless_M4T" && sttTypeSelect.GetSelected().Value == "seamless_m4t" || s.Value == "phi4" && sttTypeSelect.GetSelected().Value == "phi4" {
+			if s.Value == "seamless_m4t" && sttTypeSelect.GetSelected().Value == "seamless_m4t" || s.Value == "phi4" && sttTypeSelect.GetSelected().Value == "phi4" {
 				modelType = "N"
 				if txtTranslatorSizeSelect.ContainsEntry(sttModelSize.GetSelected(), CustomWidget.CompareValue) {
 					txtTranslatorSizeSelect.SetSelected(sttModelSize.GetSelected().Value)
@@ -1629,6 +1713,20 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				txtTranslatorSizeSelect.Disable()
 				txtTranslatorPrecisionSelect.Disable()
 				txtTranslatorDeviceSelect.Disable()
+			}
+
+			if s.Value == ocrTypeSelect.GetSelected().Value {
+				ocrAiDeviceSelect.Disable()
+				if ocrAiDeviceSelect.ContainsEntry(txtTranslatorDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
+					ocrAiDeviceSelect.SetSelected(txtTranslatorDeviceSelect.GetSelected().Value)
+				}
+				ocrPrecisionSelect.Disable()
+				if ocrPrecisionSelect.ContainsEntry(txtTranslatorPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
+					ocrPrecisionSelect.SetSelected(txtTranslatorPrecisionSelect.GetSelected().Value)
+				}
+			} else if ocrTypeSelect.GetSelected().Value != "" {
+				ocrAiDeviceSelect.Enable()
+				ocrPrecisionSelect.Enable()
 			}
 
 			AIModel := ProfileAIModelOption{
@@ -1646,8 +1744,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		ttsAiDeviceSelect := CustomWidget.NewTextValueSelect("tts_ai_device", []CustomWidget.TextValueOption{
 			{Text: "CUDA", Value: "cuda"},
 			{Text: "CPU", Value: "cpu"},
-			{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
-			{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
+			//{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
+			//{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
 		}, func(s CustomWidget.TextValueOption) {
 			if !Hardwareinfo.IsNVIDIACard(nil) && s.Value == "cuda" {
 				dialog.ShowInformation(lang.L("No NVIDIA Card found"), lang.L("No NVIDIA Card found. You might need to use CPU instead for it to work."), fyne.CurrentApp().Driver().AllWindows()[1])
@@ -1686,8 +1784,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					ttsAiDeviceSelect.Options = []CustomWidget.TextValueOption{
 						{Text: "CUDA", Value: "cuda"},
 						{Text: "CPU", Value: "cpu"},
-						{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
-						{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
+						//{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
+						//{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
 					}
 				}
 				if !ttsAiDeviceSelect.ContainsEntry(selectedDeviceOption, CustomWidget.CompareValue) {
@@ -1711,15 +1809,41 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		profileForm.Append(lang.L("A.I. Device for Text-to-Speech"), ttsAiDeviceSelect)
 
-		ocrTypeSelect := CustomWidget.NewTextValueSelect("ocr_type", []CustomWidget.TextValueOption{
-			{Text: "Easy OCR", Value: "easyocr"},
-			{Text: "GOT OCR 2.0", Value: "got_ocr_20"},
-			{Text: lang.L("Disabled"), Value: ""},
-		}, func(s CustomWidget.TextValueOption) {}, 0)
+		profileForm.Append("", layout.NewSpacer())
+
+		ocrTypeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+			ocrAiDeviceSelect.Enable()
+			ocrPrecisionSelect.Enable()
+			if s.Value == "easyocr" {
+				ocrAiDeviceSelect.SetSelected("cpu")
+				ocrAiDeviceSelect.Disable()
+				ocrPrecisionSelect.Disable()
+			} else if s.Value == sttTypeSelect.GetSelected().Value {
+				ocrAiDeviceSelect.Disable()
+				if ocrAiDeviceSelect.ContainsEntry(sttAiDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
+					ocrAiDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
+				}
+				ocrPrecisionSelect.Disable()
+				if ocrPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
+					ocrPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
+				}
+			} else if s.Value == txtTranslatorTypeSelect.GetSelected().Value {
+				ocrAiDeviceSelect.Disable()
+				if ocrAiDeviceSelect.ContainsEntry(txtTranslatorDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
+					ocrAiDeviceSelect.SetSelected(txtTranslatorDeviceSelect.GetSelected().Value)
+				}
+				ocrPrecisionSelect.Disable()
+				if ocrPrecisionSelect.ContainsEntry(txtTranslatorPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
+					ocrPrecisionSelect.SetSelected(txtTranslatorPrecisionSelect.GetSelected().Value)
+				}
+			}
+		}
+		profileForm.Append(lang.L("Integrated Image-to-Text"), ocrTypeSelect)
+		//profileForm.Append(lang.L("Integrated Image-to-Text"), container.NewGridWithColumns(2, ocrTypeSelect))
+		profileForm.Append(lang.L("A.I. Device for Image-to-Text"), container.NewGridWithColumns(2, ocrAiDeviceSelect, ocrPrecisionSelect))
+		//profileForm.Append(lang.L("A.I. Device for Image-to-Text"), ocrAiDeviceSelect)
 
 		profileForm.Append("", layout.NewSpacer())
-		profileForm.Append(lang.L("Integrated Image-to-Text"), ocrTypeSelect)
-
 		pushToTalkChanged := false
 		PushToTalkInput.OnChanged = func(s string) {
 			if s != "" && !isLoadingSettingsFile {
@@ -1742,7 +1866,21 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		return profileForm
 	}
 
-	profileListContent := container.NewVScroll(BuildProfileForm())
+	formSubmitFunction := func() {}
+	submitButton := widget.NewButtonWithIcon(lang.L("Save and Load Profile"), theme.ConfirmIcon(), func() {})
+	profileFormBuild := BuildProfileForm()
+	submitButton.OnTapped = func() {
+		formSubmitFunction()
+	}
+
+	//profileListContent := container.NewVScroll(profileForm)
+
+	submitButton.Importance = widget.HighImportance
+	profileListContent := container.NewBorder(
+		nil, submitButton, nil, nil,
+		container.NewVScroll(profileFormBuild),
+	)
+
 	profileListContent.Hide()
 
 	heartImage := canvas.NewImageFromResource(Resources.ResourceHeartPng)
@@ -1807,6 +1945,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		isLoadingSettingsFile = true
 		profileHelpTextContent.Hide()
 		profileListContent.Show()
+		submitButton.Hide()
 
 		profileSettings := ProfileSettings.Presets[createProfilePresetSelect.GetSelected().Value]
 		profileSettings.SettingsFilename = settingsFiles[id]
@@ -1819,7 +1958,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			}
 		}
 		profileSettings.SettingsFilename = settingsFiles[id]
-		profileForm := profileListContent.Content.(*widget.Form)
+		//profileForm := profileListContent.Content.(*widget.Form)
+		profileForm := profileFormBuild.(*widget.Form)
 		profileForm.SubmitText = lang.L("Save and Load Profile")
 		profileForm.Items[0].Widget.(*fyne.Container).Objects[0].(*widget.Entry).SetText(profileSettings.Websocket_ip)
 		profileForm.Items[0].Widget.(*fyne.Container).Objects[1].(*widget.Entry).SetText(strconv.Itoa(profileSettings.Websocket_port))
@@ -1941,8 +2081,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileForm.Items[22].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Tts_ai_device)
 		// spacer (23)
 		profileForm.Items[24].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Ocr_type)
+		profileForm.Items[25].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Ocr_ai_device)
+		profileForm.Items[25].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Ocr_precision)
 
-		profileForm.OnSubmit = func() {
+		formSubmitFunction = func() {
 			profileSettings.Websocket_ip = profileForm.Items[0].Widget.(*fyne.Container).Objects[0].(*widget.Entry).Text
 			profileSettings.Websocket_port, _ = strconv.Atoi(profileForm.Items[0].Widget.(*fyne.Container).Objects[1].(*widget.Entry).Text)
 			profileSettings.Run_backend = profileForm.Items[0].Widget.(*fyne.Container).Objects[2].(*widget.Check).Checked
@@ -1979,6 +2121,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			profileSettings.Tts_ai_device = profileForm.Items[22].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
 
 			profileSettings.Ocr_type = profileForm.Items[24].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Ocr_ai_device = profileForm.Items[25].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
+			profileSettings.Ocr_precision = profileForm.Items[25].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected().Value
 
 			// update existing settings or create new one if it does not exist yet
 			if Utilities.FileExists(filepath.Join(profilesDir, settingsFiles[id])) {
@@ -2019,9 +2163,11 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					Tts_type:      profileSettings.Tts_type,
 					Tts_ai_device: profileSettings.Tts_ai_device,
 
-					Osc_ip:   profileSettings.Osc_ip,
-					Osc_port: profileSettings.Osc_port,
-					Ocr_type: profileSettings.Ocr_type,
+					Osc_ip:        profileSettings.Osc_ip,
+					Osc_port:      profileSettings.Osc_port,
+					Ocr_type:      profileSettings.Ocr_type,
+					Ocr_ai_device: profileSettings.Ocr_ai_device,
+					Ocr_precision: profileSettings.Ocr_precision,
 				}
 				newProfileEntry.Save(filepath.Join(profilesDir, settingsFiles[id]))
 			}
@@ -2094,6 +2240,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
 		}
 		isLoadingSettingsFile = false
+		submitButton.Show()
 	}
 
 	newProfileEntry := widget.NewEntry()

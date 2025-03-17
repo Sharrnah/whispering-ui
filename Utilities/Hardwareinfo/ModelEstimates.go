@@ -60,9 +60,9 @@ var Models = []AIModel{
 	{"TxtTranslatorM2M100_small", 2197.0},
 	{"TxtTranslatorM2M100_large", 5211.0},
 	// Seamless M4T models
-	{"TxtTranslatorSeamless_M4T_medium", 6250.0},
-	{"TxtTranslatorSeamless_M4T_large", 10518.0},
-	{"TxtTranslatorSeamless_M4T_large-v2", 10518.0},
+	{"TxtTranslatorseamless_m4t_medium", 6250.0},
+	{"TxtTranslatorseamless_m4t_large", 10518.0},
+	{"TxtTranslatorseamless_m4t_large-v2", 10518.0},
 	// TTS types
 	{"ttsType-silero_", 1533.0},
 	{"ttsType-f5_e2_", 1200.0},

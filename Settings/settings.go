@@ -160,6 +160,8 @@ type Conf struct {
 
 	// OCR settings
 	Ocr_type         string `yaml:"ocr_type" json:"ocr_type"`
+	Ocr_ai_device    string `yaml:"ocr_ai_device" json:"ocr_ai_device"`
+	Ocr_precision    string `yaml:"ocr_precision" json:"ocr_precision"`
 	Ocr_txt_src_lang string `yaml:"ocr_txt_src_lang" json:"ocr_txt_src_lang"`
 	Ocr_txt_trg_lang string `yaml:"ocr_txt_trg_lang" json:"ocr_txt_trg_lang"`
 	Ocr_lang         string `yaml:"ocr_lang" json:"ocr_lang"`
