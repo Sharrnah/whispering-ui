@@ -233,6 +233,15 @@ func CreateOcrWindow() fyne.CanvasObject {
 
 	translateOnlyButton := widget.NewButtonWithIcon(lang.L("Translate Only"), theme.MenuExpandIcon(), translateOnlyFunction)
 
+	// special case for models that only allow setting target language
+	if Settings.Config.Txt_translator == "phi4" {
+		Fields.Field.SourceLanguageTxtTranslateCombo.Disable()
+		Fields.Field.SourceLanguageTxtTranslateCombo.Text = "auto"
+		Fields.Field.SourceLanguageTxtTranslateCombo.Refresh()
+
+		switchButton.Disable()
+	}
+
 	ocrContent := container.New(layout.NewVBoxLayout(),
 		ocrSettingsRow,
 		container.New(layout.NewPaddedLayout(), buttonRow),
