@@ -73,6 +73,15 @@ func CreateTextTranslateWindow() fyne.CanvasObject {
 		container.NewBorder(nil, Fields.Field.TranscriptionTranslationInputHintOnTxtTranslate, nil, nil, Fields.Field.TranscriptionTranslationTextTranslationInput),
 	)
 
+	// special case for models that only allow setting target language
+	if Settings.Config.Txt_translator == "phi4" {
+		Fields.Field.SourceLanguageCombo.Disable()
+		Fields.Field.SourceLanguageCombo.Text = "auto"
+		Fields.Field.SourceLanguageCombo.Refresh()
+
+		switchButton.Disable()
+	}
+
 	translateOnlyFunction := func() {
 		fromLang := Messages.InstalledLanguages.GetCodeByName(Fields.Field.SourceLanguageCombo.Text)
 		if fromLang == "" {

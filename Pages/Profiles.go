@@ -896,6 +896,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Original NLLB200 (200 languages)", Value: "NLLB200"},
 			{Text: "M2M100 (100 languages)", Value: "M2M100"},
 			{Text: "Seamless M4T (101 languages)", Value: "Seamless_M4T"},
+			{Text: "Phi4 (23 languages)", Value: "phi4"},
 			{Text: lang.L("Disabled"), Value: ""},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
@@ -962,10 +963,14 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			/**
 			special case for Seamless M4T since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
 			*/
-			if txtTranslatorTypeSelect.GetSelected().Value == "Seamless_M4T" && sttTypeSelect.GetSelected().Value == "seamless_m4t" {
+			if txtTranslatorTypeSelect.GetSelected().Value == "Seamless_M4T" && sttTypeSelect.GetSelected().Value == "seamless_m4t" || txtTranslatorTypeSelect.GetSelected().Value == "phi4" && sttTypeSelect.GetSelected().Value == "phi4" {
 				txtTranslatorSizeSelect.SetSelected(s.Value)
-				txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
-				txtTranslatorDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
+				if txtTranslatorPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
+					txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
+				}
+				if txtTranslatorDeviceSelect.ContainsEntry(sttAiDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
+					txtTranslatorDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
+				}
 				txtTranslatorSizeSelect.Disable()
 				txtTranslatorPrecisionSelect.Disable()
 				txtTranslatorDeviceSelect.Disable()
@@ -1022,10 +1027,14 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			/**
 			special case for Seamless M4T since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
 			*/
-			if txtTranslatorTypeSelect.GetSelected().Value == "Seamless_M4T" && sttTypeSelect.GetSelected().Value == "seamless_m4t" {
+			if txtTranslatorTypeSelect.GetSelected().Value == "Seamless_M4T" && sttTypeSelect.GetSelected().Value == "seamless_m4t" || txtTranslatorTypeSelect.GetSelected().Value == "phi4" && sttTypeSelect.GetSelected().Value == "phi4" {
 				txtTranslatorSizeSelect.SetSelected(s.Value)
-				txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
-				txtTranslatorDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
+				if txtTranslatorPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
+					txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
+				}
+				if txtTranslatorDeviceSelect.ContainsEntry(sttAiDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
+					txtTranslatorDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
+				}
 				txtTranslatorSizeSelect.Disable()
 				txtTranslatorPrecisionSelect.Disable()
 				txtTranslatorDeviceSelect.Disable()
@@ -1335,12 +1344,20 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					sttPrecisionSelect.SetSelected("float16")
 				}
 
-				AIModel := ProfileAIModelOption{
-					AIModel:     "Whisper",
-					AIModelType: AIModelType,
-					AIModelSize: "large",
+				//AIModel := ProfileAIModelOption{
+				//	AIModel:     "Whisper",
+				//	AIModelType: AIModelType,
+				//	AIModelSize: "large",
+				//}
+				//AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
+
+				if txtTranslatorTypeSelect.GetSelected().Value != "phi4" && !isLoadingSettingsFile {
+					dialog.NewConfirm(lang.L("Usage of Multi-Modal Model."), lang.L("Use Multi-Modal model for Text-Translation as well?"), func(b bool) {
+						if b {
+							txtTranslatorTypeSelect.SetSelected("phi4")
+						}
+					}, fyne.CurrentApp().Driver().AllWindows()[1]).Show()
 				}
-				AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 			} else {
 				sttPrecisionSelect.Disable()
 				sttModelSize.Disable()
@@ -1351,14 +1368,18 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			sttAiDeviceSelect.Refresh()
 
 			/**
-			special case for Seamless M4T since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
+			special case for Seamless M4T or Phi4 since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
 			*/
-			if txtTranslatorTypeSelect.GetSelected().Value == "Seamless_M4T" && s.Value == "seamless_m4t" {
+			if txtTranslatorTypeSelect.GetSelected().Value == "Seamless_M4T" && s.Value == "seamless_m4t" || txtTranslatorTypeSelect.GetSelected().Value == "phi4" && s.Value == "phi4" {
 				if txtTranslatorSizeSelect.ContainsEntry(sttModelSize.GetSelected(), CustomWidget.CompareValue) {
 					txtTranslatorSizeSelect.SetSelected(sttModelSize.GetSelected().Value)
 				}
-				txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
-				txtTranslatorDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
+				if txtTranslatorPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
+					txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
+				}
+				if txtTranslatorDeviceSelect.ContainsEntry(sttAiDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
+					txtTranslatorDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
+				}
 				txtTranslatorSizeSelect.Disable()
 				txtTranslatorPrecisionSelect.Disable()
 				txtTranslatorDeviceSelect.Disable()
@@ -1519,6 +1540,12 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					{Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"},
 					{Text: "int8_bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "int8_bfloat16"},
 				}
+			} else if s.Value == "phi4" {
+				txtTranslatorPrecisionSelect.Options = []CustomWidget.TextValueOption{
+					{Text: "float32 " + lang.L("precision"), Value: "float32"},
+					{Text: "float16 " + lang.L("precision"), Value: "float16"},
+					{Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"},
+				}
 			} else if s.Value == "" {
 				txtTranslatorPrecisionSelect.Disable()
 				txtTranslatorSizeSelect.Disable()
@@ -1551,18 +1578,30 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				if selectedSize == "small" {
 					txtTranslatorSizeSelect.SetSelected("medium")
 				}
+			} else if s.Value == "phi4" {
+				txtTranslatorSizeSelect.Options = []CustomWidget.TextValueOption{
+					{Text: "Large", Value: "large"},
+				}
+				if selectedSize != "large" {
+					txtTranslatorSizeSelect.SetSelected("large")
+				}
+				txtTranslatorSizeSelect.Disable()
 			}
 
 			/**
-			special case for Seamless M4T since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
+			special case for Seamless M4T or Phi4 since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
 			*/
-			if s.Value == "Seamless_M4T" && sttTypeSelect.GetSelected().Value == "seamless_m4t" {
+			if s.Value == "Seamless_M4T" && sttTypeSelect.GetSelected().Value == "seamless_m4t" || s.Value == "phi4" && sttTypeSelect.GetSelected().Value == "phi4" {
 				modelType = "N"
 				if txtTranslatorSizeSelect.ContainsEntry(sttModelSize.GetSelected(), CustomWidget.CompareValue) {
 					txtTranslatorSizeSelect.SetSelected(sttModelSize.GetSelected().Value)
 				}
-				txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
-				txtTranslatorDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
+				if txtTranslatorPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
+					txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
+				}
+				if txtTranslatorDeviceSelect.ContainsEntry(sttAiDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
+					txtTranslatorDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
+				}
 				txtTranslatorSizeSelect.Disable()
 				txtTranslatorPrecisionSelect.Disable()
 				txtTranslatorDeviceSelect.Disable()
