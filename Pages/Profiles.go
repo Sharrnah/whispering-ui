@@ -433,85 +433,6 @@ func stopAndClose(playBackDevice CurrentPlaybackDevice, onClose func()) {
 	onClose()
 }
 
-type ProfileAIModelOption struct {
-	AIModel           string
-	AIModelType       string
-	AIModelSize       string
-	Precision         float64
-	Device            string
-	MemoryConsumption float64
-}
-
-var AllProfileAIModelOptions = make([]ProfileAIModelOption, 0)
-
-func (p ProfileAIModelOption) CalculateMemoryConsumption(CPUbar *widget.ProgressBar, GPUBar *widget.ProgressBar, totalGPUMemory int64) {
-	addToList := true
-	lastIndex := -1
-	for index, profileAIModelOption := range AllProfileAIModelOptions {
-		if profileAIModelOption.AIModel == p.AIModel {
-			// update existing entry
-			println("Device updated...")
-			if p.Device != "" {
-				AllProfileAIModelOptions[index].Device = p.Device
-			}
-			if p.AIModelType != "" {
-				AllProfileAIModelOptions[index].AIModelType = p.AIModelType
-			}
-			if p.AIModelSize != "" {
-				AllProfileAIModelOptions[index].AIModelSize = p.AIModelSize
-			}
-			if p.Precision != 0 {
-				AllProfileAIModelOptions[index].Precision = p.Precision
-			}
-			AllProfileAIModelOptions[index].MemoryConsumption = p.MemoryConsumption
-			addToList = false
-			lastIndex = index
-			break
-		}
-	}
-	if lastIndex > -1 && len(AllProfileAIModelOptions) >= lastIndex+1 {
-		// iterate through all Hardwareinfo.Models structs and find the one that matches the current Name
-		for _, model := range Hardwareinfo.Models {
-			fullModelName := AllProfileAIModelOptions[lastIndex].AIModel + AllProfileAIModelOptions[lastIndex].AIModelType + "_" + AllProfileAIModelOptions[lastIndex].AIModelSize
-			if model.Name == fullModelName {
-				finalMemoryUsage := Hardwareinfo.EstimateMemoryUsage(model.Float32PrecisionMemoryUsage, AllProfileAIModelOptions[lastIndex].Precision)
-				println("FullName:")
-				println(model.Name)
-				println("finalMemoryUsage:")
-				println(int(finalMemoryUsage))
-
-				AllProfileAIModelOptions[lastIndex].MemoryConsumption = finalMemoryUsage
-			}
-		}
-	}
-
-	if addToList {
-		println("Device added...")
-		AllProfileAIModelOptions = append(AllProfileAIModelOptions, p)
-	}
-
-	// update memory usage bars
-	GPUBar.Value = 0.0
-	CPUbar.Value = 0.0
-	for _, profileAIModelOption := range AllProfileAIModelOptions {
-		println(profileAIModelOption.AIModel, profileAIModelOption.MemoryConsumption)
-		if strings.HasPrefix(strings.ToLower(profileAIModelOption.Device), "cuda") || strings.HasPrefix(strings.ToLower(profileAIModelOption.Device), "direct-ml") {
-			println("CUDA MEMORY:")
-			println(int(profileAIModelOption.MemoryConsumption))
-			if totalGPUMemory == 0 {
-				GPUBar.Max = GPUBar.Value + profileAIModelOption.MemoryConsumption
-			}
-			GPUBar.Value = GPUBar.Value + profileAIModelOption.MemoryConsumption
-		} else if strings.HasPrefix(strings.ToLower(profileAIModelOption.Device), "cpu") {
-			println("CPU MEMORY:")
-			println(int(profileAIModelOption.MemoryConsumption))
-			CPUbar.Value = CPUbar.Value + profileAIModelOption.MemoryConsumption
-		}
-	}
-	CPUbar.Refresh()
-	GPUBar.Refresh()
-}
-
 const energyDetectionTime = 10
 const EnergySliderMax = 2000
 
@@ -657,7 +578,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		// refresh GPU Compute Capability label
 		GPUInformationLabel.SetText("Compute Capability: " + fmt.Sprintf("%.1f", ComputeCapability))
 		// refresh memory consumption labels
-		AIModel := ProfileAIModelOption{}
+		AIModel := Hardwareinfo.ProfileAIModelOption{}
 		AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 	}()
 
@@ -691,7 +612,14 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		ocrAiDeviceSelect := CustomWidget.NewTextValueSelect("ocr_ai_device", []CustomWidget.TextValueOption{
 			{Text: "CPU", Value: "cpu"},
 			{Text: "CUDA", Value: "cuda"},
-		}, func(s CustomWidget.TextValueOption) {}, 0)
+		}, func(s CustomWidget.TextValueOption) {
+			// calculate memory consumption
+			AIModel := Hardwareinfo.ProfileAIModelOption{
+				AIModel: "ocrType",
+				Device:  s.Value,
+			}
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
+		}, 0)
 
 		ocrTypeSelect := CustomWidget.NewTextValueSelect("ocr_type", []CustomWidget.TextValueOption{
 			{Text: "Easy OCR", Value: "easyocr"},
@@ -704,7 +632,37 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "float32 " + lang.L("precision"), Value: "float32"},
 			{Text: "float16 " + lang.L("precision"), Value: "float16"},
 			{Text: "bfloat16 " + lang.L("precision"), Value: "bfloat16"},
-		}, func(s CustomWidget.TextValueOption) {}, 0)
+		}, func(s CustomWidget.TextValueOption) {
+			precisionType := Hardwareinfo.Float32
+			switch s.Value {
+			case "float32":
+				precisionType = Hardwareinfo.Float32
+			case "float16":
+				precisionType = Hardwareinfo.Float16
+			case "int32":
+				precisionType = Hardwareinfo.Int32
+			case "int16":
+				precisionType = Hardwareinfo.Int16
+			case "int8_float16":
+				precisionType = Hardwareinfo.Int8
+			case "int8":
+				precisionType = Hardwareinfo.Int8
+			case "bfloat16":
+				precisionType = Hardwareinfo.Float16
+			case "int8_bfloat16":
+				precisionType = Hardwareinfo.Int8
+			case "8bit":
+				precisionType = Hardwareinfo.Bit8
+			case "4bit":
+				precisionType = Hardwareinfo.Bit4
+			}
+			// calculate memory consumption
+			AIModel := Hardwareinfo.ProfileAIModelOption{
+				AIModel:   "ocrType",
+				Precision: precisionType,
+			}
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
+		}, 0)
 
 		appendWidgetToForm(profileForm, lang.L("Websocket IP + Port"), container.NewGridWithColumns(3, websocketIp, websocketPort, runBackendCheckbox), lang.L("IP + Port of the websocket server the backend will start and the UI will connect to."))
 		profileForm.Append("", layout.NewSpacer())
@@ -996,7 +954,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				sttPrecisionSelect.SetSelected("float16")
 			}
 			// calculate memory consumption
-			AIModel := ProfileAIModelOption{
+			AIModel := Hardwareinfo.ProfileAIModelOption{
 				AIModel: "Whisper",
 				Device:  s.Value,
 			}
@@ -1074,7 +1032,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				dialog.ShowInformation(lang.L("Information"), lang.L("Your Device most likely does not support this precision computation. Please consider switching to some other precision.", map[string]interface{}{"Device": "CUDA GPU", "Precision": "bfloat16"}), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 			// calculate memory consumption
-			AIModel := ProfileAIModelOption{
+			AIModel := Hardwareinfo.ProfileAIModelOption{
 				AIModel:   "Whisper",
 				Precision: precisionType,
 			}
@@ -1201,6 +1159,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "1b-all (1162 languages)", Value: "1b-all"},
 		}
 
+		phi4ModelList := []CustomWidget.TextValueOption{
+			{Text: "Large", Value: "large"},
+		}
+
 		sttModelSize := CustomWidget.NewTextValueSelect("model", fasterWhisperModelList, func(s CustomWidget.TextValueOption) {
 			// remove last suffix starting with a dot
 			sizeName := strings.Split(s.Value, ".")[0]
@@ -1209,7 +1171,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			sizeName, _ = strings.CutSuffix(sizeName, "-v3")
 
 			// calculate memory consumption
-			AIModel := ProfileAIModelOption{
+			AIModel := Hardwareinfo.ProfileAIModelOption{
 				AIModel:     "Whisper",
 				AIModelSize: sizeName,
 			}
@@ -1291,7 +1253,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					{Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"},
 					{Text: "int8_bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "int8_bfloat16"},
 				}
-				AIModelType = "CT2"
+				AIModelType = "faster_whisper"
 			} else if s.Value == "original_whisper" {
 				sttModelSize.Options = originalWhisperModelList
 				// unselect if not in list
@@ -1373,7 +1335,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				if selectedPrecision == "int8" || selectedPrecision == "int16" {
 					sttPrecisionSelect.SetSelected("float32")
 				}
-				AIModelType = "m4t"
+				AIModelType = "seamless_m4t"
 
 				if txtTranslatorTypeSelect.GetSelected().Value != "seamless_m4t" && !isLoadingSettingsFile {
 					dialog.NewConfirm(lang.L("Usage of Multi-Modal Model."), lang.L("Use Multi-Modal model for Text-Translation as well?"), func(b bool) {
@@ -1385,7 +1347,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			} else if s.Value == "speech_t5" {
 				sttPrecisionSelect.Disable()
 				sttModelSize.Disable()
-				AIModelType = "t5"
+				AIModelType = "speech_t5"
 			} else if s.Value == "wav2vec_bert" {
 				sttModelSize.Disable()
 				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
@@ -1397,7 +1359,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "bfloat16" || selectedPrecision == "int8_bfloat16" {
 					sttPrecisionSelect.SetSelected("float16")
 				}
-				AIModelType = "wav2vec-bert"
+				AIModelType = "wav2vec_bert"
 			} else if s.Value == "mms" {
 				sttModelSize.Options = originalMmsModelList
 				// unselect if not in list
@@ -1418,10 +1380,15 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				sttPrecisionSelect.Disable()
 				sttPrecisionSelect.SetSelected("float32") // only available in float32
 				sttModelSize.Disable()
-				AIModelType = "nemo-canary"
+				AIModelType = "nemo_canary"
 			} else if s.Value == "phi4" {
+				sttModelSize.Options = phi4ModelList
+				// unselect if not in list
+				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption, CustomWidget.CompareValue) {
+					sttModelSize.SetSelectedIndex(0)
+				}
 				sttModelSize.Disable()
-				AIModelType = "Phi4"
+				AIModelType = "phi4"
 
 				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
 					{Text: "float32 " + lang.L("precision"), Value: "float32"},
@@ -1457,7 +1424,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				sttPrecisionSelect.Disable()
 				sttModelSize.Disable()
 				sttAiDeviceSelect.Disable()
-				AIModelType = "disabled"
+				//AIModelType = "disabled"
 			}
 
 			sttAiDeviceSelect.Refresh()
@@ -1498,7 +1465,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			}
 
 			// calculate memory consumption
-			AIModel := ProfileAIModelOption{
+			AIModel := Hardwareinfo.ProfileAIModelOption{
 				AIModel:     "Whisper",
 				AIModelType: AIModelType,
 			}
@@ -1530,7 +1497,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				txtTranslatorPrecisionSelect.SetSelected("float16")
 			}
 			// calculate memory consumption
-			AIModel := ProfileAIModelOption{
+			AIModel := Hardwareinfo.ProfileAIModelOption{
 				AIModel: "TxtTranslator",
 				Device:  s.Value,
 			}
@@ -1574,7 +1541,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				dialog.ShowInformation(lang.L("Information"), lang.L("Your Device most likely does not support this precision computation. Please consider switching to some other precision.", map[string]interface{}{"Device": "CUDA GPU", "Precision": "bfloat16"}), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 			// calculate memory consumption
-			AIModel := ProfileAIModelOption{
+			AIModel := Hardwareinfo.ProfileAIModelOption{
 				AIModel:   "TxtTranslator",
 				Precision: precisionType,
 			}
@@ -1585,7 +1552,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		txtTranslatorSizeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
 			// calculate memory consumption
-			AIModel := ProfileAIModelOption{
+			AIModel := Hardwareinfo.ProfileAIModelOption{
 				AIModel:     "TxtTranslator",
 				AIModelSize: s.Value,
 			}
@@ -1658,7 +1625,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				txtTranslatorPrecisionSelect.Disable()
 				txtTranslatorSizeSelect.Disable()
 				txtTranslatorDeviceSelect.Disable()
-				modelType = "N"
+				//modelType = "N"
 			}
 
 			txtTranslatorDeviceSelect.Refresh()
@@ -1700,7 +1667,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			special case for Seamless M4T or Phi4 since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
 			*/
 			if s.Value == "seamless_m4t" && sttTypeSelect.GetSelected().Value == "seamless_m4t" || s.Value == "phi4" && sttTypeSelect.GetSelected().Value == "phi4" {
-				modelType = "N"
+				//modelType = "N"
 				if txtTranslatorSizeSelect.ContainsEntry(sttModelSize.GetSelected(), CustomWidget.CompareValue) {
 					txtTranslatorSizeSelect.SetSelected(sttModelSize.GetSelected().Value)
 				}
@@ -1729,7 +1696,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				ocrPrecisionSelect.Enable()
 			}
 
-			AIModel := ProfileAIModelOption{
+			AIModel := Hardwareinfo.ProfileAIModelOption{
 				AIModel:     "TxtTranslator",
 				AIModelType: modelType,
 			}
@@ -1751,8 +1718,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				dialog.ShowInformation(lang.L("No NVIDIA Card found"), lang.L("No NVIDIA Card found. You might need to use CPU instead for it to work."), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 			// calculate memory consumption
-			AIModel := ProfileAIModelOption{
-				AIModel:   "ttsType-",
+			AIModel := Hardwareinfo.ProfileAIModelOption{
+				AIModel:   "ttsType",
 				Device:    s.Value,
 				Precision: Hardwareinfo.Float32,
 			}
@@ -1768,9 +1735,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
 		ttsTypeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
-			AIModelType := "disabled"
+			//AIModelType := "disabled"
+			AIModelType := s.Value
 			if s.Value != "" {
-				AIModelType = s.Value
 				ttsAiDeviceSelect.Enable()
 
 				selectedDeviceOption := ttsAiDeviceSelect.GetSelected()
@@ -1797,8 +1764,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				ttsAiDeviceSelect.Disable()
 			}
 			// calculate memory consumption
-			AIModel := ProfileAIModelOption{
-				AIModel:     "ttsType-",
+			AIModel := Hardwareinfo.ProfileAIModelOption{
+				AIModel:     "ttsType",
 				AIModelType: AIModelType,
 				Precision:   Hardwareinfo.Float32,
 			}
@@ -1814,6 +1781,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		ocrTypeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
 			ocrAiDeviceSelect.Enable()
 			ocrPrecisionSelect.Enable()
+			aiModelType := s.Value
 			if s.Value == "easyocr" {
 				ocrAiDeviceSelect.SetSelected("cpu")
 				ocrAiDeviceSelect.Disable()
@@ -1827,6 +1795,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				if ocrPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
 					ocrPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
 				}
+				//aiModelType = "disabled"
 			} else if s.Value == txtTranslatorTypeSelect.GetSelected().Value {
 				ocrAiDeviceSelect.Disable()
 				if ocrAiDeviceSelect.ContainsEntry(txtTranslatorDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
@@ -1836,7 +1805,15 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				if ocrPrecisionSelect.ContainsEntry(txtTranslatorPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
 					ocrPrecisionSelect.SetSelected(txtTranslatorPrecisionSelect.GetSelected().Value)
 				}
+				//aiModelType = "disabled"
 			}
+
+			// calculate memory consumption
+			AIModel := Hardwareinfo.ProfileAIModelOption{
+				AIModel:     "ocrType",
+				AIModelType: aiModelType,
+			}
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 		}
 		profileForm.Append(lang.L("Integrated Image-to-Text"), ocrTypeSelect)
 		//profileForm.Append(lang.L("Integrated Image-to-Text"), container.NewGridWithColumns(2, ocrTypeSelect))
