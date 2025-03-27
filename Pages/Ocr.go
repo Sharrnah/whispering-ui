@@ -31,7 +31,7 @@ func guessTranslationFromLanguage(ocrLanguageCode string) string {
 	if fromLang == "" || fromLang == "Auto" {
 		fromLang = "auto"
 	}
-	if fromLang == "auto" {
+	if fromLang == "auto" && !Fields.Field.OcrLanguageCombo.Disabled() && Fields.Field.OcrLanguageCombo.Text != "" && strings.ToLower(Fields.Field.OcrLanguageCombo.Text) != "auto" {
 		guessedSrcLangByOCRLang := ""
 		// try to guess the language from the OCR language selection if auto to lessen the language guessing
 		guessedSrcLangByOCRLang = Messages.InstalledLanguages.GetCodeByName(Fields.Field.OcrLanguageCombo.Text)
