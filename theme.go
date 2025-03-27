@@ -7,11 +7,12 @@ import (
 )
 
 var (
-	orange                     = &color.NRGBA{R: 198, G: 123, B: 0, A: 255}
-	orangeTransparent          = &color.NRGBA{R: 198, G: 123, B: 0, A: 180}
-	orangeTransparentSelection = &color.NRGBA{R: 198, G: 123, B: 0, A: 100}
-	colorDarkHover             = color.NRGBA{R: 0xff, G: 0xff, B: 0xff, A: 0x0f}
-	colorDarkDisabled          = color.NRGBA{R: 80, G: 80, B: 81, A: 255}
+	orange                     = color.NRGBA{R: 198, G: 123, B: 0, A: 255}       // light orange
+	orangeForeground           = color.NRGBA{R: 0, G: 0, B: 0, A: 255}           // Black
+	orangeTransparent          = color.NRGBA{R: 198, G: 123, B: 0, A: 180}       // light orange with transparency
+	orangeTransparentSelection = color.NRGBA{R: 198, G: 123, B: 0, A: 100}       // light orange with transparency for selection
+	colorDarkHover             = color.NRGBA{R: 0xff, G: 0xff, B: 0xff, A: 0x0f} // white with transparency
+	colorDarkDisabled          = color.NRGBA{R: 80, G: 80, B: 81, A: 255}        // dark gray
 	colorDarkInputBackground   = color.NRGBA{R: 0x25, G: 0x25, B: 0x28, A: 0xff}
 	ColorSeparator             = color.NRGBA{R: 120, G: 120, B: 120, A: 255}
 )
@@ -24,6 +25,8 @@ func (m AppTheme) Color(name fyne.ThemeColorName, variant fyne.ThemeVariant) col
 	switch name {
 	case theme.ColorNamePrimary:
 		return orange
+	case theme.ColorNameForegroundOnPrimary:
+		return orangeForeground
 	case theme.ColorNameScrollBar:
 		return orangeTransparent
 	case theme.ColorNameHover, theme.ColorNameFocus:
