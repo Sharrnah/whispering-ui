@@ -166,7 +166,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 			return len(Fields.DataBindings.WhisperResultsData)
 		},
 		func() fyne.CanvasObject {
-			return container.New(layout.NewGridLayout(1),
+			return container.New(layout.NewGridLayoutWithRows(2),
 				container.NewBorder(
 					nil,
 					nil,
@@ -215,7 +215,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 			}
 
 			// resize
-			Fields.Field.WhisperResultList.SetItemHeight(i, translateResultLabel.MinSize().Height+originalTranscriptionLabel.MinSize().Height+15)
+			Fields.Field.WhisperResultList.SetItemHeight(i, translateResultLabel.MinSize().Height+originalTranscriptionLabel.MinSize().Height+theme.Padding())
 		},
 	)
 
