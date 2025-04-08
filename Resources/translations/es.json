@@ -331,5 +331,10 @@
     "osc_sync_afk.Name": "OSC sincronizar STT con AFK",
     "osc_sync_afk.Description": "Sincroniza el estado de voz a texto con el estado AFK de VRChat.",
     "E-Mail Address (Optional)": "Dirección de correo electrónico (opcional)",
-    "Clear": "Limpiar"
+    "Clear": "Limpiar",
+    "tts_normalize.Description": "Normaliza automáticamente el volumen de la salida de texto a voz.",
+    "translate": "traducir",
+    "transcribe & translate": "transcribir y traducir",
+    "question & answering": "preguntas y respuestas",
+    "tts_normalize.Name": "Normalizar el volumen de texto a voz"
 }
