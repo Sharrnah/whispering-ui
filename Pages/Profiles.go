@@ -1465,6 +1465,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			}
 
 			// calculate memory consumption
+			if AIModelType == "" {
+				AIModelType = "-"
+			}
 			AIModel := Hardwareinfo.ProfileAIModelOption{
 				AIModel:     "Whisper",
 				AIModelType: AIModelType,
@@ -1696,6 +1699,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				ocrPrecisionSelect.Enable()
 			}
 
+			if modelType == "" {
+				modelType = "-"
+			}
 			AIModel := Hardwareinfo.ProfileAIModelOption{
 				AIModel:     "TxtTranslator",
 				AIModelType: modelType,
@@ -1764,6 +1770,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				ttsAiDeviceSelect.Disable()
 			}
 			// calculate memory consumption
+			if AIModelType == "" {
+				AIModelType = "-"
+			}
 			AIModel := Hardwareinfo.ProfileAIModelOption{
 				AIModel:     "ttsType",
 				AIModelType: AIModelType,
@@ -1809,6 +1818,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			}
 
 			// calculate memory consumption
+			if aiModelType == "" {
+				aiModelType = "-"
+			}
 			AIModel := Hardwareinfo.ProfileAIModelOption{
 				AIModel:     "ocrType",
 				AIModelType: aiModelType,
