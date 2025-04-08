@@ -331,5 +331,10 @@
     "Your error report has been sent.": "Raport o błędzie został wysłany.",
     "Send": "Wyślij",
     "Automatically Report Errors": "Automatyczne zgłaszanie błędów",
-    "Clear": "Wyczyść"
+    "Clear": "Wyczyść",
+    "translate": "tłumaczyć",
+    "transcribe & translate": "transkrypcja i tłumaczenie",
+    "question & answering": "pytania i odpowiedzi",
+    "tts_normalize.Name": "Normalizacja głośności zamiany tekstu na mowę",
+    "tts_normalize.Description": "Automatyczna normalizacja głośności wyjścia zamiany tekstu na mowę."
 }
