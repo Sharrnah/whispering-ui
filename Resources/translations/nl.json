@@ -342,5 +342,10 @@
     "Do you want to automatically report errors?": "Wil je automatisch fouten melden?",
     "Send error report": "Foutrapport verzenden",
     "Attach log file": "Logbestand bijvoegen",
-    "Clear": "Leeg"
+    "Clear": "Leeg",
+    "translate": "vertalen",
+    "transcribe & translate": "transcriberen en vertalen",
+    "question & answering": "vraag & antwoord",
+    "tts_normalize.Name": "Tekst-naar-spraak volume normaliseren",
+    "tts_normalize.Description": "Het volume van de Text-to-Speech uitvoer automatisch normaliseren."
 }
