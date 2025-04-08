@@ -342,5 +342,10 @@
     "Error Report Sent": "Odeslané hlášení o chybě",
     "Your error report has been sent.": "Vaše chybové hlášení bylo odesláno.",
     "Automatically Report Errors": "Automatické hlášení chyb",
-    "Clear": "Vymazat"
+    "Clear": "Vymazat",
+    "translate": "přeložit",
+    "transcribe & translate": "přepisovat a překládat",
+    "question & answering": "otázky a odpovědi",
+    "tts_normalize.Name": "Normalizace hlasitosti převodu textu na řeč",
+    "tts_normalize.Description": "Automatická normalizace hlasitosti výstupu převodu textu na řeč."
 }
