@@ -54,6 +54,9 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		}, {
 			Text:  lang.L("question & answering"),
 			Value: "question_answering",
+		}, {
+			Text:  lang.L("function calling"),
+			Value: "function_calling",
 		}}
 
 		// set initial task to value of loaded profile configuration
@@ -66,13 +69,13 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 
 		oldOnChangeFunc := speechTaskWidget.(*CustomWidget.TextValueSelect).OnChanged
 		speechTaskWidget.(*CustomWidget.TextValueSelect).OnChanged = func(s CustomWidget.TextValueOption) {
-			if s.Value == "transcribe" || s.Value == "question_answering" {
+			if s.Value == "transcribe" || s.Value == "question_answering" || s.Value == "function_calling" {
 				Fields.Field.TranscriptionSpeakerLanguageCombo.Disable()
 			} else {
 				Fields.Field.TranscriptionSpeakerLanguageCombo.Enable()
 			}
 			additionalWidgets.Hide()
-			if s.Value == "question_answering" || s.Value == "chat" {
+			if s.Value == "question_answering" || s.Value == "chat" || s.Value == "function_calling" {
 				additionalWidgets.Show()
 			}
 			oldOnChangeFunc(s)
@@ -82,18 +85,21 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 			layout.NewGridLayout(2),
 			widget.NewButtonWithIcon(lang.L("Chat"), theme.MailSendIcon(), func() {
 				text, _ := Fields.DataBindings.TranscriptionInputBinding.Get()
+				task := speechTaskWidget.(*CustomWidget.TextValueSelect).GetSelected().Value
 				sendMessage := SendMessageChannel.SendMessageStruct{
 					Type: "chat_req",
 					Value: struct {
 						Text *string `json:"text"`
+						Task *string `json:"task"`
 					}{
 						Text: &text,
+						Task: &task,
 					},
 				}
 				sendMessage.SendMessage()
 			}),
 		)
-		if Settings.Config.Whisper_task != "question_answering" && Settings.Config.Whisper_task != "chat" {
+		if Settings.Config.Whisper_task != "question_answering" && Settings.Config.Whisper_task != "chat" && Settings.Config.Whisper_task != "function_calling" {
 			additionalWidgets.Hide()
 		}
 	}

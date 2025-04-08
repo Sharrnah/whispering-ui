@@ -137,6 +137,8 @@ func (p ProfileAIModelOption) CalculateMemoryConsumption(CPUBar *widget.Progress
 			if model.BaseName == AllProfileAIModelOptions[lastIndex].AIModel &&
 				model.ModelType == AllProfileAIModelOptions[lastIndex].AIModelType &&
 				(model.ModelSize == "" || model.ModelSize == AllProfileAIModelOptions[lastIndex].AIModelSize) {
+				AllProfileAIModelOptions[lastIndex].AIModelSize = model.ModelSize
+
 				finalMemoryUsage := EstimateMemoryUsage(model.Float32PrecisionMemoryUsage, AllProfileAIModelOptions[lastIndex].Precision)
 				println("Full model match found:")
 				println("BaseName: " + model.BaseName + ", ModelType: " + model.ModelType + ", ModelSize: " + model.ModelSize)
