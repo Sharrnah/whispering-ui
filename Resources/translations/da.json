@@ -331,5 +331,10 @@
     "E-Mail Address (Optional)": "E-mail-adresse (valgfrit)",
     "Error Report Sent": "Fejlrapport sendt",
     "Your error report has been sent.": "Din fejlrapport er blevet sendt.",
-    "Clear": "Ryd"
+    "Clear": "Ryd",
+    "question & answering": "spørgsmål og svar",
+    "translate": "oversætte",
+    "transcribe & translate": "transskribere og oversætte",
+    "tts_normalize.Name": "Normaliser tekst-til-tale-lydstyrken",
+    "tts_normalize.Description": "Normaliser automatisk lydstyrken på tekst-til-tale-outputtet."
 }
