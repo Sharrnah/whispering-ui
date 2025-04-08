@@ -327,7 +327,7 @@
     "tts_volume.Description": "Stellen Sie die Lautstärke der Text-zu-Sprache-Ausgabe ein.\n1.0 = normale Lautstärke",
     "You disabled VAD but have set the pause or phrase limit to 0. This is not supported. Setting Pause and Phrase limits to non-zero values.": "Sie haben VAD deaktiviert, aber das Pausen- oder Phrasenlimit auf 0 gesetzt. Dies wird nicht unterstützt. Pausen- und Phrasengrenzen auf Werte ungleich Null gesetzt.",
     "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "Neustart des Backends erforderlich, um Änderungen zu übernehmen.\nSind Sie sicher, dass Sie das Backend neu starten wollen?",
-    "Export Last Generation": "Letzte Generation exportieren",
+    "Export Last Generation": "Letzte Generierung exportieren",
     "osc_sync_mute.Name": "OSC sync STT mit Stummschaltung",
     "osc_sync_mute.Description": "Synchronisiert den Speech-to-Text-Status mit dem Mute-Status von VRChat.",
     "Automatically Report Errors": "Automatisch Fehler melden",
@@ -342,5 +342,10 @@
     "E-Mail Address (Optional)": "E-Mail Adresse (optional)",
     "Error Report Sent": "Fehlerbericht gesendet",
     "Your error report has been sent.": "Ihr Fehlerbericht wurde gesendet.",
-    "Clear": "Leeren"
+    "Clear": "Leeren",
+    "tts_normalize.Description": "Die Lautstärke der Text-to-Speech-Ausgabe automatisch normalisieren.",
+    "translate": "übersetzen",
+    "transcribe & translate": "transkribieren & übersetzen",
+    "question & answering": "Fragen & Antworten",
+    "tts_normalize.Name": "Text-zu-Sprache-Lautstärke normalisieren"
 }
