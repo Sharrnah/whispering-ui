@@ -331,5 +331,10 @@
     "Error Report Sent": "已发送错误报告",
     "Your error report has been sent.": "您的错误报告已发送。",
     "Send": "发送",
-    "Clear": "清空"
+    "Clear": "清空",
+    "transcribe & translate": "誊写和翻译",
+    "question & answering": "问答",
+    "tts_normalize.Description": "自动调整文本到语音输出的音量。",
+    "translate": "译",
+    "tts_normalize.Name": "文本到语音音量正常化"
 }
