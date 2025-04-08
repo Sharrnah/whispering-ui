@@ -331,5 +331,10 @@
     "Send error report": "エラーレポートを送信する",
     "Attach log file": "ログファイルを添付する",
     "E-Mail Address (Optional)": "Eメールアドレス（オプション）",
-    "Clear": "クリア"
+    "Clear": "クリア",
+    "question & answering": "質疑応答",
+    "tts_normalize.Description": "音声合成出力の音量を自動的に正規化します。",
+    "translate": "翻訳する",
+    "transcribe & translate": "転写・翻訳",
+    "tts_normalize.Name": "音声合成ボリュームの正規化"
 }
