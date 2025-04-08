@@ -331,5 +331,10 @@
     "osc_sync_afk.Name": "OSC 동기화 STT와 AFK",
     "Automatically Report Errors": "오류 자동 보고",
     "Do you want to automatically report errors?": "자동으로 오류를 신고하시겠습니까?",
-    "Clear": "비우기"
+    "Clear": "비우기",
+    "transcribe & translate": "전사 및 번역",
+    "question & answering": "질문 및 답변",
+    "tts_normalize.Name": "텍스트 음성 변환 볼륨 정규화",
+    "tts_normalize.Description": "텍스트 음성 변환 출력의 볼륨을 자동으로 정규화합니다.",
+    "translate": "번역"
 }
