@@ -305,6 +305,8 @@
     "osc_sync_afk.Description": "Synchronizes the Speech-to-Text state with the AFK state of VRChat.",
     "tts_type.Name": "Integrated Text-to-Speech",
     "tts_prosody_rate.Name": "Speed / Rate",
+    "tts_normalize.Name": "Normalize Text-to-Speech Volume",
+    "tts_normalize.Description": "Automatically normalize the volume of the Text-to-Speech output.",
     "tts_volume.Name": "Text-to-Speech Volume Adjustment",
     "tts_volume.Description": "Adjust the volume of the text-to-speech output.\n1.0 = normal volume",
     "tts_use_secondary_playback.Name": "Route text-to-speech to secondary audio device",

@@ -52,6 +52,14 @@ var TextToSpeechSettingsMapping = SettingsMapping{
 			},
 		},
 		{
+			SettingsName:         "Normalize Text-to-Speech Volume",
+			SettingsInternalName: "tts_normalize",
+			SettingsDescription:  "Automatically normalize the volume of the Text-to-Speech output.",
+			_widget: func() fyne.CanvasObject {
+				return widget.NewCheck("", func(b bool) {})
+			},
+		},
+		{
 			SettingsName:         "Text-to-Speech Volume Adjustment",
 			SettingsInternalName: "tts_volume",
 			SettingsDescription:  "Adjust the volume of the text-to-speech output.\n1.0 = normal volume",

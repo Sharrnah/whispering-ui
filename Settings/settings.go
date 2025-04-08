@@ -178,6 +178,7 @@ type Conf struct {
 	Tts_use_secondary_playback    bool     `yaml:"tts_use_secondary_playback" json:"tts_use_secondary_playback"`
 	Tts_secondary_playback_device int      `yaml:"tts_secondary_playback_device" json:"tts_secondary_playback_device"`
 	Tts_volume                    float64  `yaml:"tts_volume" json:"tts_volume"`
+	Tts_normalize                 bool     `yaml:"tts_normalize" json:"tts_normalize"`
 	Tts_streamed_playback         bool     `yaml:"tts_streamed_playback" json:"tts_streamed_playback"`
 	Tts_streamed_chunk_size       int      `yaml:"tts_streamed_chunk_size" json:"tts_streamed_chunk_size"`
 

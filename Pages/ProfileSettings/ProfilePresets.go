@@ -30,6 +30,7 @@ var DefaultProfileSetting = Settings.Conf{
 	Tts_type:                "silero",
 	Tts_ai_device:           "cpu",
 	Tts_volume:              1.0,
+	Tts_normalize:           true,
 	Tts_streamed_playback:   false,
 	Tts_streamed_chunk_size: 400,
 	Current_language:        "",
