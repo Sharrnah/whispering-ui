@@ -10,6 +10,7 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"sync"
 	"time"
 	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/Updater"
@@ -18,7 +19,49 @@ import (
 
 const rootCacheFolder = ".cache"
 
+// Global variables to track active downloads.
+var (
+	activeDownloads      = []string{}
+	activeDownloadsMutex sync.Mutex
+)
+
+func isDownloading(target string) bool {
+	activeDownloadsMutex.Lock()
+	defer activeDownloadsMutex.Unlock()
+	for _, v := range activeDownloads {
+		if v == target {
+			return true
+		}
+	}
+	return false
+}
+
+func addDownload(target string) {
+	activeDownloadsMutex.Lock()
+	defer activeDownloadsMutex.Unlock()
+	activeDownloads = append(activeDownloads, target)
+}
+
+func removeDownload(target string) {
+	activeDownloadsMutex.Lock()
+	defer activeDownloadsMutex.Unlock()
+	for i, v := range activeDownloads {
+		if v == target {
+			activeDownloads = append(activeDownloads[:i], activeDownloads[i+1:]...)
+			break
+		}
+	}
+}
+
 func DownloadFile(urls []string, targetDir string, checksum string, title string, extractFormat string) error {
+	// If the file is already being downloaded, skip and return.
+	if isDownloading(targetDir) {
+		return fmt.Errorf("File is already being downloaded: %s", targetDir)
+	}
+	addDownload(targetDir)
+	// Ensure removal on exit.
+	defer removeDownload(targetDir)
+
 	// find active window
 	window, _ := Utilities.GetCurrentMainWindow("Downloading " + title)
 
@@ -28,6 +71,15 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 
 	// get file name from download url
 	filename := downloadUrl[strings.LastIndex(downloadUrl, "/")+1:]
+
+	// create downloader
+	downloader := Updater.Download{
+		Url:                 downloadUrl,
+		FallbackUrls:        urls,
+		Filepath:            targetDir,
+		ConcurrentDownloads: 4,
+		ChunkSize:           15 * 1024 * 1024, // 15 MB
+	}
 
 	// create download dialog
 	statusBar := widget.NewProgressBar()
@@ -73,14 +125,6 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 	os.MkdirAll(downloadTargetDir, 0755)
 	//downloadTargetFile := filepath.Join(downloadTargetDir, filename)
 
-	// create downloader
-	downloader := Updater.Download{
-		Url:                 downloadUrl,
-		FallbackUrls:        urls,
-		Filepath:            targetDir,
-		ConcurrentDownloads: 4,
-		ChunkSize:           15 * 1024 * 1024, // 15 MB
-	}
 	downloader.WriteCounter.OnProgress = func(progress, total uint64, speed float64) {
 		if int64(total) == -1 {
 			statusBarContainer.Remove(statusBar)
