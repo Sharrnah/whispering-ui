@@ -1153,6 +1153,12 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Large V2", Value: "large-v2"},
 		}
 
+		nemoCanaryModelList := []CustomWidget.TextValueOption{
+			{Text: "Nemo Canary 1b", Value: "canary-1b"},
+			{Text: "Nemo Canary 180m flash", Value: "canary-180m-flash"},
+			{Text: "Nemo Canary 1b flash", Value: "canary-1b-flash"},
+		}
+
 		originalMmsModelList := []CustomWidget.TextValueOption{
 			{Text: "1b-fl102 (102 languages)", Value: "mms-1b-fl102"},
 			{Text: "1b-l1107 (1107 languages)", Value: "mms-1b-l1107"},
@@ -1377,9 +1383,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				}
 				AIModelType = "mms"
 			} else if s.Value == "nemo_canary" {
+				sttModelSize.Options = nemoCanaryModelList
 				sttPrecisionSelect.Disable()
 				sttPrecisionSelect.SetSelected("float32") // only available in float32
-				sttModelSize.Disable()
 				AIModelType = "nemo_canary"
 			} else if s.Value == "phi4" {
 				sttModelSize.Options = phi4ModelList

@@ -44,11 +44,9 @@ var Models = []AIModel{
 	{"Whisper", "wav2vec_bert", "medium", 2989.0},
 	{"Whisper", "wav2vec_bert", "large", 2989.0},
 	// NeMo Canary models
-	{"Whisper", "nemo_canary", "tiny", 4509.0},
-	{"Whisper", "nemo_canary", "base", 4509.0},
-	{"Whisper", "nemo_canary", "small", 4509.0},
-	{"Whisper", "nemo_canary", "medium", 4509.0},
-	{"Whisper", "nemo_canary", "large", 4509.0},
+	{"Whisper", "nemo_canary", "canary-1b", 4509.0},
+	{"Whisper", "nemo_canary", "canary-180m-flash", 702.0},
+	{"Whisper", "nemo_canary", "canary-1b-flash", 4000.0},
 	// MMS models
 	{"Whisper", "mms", "1b-all", 4646.0},
 	{"Whisper", "mms", "mms-1b-fl102", 4544.0},
