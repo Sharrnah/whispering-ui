@@ -336,5 +336,9 @@
     "question & answering": "问答",
     "tts_normalize.Description": "自动调整文本到语音输出的音量。",
     "translate": "译",
-    "tts_normalize.Name": "文本到语音音量正常化"
+    "tts_normalize.Name": "文本到语音音量正常化",
+    "tts_streamed_playback.Description": "如果 TTS 服务支持流式音频，则通过流式音频播放文本到语音。",
+    "tts_streamed_chunk_size.Name": "流媒体播放块大小",
+    "tts_streamed_chunk_size.Description": "流媒体音频的分块大小（如果 TTS 服务支持）",
+    "tts_streamed_playback.Name": "如果支持流媒体播放"
 }
