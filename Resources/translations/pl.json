@@ -336,5 +336,9 @@
     "transcribe & translate": "transkrypcja i tłumaczenie",
     "question & answering": "pytania i odpowiedzi",
     "tts_normalize.Name": "Normalizacja głośności zamiany tekstu na mowę",
-    "tts_normalize.Description": "Automatyczna normalizacja głośności wyjścia zamiany tekstu na mowę."
+    "tts_normalize.Description": "Automatyczna normalizacja głośności wyjścia zamiany tekstu na mowę.",
+    "tts_streamed_playback.Name": "Odtwarzanie strumieniowe, jeśli jest obsługiwane",
+    "tts_streamed_playback.Description": "Odtwarzanie zamiany tekstu na mowę poprzez strumieniowe przesyłanie dźwięku, jeśli jest to obsługiwane przez usługę TTS.",
+    "tts_streamed_chunk_size.Name": "Rozmiar fragmentu odtwarzania strumieniowego",
+    "tts_streamed_chunk_size.Description": "Rozmiar fragmentu dla strumieniowego przesyłania dźwięku (jeśli jest obsługiwany przez usługę TTS)"
 }
