@@ -336,5 +336,9 @@
     "question & answering": "질문 및 답변",
     "tts_normalize.Name": "텍스트 음성 변환 볼륨 정규화",
     "tts_normalize.Description": "텍스트 음성 변환 출력의 볼륨을 자동으로 정규화합니다.",
-    "translate": "번역"
+    "translate": "번역",
+    "tts_streamed_playback.Name": "스트리밍 재생이 지원되는 경우",
+    "tts_streamed_playback.Description": "TTS 서비스에서 지원하는 경우 오디오를 스트리밍하여 텍스트 음성 변환을 재생합니다.",
+    "tts_streamed_chunk_size.Name": "스트리밍 재생 청크 크기",
+    "tts_streamed_chunk_size.Description": "오디오 스트리밍을 위한 청크 크기(TTS 서비스에서 지원하는 경우)"
 }
