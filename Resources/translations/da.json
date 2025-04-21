@@ -336,5 +336,9 @@
     "translate": "oversætte",
     "transcribe & translate": "transskribere og oversætte",
     "tts_normalize.Name": "Normaliser tekst-til-tale-lydstyrken",
-    "tts_normalize.Description": "Normaliser automatisk lydstyrken på tekst-til-tale-outputtet."
+    "tts_normalize.Description": "Normaliser automatisk lydstyrken på tekst-til-tale-outputtet.",
+    "tts_streamed_chunk_size.Description": "Chunk size for streaming audio (hvis det understøttes af TTS-tjenesten)",
+    "tts_streamed_playback.Name": "Streamet afspilning, hvis det understøttes",
+    "tts_streamed_playback.Description": "Afspil tekst-til-tale ved at streame lyd, hvis det understøttes af TTS-tjenesten.",
+    "tts_streamed_chunk_size.Name": "Størrelsen på den streamede afspilning"
 }
