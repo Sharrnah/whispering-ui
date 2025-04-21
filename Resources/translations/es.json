@@ -336,5 +336,9 @@
     "translate": "traducir",
     "transcribe & translate": "transcribir y traducir",
     "question & answering": "preguntas y respuestas",
-    "tts_normalize.Name": "Normalizar el volumen de texto a voz"
+    "tts_normalize.Name": "Normalizar el volumen de texto a voz",
+    "tts_streamed_playback.Name": "Reproducción en streaming si es compatible",
+    "tts_streamed_playback.Description": "Reproducir texto a voz mediante streaming de audio si es compatible con el servicio TTS.",
+    "tts_streamed_chunk_size.Name": "Tamaño del fragmento de reproducción",
+    "tts_streamed_chunk_size.Description": "Tamaño del fragmento para la transmisión de audio (si el servicio TTS lo admite)"
 }
