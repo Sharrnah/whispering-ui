@@ -347,5 +347,9 @@
     "translate": "übersetzen",
     "transcribe & translate": "transkribieren & übersetzen",
     "question & answering": "Fragen & Antworten",
-    "tts_normalize.Name": "Text-zu-Sprache-Lautstärke normalisieren"
+    "tts_normalize.Name": "Text-zu-Sprache-Lautstärke normalisieren",
+    "tts_streamed_playback.Name": "Streaming-Wiedergabe, sofern unterstützt",
+    "tts_streamed_playback.Description": "Wiedergabe von Text-to-Speech durch Audio-Streaming, wenn dies vom TTS-Dienst unterstützt wird.",
+    "tts_streamed_chunk_size.Name": "Chunk-Größe für die gestreamte Wiedergabe",
+    "tts_streamed_chunk_size.Description": "Chunk-Größe für Audio-Streaming (falls vom TTS-Dienst unterstützt)"
 }
