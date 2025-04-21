@@ -347,5 +347,9 @@
     "transcribe & translate": "transcriberen en vertalen",
     "question & answering": "vraag & antwoord",
     "tts_normalize.Name": "Tekst-naar-spraak volume normaliseren",
-    "tts_normalize.Description": "Het volume van de Text-to-Speech uitvoer automatisch normaliseren."
+    "tts_normalize.Description": "Het volume van de Text-to-Speech uitvoer automatisch normaliseren.",
+    "tts_streamed_playback.Name": "Gestreamd afspelen indien ondersteund",
+    "tts_streamed_playback.Description": "Speel tekst-naar-spraak af door audio te streamen als dit wordt ondersteund door de TTS-service.",
+    "tts_streamed_chunk_size.Name": "Chunkgrootte gestreamde weergave",
+    "tts_streamed_chunk_size.Description": "Chunk-grootte voor streaming audio (indien ondersteund door de TTS-service)"
 }
