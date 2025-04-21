@@ -347,5 +347,9 @@
     "transcribe & translate": "přepisovat a překládat",
     "question & answering": "otázky a odpovědi",
     "tts_normalize.Name": "Normalizace hlasitosti převodu textu na řeč",
-    "tts_normalize.Description": "Automatická normalizace hlasitosti výstupu převodu textu na řeč."
+    "tts_normalize.Description": "Automatická normalizace hlasitosti výstupu převodu textu na řeč.",
+    "tts_streamed_playback.Name": "Streamované přehrávání, pokud je podporováno",
+    "tts_streamed_playback.Description": "Přehrávání převodu textu na řeč pomocí streamovaného zvuku, pokud je podporován službou TTS.",
+    "tts_streamed_chunk_size.Name": "Velikost oddílu streamovaného přehrávání",
+    "tts_streamed_chunk_size.Description": "Velikost části pro streamování zvuku (pokud je služba TTS podporována)"
 }
