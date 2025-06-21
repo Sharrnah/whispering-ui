@@ -309,7 +309,7 @@
     "realtime_temperature_fallback.Description": "Si activé, la température sera rétablie en cas de faible confiance.\n(désactivez-le pour un traitement plus rapide)",
     "tts_type.Name": "Synthèse vocale intégrée",
     "NVIDIA, High Memory (>8GB), Accuracy optimized": "NVIDIA, mémoire élevée (>8Go), précision optimisée",
-    "Default": "Par défaut",
+    "Default": "Défaut",
     "tts_prosody_rate.Name": "Vitesse / Taux",
     "NVIDIA, Low Memory (<=8GB), Accuracy optimized": "NVIDIA, mémoire faible (<=8Go), précision optimisée",
     "NVIDIA, High Memory (>8GB), Realtime optimized": "NVIDIA, mémoire élevée (>8Go), temps réel optimisé",
