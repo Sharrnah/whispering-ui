@@ -308,7 +308,7 @@
     "whisper_apply_voice_markers.Name": "Appliquer des marqueurs vocaux à l'audio",
     "realtime_temperature_fallback.Description": "Si activé, la température sera rétablie en cas de faible confiance.\n(désactivez-le pour un traitement plus rapide)",
     "tts_type.Name": "Synthèse vocale intégrée",
-    "NVIDIA, High Memory (>8GB), Accuracy optimized": "NVIDIA, mémoire élevée (>8Go), précision optimisée",
+    "NVIDIA, High Memory (>8GB), Accuracy optimized": "NVIDIA, mémoire élevée (>8GB), précision optimisée",
     "Default": "Par défaut",
     "tts_prosody_rate.Name": "Vitesse / Taux",
     "NVIDIA, Low Memory (<=8GB), Accuracy optimized": "NVIDIA, mémoire faible (<=8Go), précision optimisée",
@@ -351,5 +351,5 @@
     "tts_streamed_playback.Name": "Lecture en continu si elle est prise en charge",
     "tts_streamed_playback.Description": "Lire la synthèse vocale en streaming audio si elle est prise en charge par le service TTS.",
     "tts_streamed_chunk_size.Name": "Taille du bloc de lecture en continu",
-    "tts_streamed_chunk_size.Description": "Taille des morceaux pour le streaming audio (si pris en charge par le service TTS)"
+    "tts_streamed_chunk_size.Description": "Taille des blocs pour le streaming audio (si pris en charge par le service TTS)"
 }
