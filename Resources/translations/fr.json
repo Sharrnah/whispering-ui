@@ -322,7 +322,7 @@
     "CPU, Low Memory (<=8GB), Accuracy optimized": "CPU, Mémoire faible (<=8Go), Précision optimisée",
     "Additional Translation Languages": "Langues de traduction additionnelles",
     "Additional Translation": "Traduction supplémentaire",
-    "Enable Additional Translations": "Activer les traductions additionnelles",
+    "Enable Additional Translations": "Activer des traductions supplémentaires",
     "tts_volume.Name": "Réglage du volume de la synthèse vocale",
     "tts_volume.Description": "Permet de régler le volume de la synthèse vocale.\n1.0 = volume normal",
     "Restarting backend required to apply changes. Are you sure you want to restart the backend?": "Le redémarrage du backend est nécessaire pour appliquer les changements.\nÊtes-vous sûr de vouloir redémarrer le backend ?",
