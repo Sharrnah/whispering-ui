@@ -339,7 +339,7 @@
     "Please enter a description of the error.": "Veuillez saisir une description de l'erreur.",
     "Attach log file": "Joindre le fichier journal",
     "Attach hardware information (GPU Memory, GPU Vendor, GPU Adapter)": "Joindre des informations sur le matériel (mémoire GPU, fournisseur GPU, adaptateur GPU)",
-    "E-Mail Address (Optional)": "Adresse électronique (facultatif)",
+    "E-Mail Address (Optional)": "Adresse E-mail (facultative)",
     "Error Report Sent": "Rapport d'erreur envoyé",
     "Your error report has been sent.": "Votre rapport d'erreur a été envoyé.",
     "Clear": "Effacer",
