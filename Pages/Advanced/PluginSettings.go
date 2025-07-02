@@ -23,6 +23,7 @@ import (
 	"sort"
 	"strconv"
 	"strings"
+	"time"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/SendMessageChannel"
@@ -166,7 +167,25 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 		}
 		reloadButton.Importance = widget.MediumImportance
 
-		pluginWindow.SetContent(container.NewBorder(container.NewBorder(nil, nil, nil, reloadButton, layout.NewSpacer()), nil, nil, nil, pluginWindowContainer))
+		resetButton := widget.NewButtonWithIcon(lang.L("Reset"), theme.ViewRestoreIcon(), nil)
+		resetButton.OnTapped = func() {
+			dialog.ShowConfirm(lang.L("Reset Plugin Settings"), lang.L("Are you sure you want to reset the settings for this plugin?"), func(reset bool) {
+				go func() {
+					if reset {
+						resetSettings(pluginClassName)
+						time.Sleep(2 * time.Second)
+
+						pluginContentWin = BuildSinglePluginSettings(pluginClassName, nil, nil, pluginWindow)
+						pluginWindowContainer.Content = pluginContentWin
+						pluginWindowContainer.Refresh()
+						pluginWindow.Content().Refresh()
+					}
+				}()
+			}, pluginWindow)
+		}
+		resetButton.Importance = widget.LowImportance
+
+		pluginWindow.SetContent(container.NewBorder(container.NewBorder(nil, nil, nil, container.NewHBox(resetButton, reloadButton), layout.NewSpacer()), nil, nil, nil, pluginWindowContainer))
 
 		// guess the size
 		windowHeight := pluginContentWin.Size().Height + reloadButton.Size().Height + 20
@@ -1033,6 +1052,16 @@ func updateSettings(SettingsFile Settings.Conf, pluginClassName string, pluginSe
 		Type:  "setting_change",
 		Name:  "plugin_settings",
 		Value: SettingsFile.Plugin_settings,
+	}
+	sendMessage.SendMessage()
+}
+
+// Helper function to update settings
+func resetSettings(pluginClassName string) {
+	sendMessage := SendMessageChannel.SendMessageStruct{
+		Type:  "setting_reset_all",
+		Name:  "plugin",
+		Value: pluginClassName,
 	}
 	sendMessage.SendMessage()
 }
