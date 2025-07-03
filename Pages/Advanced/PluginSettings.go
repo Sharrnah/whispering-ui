@@ -167,7 +167,7 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 		}
 		reloadButton.Importance = widget.MediumImportance
 
-		resetButton := widget.NewButtonWithIcon(lang.L("Reset"), theme.ViewRestoreIcon(), nil)
+		resetButton := widget.NewButtonWithIcon(lang.L("Reset"), theme.ContentUndoIcon(), nil)
 		resetButton.OnTapped = func() {
 			dialog.ShowConfirm(lang.L("Reset Plugin Settings"), lang.L("Are you sure you want to reset the settings for this plugin?"), func(reset bool) {
 				go func() {
