@@ -340,5 +340,8 @@
     "tts_streamed_playback.Name": "스트리밍 재생이 지원되는 경우",
     "tts_streamed_playback.Description": "TTS 서비스에서 지원하는 경우 오디오를 스트리밍하여 텍스트 음성 변환을 재생합니다.",
     "tts_streamed_chunk_size.Name": "스트리밍 재생 청크 크기",
-    "tts_streamed_chunk_size.Description": "오디오 스트리밍을 위한 청크 크기(TTS 서비스에서 지원하는 경우)"
+    "tts_streamed_chunk_size.Description": "오디오 스트리밍을 위한 청크 크기(TTS 서비스에서 지원하는 경우)",
+    "Reset Plugin Settings": "플러그인 설정 재설정 - {{.PluginClassName}}",
+    "Are you sure you want to reset the settings for this plugin?": "{{.PluginClassName}} 설정을 재설정하시겠습니까?",
+    "Reset": "초기화"
 }
