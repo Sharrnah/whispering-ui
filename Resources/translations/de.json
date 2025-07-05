@@ -353,6 +353,6 @@
     "tts_streamed_chunk_size.Name": "Chunk-Größe für die gestreamte Wiedergabe",
     "tts_streamed_chunk_size.Description": "Chunk-Größe für Audio-Streaming (falls vom TTS-Dienst unterstützt)",
     "Reset": "Zurücksetzen",
-    "Reset Plugin Settings": "Plugin-Einstellungen zurücksetzen",
-    "Are you sure you want to reset the settings for this plugin?": "Sind Sie sicher, dass Sie die Einstellungen für dieses Plugin zurücksetzen wollen?"
+    "Reset Plugin Settings": "Plugin-Einstellungen zurücksetzen - {{.PluginClassName}}",
+    "Are you sure you want to reset the settings for this plugin?": "Sind Sie sicher, dass Sie die Einstellungen für {{.PluginClassName}} zurücksetzen wollen?"
 }
