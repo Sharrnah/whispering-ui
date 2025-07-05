@@ -138,7 +138,21 @@ func _getFilePathDialogInitPath(v map[string]interface{}, entry *widget.Entry) (
 var onlyShowEnabledPlugins bool
 var openPluginItem = -1
 
-func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widget.AccordionItem, pluginAccordion *widget.Accordion, window fyne.Window) fyne.CanvasObject {
+func RebuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widget.AccordionItem, pluginAccordion *widget.Accordion, reloadButtonRef *widget.Button, window *fyne.Window) {
+	if pluginAccordionItem != nil {
+		pluginSettingsContainer := BuildSinglePluginSettings(pluginClassName, pluginAccordionItem, pluginAccordion, reloadButtonRef, *window)
+
+		pluginAccordionItem.Detail = pluginSettingsContainer
+		pluginAccordionItem.Detail.Refresh()
+		pluginAccordion.Refresh()
+	} else {
+		if reloadButtonRef != nil {
+			reloadButtonRef.OnTapped()
+		}
+	}
+}
+
+func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widget.AccordionItem, pluginAccordion *widget.Accordion, reloadButtonRef *widget.Button, window fyne.Window) fyne.CanvasObject {
 	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
 		scope.SetTag("GoRoutine", "Pages\\Advanced\\PluginSettings->BuildSinglePluginSettings")
 	})
@@ -155,37 +169,20 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 	pluginToWindowButton.OnTapped = func() {
 		pluginWindow := fyne.CurrentApp().NewWindow(pluginClassName + " " + lang.L("Settings"))
 
-		pluginContentWin := BuildSinglePluginSettings(pluginClassName, nil, nil, pluginWindow)
+		reloadButton := widget.NewButtonWithIcon(lang.L("Reload"), theme.ViewRefreshIcon(), nil)
+
+		pluginContentWin := BuildSinglePluginSettings(pluginClassName, nil, nil, reloadButton, pluginWindow)
 		pluginWindowContainer := container.NewVScroll(pluginContentWin)
 
-		reloadButton := widget.NewButtonWithIcon(lang.L("Reload"), theme.ViewRefreshIcon(), nil)
 		reloadButton.OnTapped = func() {
-			pluginContentWin = BuildSinglePluginSettings(pluginClassName, nil, nil, pluginWindow)
+			pluginContentWin = BuildSinglePluginSettings(pluginClassName, nil, nil, reloadButton, pluginWindow)
 			pluginWindowContainer.Content = pluginContentWin
 			pluginWindowContainer.Refresh()
 			pluginWindow.Content().Refresh()
 		}
 		reloadButton.Importance = widget.MediumImportance
 
-		resetButton := widget.NewButtonWithIcon(lang.L("Reset"), theme.ContentUndoIcon(), nil)
-		resetButton.OnTapped = func() {
-			dialog.ShowConfirm(lang.L("Reset Plugin Settings"), lang.L("Are you sure you want to reset the settings for this plugin?"), func(reset bool) {
-				go func() {
-					if reset {
-						resetSettings(pluginClassName)
-						time.Sleep(2 * time.Second)
-
-						pluginContentWin = BuildSinglePluginSettings(pluginClassName, nil, nil, pluginWindow)
-						pluginWindowContainer.Content = pluginContentWin
-						pluginWindowContainer.Refresh()
-						pluginWindow.Content().Refresh()
-					}
-				}()
-			}, pluginWindow)
-		}
-		resetButton.Importance = widget.LowImportance
-
-		pluginWindow.SetContent(container.NewBorder(container.NewBorder(nil, nil, nil, container.NewHBox(resetButton, reloadButton), layout.NewSpacer()), nil, nil, nil, pluginWindowContainer))
+		pluginWindow.SetContent(container.NewBorder(container.NewBorder(nil, nil, nil, reloadButton, layout.NewSpacer()), nil, nil, nil, pluginWindowContainer))
 
 		// guess the size
 		windowHeight := pluginContentWin.Size().Height + reloadButton.Size().Height + 20
@@ -210,6 +207,28 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 	if pluginAccordionItem == nil || pluginAccordion == nil {
 		pluginToWindowButton.Hide()
 	}
+
+	resetSettingsButton := widget.NewButtonWithIcon(lang.L("Reset"), theme.ContentUndoIcon(), nil)
+	resetSettingsButton.OnTapped = func() {
+		toResetWindow := window
+		if toResetWindow == nil {
+			toResetWindow, _ = Utilities.GetCurrentMainWindow("Plugin Settings " + pluginClassName)
+		}
+		translationVarMap := map[string]interface{}{
+			"PluginClassName": pluginClassName,
+		}
+		dialog.ShowConfirm(lang.L("Reset Plugin Settings", translationVarMap), lang.L("Are you sure you want to reset the settings for this plugin?", translationVarMap), func(reset bool) {
+			go func() {
+				if reset {
+					resetSettings(pluginClassName)
+					time.Sleep(2 * time.Second)
+
+					RebuildSinglePluginSettings(pluginClassName, pluginAccordionItem, pluginAccordion, reloadButtonRef, &toResetWindow)
+				}
+			}()
+		}, toResetWindow)
+	}
+	resetSettingsButton.Importance = widget.LowImportance
 
 	// plugin enabled checkbox
 	pluginEnabledCheckbox := widget.NewCheck(lang.L("pluginClass enabled", map[string]interface{}{"PluginClass": pluginClassName}), func(enabled bool) {
@@ -320,7 +339,7 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 		}
 
 		pluginSettingsContainer := container.NewVBox(
-			container.NewBorder(nil, nil, nil, pluginToWindowButton, pluginEnabledCheckbox),
+			container.NewBorder(nil, nil, nil, container.NewHBox(resetSettingsButton, pluginToWindowButton), pluginEnabledCheckbox),
 			container.NewGridWithColumns(2, beginLine),
 			settingsGroupTabs,
 			spacerText,
@@ -330,7 +349,7 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 	} else {
 		// no grouping
 		pluginSettingsContainer := container.NewVBox()
-		pluginSettingsContainer.Add(container.NewBorder(nil, nil, nil, pluginToWindowButton, pluginEnabledCheckbox))
+		pluginSettingsContainer.Add(container.NewBorder(nil, nil, nil, container.NewHBox(resetSettingsButton, pluginToWindowButton), pluginEnabledCheckbox))
 		pluginSettingsContainer.Add(container.NewGridWithColumns(2, beginLine))
 
 		var sortedSettingNames []string
@@ -382,7 +401,7 @@ func BuildPluginSettingsAccordion(window fyne.Window) (fyne.CanvasObject, int) {
 				nil,
 			)
 
-			pluginSettingsContainer := BuildSinglePluginSettings(pluginClassName, pluginAccordionItem, pluginAccordion, window)
+			pluginSettingsContainer := BuildSinglePluginSettings(pluginClassName, pluginAccordionItem, pluginAccordion, nil, window)
 
 			pluginAccordionItem.Detail = pluginSettingsContainer
 
