@@ -340,5 +340,8 @@
     "tts_streamed_playback.Description": "如果 TTS 服务支持流式音频，则通过流式音频播放文本到语音。",
     "tts_streamed_chunk_size.Name": "流媒体播放块大小",
     "tts_streamed_chunk_size.Description": "流媒体音频的分块大小（如果 TTS 服务支持）",
-    "tts_streamed_playback.Name": "如果支持流媒体播放"
+    "tts_streamed_playback.Name": "如果支持流媒体播放",
+    "Reset": "重置",
+    "Reset Plugin Settings": "重置插件设置{{.PluginClassName}}",
+    "Are you sure you want to reset the settings for this plugin?": "您确定要重置{{.PluginClassName}} 的设置吗？"
 }
