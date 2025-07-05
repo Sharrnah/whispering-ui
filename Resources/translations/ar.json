@@ -340,5 +340,8 @@
     "Finished.": "تم الانتهاء.",
     "Platform Update available": "تحديث المنصة متاح",
     "There is a new Update of the Platform available. Update to new version now?": "يتوفر تحديث جديد للمنصة.\nالتحديث إلى {{.Version}} الآن؟",
-    "Additional Translation Languages": "لغات الترجمة الإضافية"
+    "Additional Translation Languages": "لغات الترجمة الإضافية",
+    "Reset": "إعادة تعيين",
+    "Reset Plugin Settings": "إعادة تعيين إعدادات المكون الإضافي - {{.PluginClassName}}",
+    "Are you sure you want to reset the settings for this plugin?": "هل أنت متأكد من أنك تريد إعادة تعيين الإعدادات لـ {{.PluginClassName}} ؟"
 }
