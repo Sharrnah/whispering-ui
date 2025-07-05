@@ -340,5 +340,8 @@
     "tts_streamed_playback.Name": "ストリーミング再生に対応している場合",
     "tts_streamed_playback.Description": "TTSサービスでサポートされている場合は、ストリーミングオーディオで音声合成を再生します。",
     "tts_streamed_chunk_size.Name": "ストリーミング再生のチャンクサイズ",
-    "tts_streamed_chunk_size.Description": "ストリーミング音声のチャンクサイズ（TTSサービスがサポートしている場合）"
+    "tts_streamed_chunk_size.Description": "ストリーミング音声のチャンクサイズ（TTSサービスがサポートしている場合）",
+    "Reset": "リセット",
+    "Reset Plugin Settings": "プラグインの設定をリセットする{{.PluginClassName}}",
+    "Are you sure you want to reset the settings for this plugin?": "本当に{{.PluginClassName}} の設定をリセットしたいのですか？"
 }
