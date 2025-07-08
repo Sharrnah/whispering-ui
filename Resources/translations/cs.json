@@ -352,7 +352,7 @@
     "tts_streamed_playback.Description": "Přehrávání převodu textu na řeč pomocí streamovaného zvuku, pokud je podporován službou TTS.",
     "tts_streamed_chunk_size.Name": "Velikost oddílu streamovaného přehrávání",
     "tts_streamed_chunk_size.Description": "Velikost části pro streamování zvuku (pokud je služba TTS podporována)",
-    "Reset Plugin Settings": "Obnovení nastavení zásuvného modulu - {{.PluginClassName}}",
+    "Reset Plugin Settings": "Obnovit nastavení zásuvného modulu - {{.PluginClassName}}",
     "Are you sure you want to reset the settings for this plugin?": "Jste si jisti, že chcete obnovit nastavení pro {{.PluginClassName}}?",
-    "Reset": "Obnovení"
+    "Reset": "Obnovit"
 }
