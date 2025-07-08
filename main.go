@@ -114,6 +114,19 @@ func main() {
 	//whisperProcess.SettingsFile = Settings.Config.SettingsFilename
 	//RuntimeBackend.BackendsList = append(RuntimeBackend.BackendsList, whisperProcess)
 
+	// allow enabling logging via environment variable
+	loggingVal, loggingOk := os.LookupEnv("ENABLE_LOGGING")
+	if loggingOk {
+		if loggingVal != "" {
+			enableLogging, err := Utilities.ParseBoolean(loggingVal)
+			if err != nil {
+				log.Printf("Error parsing ENABLE_LOGGING: %v", err)
+				enableLogging = true // default to true if parsing fails
+			}
+			fyne.CurrentApp().Preferences().SetBool("WriteLogfile", enableLogging)
+		}
+	}
+
 	profileWindow := a.NewWindow(lang.L("Whispering Tiger Profiles"))
 
 	onProfileClose := func() {

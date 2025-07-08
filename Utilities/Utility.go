@@ -299,3 +299,11 @@ func GetInlineDialogSize(window fyne.Window, marginSize fyne.Size, minSize fyne.
 	}
 	return windowSize
 }
+
+func ParseBoolean(value string) (bool, error) {
+	booleanValue, err := strconv.ParseBool(value)
+	if err != nil {
+		return false, fmt.Errorf("invalid boolean value: %s", value)
+	}
+	return booleanValue, nil
+}
