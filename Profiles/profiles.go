@@ -33,23 +33,24 @@ type Profile struct {
 	Ocr_precision string `yaml:"ocr_precision"`
 
 	// Whisper Settings
-	Ai_device                interface{} `yaml:"ai_device"`
-	Model                    string      `yaml:"model"`
-	Txt_translator           string      `yaml:"txt_translator"`
-	Txt_translator_size      string      `yaml:"txt_translator_size"`
-	Txt_translator_device    string      `yaml:"txt_translator_device"`
-	Txt_translator_precision string      `yaml:"txt_translator_precision"`
-	Websocket_ip             string      `yaml:"websocket_ip"`
-	Websocket_port           int         `yaml:"websocket_port"`
-	Run_Backend              bool        `yaml:"run_backend"`
-	Osc_ip                   string      `yaml:"osc_ip"`
-	Osc_port                 int         `yaml:"osc_port"`
-	Tts_type                 string      `yaml:"tts_type"`
-	Tts_ai_device            string      `yaml:"tts_ai_device"`
-	Whisper_precision        string      `yaml:"whisper_precision"`
-	Stt_type                 string      `yaml:"stt_type"`
-	Realtime                 bool        `yaml:"realtime"`
-	Push_to_talk_key         string      `yaml:"push_to_talk_key"`
+	Ai_device                   interface{} `yaml:"ai_device"`
+	Model                       string      `yaml:"model"`
+	Txt_translator              string      `yaml:"txt_translator"`
+	Txt_translator_size         string      `yaml:"txt_translator_size"`
+	Txt_translator_device       string      `yaml:"txt_translator_device"`
+	Txt_translator_precision    string      `yaml:"txt_translator_precision"`
+	Txt_translate_realtime_sync bool        `yaml:"txt_translate_realtime_sync"`
+	Websocket_ip                string      `yaml:"websocket_ip"`
+	Websocket_port              int         `yaml:"websocket_port"`
+	Run_Backend                 bool        `yaml:"run_backend"`
+	Osc_ip                      string      `yaml:"osc_ip"`
+	Osc_port                    int         `yaml:"osc_port"`
+	Tts_type                    string      `yaml:"tts_type"`
+	Tts_ai_device               string      `yaml:"tts_ai_device"`
+	Whisper_precision           string      `yaml:"whisper_precision"`
+	Stt_type                    string      `yaml:"stt_type"`
+	Realtime                    bool        `yaml:"realtime"`
+	Push_to_talk_key            string      `yaml:"push_to_talk_key"`
 }
 
 func (p *Profile) Load(fileName string) {

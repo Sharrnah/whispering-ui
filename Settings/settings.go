@@ -111,15 +111,16 @@ type Conf struct {
 	Normalize_gain_factor     float64 `yaml:"normalize_gain_factor" json:"normalize_gain_factor"`
 
 	// text translate settings
-	Txt_translate            bool   `yaml:"txt_translate" json:"txt_translate"`
-	Txt_translator_device    string `yaml:"txt_translator_device" json:"txt_translator_device"`
-	Src_lang                 string `yaml:"src_lang" json:"src_lang"`
-	Trg_lang                 string `yaml:"trg_lang" json:"trg_lang"`
-	Txt_romaji               bool   `yaml:"txt_romaji" json:"txt_romaji"`
-	Txt_translator           string `yaml:"txt_translator" json:"txt_translator"`
-	Txt_translator_size      string `yaml:"txt_translator_size" json:"txt_translator_size"`
-	Txt_translator_precision string `yaml:"txt_translator_precision" json:"txt_translator_precision"`
-	Txt_translate_realtime   bool   `yaml:"txt_translate_realtime" json:"txt_translate_realtime"`
+	Txt_translate               bool   `yaml:"txt_translate" json:"txt_translate"`
+	Txt_translator_device       string `yaml:"txt_translator_device" json:"txt_translator_device"`
+	Src_lang                    string `yaml:"src_lang" json:"src_lang"`
+	Trg_lang                    string `yaml:"trg_lang" json:"trg_lang"`
+	Txt_romaji                  bool   `yaml:"txt_romaji" json:"txt_romaji"`
+	Txt_translator              string `yaml:"txt_translator" json:"txt_translator"`
+	Txt_translator_size         string `yaml:"txt_translator_size" json:"txt_translator_size"`
+	Txt_translator_precision    string `yaml:"txt_translator_precision" json:"txt_translator_precision"`
+	Txt_translate_realtime      bool   `yaml:"txt_translate_realtime" json:"txt_translate_realtime"`
+	Txt_translate_realtime_sync bool   `yaml:"txt_translate_realtime_sync" json:"txt_translate_realtime_sync"`
 
 	Txt_second_translation_enabled   bool   `yaml:"txt_second_translation_enabled" json:"txt_second_translation_enabled"`
 	Txt_second_translation_languages string `yaml:"txt_second_translation_languages" json:"txt_second_translation_languages"`
