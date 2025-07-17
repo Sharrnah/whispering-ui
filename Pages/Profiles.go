@@ -1126,6 +1126,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Medium Distilled (English)", Value: "medium-distilled.en"},
 			{Text: "Large V2 Distilled (English)", Value: "large-distilled-v2.en"},
 			{Text: "Large V3 Distilled (English)", Value: "large-distilled-v3.en"},
+			{Text: "Large V3.5 Distilled (English)", Value: "large-distilled-v3.5.en"},
 			{Text: "Crisper", Value: "crisper"},
 			{Text: "Small (European finetune)", Value: "small.eu"},
 			{Text: "Medium (European finetune)", Value: "medium.eu"},
@@ -1157,6 +1158,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Nemo Canary 1b", Value: "canary-1b"},
 			{Text: "Nemo Canary 180m flash", Value: "canary-180m-flash"},
 			{Text: "Nemo Canary 1b flash", Value: "canary-1b-flash"},
+			{Text: "Parakeet TDT 0.6B V2 (English)", Value: "parakeet-tdt-0_6b-v2"},
 		}
 
 		originalMmsModelList := []CustomWidget.TextValueOption{
@@ -1743,6 +1745,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "F5/E2", Value: "f5_e2"},
 			{Text: "Zonos", Value: "zonos"},
 			{Text: "Kokoro", Value: "kokoro"},
+			{Text: "Orpheus", Value: "orpheus"},
 			{Text: lang.L("Disabled"), Value: ""},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
