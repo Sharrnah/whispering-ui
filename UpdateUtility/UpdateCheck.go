@@ -21,10 +21,21 @@ import (
 
 var updateInfoUrl = "https://s3.libs.space:9000/projects/whispering/latest.yaml"
 
-func versionDownload(updater Updater.UpdatePackages, packageName, filename string, window fyne.Window, startBackend bool, progressTitle string, cleanUpFunc func()) error {
+func versionDownload(updater Updater.UpdatePackages, packageName, filename string, window fyne.Window, startBackend bool, progressTitle string, noDismiss bool, cleanUpFunc func()) error {
 	statusBar := widget.NewProgressBar()
 	statusBarContainer := container.NewVBox(statusBar)
-	downloadDialog := dialog.NewCustom(progressTitle, lang.L("Hide (Download will continue)"), statusBarContainer, window)
+	downloadDialog := dialog.NewCustomWithoutButtons(progressTitle, statusBarContainer, window)
+	if !noDismiss {
+		downloadDialog.SetButtons([]fyne.CanvasObject{
+			&widget.Button{
+				Text: lang.L("Hide (Download will continue)"),
+				OnTapped: func() {
+					downloadDialog.Hide()
+				},
+			},
+		})
+	}
+	//downloadDialog := dialog.NewCustom(progressTitle, lang.L("Hide (Download will continue)"), statusBarContainer, window)
 	downloadDialog.Show()
 	downloadingLabel := widget.NewLabel(lang.L("Downloading...") + " ")
 
@@ -108,6 +119,26 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 	err := downloader.DownloadFile(3)
 	if err != nil {
 		Logging.CaptureException(err)
+		downloadDialog.SetButtons([]fyne.CanvasObject{
+			&widget.Button{
+				Text: lang.L("Close"),
+				OnTapped: func() {
+					downloadDialog.Hide()
+				},
+			},
+			// retry button
+			&widget.Button{
+				Text: lang.L("Retry Download"),
+				OnTapped: func() {
+					downloadDialog.Hide()
+					err = versionDownload(updater, packageName, filename, window, startBackend, progressTitle, false, cleanUpFunc)
+					if err != nil {
+						Logging.CaptureException(err)
+						dialog.ShowError(err, window)
+					}
+				},
+			},
+		})
 		dialog.ShowError(err, window)
 		return err
 	}
@@ -118,6 +149,26 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 	if err := Updater.CheckFileHash(filename, updater.Packages[packageName].SHA256); err != nil {
 		fmt.Printf("Error: %s\n", err.Error())
 		Logging.CaptureException(err)
+		downloadDialog.SetButtons([]fyne.CanvasObject{
+			&widget.Button{
+				Text: lang.L("Close"),
+				OnTapped: func() {
+					downloadDialog.Hide()
+				},
+			},
+			// retry button
+			&widget.Button{
+				Text: lang.L("Retry Download"),
+				OnTapped: func() {
+					downloadDialog.Hide()
+					err = versionDownload(updater, packageName, filename, window, startBackend, progressTitle, false, cleanUpFunc)
+					if err != nil {
+						Logging.CaptureException(err)
+						dialog.ShowError(err, window)
+					}
+				},
+			},
+		})
 		dialog.ShowError(err, window)
 		checksumCheckFailLabel := widget.NewLabel(lang.L("Checksum check failed. Please delete temporary file and download again. If it still fails, please contact support."))
 		checksumCheckFailLabel.Wrapping = fyne.TextWrapWord
@@ -147,19 +198,42 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 	err = Updater.Unzip(filename, filepath.Dir(appExec))
 	if err != nil {
 		Logging.CaptureException(err)
+		downloadDialog.SetButtons([]fyne.CanvasObject{
+			&widget.Button{
+				Text: lang.L("Close"),
+				OnTapped: func() {
+					downloadDialog.Hide()
+				},
+			},
+		})
 		dialog.ShowError(err, window)
 		return err
 	}
 	err = os.Remove(filename)
 	if err != nil {
 		Logging.CaptureException(err)
+		downloadDialog.SetButtons([]fyne.CanvasObject{
+			&widget.Button{
+				Text: lang.L("Close"),
+				OnTapped: func() {
+					downloadDialog.Hide()
+				},
+			},
+		})
 		dialog.ShowError(err, window)
 		return err
 	}
 
 	if err == nil {
 		statusBarContainer.Add(widget.NewLabel(lang.L("Finished.")))
-		downloadDialog.SetDismissText(lang.L("Close"))
+		downloadDialog.SetButtons([]fyne.CanvasObject{
+			&widget.Button{
+				Text: lang.L("Close"),
+				OnTapped: func() {
+					downloadDialog.Hide()
+				},
+			},
+		})
 		downloadDialog.Refresh()
 		if reOpenAfterHide {
 			downloadDialog.Show()
@@ -231,7 +305,7 @@ func VersionCheck(window fyne.Window, startBackend bool) bool {
 							dialog.ShowError(err, window)
 						}
 					}
-					err = versionDownload(updater, "ai_platform", "audioWhisper_platform.zip", window, startBackend, progressTitle, cleanUpFunc)
+					err = versionDownload(updater, "ai_platform", "audioWhisper_platform.zip", window, startBackend, progressTitle, true, cleanUpFunc)
 					if err == nil {
 						packageInfo := updater.Packages["ai_platform"]
 						packageInfo.WriteYaml(".current_platform.yaml")
