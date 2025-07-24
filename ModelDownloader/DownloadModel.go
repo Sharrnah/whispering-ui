@@ -2,6 +2,7 @@ package ModelDownloader
 
 import (
 	"fmt"
+	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/widget"
@@ -90,7 +91,9 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 		dialogTitlePart = title + " [" + filename + "]"
 	}
 	downloadDialog := dialog.NewCustom("Downloading "+dialogTitlePart, "Hide (Download will continue)", statusBarContainer, window)
-	downloadDialog.Show()
+	fyne.Do(func() {
+		downloadDialog.Show()
+	})
 	downloadingLabel := widget.NewLabel("Downloading... ")
 
 	reOpenAfterHide := false
@@ -127,13 +130,16 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 
 	downloader.WriteCounter.OnProgress = func(progress, total uint64, speed float64) {
 		if int64(total) == -1 {
-			statusBarContainer.Remove(statusBar)
-			statusBarContainer.Add(widget.NewProgressBarInfinite())
-			statusBarContainer.Refresh()
+			fyne.Do(func() {
+				statusBarContainer.Remove(statusBar)
+				statusBarContainer.Add(widget.NewProgressBarInfinite())
+				statusBarContainer.Refresh()
+			})
 		} else {
-			statusBar.Max = float64(total)
-			statusBar.SetValue(float64(progress))
-
+			fyne.Do(func() {
+				statusBar.Max = float64(total)
+				statusBar.SetValue(float64(progress))
+			})
 			resumeStatusText := ""
 			if downloader.IsResuming() {
 				resumeStatusText = " (Resume)"
@@ -147,27 +153,36 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 			} else {
 				speedStr = fmt.Sprintf("%.2f MiB/s", speed/(1024*1024))
 			}
-
-			downloadingLabel.SetText("Downloading from " + subdomain + "... " + humanize.Bytes(total) + " (" + speedStr + ") " + resumeStatusText)
+			fyne.Do(func() {
+				downloadingLabel.SetText("Downloading from " + subdomain + "... " + humanize.Bytes(total) + " (" + speedStr + ") " + resumeStatusText)
+			})
 		}
 	}
 
-	statusBarContainer.Add(downloadingLabel)
-	statusBarContainer.Refresh()
+	fyne.Do(func() {
+		statusBarContainer.Add(downloadingLabel)
+		statusBarContainer.Refresh()
+	})
 	err := downloader.DownloadFile(3)
 	if err != nil {
 		Logging.CaptureException(err)
-		dialog.ShowError(err, window)
+		fyne.Do(func() {
+			dialog.ShowError(err, window)
+		})
 		return err
 	}
 
 	// check if the file has the correct hash
 	if checksum != "" {
-		statusBarContainer.Add(widget.NewLabel("Checking checksum..."))
+		fyne.Do(func() {
+			statusBarContainer.Add(widget.NewLabel("Checking checksum..."))
+		})
 		if err := Updater.CheckFileHash(targetDir, checksum); err != nil {
 			fmt.Printf("Error: %s\n", err.Error())
-			dialog.ShowError(err, window)
-			statusBarContainer.Add(widget.NewLabel("Checksum check failed. Please delete temporary file and download again. If it still fails, please contact support."))
+			fyne.Do(func() {
+				dialog.ShowError(err, window)
+				statusBarContainer.Add(widget.NewLabel("Checksum check failed. Please delete temporary file and download again. If it still fails, please contact support."))
+			})
 			return err
 		}
 	}
@@ -175,21 +190,26 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 	// wait a bit before trying to extract
 	if needsExtract {
 		time.Sleep(1 * time.Second)
-
-		statusBarContainer.Add(widget.NewLabel("Extracting..."))
-		statusBarContainer.Refresh()
+		fyne.Do(func() {
+			statusBarContainer.Add(widget.NewLabel("Extracting..."))
+			statusBarContainer.Refresh()
+		})
 		if extractType == "zip" {
 			err = Updater.Unzip(targetDir, downloadTargetDir)
 		} else if extractType == "tar.gz" {
 			err = Updater.Untar(targetDir, downloadTargetDir)
 		}
 		if err != nil {
-			dialog.ShowError(err, window)
+			fyne.Do(func() {
+				dialog.ShowError(err, window)
+			})
 			return err
 		}
 		err = downloader.CreateFinishedFile(".finished", 5, 3*time.Second)
 		if err != nil {
-			dialog.ShowError(err, window)
+			fyne.Do(func() {
+				dialog.ShowError(err, window)
+			})
 			return err
 		}
 
@@ -208,23 +228,29 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 		//err = os.Rename(targetDir, targetDir+".finished")
 		err = downloader.CreateFinishedFile(".finished", 5, 3*time.Second)
 		if err != nil {
-			dialog.ShowError(err, window)
+			fyne.Do(func() {
+				dialog.ShowError(err, window)
+			})
 			return err
 		}
 	}
 
 	if err == nil {
-		statusBarContainer.Add(widget.NewLabel("Finished."))
-		downloadDialog.SetDismissText("Close")
-		downloadDialog.Refresh()
-		if reOpenAfterHide {
-			downloadDialog.Show()
-		} else {
-			downloadDialog.Hide()
-		}
+		fyne.Do(func() {
+			statusBarContainer.Add(widget.NewLabel("Finished."))
+			downloadDialog.SetDismissText("Close")
+			downloadDialog.Refresh()
+			if reOpenAfterHide {
+				downloadDialog.Show()
+			} else {
+				downloadDialog.Hide()
+			}
+		})
 	}
 
-	statusBarContainer.Refresh()
+	fyne.Do(func() {
+		statusBarContainer.Refresh()
+	})
 
 	return nil
 }

@@ -100,7 +100,9 @@ func main() {
 	w.CenterOnScreen()
 
 	// initialize global fields (so they can use initialized languages)
-	Fields.InitializeGlobalFields()
+	fyne.Do(func() {
+		Fields.InitializeGlobalFields()
+	})
 
 	w.SetOnClosed(func() {
 		fyne.CurrentApp().Preferences().SetFloat("MainWindowWidth", float64(w.Canvas().Size().Width))
@@ -271,29 +273,33 @@ func main() {
 	// check for updates
 	if fyne.CurrentApp().Preferences().BoolWithFallback("CheckForUpdateAtStartup", true) || (!Utilities.FileExists("audioWhisper/audioWhisper.exe") && !Utilities.FileExists("audioWhisper.py")) {
 		go func() {
-			if len(fyne.CurrentApp().Driver().AllWindows()) == 2 {
-				UpdateUtility.VersionCheck(fyne.CurrentApp().Driver().AllWindows()[1], false)
-			}
+			fyne.Do(func() {
+				if len(fyne.CurrentApp().Driver().AllWindows()) == 2 {
+					UpdateUtility.VersionCheck(fyne.CurrentApp().Driver().AllWindows()[1], false)
+				}
+			})
 		}()
 	}
 	if fyne.CurrentApp().Preferences().BoolWithFallback("CheckForPluginUpdatesAtStartup", true) {
 		go func() {
-			lastCheckTimestamp := fyne.CurrentApp().Preferences().IntWithFallback("CheckForPluginUpdatesAtStartupLastTime", 0)
-			lastCheckTime := time.Unix(int64(lastCheckTimestamp), 0)
-			currentTime := time.Now()
+			fyne.Do(func() {
+				lastCheckTimestamp := fyne.CurrentApp().Preferences().IntWithFallback("CheckForPluginUpdatesAtStartupLastTime", 0)
+				lastCheckTime := time.Unix(int64(lastCheckTimestamp), 0)
+				currentTime := time.Now()
 
-			// make sure to check for plugin updates only every day
-			if lastCheckTime.Year() != currentTime.Year() || lastCheckTime.YearDay() != currentTime.YearDay() {
-				fyne.CurrentApp().Preferences().SetInt("CheckForPluginUpdatesAtStartupLastTime", int(currentTime.Unix()))
+				// make sure to check for plugin updates only every day
+				if lastCheckTime.Year() != currentTime.Year() || lastCheckTime.YearDay() != currentTime.YearDay() {
+					fyne.CurrentApp().Preferences().SetInt("CheckForPluginUpdatesAtStartupLastTime", int(currentTime.Unix()))
 
-				if UpdateUtility.PluginsUpdateAvailable() {
-					dialog.ShowConfirm(lang.L("New Plugin updates available"), lang.L("Whispering Tiger has new Plugin updates available. Go to Plugin List now?"), func(b bool) {
-						if b {
-							Advanced.CreatePluginListWindow(nil, false)
-						}
-					}, fyne.CurrentApp().Driver().AllWindows()[1])
+					if UpdateUtility.PluginsUpdateAvailable() {
+						dialog.ShowConfirm(lang.L("New Plugin updates available"), lang.L("Whispering Tiger has new Plugin updates available. Go to Plugin List now?"), func(b bool) {
+							if b {
+								Advanced.CreatePluginListWindow(nil, false)
+							}
+						}, fyne.CurrentApp().Driver().AllWindows()[1])
+					}
 				}
-			}
+			})
 		}()
 	}
 

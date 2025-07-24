@@ -186,49 +186,59 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			ocrSrcLang = "auto"
 		}
 
-		// set txt source + target lang combo boxes
-		Fields.Field.SourceLanguageCombo.Text = Messages.InstalledLanguages.GetNameByCode(srcLang)
-		Fields.Field.SourceLanguageCombo.ResetOptionsFilter()
-		Fields.Field.TargetLanguageCombo.Text = Messages.InstalledLanguages.GetNameByCode(trgLang)
-		Fields.Field.TargetLanguageCombo.ResetOptionsFilter()
+		fyne.Do(func() {
+			// set txt source + target lang combo boxes
+			Fields.Field.SourceLanguageCombo.Text = Messages.InstalledLanguages.GetNameByCode(srcLang)
+			Fields.Field.SourceLanguageCombo.ResetOptionsFilter()
+			Fields.Field.TargetLanguageCombo.Text = Messages.InstalledLanguages.GetNameByCode(trgLang)
+			Fields.Field.TargetLanguageCombo.ResetOptionsFilter()
 
-		// set ocr txt source + target lang combo boxes
-		Fields.Field.SourceLanguageTxtTranslateCombo.Text = Messages.InstalledLanguages.GetNameByCode(ocrSrcLang)
-		Fields.Field.SourceLanguageTxtTranslateCombo.ResetOptionsFilter()
-		Fields.Field.TargetLanguageTxtTranslateCombo.Text = Messages.InstalledLanguages.GetNameByCode(ocrTrgLang)
-		Fields.Field.TargetLanguageTxtTranslateCombo.ResetOptionsFilter()
+			// set ocr txt source + target lang combo boxes
+			Fields.Field.SourceLanguageTxtTranslateCombo.Text = Messages.InstalledLanguages.GetNameByCode(ocrSrcLang)
+			Fields.Field.SourceLanguageTxtTranslateCombo.ResetOptionsFilter()
+			Fields.Field.TargetLanguageTxtTranslateCombo.Text = Messages.InstalledLanguages.GetNameByCode(ocrTrgLang)
+			Fields.Field.TargetLanguageTxtTranslateCombo.ResetOptionsFilter()
 
-		// set auto text translate checkbox label
-		Fields.Field.TextTranslateEnabled.Text = lang.L("SttTextTranslateLabel", map[string]interface{}{"FromLang": Messages.InstalledLanguages.GetNameByCode(srcLang), "ToLang": Messages.InstalledLanguages.GetNameByCode(trgLang)}) + Fields.AdditionalLanguagesCountString(" ", "[]")
-		Fields.Field.TextTranslateEnabled.Refresh()
+			// set auto text translate checkbox label
+			Fields.Field.TextTranslateEnabled.Text = lang.L("SttTextTranslateLabel", map[string]interface{}{"FromLang": Messages.InstalledLanguages.GetNameByCode(srcLang), "ToLang": Messages.InstalledLanguages.GetNameByCode(trgLang)}) + Fields.AdditionalLanguagesCountString(" ", "[]")
+			Fields.Field.TextTranslateEnabled.Refresh()
+		})
 	case "available_tts_models":
 		err = json.Unmarshal(c.Raw, &Messages.TtsLanguages)
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		Messages.TtsLanguages.Update()
+		fyne.Do(func() {
+			Messages.TtsLanguages.Update()
+		})
 	case "available_tts_voices":
 		err = json.Unmarshal(c.Raw, &Messages.TtsVoices)
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		Messages.TtsVoices.Update()
+		fyne.Do(func() {
+			Messages.TtsVoices.Update()
+		})
 	case "available_img_languages":
 		err = json.Unmarshal(c.Raw, &Messages.OcrLanguagesList)
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		Messages.OcrLanguagesList.Update()
+		fyne.Do(func() {
+			Messages.OcrLanguagesList.Update()
+		})
 	case "windows_list":
 		err = json.Unmarshal(c.Raw, &Messages.WindowsList)
 		if err != nil {
 			log.Println(err)
 			return
 		}
-		Messages.WindowsList.Update()
+		fyne.Do(func() {
+			Messages.WindowsList.Update()
+		})
 	case "settings_values":
 		var (
 			i  interface{}
@@ -261,7 +271,9 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			Messages.TranslateSettings.Websocket_port = websocketPort
 		}
 
-		Messages.TranslateSettings.Update()
+		fyne.Do(func() {
+			Messages.TranslateSettings.Update()
+		})
 	case "transcript":
 		c.Text = strings.TrimSpace(c.Text)
 		c.TxtTranslation = strings.TrimSpace(c.TxtTranslation)
@@ -281,13 +293,14 @@ func (c *MessageStruct) HandleReceiveMessage() {
 
 			resultMsg_.Update()
 
-			// stop processing status
-			Fields.Field.ProcessingStatus.Stop()
-			//Fields.Field.ProcessingStatus.Refresh()
+			fyne.Do(func() {
+				// stop processing status
+				Fields.Field.ProcessingStatus.Stop()
+				//Fields.Field.ProcessingStatus.Refresh()
 
-			//Fields.Field.RealtimeResultLabel.SetText(whisperResultMessage.Text)
-			Fields.DataBindings.WhisperResultIntermediateResult.Set(resultMsg_.Text)
-
+				//Fields.Field.RealtimeResultLabel.SetText(whisperResultMessage.Text)
+				Fields.DataBindings.WhisperResultIntermediateResult.Set(resultMsg_.Text)
+			})
 			//Fields.Field.WhisperResultList.
 		}(whisperResultMessage)
 
@@ -308,22 +321,24 @@ func (c *MessageStruct) HandleReceiveMessage() {
 	case "translate_result":
 		//Messages.LastTranslationResult = c.TranslateResult
 		//Fields.Field.TranscriptionTranslationSpeechToTextInput.SetText(c.TranslateResult)
-		Fields.DataBindings.TranscriptionTranslationInputBinding.Set(c.TranslateResult)
-		if c.OriginalText != "" {
-			//Fields.Field.TranscriptionSpeechToTextInput.SetText(c.OriginalText)
-			Fields.DataBindings.TranscriptionInputBinding.Set(c.OriginalText)
-		}
-		if Fields.Field.SourceLanguageCombo.GetCurrentValueOptionEntry() != nil && Fields.Field.SourceLanguageCombo.GetCurrentValueOptionEntry().Value == "Auto" {
-			langName := Utilities.LanguageMapList.GetName(c.TxtFromLang)
-			Settings.Config.Last_auto_txt_translate_lang = c.TxtFromLang
-			if langName == "" {
-				langName = c.TxtFromLang
+		fyne.Do(func() {
+			Fields.DataBindings.TranscriptionTranslationInputBinding.Set(c.TranslateResult)
+			if c.OriginalText != "" {
+				//Fields.Field.TranscriptionSpeechToTextInput.SetText(c.OriginalText)
+				Fields.DataBindings.TranscriptionInputBinding.Set(c.OriginalText)
 			}
-			Fields.Field.SourceLanguageCombo.OptionsTextValue[0].Text = "Auto [detected: " + langName + "]"
-			Fields.Field.SourceLanguageCombo.Options[0] = Fields.Field.SourceLanguageCombo.OptionsTextValue[0].Text
-			Fields.Field.SourceLanguageCombo.Text = Fields.Field.SourceLanguageCombo.Options[0]
-			Fields.Field.SourceLanguageCombo.Refresh()
-		}
+			if Fields.Field.SourceLanguageCombo.GetCurrentValueOptionEntry() != nil && Fields.Field.SourceLanguageCombo.GetCurrentValueOptionEntry().Value == "Auto" {
+				langName := Utilities.LanguageMapList.GetName(c.TxtFromLang)
+				Settings.Config.Last_auto_txt_translate_lang = c.TxtFromLang
+				if langName == "" {
+					langName = c.TxtFromLang
+				}
+				Fields.Field.SourceLanguageCombo.OptionsTextValue[0].Text = "Auto [detected: " + langName + "]"
+				Fields.Field.SourceLanguageCombo.Options[0] = Fields.Field.SourceLanguageCombo.OptionsTextValue[0].Text
+				Fields.Field.SourceLanguageCombo.Text = Fields.Field.SourceLanguageCombo.Options[0]
+				Fields.Field.SourceLanguageCombo.Refresh()
+			}
+		})
 		//case "tts_save":
 		//	var audioData = Audio.TtsResultRaw{}
 		//	err = json.Unmarshal(c.Raw, &audioData)
@@ -347,7 +362,9 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		}
 
 		go func(ocrResult_ Messages.OcrResultData) {
-			ocrResult_.Update()
+			fyne.Do(func() {
+				ocrResult_.Update()
+			})
 		}(Messages.OcrResult)
 
 	// special case for LLM plugin
@@ -368,7 +385,9 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			resultMsg_.Update()
 
 			// stop processing status
-			Fields.Field.ProcessingStatus.Stop()
+			fyne.Do(func() {
+				Fields.Field.ProcessingStatus.Stop()
+			})
 		}(whisperResultMessage)
 
 		// stop processing status
@@ -386,16 +405,20 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			processingStatusMutex.Lock()
 			defer processingStatusMutex.Unlock()
 			if processStarted_ {
-				Fields.Field.ProcessingStatus.Start()
-				Fields.Field.ProcessingStatus.Refresh()
+				fyne.Do(func() {
+					Fields.Field.ProcessingStatus.Start()
+					Fields.Field.ProcessingStatus.Refresh()
+				})
 				select {
 				// reset processing status timer
 				case resetProcessingStopTimer <- true:
 				default:
 				}
 			} else {
-				Fields.Field.ProcessingStatus.Stop()
-				Fields.Field.ProcessingStatus.Refresh()
+				fyne.Do(func() {
+					Fields.Field.ProcessingStatus.Stop()
+					Fields.Field.ProcessingStatus.Refresh()
+				})
 			}
 		}(processingStarted)
 	case "processing_data":
@@ -410,14 +433,18 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			go func(procData_ string) {
 				intermediateResultListMutex.Lock()
 				defer intermediateResultListMutex.Unlock()
-				Fields.DataBindings.WhisperResultIntermediateResult.Set(procData_)
+				fyne.Do(func() {
+					Fields.DataBindings.WhisperResultIntermediateResult.Set(procData_)
+				})
 			}(processingData)
 
-			Fields.Field.ProcessingStatus.Start()
-			//Fields.Field.ProcessingStatus.Refresh()
-			Fields.Field.RealtimeResultLabel.Show()
-			//Fields.Field.RealtimeResultLabel.SetText(processingData)
-			//Fields.Field.RealtimeResultLabel.Refresh()
+			fyne.Do(func() {
+				Fields.Field.ProcessingStatus.Start()
+				//Fields.Field.ProcessingStatus.Refresh()
+				Fields.Field.RealtimeResultLabel.Show()
+				//Fields.Field.RealtimeResultLabel.SetText(processingData)
+				//Fields.Field.RealtimeResultLabel.Refresh()
+			})
 
 			// Attempt to send to resetRealtimeLabelHideTimer
 			select {
@@ -437,56 +464,72 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		}
 		err = json.Unmarshal(c.Raw, &Messages.CurrentLoadingState)
 		if err != nil {
-			Messages.LoadingStateContainer.RemoveAll()
-			Messages.LoadingStateDialog.Hide()
+			fyne.Do(func() {
+				Messages.LoadingStateContainer.RemoveAll()
+				Messages.LoadingStateDialog.Hide()
+			})
 			return
 		}
-		Messages.CurrentLoadingState.Update()
+		fyne.Do(func() {
+			Messages.CurrentLoadingState.Update()
+		})
 	case "tts_save":
 		ttsSpeechAudio := Messages.TtsSpeechAudio{}
 		err = json.Unmarshal(c.Raw, &ttsSpeechAudio)
 		if err != nil {
-			if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
-				currentMainWindow, _ := Utilities.GetCurrentMainWindow("")
-				Logging.CaptureException(err)
-				dialog.ShowError(err, currentMainWindow)
-			}
+			fyne.Do(func() {
+				if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
+					currentMainWindow, _ := Utilities.GetCurrentMainWindow("")
+					Logging.CaptureException(err)
+					dialog.ShowError(err, currentMainWindow)
+				}
+			})
 		}
 		if err == nil && len(ttsSpeechAudio.WavData) > 0 {
-			ttsSpeechAudio.SaveWav()
+			fyne.Do(func() {
+				ttsSpeechAudio.SaveWav()
+			})
 		}
 	case "download":
 		download := Messages.DownloadMessage{}
 		err = json.Unmarshal(c.Raw, &download)
 		if err != nil {
-			if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
-				currentMainWindow, _ := Utilities.GetCurrentMainWindow("")
-				Logging.CaptureException(err)
-				dialog.ShowError(err, currentMainWindow)
-			}
+			fyne.Do(func() {
+				if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
+					currentMainWindow, _ := Utilities.GetCurrentMainWindow("")
+					Logging.CaptureException(err)
+					dialog.ShowError(err, currentMainWindow)
+				}
+			})
 			return
 		}
 		go func(dl_ Messages.DownloadMessage) {
 			err = dl_.StartDownload()
 			if err != nil {
-				if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
-					currentMainWindow, _ := Utilities.GetCurrentMainWindow("")
-					dialog.ShowError(err, currentMainWindow)
-				}
+				fyne.Do(func() {
+					if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
+						currentMainWindow, _ := Utilities.GetCurrentMainWindow("")
+						dialog.ShowError(err, currentMainWindow)
+					}
+				})
 				return
 			}
-			if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
-				currentMainWindow, _ := Utilities.GetCurrentMainWindow("")
-				currentMainWindow.Canvas().Content().Refresh()
-			}
+			fyne.Do(func() {
+				if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
+					currentMainWindow, _ := Utilities.GetCurrentMainWindow("")
+					currentMainWindow.Canvas().Content().Refresh()
+				}
+			})
 		}(download)
 	}
 
 	// set focus to main window
 	if fyne.CurrentApp().Preferences().BoolWithFallback("AutoRefocusWindow", false) {
-		if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
-			fyne.CurrentApp().Driver().AllWindows()[0].RequestFocus()
-		}
+		fyne.Do(func() {
+			if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
+				fyne.CurrentApp().Driver().AllWindows()[0].RequestFocus()
+			}
+		})
 	}
 
 	// refresh window

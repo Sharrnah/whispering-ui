@@ -237,7 +237,9 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 
 		go func() {
 			time.Sleep(200 * time.Millisecond)
-			Fields.Field.WhisperResultList.Unselect(id)
+			fyne.Do(func() {
+				Fields.Field.WhisperResultList.Unselect(id)
+			})
 		}()
 	}
 

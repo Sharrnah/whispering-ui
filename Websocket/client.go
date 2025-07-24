@@ -54,7 +54,6 @@ func (c *Client) Start() {
 	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
 		scope.SetTag("GoRoutine", "Websocket\\client->Start")
 	})
-
 	previouslyConnected := false
 
 	runBackend := Settings.Config.Run_backend
@@ -81,8 +80,10 @@ func (c *Client) Start() {
 	u := url.URL{Scheme: "ws", Host: c.Addr, Path: "/"}
 	log.Printf("connecting to %s", u.String())
 
-	connectingStateContainer.Add(widget.NewLabel(lang.L("Connecting to Server", map[string]interface{}{"ServerUri": u.String()})))
-	connectingStateDialog.Show()
+	fyne.Do(func() {
+		connectingStateContainer.Add(widget.NewLabel(lang.L("Connecting to Server", map[string]interface{}{"ServerUri": u.String()})))
+		connectingStateDialog.Show()
+	})
 
 	// create websocket dialer
 	dialer := websocket.DefaultDialer
@@ -101,7 +102,9 @@ func (c *Client) Start() {
 	}
 	time.Sleep(100)
 
-	connectingStateDialog.Hide()
+	fyne.Do(func() {
+		connectingStateDialog.Hide()
+	})
 	previouslyConnected = true
 
 	defer c.Conn.Close()
@@ -134,12 +137,16 @@ func (c *Client) Start() {
 				for err != nil {
 					log.Println("retrying after disconnect... ")
 					if previouslyConnected {
-						connectingStateDialog.Show()
+						fyne.Do(func() {
+							connectingStateDialog.Show()
+						})
 						previouslyConnected = false
 					}
 					c.Conn, _, err = dialer.Dial(u.String(), nil)
 					time.Sleep(500 * time.Millisecond) // make sure to multiply by time.Millisecond
-					connectingStateDialog.Hide()
+					fyne.Do(func() {
+						connectingStateDialog.Hide()
+					})
 				}
 				if runBackend {
 					log.Println("send ui_connected")

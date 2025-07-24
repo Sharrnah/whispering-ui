@@ -1,6 +1,7 @@
 package Hardwareinfo
 
 import (
+	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/widget"
 	"strings"
 )
@@ -166,29 +167,31 @@ func (p ProfileAIModelOption) CalculateMemoryConsumption(CPUBar *widget.Progress
 	}
 
 	// Reset progress bars
-	GPUBar.Value = 0.0
-	CPUBar.Value = 0.0
+	fyne.Do(func() {
+		GPUBar.Value = 0.0
+		CPUBar.Value = 0.0
 
-	// Sum up the memory consumption for each unique option
-	//for _, profileAIModelOption := range AllProfileAIModelOptions {
-	for _, profileAIModelOption := range uniqueOptions {
-		println(profileAIModelOption.AIModel, profileAIModelOption.MemoryConsumption)
-		deviceLower := strings.ToLower(profileAIModelOption.Device)
-		println(profileAIModelOption.AIModel, profileAIModelOption.MemoryConsumption)
-		if strings.HasPrefix(deviceLower, "cuda") ||
-			strings.HasPrefix(deviceLower, "direct-ml") {
-			println("CUDA MEMORY:")
-			println(int(profileAIModelOption.MemoryConsumption))
-			if totalGPUMemory == 0 {
-				GPUBar.Max = GPUBar.Value + profileAIModelOption.MemoryConsumption
+		// Sum up the memory consumption for each unique option
+		//for _, profileAIModelOption := range AllProfileAIModelOptions {
+		for _, profileAIModelOption := range uniqueOptions {
+			println(profileAIModelOption.AIModel, profileAIModelOption.MemoryConsumption)
+			deviceLower := strings.ToLower(profileAIModelOption.Device)
+			println(profileAIModelOption.AIModel, profileAIModelOption.MemoryConsumption)
+			if strings.HasPrefix(deviceLower, "cuda") ||
+				strings.HasPrefix(deviceLower, "direct-ml") {
+				println("CUDA MEMORY:")
+				println(int(profileAIModelOption.MemoryConsumption))
+				if totalGPUMemory == 0 {
+					GPUBar.Max = GPUBar.Value + profileAIModelOption.MemoryConsumption
+				}
+				GPUBar.Value += profileAIModelOption.MemoryConsumption
+			} else if strings.HasPrefix(deviceLower, "cpu") {
+				println("CPU MEMORY:")
+				println(int(profileAIModelOption.MemoryConsumption))
+				CPUBar.Value += profileAIModelOption.MemoryConsumption
 			}
-			GPUBar.Value += profileAIModelOption.MemoryConsumption
-		} else if strings.HasPrefix(deviceLower, "cpu") {
-			println("CPU MEMORY:")
-			println(int(profileAIModelOption.MemoryConsumption))
-			CPUBar.Value += profileAIModelOption.MemoryConsumption
 		}
-	}
-	CPUBar.Refresh()
-	GPUBar.Refresh()
+		CPUBar.Refresh()
+		GPUBar.Refresh()
+	})
 }

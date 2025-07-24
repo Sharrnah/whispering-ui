@@ -229,11 +229,13 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 
 			currentVolume := sampleVolume / float64(framecount)
 			if currentVolume >= 0 {
-				if c.InputWaveWidget.Max < currentVolume {
-					c.InputWaveWidget.Max = currentVolume * 2
-					c.InputWaveWidget.Refresh()
-				}
-				c.InputWaveWidget.SetValue(currentVolume)
+				fyne.Do(func() {
+					if c.InputWaveWidget.Max < currentVolume {
+						c.InputWaveWidget.Max = currentVolume * 2
+						c.InputWaveWidget.Refresh()
+					}
+					c.InputWaveWidget.SetValue(currentVolume)
+				})
 			}
 		}
 
@@ -249,7 +251,9 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 
 			currentVolume := sampleVolume / float64(framecount)
 			if currentVolume >= 0 {
-				c.OutputWaveWidget.SetValue(currentVolume)
+				fyne.Do(func() {
+					c.OutputWaveWidget.SetValue(currentVolume)
+				})
 			}
 		}
 	}
@@ -576,7 +580,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		})
 
 		// refresh GPU Compute Capability label
-		GPUInformationLabel.SetText("Compute Capability: " + fmt.Sprintf("%.1f", ComputeCapability))
+		fyne.Do(func() {
+			GPUInformationLabel.SetText("Compute Capability: " + fmt.Sprintf("%.1f", ComputeCapability))
+		})
 		// refresh memory consumption labels
 		AIModel := Hardwareinfo.ProfileAIModelOption{}
 		AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)

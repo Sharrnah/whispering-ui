@@ -229,60 +229,7 @@ var Field = struct {
 	StatusBar                                       *widget.ProgressBar
 	StatusText                                      *widget.Label
 	StatusRow                                       *fyne.Container
-}{
-	RealtimeResultLabel:                             widget.NewLabelWithData(DataBindings.WhisperResultIntermediateResult),
-	ProcessingStatus:                                widget.NewActivity(),
-	WhisperResultList:                               nil,
-	TranscriptionTaskCombo:                          nil,
-	TranscriptionSpeakerLanguageCombo:               CustomWidget.NewCompletionEntry([]string{"Auto"}),
-	TranscriptionTargetLanguageCombo:                CustomWidget.NewCompletionEntry([]string{}),
-	TranscriptionInputHint:                          canvas.NewText("0", color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}),
-	TranscriptionInputHintOnTxtTranslate:            canvas.NewText("0", color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}),
-	TranscriptionTranslationInputHint:               canvas.NewText("0", color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}),
-	TranscriptionTranslationInputHintOnTxtTranslate: canvas.NewText("0", color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}),
-	SourceLanguageCombo:                             CustomWidget.NewCompletionEntry([]string{"Auto"}),
-	TargetLanguageCombo:                             CustomWidget.NewCompletionEntry([]string{"None"}),
-	SourceLanguageTxtTranslateCombo:                 CustomWidget.NewCompletionEntry([]string{"Auto"}),
-	TargetLanguageTxtTranslateCombo:                 CustomWidget.NewCompletionEntry([]string{"None"}),
-	TtsModelCombo: widget.NewSelect([]string{}, func(value string) {
-		sendMessage := SendMessageChannel.SendMessageStruct{
-			Type:  "setting_change",
-			Name:  "tts_model",
-			Value: value,
-		}
-		sendMessage.SendMessage()
-
-		log.Println("Select set to", value)
-	}),
-	TtsVoiceCombo: widget.NewSelect([]string{}, func(value string) {
-
-		sendMessage := SendMessageChannel.SendMessageStruct{
-			Type:  "setting_change",
-			Name:  "tts_voice",
-			Value: value,
-		}
-		sendMessage.SendMessage()
-
-		log.Println("Select set to", value)
-	}),
-	OscLimitHint: canvas.NewText(fmt.Sprintf(OscLimitLabelConst, 0, 0), color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff}),
-
-	OcrLanguageCombo: CustomWidget.NewCompletionEntry([]string{}),
-	OcrWindowCombo: CustomWidget.NewSelect([]string{}, func(value string) {
-		sendMessage := SendMessageChannel.SendMessageStruct{
-			Type:  "setting_change",
-			Name:  "ocr_window_name",
-			Value: value,
-		}
-		sendMessage.SendMessage()
-	}),
-	OcrImageContainer: container.NewStack(),
-	LogText:           terminal.New(),
-	// Status Bar
-	StatusBar:  nil,
-	StatusText: widget.NewLabelWithData(DataBindings.StatusTextBinding),
-	StatusRow:  nil,
-}
+}{}
 
 func createFields() {
 	Field.TranscriptionTaskCombo = fieldCreationFunctions.TranscriptionTaskCombo()
@@ -305,6 +252,60 @@ func InitializeGlobalFields() {
 	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
 		scope.SetTag("GoRoutine", "Fields\\GlobalFields->InitializeGlobalFields")
 	})
+
+	// Initialize basic fields
+	Field.RealtimeResultLabel = widget.NewLabelWithData(DataBindings.WhisperResultIntermediateResult)
+	Field.ProcessingStatus = widget.NewActivity()
+	Field.TranscriptionSpeakerLanguageCombo = CustomWidget.NewCompletionEntry([]string{"Auto"})
+	Field.TranscriptionTargetLanguageCombo = CustomWidget.NewCompletionEntry([]string{})
+	Field.TranscriptionInputHint = canvas.NewText("0", color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff})
+	Field.TranscriptionInputHintOnTxtTranslate = canvas.NewText("0", color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff})
+	Field.TranscriptionTranslationInputHint = canvas.NewText("0", color.NRGBA{R: 0xb2, G: 0xb2, B: 0xff})
+	Field.TranscriptionTranslationInputHintOnTxtTranslate = canvas.NewText("0", color.NRGBA{R: 0xb2, G: 0xb2, B: 0xff})
+	Field.SourceLanguageCombo = CustomWidget.NewCompletionEntry([]string{"Auto"})
+	Field.TargetLanguageCombo = CustomWidget.NewCompletionEntry([]string{"None"})
+	Field.SourceLanguageTxtTranslateCombo = CustomWidget.NewCompletionEntry([]string{"Auto"})
+	Field.TargetLanguageTxtTranslateCombo = CustomWidget.NewCompletionEntry([]string{"None"})
+
+	Field.TtsModelCombo = widget.NewSelect([]string{}, func(value string) {
+		sendMessage := SendMessageChannel.SendMessageStruct{
+			Type:  "setting_change",
+			Name:  "tts_model",
+			Value: value,
+		}
+		sendMessage.SendMessage()
+
+		log.Println("Select set to", value)
+	})
+
+	Field.TtsVoiceCombo = widget.NewSelect([]string{}, func(value string) {
+
+		sendMessage := SendMessageChannel.SendMessageStruct{
+			Type:  "setting_change",
+			Name:  "tts_voice",
+			Value: value,
+		}
+		sendMessage.SendMessage()
+
+		log.Println("Select set to", value)
+	})
+
+	Field.OscLimitHint = canvas.NewText(fmt.Sprintf(OscLimitLabelConst, 0, 0), color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff})
+
+	Field.OcrLanguageCombo = CustomWidget.NewCompletionEntry([]string{})
+
+	Field.OcrWindowCombo = CustomWidget.NewSelect([]string{}, func(value string) {
+		sendMessage := SendMessageChannel.SendMessageStruct{
+			Type:  "setting_change",
+			Name:  "ocr_window_name",
+			Value: value,
+		}
+		sendMessage.SendMessage()
+	})
+
+	Field.OcrImageContainer = container.NewStack()
+	Field.LogText = terminal.New()
+	Field.StatusText = widget.NewLabelWithData(DataBindings.StatusTextBinding)
 
 	createFields()
 
