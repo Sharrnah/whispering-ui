@@ -167,45 +167,41 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 	// plugin to window button
 	pluginToWindowButton := widget.NewButtonWithIcon("", theme.ViewFullScreenIcon(), nil)
 	pluginToWindowButton.OnTapped = func() {
-		go func() {
-			pluginWindow := fyne.CurrentApp().NewWindow(pluginClassName + " " + lang.L("Settings"))
-			fyne.Do(func() {
-				reloadButton := widget.NewButtonWithIcon(lang.L("Reload"), theme.ViewRefreshIcon(), nil)
+		pluginWindow := fyne.CurrentApp().NewWindow(pluginClassName + " " + lang.L("Settings"))
+		reloadButton := widget.NewButtonWithIcon(lang.L("Reload"), theme.ViewRefreshIcon(), nil)
 
-				pluginContentWin := BuildSinglePluginSettings(pluginClassName, nil, nil, reloadButton, pluginWindow)
-				pluginWindowContainer := container.NewVScroll(pluginContentWin)
+		pluginContentWin := BuildSinglePluginSettings(pluginClassName, nil, nil, reloadButton, pluginWindow)
+		pluginWindowContainer := container.NewVScroll(pluginContentWin)
 
-				reloadButton.OnTapped = func() {
-					pluginContentWin = BuildSinglePluginSettings(pluginClassName, nil, nil, reloadButton, pluginWindow)
-					pluginWindowContainer.Content = pluginContentWin
-					pluginWindowContainer.Refresh()
-					pluginWindow.Content().Refresh()
-				}
-				reloadButton.Importance = widget.MediumImportance
+		reloadButton.OnTapped = func() {
+			pluginContentWin = BuildSinglePluginSettings(pluginClassName, nil, nil, reloadButton, pluginWindow)
+			pluginWindowContainer.Content = pluginContentWin
+			pluginWindowContainer.Refresh()
+			pluginWindow.Content().Refresh()
+		}
+		reloadButton.Importance = widget.MediumImportance
 
-				pluginWindow.SetContent(container.NewBorder(container.NewBorder(nil, nil, nil, reloadButton, layout.NewSpacer()), nil, nil, nil, pluginWindowContainer))
+		pluginWindow.SetContent(container.NewBorder(container.NewBorder(nil, nil, nil, reloadButton, layout.NewSpacer()), nil, nil, nil, pluginWindowContainer))
 
-				// guess the size
-				windowHeight := pluginContentWin.Size().Height + reloadButton.Size().Height + 20
-				windowWidth := pluginContentWin.Size().Width
-				if windowHeight >= fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size().Height {
-					windowHeight = fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size().Height
-				}
-				if pluginAccordionItem != nil {
-					windowHeight = pluginAccordionItem.Detail.Size().Height + reloadButton.Size().Height + 20
-					windowWidth = pluginAccordionItem.Detail.Size().Width
-					if windowHeight >= fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size().Height {
-						windowHeight = fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size().Height
-					}
-					if windowWidth >= 1400 {
-						windowWidth = windowWidth / 2
-					}
-				}
-				pluginWindow.Resize(fyne.NewSize(windowWidth, windowHeight))
-				pluginWindow.CenterOnScreen()
-				pluginWindow.Show()
-			})
-		}()
+		// guess the size
+		windowHeight := pluginContentWin.Size().Height + reloadButton.Size().Height + 20
+		windowWidth := pluginContentWin.Size().Width
+		if windowHeight >= fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size().Height {
+			windowHeight = fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size().Height
+		}
+		if pluginAccordionItem != nil {
+			windowHeight = pluginAccordionItem.Detail.Size().Height + reloadButton.Size().Height + 20
+			windowWidth = pluginAccordionItem.Detail.Size().Width
+			if windowHeight >= fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size().Height {
+				windowHeight = fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size().Height
+			}
+			if windowWidth >= 1400 {
+				windowWidth = windowWidth / 2
+			}
+		}
+		pluginWindow.Resize(fyne.NewSize(windowWidth, windowHeight))
+		pluginWindow.CenterOnScreen()
+		pluginWindow.Show()
 	}
 	if pluginAccordionItem == nil || pluginAccordion == nil {
 		pluginToWindowButton.Hide()
@@ -431,42 +427,38 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 	pluginToWindowButton := widget.NewButtonWithIcon(lang.L("Open List in Window"), theme.ViewFullScreenIcon(), nil)
 
 	pluginToWindowButton.OnTapped = func() {
-		go func() {
-			pluginWindow := fyne.CurrentApp().NewWindow(lang.L("Plugin Settings"))
-			fyne.Do(func() {
-				pluginAccordionWin, _ := BuildPluginSettingsAccordion(pluginWindow)
-				pluginWindowContainer := container.NewVScroll(pluginAccordionWin)
-				reloadButton := widget.NewButtonWithIcon(lang.L("Reload"), theme.ViewRefreshIcon(), nil)
-				reloadButton.OnTapped = func() {
-					openItem := -1
-					for index, item := range pluginAccordionWin.(*widget.Accordion).Items {
-						if item.Open {
-							openItem = index
-							break
-						}
-					}
-					pluginAccordionWin, _ = BuildPluginSettingsAccordion(pluginWindow)
-					pluginWindowContainer.Content = pluginAccordionWin
-					pluginWindowContainer.Refresh()
-					pluginWindow.Content().Refresh()
-					if openItem >= 0 && openItem <= len(pluginAccordionWin.(*widget.Accordion).Items) {
-						pluginAccordionWin.(*widget.Accordion).Open(openItem)
-					}
+		pluginWindow := fyne.CurrentApp().NewWindow(lang.L("Plugin Settings"))
+		pluginAccordionWin, _ := BuildPluginSettingsAccordion(pluginWindow)
+		pluginWindowContainer := container.NewVScroll(pluginAccordionWin)
+		reloadButton := widget.NewButtonWithIcon(lang.L("Reload"), theme.ViewRefreshIcon(), nil)
+		reloadButton.OnTapped = func() {
+			openItem := -1
+			for index, item := range pluginAccordionWin.(*widget.Accordion).Items {
+				if item.Open {
+					openItem = index
+					break
 				}
-				reloadButton.Importance = widget.MediumImportance
-				pluginWindow.SetContent(container.NewBorder(container.NewBorder(nil, nil, nil, reloadButton), nil, nil, nil, pluginWindowContainer))
+			}
+			pluginAccordionWin, _ = BuildPluginSettingsAccordion(pluginWindow)
+			pluginWindowContainer.Content = pluginAccordionWin
+			pluginWindowContainer.Refresh()
+			pluginWindow.Content().Refresh()
+			if openItem >= 0 && openItem <= len(pluginAccordionWin.(*widget.Accordion).Items) {
+				pluginAccordionWin.(*widget.Accordion).Open(openItem)
+			}
+		}
+		reloadButton.Importance = widget.MediumImportance
+		pluginWindow.SetContent(container.NewBorder(container.NewBorder(nil, nil, nil, reloadButton), nil, nil, nil, pluginWindowContainer))
 
-				windowHeight := pluginAccordion.Size().Height
-				if windowHeight >= fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size().Height {
-					windowHeight = fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size().Height
-				}
-				pluginWindow.Resize(fyne.NewSize(pluginAccordion.Size().Width, windowHeight))
-				pluginWindow.CenterOnScreen()
+		windowHeight := pluginAccordion.Size().Height
+		if windowHeight >= fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size().Height {
+			windowHeight = fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size().Height
+		}
+		pluginWindow.Resize(fyne.NewSize(pluginAccordion.Size().Width, windowHeight))
+		pluginWindow.CenterOnScreen()
 
-				pluginWindow.Show()
-				// loop while pluginWindow is open, do refresh
-			})
-		}()
+		pluginWindow.Show()
+		// loop while pluginWindow is open, do refresh
 	}
 
 	downloadButton := widget.NewButton(lang.L("Download / Update Plugins"), nil)
