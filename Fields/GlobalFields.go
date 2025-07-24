@@ -9,7 +9,6 @@ import (
 	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
-	"github.com/fyne-io/terminal"
 	"github.com/getsentry/sentry-go"
 	"image/color"
 	"log"
@@ -225,7 +224,7 @@ var Field = struct {
 	OcrLanguageCombo                                *CustomWidget.CompletionEntry
 	OcrWindowCombo                                  *CustomWidget.TappableSelect
 	OcrImageContainer                               *fyne.Container
-	LogText                                         *terminal.Terminal
+	LogText                                         *widget.Entry
 	StatusBar                                       *widget.ProgressBar
 	StatusText                                      *widget.Label
 	StatusRow                                       *fyne.Container
@@ -304,7 +303,8 @@ func InitializeGlobalFields() {
 	})
 
 	Field.OcrImageContainer = container.NewStack()
-	Field.LogText = terminal.New()
+	//Field.LogText = terminal.New()
+	Field.LogText = widget.NewMultiLineEntry()
 	Field.StatusText = widget.NewLabelWithData(DataBindings.StatusTextBinding)
 
 	createFields()

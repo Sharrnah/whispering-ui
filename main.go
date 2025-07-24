@@ -213,8 +213,10 @@ func main() {
 						tabContent.OnSelected(tabContent.Items[tabContent.SelectedIndex()])
 					}
 					if tabContent.Selected().Text == lang.L("Logs") {
-						Fields.Field.LogText.SetText("")
-						Fields.Field.LogText.Write([]byte(strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\r\n") + "\r\n"))
+						//Fields.Field.LogText.SetText("")
+						//Fields.Field.LogText.Write([]byte(strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\r\n") + "\r\n"))
+
+						Fields.Field.LogText.SetText(strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\r\n") + "\r\n")
 					}
 				}
 			}

@@ -170,8 +170,9 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 			tab.Content.(*container.Scroll).Refresh()
 		}
 		if tab.Text == lang.L("Logs") {
-			Fields.Field.LogText.SetText("")
-			Fields.Field.LogText.Write([]byte(strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\r\n") + "\r\n"))
+			//Fields.Field.LogText.SetText("")
+			Fields.Field.LogText.SetText(strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\r\n") + "\r\n")
+			//Fields.Field.LogText.Write([]byte(strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\r\n") + "\r\n"))
 		}
 	}
 
@@ -181,7 +182,24 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 		defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
 			scope.SetTag("GoRoutine", "Pages\\Advanced->CreateAdvancedWindow#LogTextUpdaterThread")
 		})
-		_ = Fields.Field.LogText.RunWithConnection(writer, reader)
+		//_ = Fields.Field.LogText.RunWithConnection(writer, reader)
+		// append text from the reader via Fields.Field.LogText.Append
+		for {
+			buf := make([]byte, 1024)
+			n, err := reader.Read(buf)
+			if n > 0 {
+				// Append the text to the log text field
+				Fields.Field.LogText.Append(string(buf[:n]))
+			}
+			if err != nil {
+				if err == io.EOF {
+					break // Exit the loop on EOF
+				}
+				Logging.CaptureException(err)
+				fyne.LogError("Error reading from log stream", err)
+				break
+			}
+		}
 	}(RuntimeBackend.BackendsList[0].WriterBackend, RuntimeBackend.BackendsList[0].ReaderBackend)
 
 	return tabs
