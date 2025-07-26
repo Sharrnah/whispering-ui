@@ -84,6 +84,8 @@
     "Speech-to-Text A.I. Size": "Speech-to-Text A.I. Size",
     "A.I. Device for Speech-to-Text": "A.I. Device for Speech-to-Text",
     "Speech-to-Text Type": "Speech-to-Text Type",
+    "Integrated Image-to-Text": "Integrated Image-to-Text",
+    "A.I. Device for Image-to-Text": "A.I. Device for Image-to-Text",
     "This will detect the current noise level.": "This will detect the current noise level.",
     "This will record for energyDetectionTime seconds and sets the energy to the max detected level. Please behave normally (breathing etc.) but don't say anything. This value can later be fine-tuned without restarting by setting the energy value in Advanced-Settings.": "This will record for {{.EnergyDetectionTime}} and sets the energy to the max detected level.\nPlease behave normally (breathing etc.) but don't say anything.\n\nThis value can later be fine-tuned without restarting by setting the \"Speech volume Level\" value in Advanced -> Settings.",
     "TimeSeconds": {
