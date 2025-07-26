@@ -1,6 +1,8 @@
 module whispering-tiger-ui
 
-go 1.23.4
+go 1.24
+
+toolchain go1.24.5
 
 //https://github.com/Sharrnah/terminal/tree/master
 replace github.com/fyne-io/terminal => github.com/Sharrnah/terminal v0.0.0-20250724212636-844a4c3532db
@@ -11,32 +13,28 @@ replace fyne.io/fyne/v2 => github.com/Sharrnah/fyne/v2 v2.0.0-20250724211743-88f
 require (
 	fyne.io/fyne/v2 v2.6.2-rc1
 	github.com/dustin/go-humanize v1.0.1
-	github.com/fyne-io/terminal v0.0.0-20250718181330-d773dcbe72d3
-	github.com/gen2brain/malgo v0.11.22
+	github.com/gen2brain/malgo v0.11.23
 	github.com/gorilla/websocket v1.5.3
 	github.com/hajimehoshi/oto/v2 v2.4.2
 	github.com/hashicorp/go-cleanhttp v0.5.2
-	github.com/jaypipes/ghw v0.13.0
+	github.com/jaypipes/ghw v0.17.0
 	github.com/jeandeaual/go-locale v0.0.0-20250612000132-0ef82f21eade
 	github.com/youpy/go-wav v0.3.2
-	golang.org/x/text v0.22.0
+	golang.org/x/text v0.27.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
-	github.com/getsentry/sentry-go v0.31.1
+	github.com/getsentry/sentry-go v0.34.1
 	github.com/go-ole/go-ole v1.3.0
 	github.com/moutend/go-wca v0.3.0
-	golang.design/x/clipboard v0.7.0
+	golang.design/x/clipboard v0.7.1
 )
 
 require (
 	fyne.io/systray v1.11.1-0.20250603113521-ca66a66d8b58 // indirect
-	github.com/ActiveState/termtest/conpty v0.5.0 // indirect
-	github.com/Azure/go-ansiterm v0.0.0-20230124172434-306776ec8161 // indirect
 	github.com/BurntSushi/toml v1.5.0 // indirect
 	github.com/StackExchange/wmi v1.2.1 // indirect
-	github.com/creack/pty v1.1.23 // indirect
 	github.com/davecgh/go-spew v1.1.1 // indirect
 	github.com/ebitengine/purego v0.7.1 // indirect
 	github.com/fredbi/uri v1.1.0 // indirect
@@ -54,6 +52,7 @@ require (
 	github.com/hack-pad/safejs v0.1.0 // indirect
 	github.com/jaypipes/pcidb v1.0.1 // indirect
 	github.com/jsummers/gobmp v0.0.0-20230614200233-a9de23ed2e25 // indirect
+	github.com/kr/text v0.2.0 // indirect
 	github.com/mitchellh/go-homedir v1.1.0 // indirect
 	github.com/nfnt/resize v0.0.0-20180221191011-83c6a9932646 // indirect
 	github.com/nicksnyder/go-i18n/v2 v2.5.1 // indirect
@@ -66,10 +65,10 @@ require (
 	github.com/youpy/go-riff v0.1.0 // indirect
 	github.com/yuin/goldmark v1.7.8 // indirect
 	github.com/zaf/g711 v1.4.0 // indirect
-	golang.org/x/exp/shiny v0.0.0-20240909161429-701f63a606c0 // indirect
-	golang.org/x/image v0.24.0 // indirect
-	golang.org/x/mobile v0.0.0-20240909163608-642950227fb3 // indirect
+	golang.org/x/exp/shiny v0.0.0-20250606033433-dcc06ee1d476 // indirect
+	golang.org/x/image v0.28.0 // indirect
+	golang.org/x/mobile v0.0.0-20250606033058-a2a15c67f36f // indirect
 	golang.org/x/net v0.35.0 // indirect
-	golang.org/x/sys v0.30.0 // indirect
+	golang.org/x/sys v0.33.0 // indirect
 	howett.net/plist v1.0.1 // indirect
 )
