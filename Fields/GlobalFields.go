@@ -224,7 +224,7 @@ var Field = struct {
 	OcrLanguageCombo                                *CustomWidget.CompletionEntry
 	OcrWindowCombo                                  *CustomWidget.TappableSelect
 	OcrImageContainer                               *fyne.Container
-	LogText                                         *widget.Entry
+	LogText                                         *CustomWidget.LogText
 	StatusBar                                       *widget.ProgressBar
 	StatusText                                      *widget.Label
 	StatusRow                                       *fyne.Container
@@ -303,8 +303,9 @@ func InitializeGlobalFields() {
 	})
 
 	Field.OcrImageContainer = container.NewStack()
-	//Field.LogText = terminal.New()
-	Field.LogText = widget.NewMultiLineEntry()
+	Field.LogText = CustomWidget.NewLogText()
+	Field.LogText.AutoScroll = true
+	Field.LogText.ReadOnly = true
 	Field.StatusText = widget.NewLabelWithData(DataBindings.StatusTextBinding)
 
 	createFields()

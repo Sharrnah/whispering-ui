@@ -7,27 +7,143 @@ import (
 )
 
 type LogText struct {
-	Widget    fyne.CanvasObject
-	TextLines []string
-	MaxLines  int
+	widget.Entry
+	TextLines  []string
+	MaxLines   int
+	AutoScroll bool // If true, automatically scroll to the bottom when new text is added
+	ReadOnly   bool // if true, LogText is read-only
+}
+
+func (l *LogText) MinSize() fyne.Size {
+	return l.Entry.MinSize()
+}
+
+func (l *LogText) Move(position fyne.Position) {
+	l.Entry.Move(position)
+}
+
+func (l *LogText) Position() fyne.Position {
+	return l.Entry.Position()
+}
+
+func (l *LogText) Resize(size fyne.Size) {
+	l.Entry.Resize(size)
+	if l.AutoScroll {
+		l.ScrollToBottom()
+	}
+}
+
+func (l *LogText) Size() fyne.Size {
+	return l.Entry.Size()
+}
+
+func (l *LogText) Hide() {
+	l.Entry.Hide()
+}
+
+func (l *LogText) Visible() bool {
+	return l.Entry.Visible()
+}
+
+func (l *LogText) Show() {
+	l.Entry.Show()
+}
+
+func (l *LogText) Refresh() {
+	l.Entry.Refresh()
 }
 
 func NewLogText() *LogText {
-	return &LogText{
-		Widget:    widget.NewLabel(""),
+	c := &LogText{
+		//Widget:    widget.NewLabel(""),
+		//Entry:    widget.NewMultiLineEntry(),
 		TextLines: []string{},
 		MaxLines:  100,
 	}
+	c.MultiLine = true
+	c.Wrapping = fyne.TextWrapOff
+	c.TextStyle = fyne.TextStyle{
+		Monospace: true,
+	}
+	c.ExtendBaseWidget(c)
+	return c
 }
 
 func (l *LogText) GetText() string {
 	return strings.Join(l.TextLines, "")
 }
 
-func (l *LogText) AppendText(text string) {
+func (l *LogText) SetText(text string) {
+	l.TextLines = strings.Split(text, "\n")
+	if len(l.TextLines) > l.MaxLines {
+		l.TextLines = l.TextLines[len(l.TextLines)-l.MaxLines:]
+	}
+	//l.Widget.(*widget.Label).SetText(text)
+	l.Entry.SetText(text)
+	if l.AutoScroll {
+		l.ScrollToBottom()
+	}
+}
+
+func (l *LogText) Append(text string) {
 	l.TextLines = append(l.TextLines, text)
 	if len(l.TextLines) > l.MaxLines {
 		l.TextLines = l.TextLines[len(l.TextLines)-l.MaxLines:]
 	}
-	l.Widget.(*widget.Label).SetText(l.GetText())
+	//l.Widget.(*widget.Label).SetText(l.GetText())
+	l.Entry.Append(text)
+	if l.AutoScroll {
+		l.ScrollToBottom()
+	}
+}
+
+func (l *LogText) ScrollToBottom() {
+	lines := strings.Split(l.Text, "\n")
+	if len(lines) == 0 {
+		return
+	}
+	//lastLine := lines[len(lines)-1]
+	l.CursorRow = len(lines) - 1
+	//entry.CursorColumn = len([]rune(lastLine))
+	l.Refresh()
+}
+
+// Override TypedKey to ignore key input when ReadOnly is true.
+func (l *LogText) TypedKey(key *fyne.KeyEvent) {
+	if l.ReadOnly {
+		return
+	}
+	// forward to the embedded Entry handler
+	l.Entry.TypedKey(key)
+}
+
+// Override TypedRune to ignore text input when ReadOnly is true.
+func (l *LogText) TypedRune(r rune) {
+	if l.ReadOnly {
+		return
+	}
+	l.Entry.TypedRune(r)
+}
+
+// Override TappedSecondary to remove Cut/Paste options when ReadOnly is true,
+// using the popup logic from our custom Entry widget.
+func (l *LogText) TappedSecondary(pe *fyne.PointEvent) {
+	if l.ReadOnly {
+		clipboard := fyne.CurrentApp().Clipboard()
+		copyItem := fyne.NewMenuItem("Copy", func() {
+			l.TypedShortcut(&fyne.ShortcutCopy{Clipboard: clipboard})
+		})
+		selectAllItem := fyne.NewMenuItem("Select all", func() {
+			l.TypedShortcut(&fyne.ShortcutSelectAll{})
+		})
+		entryPos := fyne.CurrentApp().Driver().AbsolutePositionForObject(l)
+		popUpPos := entryPos.Add(pe.Position)
+		c := fyne.CurrentApp().Driver().CanvasForObject(l)
+		menu := fyne.NewMenu("", copyItem, selectAllItem)
+		popup := widget.NewPopUpMenu(menu, c)
+		popup.ShowAtPosition(popUpPos)
+		return
+	}
+	// forward to the embedded Entry handler
+	l.Entry.TappedSecondary(pe)
 }
