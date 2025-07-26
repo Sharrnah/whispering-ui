@@ -54,6 +54,7 @@
     "Keypress": "Keypress",
     "The Websocket Port is already in use": "The Websocket Port is already in use.",
     "Do you want to quit the running backend or reconnect to it?": "Do you want to quit the running backend or reconnect to it?",
+    "Quit running backend": "Quit running backend",
     "Connecting to Server": "Connecting to {{.ServerUri}}",
     "New Profile Name": "New Profile Name",
     "New": "New",

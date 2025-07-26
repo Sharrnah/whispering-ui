@@ -2204,7 +2204,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					stopAndClose(playBackDevice, onClose)
 					backendCheckDialog.Hide()
 				}))
-				yesButton := widget.NewButtonWithIcon(lang.L("Yes"), theme.ConfirmIcon(), func() {
+				quitButton := widget.NewButtonWithIcon(lang.L("Quit running backend"), theme.ConfirmIcon(), func() {
 					err := Utilities.KillProcessById(Settings.Config.Process_id)
 					if err != nil {
 						err = Utilities.SendQuitMessage(websocketAddr)
@@ -2218,8 +2218,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					}
 					backendCheckDialog.Hide()
 				})
-				yesButton.Importance = widget.HighImportance
-				buttonList.Add(yesButton)
+				quitButton.Importance = widget.HighImportance
+				buttonList.Add(quitButton)
 
 				backendCheckDialogContent.Add(
 					widget.NewLabelWithStyle(lang.L("The Websocket Port is already in use")+"\n"+lang.L("Do you want to quit the running backend or reconnect to it?"), fyne.TextAlignCenter, fyne.TextStyle{}),
