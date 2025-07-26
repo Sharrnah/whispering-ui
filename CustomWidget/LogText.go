@@ -2,6 +2,7 @@ package CustomWidget
 
 import (
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
 	"strings"
 )
@@ -125,15 +126,14 @@ func (l *LogText) TypedRune(r rune) {
 	l.Entry.TypedRune(r)
 }
 
-// Override TappedSecondary to remove Cut/Paste options when ReadOnly is true,
-// using the popup logic from our custom Entry widget.
+// TappedSecondary Override to remove Cut/Paste options when ReadOnly is true
 func (l *LogText) TappedSecondary(pe *fyne.PointEvent) {
 	if l.ReadOnly {
 		clipboard := fyne.CurrentApp().Clipboard()
-		copyItem := fyne.NewMenuItem("Copy", func() {
+		copyItem := fyne.NewMenuItem(lang.L("Copy"), func() {
 			l.TypedShortcut(&fyne.ShortcutCopy{Clipboard: clipboard})
 		})
-		selectAllItem := fyne.NewMenuItem("Select all", func() {
+		selectAllItem := fyne.NewMenuItem(lang.L("Select all"), func() {
 			l.TypedShortcut(&fyne.ShortcutSelectAll{})
 		})
 		entryPos := fyne.CurrentApp().Driver().AbsolutePositionForObject(l)
@@ -146,4 +146,15 @@ func (l *LogText) TappedSecondary(pe *fyne.PointEvent) {
 	}
 	// forward to the embedded Entry handler
 	l.Entry.TappedSecondary(pe)
+}
+
+// TypedShortcut Override to ignore Cut (CTRL+X) and Paste (CTRL+V) when ReadOnly is true.
+func (l *LogText) TypedShortcut(s fyne.Shortcut) {
+	if l.ReadOnly {
+		switch s.(type) {
+		case *fyne.ShortcutCut, *fyne.ShortcutPaste:
+			return
+		}
+	}
+	l.Entry.TypedShortcut(s)
 }
