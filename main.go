@@ -100,9 +100,7 @@ func main() {
 	w.CenterOnScreen()
 
 	// initialize global fields (so they can use initialized languages)
-	fyne.Do(func() {
-		Fields.InitializeGlobalFields()
-	})
+	Fields.InitializeGlobalFields()
 
 	w.SetOnClosed(func() {
 		fyne.CurrentApp().Preferences().SetFloat("MainWindowWidth", float64(w.Canvas().Size().Width))
