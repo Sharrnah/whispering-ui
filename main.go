@@ -303,6 +303,15 @@ func main() {
 		}()
 	}
 
+	// check if running from temporary directory
+	if exePath, err := os.Executable(); err == nil {
+		exeDir := filepath.Dir(exePath)
+		tempDir := os.TempDir()
+		if strings.HasPrefix(strings.ToLower(exeDir), strings.ToLower(tempDir)) {
+			dialog.ShowInformation(lang.L("Warning"), lang.L("It looks like you are running Whispering Tiger from a temporary directory. Please extract the application and run it from a different folder."), profileWindow)
+		}
+	}
+
 	a.Lifecycle().SetOnStopped(func() {
 		// after run (app exit), send whisper process signal to stop
 		if len(RuntimeBackend.BackendsList) > 0 {
