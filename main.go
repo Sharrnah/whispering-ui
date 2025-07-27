@@ -255,61 +255,27 @@ func main() {
 	profileWindow.CenterOnScreen()
 	profileWindow.Show()
 
-	if !fyne.CurrentApp().Preferences().BoolWithFallback("SendErrorsToServerInit", false) {
-		confirmErrorReportingDialog := dialog.NewConfirm(lang.L("Automatically Report Errors"), lang.L("Do you want to automatically report errors?"),
-			func(b bool) {
-				Logging.EnableReporting(b)
-				fyne.CurrentApp().Preferences().SetBool("SendErrorsToServerInit", true) // Set Init to mark that it was already shown
-			},
-			profileWindow)
-		confirmErrorReportingDialog.Show()
-	}
-	SendErrorsToServerSetting := fyne.CurrentApp().Preferences().BoolWithFallback("SendErrorsToServer", false)
-	Logging.EnableReporting(SendErrorsToServerSetting)
-
-	Logging.ErrorHandlerInit(Utilities.AppVersion+"."+Utilities.AppBuild, UpdateUtility.GetCurrentPlatformVersion())
-	defer Logging.ErrorHandlerRecover()
-
-	// check for updates
-	if fyne.CurrentApp().Preferences().BoolWithFallback("CheckForUpdateAtStartup", true) || (!Utilities.FileExists("audioWhisper/audioWhisper.exe") && !Utilities.FileExists("audioWhisper.py")) {
-		go func() {
-			fyne.Do(func() {
-				if len(fyne.CurrentApp().Driver().AllWindows()) == 2 {
-					UpdateUtility.VersionCheck(fyne.CurrentApp().Driver().AllWindows()[1], false)
-				}
-			})
-		}()
-	}
-	if fyne.CurrentApp().Preferences().BoolWithFallback("CheckForPluginUpdatesAtStartup", true) {
-		go func() {
-			fyne.Do(func() {
-				lastCheckTimestamp := fyne.CurrentApp().Preferences().IntWithFallback("CheckForPluginUpdatesAtStartupLastTime", 0)
-				lastCheckTime := time.Unix(int64(lastCheckTimestamp), 0)
-				currentTime := time.Now()
-
-				// make sure to check for plugin updates only every day
-				if lastCheckTime.Year() != currentTime.Year() || lastCheckTime.YearDay() != currentTime.YearDay() {
-					fyne.CurrentApp().Preferences().SetInt("CheckForPluginUpdatesAtStartupLastTime", int(currentTime.Unix()))
-
-					if UpdateUtility.PluginsUpdateAvailable() {
-						dialog.ShowConfirm(lang.L("New Plugin updates available"), lang.L("Whispering Tiger has new Plugin updates available. Go to Plugin List now?"), func(b bool) {
-							if b {
-								Advanced.CreatePluginListWindow(nil, false)
-							}
-						}, fyne.CurrentApp().Driver().AllWindows()[1])
-					}
-				}
-			})
-		}()
-	}
-
-	// check if running from temporary directory
+	// priority: warn if running from temp directory, then ask about error reporting
 	if exePath, err := os.Executable(); err == nil {
 		exeDir := filepath.Dir(exePath)
-		tempDir := os.TempDir()
-		if strings.HasPrefix(strings.ToLower(exeDir), strings.ToLower(tempDir)) {
-			dialog.ShowInformation(lang.L("Warning"), lang.L("It looks like you are running Whispering Tiger from a temporary directory. Please extract the application and run it from a different folder."), profileWindow)
+		if strings.HasPrefix(strings.ToLower(exeDir), strings.ToLower(os.TempDir())) {
+			//goland:noinspection GoErrorStringFormat
+			dlg := dialog.NewError(
+				fmt.Errorf(lang.L("It looks like you are running Whispering Tiger from a temporary directory. Please extract the application and run it from a different folder.")),
+				profileWindow,
+			)
+			dlg.SetOnClosed(func() {
+				requestErrorReporting(profileWindow)
+				startBackgroundTasks()
+			})
+			dlg.Show()
+		} else {
+			requestErrorReporting(profileWindow)
+			startBackgroundTasks()
 		}
+	} else {
+		requestErrorReporting(profileWindow)
+		startBackgroundTasks()
 	}
 
 	a.Lifecycle().SetOnStopped(func() {
@@ -322,4 +288,66 @@ func main() {
 	})
 
 	a.Run()
+}
+
+// new helper – ask about error reporting once, then start background tasks
+func requestErrorReporting(parentWindow fyne.Window) {
+	if !fyne.CurrentApp().Preferences().BoolWithFallback("SendErrorsToServerInit", false) {
+		dialog.NewConfirm(
+			lang.L("Automatically Report Errors"),
+			lang.L("Do you want to automatically report errors?"),
+			func(b bool) {
+				Logging.EnableReporting(b)
+				fyne.CurrentApp().Preferences().SetBool("SendErrorsToServerInit", true)
+			},
+			parentWindow,
+		).Show()
+	}
+}
+
+// startBackgroundTasks encapsulates what used to run immediately after confirm
+func startBackgroundTasks() {
+	// apply saved setting
+	send := fyne.CurrentApp().Preferences().BoolWithFallback("SendErrorsToServer", false)
+	Logging.EnableReporting(send)
+	Logging.ErrorHandlerInit(Utilities.AppVersion+"."+Utilities.AppBuild, UpdateUtility.GetCurrentPlatformVersion())
+	defer Logging.ErrorHandlerRecover()
+
+	// check for app updates
+	if fyne.CurrentApp().Preferences().BoolWithFallback("CheckForUpdateAtStartup", true) ||
+		(!Utilities.FileExists("audioWhisper/audioWhisper.exe") && !Utilities.FileExists("audioWhisper.py")) {
+		go func() {
+			fyne.Do(func() {
+				wList := fyne.CurrentApp().Driver().AllWindows()
+				if len(wList) >= 2 {
+					UpdateUtility.VersionCheck(wList[1], false)
+				}
+			})
+		}()
+	}
+
+	// check for plugin updates
+	if fyne.CurrentApp().Preferences().BoolWithFallback("CheckForPluginUpdatesAtStartup", true) {
+		go func() {
+			fyne.Do(func() {
+				last := fyne.CurrentApp().Preferences().IntWithFallback("CheckForPluginUpdatesAtStartupLastTime", 0)
+				now := time.Now()
+				if time.Unix(int64(last), 0).YearDay() != now.YearDay() {
+					fyne.CurrentApp().Preferences().SetInt("CheckForPluginUpdatesAtStartupLastTime", int(now.Unix()))
+					if UpdateUtility.PluginsUpdateAvailable() {
+						dialog.ShowConfirm(
+							lang.L("New Plugin updates available"),
+							lang.L("Whispering Tiger has new Plugin updates available. Go to Plugin List now?"),
+							func(goNow bool) {
+								if goNow {
+									Advanced.CreatePluginListWindow(nil, false)
+								}
+							},
+							fyne.CurrentApp().Driver().AllWindows()[1],
+						)
+					}
+				}
+			})
+		}()
+	}
 }
