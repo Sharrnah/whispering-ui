@@ -241,12 +241,16 @@ func main() {
 		fyne.CurrentApp().Preferences().SetFloat("ProfileWindowHeight", float64(profileWindow.Canvas().Size().Height))
 
 		// close profile window
+		profileWindow.SetOnClosed(func() {}) // disable quit handler for programmatic close
 		profileWindow.Close()
 	}
 
 	profilePage := Pages.CreateProfileWindow(onProfileClose)
 	profileWindow.SetContent(profilePage)
-
+	// quit application if profile window is closed without using the button
+	profileWindow.SetOnClosed(func() {
+		fyne.CurrentApp().Quit()
+	})
 	// set profile window size
 	profileWindowWidth := fyne.CurrentApp().Preferences().FloatWithFallback("ProfileWindowWidth", 1400)
 	profileWindowHeight := fyne.CurrentApp().Preferences().FloatWithFallback("ProfileWindowHeight", 600)
