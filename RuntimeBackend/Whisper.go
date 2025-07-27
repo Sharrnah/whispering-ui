@@ -424,3 +424,50 @@ func RestartBackend(confirmation bool, confirmationText string) {
 		restartFunction()
 	}
 }
+
+func ErrorReportWithLog(errorReportWindow fyne.Window) {
+	infoTitle := widget.NewLabel(lang.L("Please enter a description of the error."))
+	attachLogCheckbox := widget.NewCheck(lang.L("Attach log file"), nil)
+	attachLogCheckbox.SetChecked(true)
+	attachHardwareCheckbox := widget.NewCheck(lang.L("Attach hardware information (GPU Memory, GPU Vendor, GPU Adapter)"), nil)
+	attachHardwareCheckbox.SetChecked(true)
+	emailEntry := widget.NewEntry()
+	emailEntry.PlaceHolder = lang.L("E-Mail Address (Optional)")
+	textErrorReportInput := widget.NewMultiLineEntry()
+	if errorReportWindow == nil {
+		errorReportWindow, _ = Utilities.GetCurrentMainWindow("Error Report")
+	}
+	errorReportDialog := dialog.NewCustomConfirm(lang.L("Send error report"), lang.L("Send"), lang.L("Cancel"),
+		container.NewBorder(container.NewVBox(emailEntry, infoTitle), container.NewVBox(attachLogCheckbox, attachHardwareCheckbox), nil, nil, textErrorReportInput),
+		func(confirm bool) {
+			if confirm {
+				// Send error to Server
+				localHub := Logging.CloneHub()
+				logfile := "-"
+				if attachLogCheckbox.Checked {
+					logfile = strings.Join(BackendsList[0].RecentLog, "\n")
+				}
+				localHub.WithScope(func(scope *sentry.Scope) {
+					scope.SetTag("report_type", "User Report")
+					if !attachHardwareCheckbox.Checked {
+						scope.RemoveTag("GPU Memory")
+						scope.RemoveTag("GPU Vendor")
+						scope.RemoveTag("GPU Adapter")
+						scope.RemoveTag("GPU Compute Capability")
+					}
+					scope.SetUser(sentry.User{Email: emailEntry.Text})
+					scope.SetContext("report", map[string]interface{}{
+						"log": logfile,
+					})
+					localHub.CaptureMessage(textErrorReportInput.Text)
+				})
+				localHub.Flush(Logging.FlushTimeoutDefault)
+				dialog.NewInformation(lang.L("Error Report Sent"), lang.L("Your error report has been sent."), errorReportWindow).Show()
+			}
+		},
+		errorReportWindow,
+	)
+	windowSize := Utilities.GetInlineDialogSize(errorReportWindow, fyne.NewSize(100, 200), fyne.NewSize(200, 200), errorReportWindow.Canvas().Size())
+	errorReportDialog.Resize(windowSize)
+	errorReportDialog.Show()
+}

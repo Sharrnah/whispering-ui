@@ -8,6 +8,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/lang"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/getsentry/sentry-go"
 	"github.com/gorilla/websocket"
@@ -16,8 +17,12 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
+	"whispering-tiger-ui/CustomWidget"
+	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Logging"
+	"whispering-tiger-ui/RuntimeBackend"
 	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
@@ -60,12 +65,32 @@ func (c *Client) Start() {
 
 	statusBar := widget.NewProgressBarInfinite()
 	connectingStateContainer := container.NewVBox()
-	connectingStateDialog := dialog.NewCustom(
+	connectingStateDialog := dialog.NewCustomWithoutButtons(
 		"",
-		lang.L("Hide"),
 		container.NewBorder(statusBar, nil, nil, nil, connectingStateContainer),
 		fyne.CurrentApp().Driver().AllWindows()[0],
 	)
+	connectingStateDialog.SetButtons([]fyne.CanvasObject{
+		&widget.Button{
+			Text: lang.L("Show Log"),
+			OnTapped: func() {
+				logWindow := fyne.CurrentApp().NewWindow(lang.L("Logs"))
+				copyLogButton := widget.NewButtonWithIcon(lang.L("Copy Log"), theme.ContentCopyIcon(), func() {
+					fyne.CurrentApp().Driver().AllWindows()[0].Clipboard().SetContent(
+						strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\n"),
+					)
+				})
+				LogText := CustomWidget.NewLogTextWithData(Fields.DataBindings.LogBinding)
+				LogText.AutoScroll = true
+				LogText.ReadOnly = true
+				sendErrorReportButton := widget.NewButtonWithIcon(lang.L("Send error report"), theme.MailSendIcon(), func() { RuntimeBackend.ErrorReportWithLog(logWindow) })
+				logWindow.SetContent(container.NewBorder(nil, container.NewHBox(copyLogButton, sendErrorReportButton), nil, nil, LogText))
+				logWindow.Resize(fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size())
+				logWindow.Show()
+				connectingStateDialog.SetButtons([]fyne.CanvasObject{})
+			},
+		},
+	})
 
 	go processingStopTimer()
 	go realtimeLabelHideTimer()

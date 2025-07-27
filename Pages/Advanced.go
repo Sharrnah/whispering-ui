@@ -4,7 +4,6 @@ import (
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
 	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
@@ -13,6 +12,7 @@ import (
 	"net/url"
 	"path/filepath"
 	"strings"
+	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/Resources"
@@ -108,52 +108,26 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 	})
 	writeLogFileCheckbox.Checked = fyne.CurrentApp().Preferences().BoolWithFallback("WriteLogfile", false)
 
-	sendErrorReportButton := widget.NewButtonWithIcon(lang.L("Send error report"), theme.MailSendIcon(), func() {
-		infoTitle := widget.NewLabel(lang.L("Please enter a description of the error."))
-		attachLogCheckbox := widget.NewCheck(lang.L("Attach log file"), nil)
-		attachLogCheckbox.SetChecked(true)
-		attachHardwareCheckbox := widget.NewCheck(lang.L("Attach hardware information (GPU Memory, GPU Vendor, GPU Adapter)"), nil)
-		attachHardwareCheckbox.SetChecked(true)
-		emailEntry := widget.NewEntry()
-		emailEntry.PlaceHolder = lang.L("E-Mail Address (Optional)")
-		textErrorReportInput := widget.NewMultiLineEntry()
-		errorReportWindow, _ := Utilities.GetCurrentMainWindow("Error Report")
-		errorReportDialog := dialog.NewCustomConfirm(lang.L("Send error report"), lang.L("Send"), lang.L("Cancel"),
-			container.NewBorder(container.NewVBox(emailEntry, infoTitle), container.NewVBox(attachLogCheckbox, attachHardwareCheckbox), nil, nil, textErrorReportInput),
-			func(confirm bool) {
-				if confirm {
-					// Send error to Server
-					localHub := Logging.CloneHub()
-					logfile := "-"
-					if attachLogCheckbox.Checked {
-						logfile = strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\n")
-					}
-					localHub.WithScope(func(scope *sentry.Scope) {
-						scope.SetTag("report_type", "User Report")
-						if !attachHardwareCheckbox.Checked {
-							scope.RemoveTag("GPU Memory")
-							scope.RemoveTag("GPU Vendor")
-							scope.RemoveTag("GPU Adapter")
-							scope.RemoveTag("GPU Compute Capability")
-						}
-						scope.SetUser(sentry.User{Email: emailEntry.Text})
-						scope.SetContext("report", map[string]interface{}{
-							"log": logfile,
-						})
-						localHub.CaptureMessage(textErrorReportInput.Text)
-					})
-					localHub.Flush(Logging.FlushTimeoutDefault)
-					dialog.NewInformation(lang.L("Error Report Sent"), lang.L("Your error report has been sent."), errorReportWindow).Show()
-				}
-			},
-			errorReportWindow,
-		)
-		windowSize := Utilities.GetInlineDialogSize(errorReportWindow, fyne.NewSize(100, 200), fyne.NewSize(200, 200), errorReportWindow.Canvas().Size())
-		errorReportDialog.Resize(windowSize)
-		errorReportDialog.Show()
-	})
+	sendErrorReportButton := widget.NewButtonWithIcon(lang.L("Send error report"), theme.MailSendIcon(), func() { RuntimeBackend.ErrorReportWithLog(nil) })
 
-	logTabContent := container.NewBorder(nil, container.NewHBox(RestartBackendButton, writeLogFileCheckbox, copyLogButton, sendErrorReportButton), nil, nil, container.NewScroll(Fields.Field.LogText))
+	logToWindowButton := widget.NewButtonWithIcon("", theme.ViewFullScreenIcon(), nil)
+	logToWindowButton.OnTapped = func() {
+		logWindow := fyne.CurrentApp().NewWindow(lang.L("Logs"))
+		copyLogButtonB := widget.NewButtonWithIcon(lang.L("Copy Log"), theme.ContentCopyIcon(), func() {
+			fyne.CurrentApp().Driver().AllWindows()[0].Clipboard().SetContent(
+				strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\n"),
+			)
+		})
+		LogText := CustomWidget.NewLogTextWithData(Fields.DataBindings.LogBinding)
+		LogText.AutoScroll = true
+		LogText.ReadOnly = true
+		sendErrorReportButtonB := widget.NewButtonWithIcon(lang.L("Send error report"), theme.MailSendIcon(), func() { RuntimeBackend.ErrorReportWithLog(logWindow) })
+		logWindow.SetContent(container.NewBorder(nil, container.NewHBox(copyLogButtonB, sendErrorReportButtonB), nil, nil, LogText))
+		logWindow.Resize(fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size())
+		logWindow.Show()
+	}
+
+	logTabContent := container.NewBorder(nil, container.NewBorder(nil, nil, nil, container.NewHBox(logToWindowButton), container.NewHBox(RestartBackendButton, writeLogFileCheckbox, copyLogButton, sendErrorReportButton)), nil, nil, container.NewScroll(Fields.Field.LogText))
 
 	tabs := container.NewAppTabs(
 		container.NewTabItem(lang.L("About Whispering Tiger"), buildAboutInfo()),

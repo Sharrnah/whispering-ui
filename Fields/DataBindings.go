@@ -21,6 +21,7 @@ var DataBindings = struct {
 	StatusTextBinding                    binding.String
 	TranscriptionInputBinding            binding.String
 	TranscriptionTranslationInputBinding binding.String
+	LogBinding                           binding.String
 }{
 	WhisperResultIntermediateResult:      binding.NewString(),
 	SpeechToTextEnabledDataBinding:       binding.NewBool(),
@@ -30,4 +31,5 @@ var DataBindings = struct {
 	StatusTextBinding:                    binding.NewString(),
 	TranscriptionInputBinding:            binding.NewString(),
 	TranscriptionTranslationInputBinding: binding.NewString(),
+	LogBinding:                           binding.NewString(),
 }

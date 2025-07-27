@@ -2,6 +2,7 @@ package CustomWidget
 
 import (
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
 	"strings"
@@ -9,57 +10,87 @@ import (
 
 type LogText struct {
 	widget.Entry
-	TextLines  []string
-	MaxLines   int
-	AutoScroll bool // If true, automatically scroll to the bottom when new text is added
-	ReadOnly   bool // if true, LogText is read-only
+	TextLines    []string
+	MaxLines     int
+	AutoScroll   bool                 // If true, automatically scroll to the bottom when new text is added
+	ReadOnly     bool                 // if true, LogText is read-only
+	Data         binding.String       // bound data source
+	dataListener binding.DataListener // listener for data change events
 }
 
-func (l *LogText) MinSize() fyne.Size {
-	return l.Entry.MinSize()
-}
-
-func (l *LogText) Move(position fyne.Position) {
-	l.Entry.Move(position)
-}
-
-func (l *LogText) Position() fyne.Position {
-	return l.Entry.Position()
-}
+//
+//func (l *LogText) MinSize() fyne.Size {
+//	return l.Entry.MinSize()
+//}
+//
+//func (l *LogText) Move(position fyne.Position) {
+//	l.Entry.Move(position)
+//}
+//
+//func (l *LogText) Position() fyne.Position {
+//	return l.Entry.Position()
+//}
 
 func (l *LogText) Resize(size fyne.Size) {
 	l.Entry.Resize(size)
 	if l.AutoScroll {
-		l.ScrollToBottom()
+		fyne.Do(func() { l.ScrollToBottom() })
 	}
 }
 
-func (l *LogText) Size() fyne.Size {
-	return l.Entry.Size()
-}
+//
+//func (l *LogText) Size() fyne.Size {
+//	return l.Entry.Size()
+//}
+//
+//func (l *LogText) Hide() {
+//	l.Entry.Hide()
+//}
+//
+//func (l *LogText) Visible() bool {
+//	return l.Entry.Visible()
+//}
+//
+//func (l *LogText) Show() {
+//	l.Entry.Show()
+//}
+//
+//func (l *LogText) Refresh() {
+//	l.Entry.Refresh()
+//}
 
-func (l *LogText) Hide() {
-	l.Entry.Hide()
+func (l *LogText) Bind(data binding.String) {
+	l.Data = data
+	l.Entry.Bind(data)
+	// initialize internal lines from binding
+	if text, err := data.Get(); err == nil {
+		l.TextLines = strings.Split(text, "\n")
+	}
+	// subscribe to data changes and trigger scroll when AutoScroll is enabled
+	l.dataListener = binding.NewDataListener(func() {
+		if l.AutoScroll {
+			fyne.Do(func() { l.ScrollToBottom() })
+		}
+	})
+	data.AddListener(l.dataListener)
+	// initial scroll if needed
+	if l.AutoScroll {
+		fyne.Do(func() { l.ScrollToBottom() })
+	}
 }
-
-func (l *LogText) Visible() bool {
-	return l.Entry.Visible()
-}
-
-func (l *LogText) Show() {
-	l.Entry.Show()
-}
-
-func (l *LogText) Refresh() {
-	l.Entry.Refresh()
+func (l *LogText) Unbind() {
+	if l.Data != nil && l.dataListener != nil {
+		l.Data.RemoveListener(l.dataListener)
+		l.dataListener = nil
+	}
+	l.Entry.Unbind()
+	l.Data = nil
 }
 
 func NewLogText() *LogText {
 	c := &LogText{
-		//Widget:    widget.NewLabel(""),
-		//Entry:    widget.NewMultiLineEntry(),
 		TextLines: []string{},
-		MaxLines:  100,
+		MaxLines:  200,
 	}
 	c.MultiLine = true
 	c.Wrapping = fyne.TextWrapOff
@@ -70,7 +101,19 @@ func NewLogText() *LogText {
 	return c
 }
 
+func NewLogTextWithData(data binding.String) *LogText {
+	logText := NewLogText()
+	logText.Bind(data)
+	logText.Validator = nil
+	return logText
+}
+
 func (l *LogText) GetText() string {
+	if l.Data != nil {
+		if text, err := l.Data.Get(); err == nil {
+			return text
+		}
+	}
 	return strings.Join(l.TextLines, "")
 }
 
@@ -79,10 +122,12 @@ func (l *LogText) SetText(text string) {
 	if len(l.TextLines) > l.MaxLines {
 		l.TextLines = l.TextLines[len(l.TextLines)-l.MaxLines:]
 	}
-	//l.Widget.(*widget.Label).SetText(text)
+	if l.Data != nil {
+		_ = l.Data.Set(text)
+	}
 	l.Entry.SetText(text)
 	if l.AutoScroll {
-		l.ScrollToBottom()
+		fyne.Do(func() { l.ScrollToBottom() })
 	}
 }
 
@@ -91,10 +136,13 @@ func (l *LogText) Append(text string) {
 	if len(l.TextLines) > l.MaxLines {
 		l.TextLines = l.TextLines[len(l.TextLines)-l.MaxLines:]
 	}
-	//l.Widget.(*widget.Label).SetText(l.GetText())
 	l.Entry.Append(text)
+	if l.Data != nil {
+		// update bound data to current full content
+		_ = l.Data.Set(l.Entry.Text)
+	}
 	if l.AutoScroll {
-		l.ScrollToBottom()
+		fyne.Do(func() { l.ScrollToBottom() })
 	}
 }
 

@@ -303,7 +303,7 @@ func InitializeGlobalFields() {
 	})
 
 	Field.OcrImageContainer = container.NewStack()
-	Field.LogText = CustomWidget.NewLogText()
+	Field.LogText = CustomWidget.NewLogTextWithData(DataBindings.LogBinding)
 	Field.LogText.AutoScroll = true
 	Field.LogText.ReadOnly = true
 	Field.StatusText = widget.NewLabelWithData(DataBindings.StatusTextBinding)
