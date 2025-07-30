@@ -54,6 +54,8 @@ var Models = []AIModel{
 	{"Whisper", "mms", "mms-1b-l1107", 4623.0},
 	// Phi-4 model
 	{"Whisper", "phi4", "", 22531.0},
+	// Voxtral model
+	{"Whisper", "voxtral", "Voxtral-Mini-3B-2507", 18852.0},
 	// NLLB200CT2 models
 	{"TxtTranslator", "NLLB200_CT2", "small", 3087.0},
 	{"TxtTranslator", "NLLB200_CT2", "medium", 6069.0},

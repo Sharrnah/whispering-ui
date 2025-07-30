@@ -87,7 +87,6 @@ func (c *Client) Start() {
 				logWindow.SetContent(container.NewBorder(nil, container.NewHBox(copyLogButton, sendErrorReportButton), nil, nil, LogText))
 				logWindow.Resize(fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size())
 				logWindow.Show()
-				connectingStateDialog.SetButtons([]fyne.CanvasObject{})
 			},
 		},
 	})

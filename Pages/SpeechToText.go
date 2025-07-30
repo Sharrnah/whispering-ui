@@ -30,6 +30,15 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 
 	var additionalWidgets fyne.CanvasObject
 
+	var originalTranscriptionSpeakerLanguageComboEntries = Fields.Field.TranscriptionSpeakerLanguageCombo.OptionsTextValue
+	// remove "auto" option from speaker language combo, as it is not supported by all models
+	var originalTranscriptionSpeakerLanguageComboEntriesWithoutAuto = []CustomWidget.TextValueOption{}
+	for _, entry := range originalTranscriptionSpeakerLanguageComboEntries {
+		if entry.Value != "auto" && entry.Value != "" {
+			originalTranscriptionSpeakerLanguageComboEntriesWithoutAuto = append(originalTranscriptionSpeakerLanguageComboEntriesWithoutAuto, entry)
+		}
+	}
+
 	speechLanguageLabel := widget.NewLabel(lang.L("Speech Language") + ":")
 
 	speechTaskWidgetLabel := widget.NewLabel(lang.L("Speech Task") + ":")
@@ -40,7 +49,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		speechTaskWidget = Fields.Field.TranscriptionTargetLanguageCombo
 	}
 	if Settings.Config.Stt_type == "phi4" || Settings.Config.Stt_type == "phi4-onnx" {
-		speechLanguageLabel.Text = lang.L("Target Language") + ":"
+		speechLanguageLabel.SetText(lang.L("Target Language") + ":")
 
 		speechTaskWidget.(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{{
 			Text:  lang.L("transcribe"),
@@ -118,6 +127,114 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		Settings.Config.Whisper_task = "transcribe"
 		speechTaskWidget.(*CustomWidget.TextValueSelect).Hide()
 	}
+	if Settings.Config.Stt_type == "voxtral" {
+		speechTaskWidget.(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{{
+			Text:  lang.L("transcribe"),
+			Value: "transcribe",
+		}, {
+			Text:  lang.L("translate"),
+			Value: "translate",
+		}, {
+			Text:  lang.L("question & answering"),
+			Value: "question_answering",
+		}}
+
+		// set initial task to value of loaded profile configuration
+		settingsTask := speechTaskWidget.(*CustomWidget.TextValueSelect).GetEntry(&CustomWidget.TextValueOption{
+			Value: Settings.Config.Whisper_task,
+		}, CustomWidget.CompareValue)
+		if settingsTask != nil {
+			speechTaskWidget.(*CustomWidget.TextValueSelect).Selected = settingsTask.Text
+		}
+
+		oldOnChangeFunc := speechTaskWidget.(*CustomWidget.TextValueSelect).OnChanged
+		speechTaskWidget.(*CustomWidget.TextValueSelect).OnChanged = func(s CustomWidget.TextValueOption) {
+			speechLanguageLabel.SetText(lang.L("Speech Language") + ":")
+			Fields.Field.TranscriptionSpeakerLanguageCombo.SetValueOptions(originalTranscriptionSpeakerLanguageComboEntries)
+
+			if s.Value == "question_answering" {
+				Fields.Field.TranscriptionSpeakerLanguageCombo.Disable()
+			} else if s.Value == "translate" {
+				Fields.Field.TranscriptionSpeakerLanguageCombo.Enable()
+				Fields.Field.TranscriptionSpeakerLanguageCombo.SetValueOptions(originalTranscriptionSpeakerLanguageComboEntriesWithoutAuto)
+				speechLanguageLabel.SetText(lang.L("Target Language") + ":")
+			} else {
+				Fields.Field.TranscriptionSpeakerLanguageCombo.Enable()
+			}
+			additionalWidgets.Hide()
+			if s.Value == "question_answering" {
+				additionalWidgets.Show()
+			}
+			oldOnChangeFunc(s)
+		}
+
+		chatEntry := widget.NewEntry()
+		chatEntry.OnChanged = func(s string) {
+			task := "update_llm_prompt"
+			allowEmpty := true
+			sendMessage := SendMessageChannel.SendMessageStruct{
+				Type: "chat_req",
+				Value: struct {
+					Text       *string `json:"text"`
+					Task       *string `json:"task"`
+					AllowEmpty *bool   `json:"allow_empty"`
+				}{
+					Text:       &s,
+					Task:       &task,
+					AllowEmpty: &allowEmpty, // Also update when the text is empty
+				},
+			}
+			sendMessage.SendMessageDebounced()
+		}
+		chatButton := widget.NewButtonWithIcon(lang.L("Chat"), theme.MailSendIcon(), func() {
+			text := chatEntry.Text
+			task := speechTaskWidget.(*CustomWidget.TextValueSelect).GetSelected().Value
+			sendMessage := SendMessageChannel.SendMessageStruct{
+				Type: "chat_req",
+				Value: struct {
+					Text *string `json:"text"`
+					Task *string `json:"task"`
+				}{
+					Text: &text,
+					Task: &task,
+				},
+			}
+			sendMessage.SendMessage()
+		})
+		presetSelection := widget.NewSelect([]string{
+			"",
+			"Answer very shortly.",
+			"Only Translate audio into Japanese. Just write the translation without explanations.",
+			"Transcribe the audio. respond with both original language and French separated by linebreak. Just write both translations without explanations.",
+			"Describe the emotional tone of what you hear in 1 or 2 words. nothing else. do not answer.",
+			"Write what you hear as some emojis. Just write the emojis without explanations. at most 1 - 5 emojis.",
+			"Describe the speakers you hear.",
+			"Write a summary of what you hear.",
+			"You are Taira, a wise, charismatic, fully-sentient female tiger who can speak perfect human languages while retaining unmistakably feline instincts. You start each sentence with 'Roar!'. Keep the Answers short and concise.",
+		}, func(s string) {
+			chatEntry.SetText(s)
+		})
+		additionalWidgets = container.NewVBox(
+			container.NewBorder(nil, nil, widget.NewLabel("Prompt Presets"), nil,
+				presetSelection,
+			),
+			container.NewBorder(
+				nil, nil, nil, chatButton,
+				chatEntry,
+			),
+		)
+		chatEntry.SetText(Settings.Config.Stt_llm_prompt) // Set initial chat entry text from configuration
+		if Settings.Config.Whisper_task == "question_answering" {
+			Fields.Field.TranscriptionSpeakerLanguageCombo.Disable()
+		} else if Settings.Config.Whisper_task == "translate" {
+			Fields.Field.TranscriptionSpeakerLanguageCombo.Enable()
+			Fields.Field.TranscriptionSpeakerLanguageCombo.SetValueOptions(originalTranscriptionSpeakerLanguageComboEntriesWithoutAuto)
+			speechLanguageLabel.SetText(lang.L("Target Language") + ":")
+		} else {
+			Fields.Field.TranscriptionSpeakerLanguageCombo.Enable()
+			additionalWidgets.Hide()
+		}
+	}
 
 	languageRow := container.New(layout.NewVBoxLayout(),
 		container.New(layout.NewFormLayout(),
@@ -143,10 +260,6 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		layout.NewVBoxLayout(),
 	)
 
-	if additionalWidgets != nil {
-		quickOptionsRow.Add(additionalWidgets)
-	}
-
 	quickOptionsRow.Add(Fields.Field.SttEnabled)
 	quickOptionsRow.Add(container.NewGridWithColumns(2, beginLine))
 	quickOptionsRow.Add(Fields.Field.TextTranslateEnabled)
@@ -154,6 +267,12 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 	quickOptionsRow.Add(container.NewHBox(
 		container.NewBorder(nil, nil, nil, Fields.Field.OscLimitHint, Fields.Field.OscEnabled),
 	))
+
+	leftVerticalBottomLayout := container.New(layout.NewVBoxLayout())
+	if additionalWidgets != nil {
+		leftVerticalBottomLayout.Add(additionalWidgets)
+	}
+	leftVerticalBottomLayout.Add(quickOptionsRow)
 
 	// main layout
 	leftVerticalLayout := container.NewBorder(
@@ -163,7 +282,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		nil, nil, nil,
 		container.NewVSplit(
 			transcriptionRow,
-			container.New(layout.NewHBoxLayout(), quickOptionsRow),
+			leftVerticalBottomLayout,
 		),
 	)
 

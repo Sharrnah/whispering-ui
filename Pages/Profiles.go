@@ -903,6 +903,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "M2M100 (100 languages)", Value: "M2M100"},
 			{Text: "Seamless M4T (101 languages)", Value: "seamless_m4t"},
 			{Text: "Phi-4 (23 languages)", Value: "phi4"},
+			{Text: "Voxtral (13 languages)", Value: "voxtral"},
 			{Text: lang.L("Disabled"), Value: ""},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
 
@@ -945,6 +946,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Wav2Vec Bert 2.0", Value: "wav2vec_bert"},
 			{Text: "NeMo Canary", Value: "nemo_canary"},
 			{Text: "Phi-4", Value: "phi4"},
+			{Text: "Voxtral", Value: "voxtral"},
 			//{Text: "Phi-4 ONNX", Value: "phi4-onnx"},
 			{Text: lang.L("Disabled"), Value: ""},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
@@ -969,7 +971,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			/**
 			special case for Seamless M4T since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
 			*/
-			if txtTranslatorTypeSelect.GetSelected().Value == "seamless_m4t" && sttTypeSelect.GetSelected().Value == "seamless_m4t" || txtTranslatorTypeSelect.GetSelected().Value == "phi4" && sttTypeSelect.GetSelected().Value == "phi4" {
+			if txtTranslatorTypeSelect.GetSelected().Value == "seamless_m4t" && sttTypeSelect.GetSelected().Value == "seamless_m4t" || txtTranslatorTypeSelect.GetSelected().Value == "phi4" && sttTypeSelect.GetSelected().Value == "phi4" || txtTranslatorTypeSelect.GetSelected().Value == "voxtral" && sttTypeSelect.GetSelected().Value == "voxtral" {
 				txtTranslatorSizeSelect.SetSelected(s.Value)
 				if txtTranslatorPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
 					txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
@@ -1047,7 +1049,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			/**
 			special case for Seamless M4T since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
 			*/
-			if sttTypeSelect.GetSelected().Value == "seamless_m4t" && txtTranslatorTypeSelect.GetSelected().Value == "seamless_m4t" || sttTypeSelect.GetSelected().Value == "phi4" && txtTranslatorTypeSelect.GetSelected().Value == "phi4" {
+			if sttTypeSelect.GetSelected().Value == "seamless_m4t" && txtTranslatorTypeSelect.GetSelected().Value == "seamless_m4t" || sttTypeSelect.GetSelected().Value == "phi4" && txtTranslatorTypeSelect.GetSelected().Value == "phi4" || sttTypeSelect.GetSelected().Value == "voxtral" && txtTranslatorTypeSelect.GetSelected().Value == "voxtral" {
 				txtTranslatorSizeSelect.SetSelected(s.Value)
 				if txtTranslatorPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
 					txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
@@ -1175,6 +1177,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		phi4ModelList := []CustomWidget.TextValueOption{
 			{Text: "Large", Value: "large"},
+		}
+
+		voxtralModelList := []CustomWidget.TextValueOption{
+			{Text: "Voxtral-Mini-3B-2507", Value: "Voxtral-Mini-3B-2507"},
 		}
 
 		sttModelSize := CustomWidget.NewTextValueSelect("model", fasterWhisperModelList, func(s CustomWidget.TextValueOption) {
@@ -1434,6 +1440,31 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 						}
 					}, fyne.CurrentApp().Driver().AllWindows()[1]).Show()
 				}
+			} else if s.Value == "voxtral" {
+				sttModelSize.Options = voxtralModelList
+				// unselect if not in list
+				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption, CustomWidget.CompareValue) {
+					sttModelSize.SetSelectedIndex(0)
+				}
+				AIModelType = "voxtral"
+
+				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
+					{Text: "float32 " + lang.L("precision"), Value: "float32"},
+					{Text: "float16 " + lang.L("precision"), Value: "float16"},
+					{Text: "8bit " + lang.L("precision"), Value: "8bit"},
+					{Text: "4bit " + lang.L("precision"), Value: "4bit"},
+				}
+				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "bfloat16" || selectedPrecision == "int8_bfloat16" {
+					sttPrecisionSelect.SetSelected("float16")
+				}
+
+				if txtTranslatorTypeSelect.GetSelected().Value != "voxtral" && !isLoadingSettingsFile {
+					dialog.NewConfirm(lang.L("Usage of Multi-Modal Model."), lang.L("Use Multi-Modal model for Text-Translation as well?"), func(b bool) {
+						if b {
+							txtTranslatorTypeSelect.SetSelected("voxtral")
+						}
+					}, fyne.CurrentApp().Driver().AllWindows()[1]).Show()
+				}
 			} else {
 				sttPrecisionSelect.Disable()
 				sttModelSize.Disable()
@@ -1445,7 +1476,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			/**
 			special case for Seamless M4T or Phi4 since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
 			*/
-			if s.Value == "seamless_m4t" && txtTranslatorTypeSelect.GetSelected().Value == "seamless_m4t" || s.Value == "phi4" && txtTranslatorTypeSelect.GetSelected().Value == "phi4" {
+			if s.Value == "seamless_m4t" && txtTranslatorTypeSelect.GetSelected().Value == "seamless_m4t" || s.Value == "phi4" && txtTranslatorTypeSelect.GetSelected().Value == "phi4" || s.Value == "voxtral" && txtTranslatorTypeSelect.GetSelected().Value == "voxtral" {
 				if txtTranslatorSizeSelect.ContainsEntry(sttModelSize.GetSelected(), CustomWidget.CompareValue) {
 					txtTranslatorSizeSelect.SetSelected(sttModelSize.GetSelected().Value)
 				}
@@ -1638,6 +1669,13 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					{Text: "float16 " + lang.L("precision"), Value: "float16"},
 					{Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"},
 				}
+			} else if s.Value == "voxtral" {
+				txtTranslatorPrecisionSelect.Options = []CustomWidget.TextValueOption{
+					{Text: "float32 " + lang.L("precision"), Value: "float32"},
+					{Text: "float16 " + lang.L("precision"), Value: "float16"},
+					{Text: "8bit " + lang.L("precision"), Value: "8bit"},
+					{Text: "4bit " + lang.L("precision"), Value: "4bit"},
+				}
 			} else if s.Value == "" {
 				txtTranslatorPrecisionSelect.Disable()
 				txtTranslatorSizeSelect.Disable()
@@ -1678,12 +1716,20 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					txtTranslatorSizeSelect.SetSelected("large")
 				}
 				txtTranslatorSizeSelect.Disable()
+			} else if s.Value == "voxtral" {
+				txtTranslatorSizeSelect.Options = []CustomWidget.TextValueOption{
+					{Text: "Voxtral-Mini-3B-2507", Value: "Voxtral-Mini-3B-2507"},
+				}
+				if selectedSize != "Voxtral-Mini-3B-2507" {
+					txtTranslatorSizeSelect.SetSelected("Voxtral-Mini-3B-2507")
+				}
+				txtTranslatorSizeSelect.Disable()
 			}
 
 			/**
-			special case for Seamless M4T or Phi4 since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
+			special case for Seamless M4T, Phi4 or voxtral since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
 			*/
-			if s.Value == "seamless_m4t" && sttTypeSelect.GetSelected().Value == "seamless_m4t" || s.Value == "phi4" && sttTypeSelect.GetSelected().Value == "phi4" {
+			if s.Value == "seamless_m4t" && sttTypeSelect.GetSelected().Value == "seamless_m4t" || s.Value == "phi4" && sttTypeSelect.GetSelected().Value == "phi4" || s.Value == "voxtral" && sttTypeSelect.GetSelected().Value == "voxtral" {
 				//modelType = "N"
 				if txtTranslatorSizeSelect.ContainsEntry(sttModelSize.GetSelected(), CustomWidget.CompareValue) {
 					txtTranslatorSizeSelect.SetSelected(sttModelSize.GetSelected().Value)
