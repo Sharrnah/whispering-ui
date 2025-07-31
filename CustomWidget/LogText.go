@@ -154,7 +154,7 @@ func (l *LogText) ScrollToBottom() {
 	//lastLine := lines[len(lines)-1]
 	l.CursorRow = len(lines) - 1
 	//entry.CursorColumn = len([]rune(lastLine))
-	l.Refresh()
+	fyne.Do(func() { l.Refresh() })
 }
 
 // Override TypedKey to ignore key input when ReadOnly is true.
