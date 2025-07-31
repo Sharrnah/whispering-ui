@@ -26,8 +26,11 @@ import (
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/UpdateUtility"
 	"whispering-tiger-ui/Utilities"
+	"whispering-tiger-ui/Utilities/Hardwareinfo"
 	"whispering-tiger-ui/Websocket"
 )
+
+const minFreeSpace uint64 = 8 * Utilities.GiB
 
 var WebsocketClient = Websocket.NewClient("127.0.0.1:5000")
 
@@ -85,7 +88,7 @@ func main() {
 	if langOk && langVal != "" {
 		lang.SetPreferredLocale(langVal)
 	}
-	lang.AddTranslationsFS(Resources.Translations, "translations")
+	_ = lang.AddTranslationsFS(Resources.Translations, "translations")
 
 	a := app.NewWithID("io.github.whispering-tiger")
 	a.SetIcon(Resources.ResourceAppIconPng)
@@ -259,9 +262,15 @@ func main() {
 	profileWindow.CenterOnScreen()
 	profileWindow.Show()
 
-	// priority: warn if running from temp directory, then ask about error reporting
 	if exePath, err := os.Executable(); err == nil {
 		exeDir := filepath.Dir(exePath)
+
+		// check if enough free space is available if no whisper executable is found
+		if !Utilities.FileExists("audioWhisper/audioWhisper.exe") && !Utilities.FileExists("audioWhisper.py") {
+			checkFreeSpace(profileWindow, exeDir, minFreeSpace)
+		}
+
+		// priority: warn if running from temp directory, then ask about error reporting
 		if strings.HasPrefix(strings.ToLower(exeDir), strings.ToLower(os.TempDir())) {
 			//goland:noinspection GoErrorStringFormat
 			dlg := dialog.NewError(
@@ -306,6 +315,19 @@ func requestErrorReporting(parentWindow fyne.Window) {
 			},
 			parentWindow,
 		).Show()
+	}
+}
+
+func checkFreeSpace(window fyne.Window, directory string, spaceRequired uint64) {
+	// check free space
+	if free, err := Hardwareinfo.GetFreeSpace(directory); err == nil && free < spaceRequired {
+		dialog.NewInformation(
+			lang.L("Low Disk Space"),
+			lang.L("Only ? GB free space remaining. The space might not be enough.", map[string]interface{}{
+				"SpaceRemaining": fmt.Sprintf("%.2f", float64(free)/float64(Utilities.GiB)),
+				"Directory":      directory,
+			}),
+			window).Show()
 	}
 }
 

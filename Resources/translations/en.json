@@ -32,6 +32,8 @@
     "Clear": "Clear",
     "WebsiteUrl": "https://whispering-tiger.github.io",
     "It looks like you are running Whispering Tiger from a temporary directory. Please extract the application and run it from a different folder.": "It looks like you are running Whispering Tiger from a temporary directory.\n\nPlease extract the application and run it from a different folder.",
+    "Low Disk Space": "Low Disk Space",
+    "Only ? GB free space remaining. The space might not be enough.": "Only {{.SpaceRemaining}} GB free space remaining at {{.Directory}}.\n\nThe space might not be enough.",
     "Select an existing Profile or create a new one. Click Save and Load Profile.": "Select an existing Profile or create a new one.\n\nClick \"Save and Load Profile\".\n\n",
     "Save and Load Profile": "Save and Load Profile",
     "KofiUrl": "https://ko-fi.com/sharrnah",
