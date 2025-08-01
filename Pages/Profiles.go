@@ -1460,8 +1460,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					{Text: "float16 " + lang.L("precision"), Value: "float16"},
 					{Text: "bfloat16 " + lang.L("precision"), Value: "bfloat16"},
 				}
-				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "bfloat16" || selectedPrecision == "int8_bfloat16" {
-					sttPrecisionSelect.SetSelected("float16")
+				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "int8_bfloat16" {
+					sttPrecisionSelect.SetSelected("float32")
 				}
 
 				//AIModel := ProfileAIModelOption{
