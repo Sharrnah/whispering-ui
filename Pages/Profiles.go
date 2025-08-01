@@ -3,6 +3,7 @@ package Pages
 import (
 	"bytes"
 	"encoding/binary"
+	"errors"
 	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/canvas"
@@ -25,6 +26,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Logging"
@@ -50,6 +52,8 @@ type CurrentPlaybackDevice struct {
 	playTestAudio       bool
 	testAudioChannels   uint32
 	testAudioSampleRate uint32
+	isInitializing      bool       // Add this flag
+	initMutex           sync.Mutex // Add this mutex
 }
 
 func (c *CurrentPlaybackDevice) Stop() {
@@ -95,16 +99,29 @@ func (c *CurrentPlaybackDevice) InitTestAudio() (*bytes.Reader, *wav.Reader) {
 }
 
 func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
+	c.initMutex.Lock()
+	defer c.initMutex.Unlock()
+	if c.isInitializing {
+		return nil // Prevent concurrent initialization
+	}
+	c.isInitializing = true
+	defer func() {
+		c.isInitializing = false
+	}()
+
 	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
 		scope.SetTag("GoRoutine", "Pages\\Profiles->InitDevices")
 	})
 
 	byteReader, testAudioReader := c.InitTestAudio()
 
-	if c.device != nil && c.device.IsStarted() {
-		if c.device != nil {
-			c.device.Uninit()
+	if c.device != nil {
+		if c.device.IsStarted() {
+			c.device.Stop() // Add explicit stop
 		}
+		c.device.Uninit()
+		c.device = nil
+		time.Sleep(100 * time.Millisecond) // Give time for cleanup
 	}
 
 	// wait in a loop until c.Context is not nil before trying to initialize
@@ -195,26 +212,34 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 
 	c.InputWaveWidget.Max = 0.1
 	c.InputWaveWidget.Refresh()
-
 	onRecvFrames := func(pOutputSample, pInputSamples []byte, framecount uint32) {
 		sampleCountCapture := framecount * deviceConfig.Capture.Channels * sizeInBytesCapture
-		sampleCountPlayback := framecount * deviceConfig.Playback.Channels * sizeInBytesCapture
+		sampleCountPlayback := framecount * deviceConfig.Playback.Channels * sizeInBytesPlayback
 
 		// play test audio
-		if c.playTestAudio {
-			go func() {
+		go func() {
+			if testAudioReader == nil {
+				testAudioReader = wav.NewReader(byteReader)
+			}
+			if c.playTestAudio {
 				// read audio bytes while reading bytes
-				readBytes, _ := io.ReadFull(testAudioReader, pOutputSample)
-				if readBytes <= 0 {
-					c.playTestAudio = false
-					byteReader.Seek(0, io.SeekStart)
-					testAudioReader = wav.NewReader(byteReader)
+				if len(pOutputSample) > 0 {
+					readBytes, err := io.ReadFull(testAudioReader, pOutputSample)
+					if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) {
+						// Handle other errors if needed
+						c.playTestAudio = false
+					} else if readBytes < len(pOutputSample) {
+						// Fill remaining buffer with silence (zero bytes)
+						for i := readBytes; i < len(pOutputSample); i++ {
+							pOutputSample[i] = 0
+						}
+					}
 				}
-			}()
-		} else {
-			byteReader.Seek(0, io.SeekStart)
-			testAudioReader = wav.NewReader(byteReader)
-		}
+			} else {
+				byteReader.Seek(0, io.SeekStart)
+				testAudioReader = wav.NewReader(byteReader)
+			}
+		}()
 
 		// single samples inside a frame
 		if pInputSamples != nil {
@@ -278,7 +303,13 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 }
 
 func (c *CurrentPlaybackDevice) UnInitDevices() {
+	c.initMutex.Lock()
+	defer c.initMutex.Unlock()
+
 	if c.device != nil {
+		if c.device.IsStarted() {
+			c.device.Stop()
+		}
 		c.device.Uninit()
 		c.device = nil
 	}
@@ -2302,6 +2333,12 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 		if strings.HasSuffix(s, ".yaml") || strings.HasSuffix(s, ".yml") {
 			return fmt.Errorf(lang.L("please do not include file extension"))
+		}
+		// check if profile name already exists
+		for _, file := range settingsFiles {
+			if strings.EqualFold(file, s+".yaml") || strings.EqualFold(file, s+".yml") {
+				return fmt.Errorf(lang.L("profile name already exists"))
+			}
 		}
 		return nil
 	}
