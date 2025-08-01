@@ -115,13 +115,15 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 
 	byteReader, testAudioReader := c.InitTestAudio()
 
+	// Properly stop and cleanup existing device with longer wait time
 	if c.device != nil {
 		if c.device.IsStarted() {
-			c.device.Stop() // Add explicit stop
+			c.device.Stop()
+			time.Sleep(200 * time.Millisecond) // Wait for device to fully stop
 		}
 		c.device.Uninit()
 		c.device = nil
-		time.Sleep(100 * time.Millisecond) // Give time for cleanup
+		time.Sleep(500 * time.Millisecond) // Increased wait time for WASAPI cleanup
 	}
 
 	// wait in a loop until c.Context is not nil before trying to initialize
@@ -129,14 +131,14 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 		if c.Context != nil {
 			break
 		}
-		time.Sleep(1 * time.Second)
+		time.Sleep(500 * time.Millisecond)
 	}
 
 	if c.Context == nil {
-		time.Sleep(1 * time.Second)
+		time.Sleep(500 * time.Millisecond)
 		if c.Context == nil {
 			c.Init()
-			time.Sleep(1 * time.Second)
+			time.Sleep(500 * time.Millisecond)
 		}
 	}
 
@@ -212,34 +214,44 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 
 	c.InputWaveWidget.Max = 0.1
 	c.InputWaveWidget.Refresh()
+
+	// Add mutex for test audio synchronization
+	var testAudioMutex sync.Mutex
+
 	onRecvFrames := func(pOutputSample, pInputSamples []byte, framecount uint32) {
 		sampleCountCapture := framecount * deviceConfig.Capture.Channels * sizeInBytesCapture
 		sampleCountPlayback := framecount * deviceConfig.Playback.Channels * sizeInBytesPlayback
 
-		// play test audio
-		go func() {
-			if testAudioReader == nil {
-				testAudioReader = wav.NewReader(byteReader)
-			}
-			if c.playTestAudio {
-				// read audio bytes while reading bytes
-				if len(pOutputSample) > 0 {
-					readBytes, err := io.ReadFull(testAudioReader, pOutputSample)
-					if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) {
-						// Handle other errors if needed
-						c.playTestAudio = false
-					} else if readBytes < len(pOutputSample) {
-						// Fill remaining buffer with silence (zero bytes)
-						for i := readBytes; i < len(pOutputSample); i++ {
-							pOutputSample[i] = 0
-						}
+		// Synchronize test audio playback to prevent overlapping
+		testAudioMutex.Lock()
+		if testAudioReader == nil {
+			testAudioReader = wav.NewReader(byteReader)
+		}
+		if c.playTestAudio {
+			// read audio bytes while reading bytes
+			if len(pOutputSample) > 0 {
+				readBytes, err := io.ReadFull(testAudioReader, pOutputSample)
+				if err != nil && !errors.Is(err, io.ErrUnexpectedEOF) {
+					// Handle other errors if needed
+					c.playTestAudio = false
+				} else if readBytes < len(pOutputSample) {
+					// Fill remaining buffer with silence (zero bytes)
+					for i := readBytes; i < len(pOutputSample); i++ {
+						pOutputSample[i] = 0
 					}
 				}
-			} else {
-				byteReader.Seek(0, io.SeekStart)
-				testAudioReader = wav.NewReader(byteReader)
 			}
-		}()
+		} else {
+			// Clear output buffer when not playing test audio
+			if len(pOutputSample) > 0 {
+				for i := range pOutputSample {
+					pOutputSample[i] = 0
+				}
+			}
+			byteReader.Seek(0, io.SeekStart)
+			testAudioReader = wav.NewReader(byteReader)
+		}
+		testAudioMutex.Unlock()
 
 		// single samples inside a frame
 		if pInputSamples != nil {
@@ -309,9 +321,11 @@ func (c *CurrentPlaybackDevice) UnInitDevices() {
 	if c.device != nil {
 		if c.device.IsStarted() {
 			c.device.Stop()
+			time.Sleep(200 * time.Millisecond) // Wait for device to fully stop
 		}
 		c.device.Uninit()
 		c.device = nil
+		time.Sleep(500 * time.Millisecond) // Increased wait time for WASAPI cleanup
 	}
 }
 
@@ -460,7 +474,7 @@ func stopAndClose(playBackDevice CurrentPlaybackDevice, onClose func()) {
 	})
 
 	// Pause a bit until the server is closed
-	time.Sleep(1 * time.Second)
+	time.Sleep(500 * time.Millisecond)
 
 	// Closes profile window, stop audio device, and call onClose
 	playBackDevice.Stop()
@@ -531,7 +545,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			println(s.Value)
 			if s.Text != "" {
 				playBackDevice.OutputDeviceName = s.Text
-				err := playBackDevice.InitDevices(false)
+				err := playBackDevice.InitDevices(true)
 				if err != nil {
 					var newError = fmt.Errorf("audio Output (speaker): %v", err)
 					Logging.CaptureException(newError)
@@ -744,7 +758,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				oldAudioOutputSelection := audioOutputSelect.GetSelected()
 
 				playBackDevice.Stop()
-				time.Sleep(1 * time.Second)
+				time.Sleep(500 * time.Millisecond)
 				playBackDevice.AudioAPI = value
 
 				audioInputDevicesOptions, _, err = GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0, "", "")
