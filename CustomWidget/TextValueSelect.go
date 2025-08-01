@@ -71,7 +71,11 @@ func (s *TextValueSelect) GetSelected() *TextValueOption {
 	if selectedIndex == -1 {
 		return nil
 	}
-	return &s.Options[s.SelectedIndex()]
+	// check if selectedIndex is within bounds of Options slice
+	if selectedIndex < 0 || selectedIndex >= len(s.Options) {
+		return nil
+	}
+	return &s.Options[selectedIndex]
 }
 
 // SetSelected sets the current option of the select widget
