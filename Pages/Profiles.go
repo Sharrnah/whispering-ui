@@ -2327,6 +2327,19 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			}
 		}
 
+		// go through all profiles in the list and check if the file exists. if not, remove it from the list
+		for i := len(settingsFiles) - 1; i >= 0; i-- {
+			// check if the file is currently in use
+			if strings.EqualFold(settingsFiles[i], settingsFiles[id]) {
+				continue
+			}
+			// if the file does not exist, remove it from the list
+			if !Utilities.FileExists(filepath.Join(profilesDir, settingsFiles[i])) {
+				settingsFiles = append(settingsFiles[:i], settingsFiles[i+1:]...)
+			}
+		}
+		profileList.Refresh()
+
 		profileForm.Refresh()
 
 		err = playBackDevice.InitDevices(false)
@@ -2360,6 +2373,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	newProfileRow := container.NewBorder(nil, nil, nil, widget.NewButtonWithIcon(lang.L("New"), theme.DocumentCreateIcon(), func() {
 		validationError := newProfileEntry.Validate()
 		if validationError != nil {
+			dialog.ShowError(validationError, fyne.CurrentApp().Driver().AllWindows()[1])
 			return
 		}
 		newEntryName := newProfileEntry.Text
