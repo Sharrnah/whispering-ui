@@ -446,8 +446,11 @@ func InitializeGlobalFields() {
 		// filter out the values of Options that do not contain the value
 		var filteredValues []string
 		for i := 0; i < len(Field.TranscriptionSpeakerLanguageCombo.Options); i++ {
-			if len(Field.TranscriptionSpeakerLanguageCombo.Options) > i && strings.Contains(strings.ToLower(Field.TranscriptionSpeakerLanguageCombo.Options[i]), strings.ToLower(value)) {
-				filteredValues = append(filteredValues, Field.TranscriptionSpeakerLanguageCombo.Options[i])
+			if len(Field.TranscriptionSpeakerLanguageCombo.Options) > i {
+				filterValueOption := Field.TranscriptionSpeakerLanguageCombo.Options[i]
+				if strings.Contains(strings.ToLower(filterValueOption), strings.ToLower(value)) {
+					filteredValues = append(filteredValues, filterValueOption)
+				}
 			}
 		}
 
@@ -472,8 +475,11 @@ func InitializeGlobalFields() {
 		// filter out the values of Options that do not contain the value
 		var filteredValues []string
 		for i := 0; i < len(Field.TranscriptionTargetLanguageCombo.Options); i++ {
-			if len(Field.TranscriptionTargetLanguageCombo.Options) > i && strings.Contains(strings.ToLower(Field.TranscriptionTargetLanguageCombo.Options[i]), strings.ToLower(value)) {
-				filteredValues = append(filteredValues, Field.TranscriptionTargetLanguageCombo.Options[i])
+			if len(Field.TranscriptionTargetLanguageCombo.Options) > i {
+				filterValueOption := Field.TranscriptionTargetLanguageCombo.Options[i]
+				if strings.Contains(strings.ToLower(filterValueOption), strings.ToLower(value)) {
+					filteredValues = append(filteredValues, filterValueOption)
+				}
 			}
 		}
 
@@ -537,8 +543,11 @@ func InitializeGlobalFields() {
 		// filter out the values of Field.TargetLanguageTxtTranslateCombo.Options that do not contain the value
 		var filteredValues []string
 		for i := 0; i < len(Field.OcrLanguageCombo.Options); i++ {
-			if len(Field.OcrLanguageCombo.Options) > i && strings.Contains(strings.ToLower(Field.OcrLanguageCombo.Options[i]), strings.ToLower(value)) {
-				filteredValues = append(filteredValues, Field.OcrLanguageCombo.Options[i])
+			if len(Field.OcrLanguageCombo.Options) > i {
+				filterValueOption := Field.OcrLanguageCombo.Options[i]
+				if strings.Contains(strings.ToLower(filterValueOption), strings.ToLower(value)) {
+					filteredValues = append(filteredValues, filterValueOption)
+				}
 			}
 		}
 		Field.OcrLanguageCombo.SetOptionsFilter(filteredValues)
