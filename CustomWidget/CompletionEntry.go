@@ -23,6 +23,7 @@ type CompletionEntry struct {
 	pause            bool
 	itemHeight       float32
 	ShowAllEntryText string
+	BaseFilterFunc   func(text string) []string // BaseFilterFunc is used to always filter the options based on the text input.
 
 	CustomCreate func() fyne.CanvasObject
 	CustomUpdate func(id widget.ListItemID, object fyne.CanvasObject)
@@ -163,6 +164,15 @@ func (c *CompletionEntry) SetOptions(itemList []string) {
 
 func (c *CompletionEntry) SetOptionsFilter(itemList []string) {
 	c.FilteredOptions = itemList
+
+	// Apply BaseFilterFunc if it's set
+	if c.BaseFilterFunc != nil {
+		c.FilteredOptions = c.BaseFilterFunc(c.Entry.Text)
+		if c.ShowAllEntryText != "" && len(c.FilteredOptions) < len(c.Options) {
+			c.FilteredOptions = append(c.FilteredOptions, c.ShowAllEntryText)
+		}
+	}
+
 	if c.ShowAllEntryText != "" && len(c.FilteredOptions) < len(c.Options) {
 		c.FilteredOptions = append(c.FilteredOptions, c.ShowAllEntryText)
 	}
@@ -173,6 +183,31 @@ func (c *CompletionEntry) ResetOptionsFilter() {
 	c.FilteredOptions = c.Options
 
 	c.Refresh()
+}
+
+// SetBaseFilterFunc sets the base filter function and applies it to the current text
+func (c *CompletionEntry) SetBaseFilterFunc(filterFunc func(text string) []string) {
+	c.BaseFilterFunc = filterFunc
+
+	// Apply the filter to the current text immediately
+	if filterFunc != nil {
+		c.FilteredOptions = filterFunc(c.Entry.Text)
+		if c.ShowAllEntryText != "" && len(c.FilteredOptions) < len(c.Options) {
+			c.FilteredOptions = append(c.FilteredOptions, c.ShowAllEntryText)
+		}
+		c.Refresh()
+	}
+}
+
+// ApplyBaseFilter applies the BaseFilterFunc to the current text if it's set
+func (c *CompletionEntry) ApplyBaseFilter() {
+	if c.BaseFilterFunc != nil {
+		c.FilteredOptions = c.BaseFilterFunc(c.Entry.Text)
+		if c.ShowAllEntryText != "" && len(c.FilteredOptions) < len(c.Options) {
+			c.FilteredOptions = append(c.FilteredOptions, c.ShowAllEntryText)
+		}
+		c.Refresh()
+	}
 }
 
 // ShowCompletion displays the completion menu

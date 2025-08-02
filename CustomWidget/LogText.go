@@ -34,7 +34,7 @@ type LogText struct {
 func (l *LogText) Resize(size fyne.Size) {
 	l.Entry.Resize(size)
 	if l.AutoScroll {
-		fyne.Do(func() { l.ScrollToBottom() })
+		l.ScrollToBottom()
 	}
 }
 
@@ -69,13 +69,15 @@ func (l *LogText) Bind(data binding.String) {
 	// subscribe to data changes and trigger scroll when AutoScroll is enabled
 	l.dataListener = binding.NewDataListener(func() {
 		if l.AutoScroll {
-			fyne.Do(func() { l.ScrollToBottom() })
+			fyne.Do(func() {
+				l.ScrollToBottom()
+			})
 		}
 	})
 	data.AddListener(l.dataListener)
 	// initial scroll if needed
 	if l.AutoScroll {
-		fyne.Do(func() { l.ScrollToBottom() })
+		l.ScrollToBottom()
 	}
 }
 func (l *LogText) Unbind() {
@@ -90,7 +92,7 @@ func (l *LogText) Unbind() {
 func NewLogText() *LogText {
 	c := &LogText{
 		TextLines: []string{},
-		MaxLines:  200,
+		MaxLines:  100,
 	}
 	c.MultiLine = true
 	c.Wrapping = fyne.TextWrapOff
@@ -127,7 +129,7 @@ func (l *LogText) SetText(text string) {
 	}
 	l.Entry.SetText(text)
 	if l.AutoScroll {
-		fyne.Do(func() { l.ScrollToBottom() })
+		l.ScrollToBottom()
 	}
 }
 
@@ -142,7 +144,7 @@ func (l *LogText) Append(text string) {
 		_ = l.Data.Set(l.Entry.Text)
 	}
 	if l.AutoScroll {
-		fyne.Do(func() { l.ScrollToBottom() })
+		l.ScrollToBottom()
 	}
 }
 
@@ -154,7 +156,7 @@ func (l *LogText) ScrollToBottom() {
 	//lastLine := lines[len(lines)-1]
 	l.CursorRow = len(lines) - 1
 	//entry.CursorColumn = len([]rune(lastLine))
-	fyne.Do(func() { l.Refresh() })
+	l.Refresh()
 }
 
 // Override TypedKey to ignore key input when ReadOnly is true.
