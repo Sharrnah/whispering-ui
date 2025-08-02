@@ -30,15 +30,6 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 
 	var additionalWidgets fyne.CanvasObject
 
-	var originalTranscriptionSpeakerLanguageComboEntries = Fields.Field.TranscriptionSpeakerLanguageCombo.OptionsTextValue
-	// remove "auto" option from speaker language combo, as it is not supported by all models
-	var originalTranscriptionSpeakerLanguageComboEntriesWithoutAuto = []CustomWidget.TextValueOption{}
-	for _, entry := range originalTranscriptionSpeakerLanguageComboEntries {
-		if entry.Value != "auto" && entry.Value != "" {
-			originalTranscriptionSpeakerLanguageComboEntriesWithoutAuto = append(originalTranscriptionSpeakerLanguageComboEntriesWithoutAuto, entry)
-		}
-	}
-
 	speechLanguageLabel := widget.NewLabel(lang.L("Speech Language") + ":")
 
 	speechTaskWidgetLabel := widget.NewLabel(lang.L("Speech Task") + ":")
@@ -128,6 +119,22 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		speechTaskWidget.(*CustomWidget.TextValueSelect).Hide()
 	}
 	if Settings.Config.Stt_type == "voxtral" {
+
+		noAutoFilterFunc := func(text string) []string {
+			var filteredValues []string
+			for _, option := range Fields.Field.TranscriptionSpeakerLanguageCombo.Options {
+				if option != "" && strings.ToLower(option) != "auto" {
+					filteredValues = append(filteredValues, option)
+				}
+			}
+			// set to first language if auto is selected
+			if len(filteredValues) > 0 && strings.ToLower(text) == "auto" {
+				Fields.Field.TranscriptionSpeakerLanguageCombo.Text = filteredValues[0]
+				Fields.Field.TranscriptionSpeakerLanguageCombo.Refresh()
+			}
+			return filteredValues
+		}
+
 		speechTaskWidget.(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{{
 			Text:  lang.L("transcribe"),
 			Value: "transcribe",
@@ -147,16 +154,16 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 			speechTaskWidget.(*CustomWidget.TextValueSelect).Selected = settingsTask.Text
 		}
 
-		oldOnChangeFunc := speechTaskWidget.(*CustomWidget.TextValueSelect).OnChanged
 		speechTaskWidget.(*CustomWidget.TextValueSelect).OnChanged = func(s CustomWidget.TextValueOption) {
 			speechLanguageLabel.SetText(lang.L("Speech Language") + ":")
-			Fields.Field.TranscriptionSpeakerLanguageCombo.SetValueOptions(originalTranscriptionSpeakerLanguageComboEntries)
+			Fields.Field.TranscriptionSpeakerLanguageCombo.SetBaseFilterFunc(nil)
 
 			if s.Value == "question_answering" {
 				Fields.Field.TranscriptionSpeakerLanguageCombo.Disable()
 			} else if s.Value == "translate" {
 				Fields.Field.TranscriptionSpeakerLanguageCombo.Enable()
-				Fields.Field.TranscriptionSpeakerLanguageCombo.SetValueOptions(originalTranscriptionSpeakerLanguageComboEntriesWithoutAuto)
+				Fields.Field.TranscriptionSpeakerLanguageCombo.SetBaseFilterFunc(noAutoFilterFunc)
+				_ = noAutoFilterFunc(Fields.Field.TranscriptionSpeakerLanguageCombo.Text)
 				speechLanguageLabel.SetText(lang.L("Target Language") + ":")
 			} else {
 				Fields.Field.TranscriptionSpeakerLanguageCombo.Enable()
@@ -165,7 +172,6 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 			if s.Value == "question_answering" {
 				additionalWidgets.Show()
 			}
-			oldOnChangeFunc(s)
 		}
 
 		chatEntry := widget.NewEntry()
@@ -228,7 +234,8 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 			Fields.Field.TranscriptionSpeakerLanguageCombo.Disable()
 		} else if Settings.Config.Whisper_task == "translate" {
 			Fields.Field.TranscriptionSpeakerLanguageCombo.Enable()
-			Fields.Field.TranscriptionSpeakerLanguageCombo.SetValueOptions(originalTranscriptionSpeakerLanguageComboEntriesWithoutAuto)
+			Fields.Field.TranscriptionSpeakerLanguageCombo.SetBaseFilterFunc(noAutoFilterFunc)
+			_ = noAutoFilterFunc(Fields.Field.TranscriptionSpeakerLanguageCombo.Text)
 			speechLanguageLabel.SetText(lang.L("Target Language") + ":")
 		} else {
 			Fields.Field.TranscriptionSpeakerLanguageCombo.Enable()
