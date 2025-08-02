@@ -154,6 +154,8 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 			speechTaskWidget.(*CustomWidget.TextValueSelect).Selected = settingsTask.Text
 		}
 
+		// oldOnChangeFunc required to keep the old functionality of the OnChanged function to update setting in python backend !!!
+		oldOnChangeFunc := speechTaskWidget.(*CustomWidget.TextValueSelect).OnChanged
 		speechTaskWidget.(*CustomWidget.TextValueSelect).OnChanged = func(s CustomWidget.TextValueOption) {
 			speechLanguageLabel.SetText(lang.L("Speech Language") + ":")
 			Fields.Field.TranscriptionSpeakerLanguageCombo.SetBaseFilterFunc(nil)
@@ -172,6 +174,8 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 			if s.Value == "question_answering" {
 				additionalWidgets.Show()
 			}
+			// oldOnChangeFunc required to keep the old functionality of the OnChanged function to update setting in python backend !!!
+			oldOnChangeFunc(s)
 		}
 
 		chatEntry := widget.NewEntry()
