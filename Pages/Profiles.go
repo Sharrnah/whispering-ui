@@ -1895,29 +1895,33 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			ocrAiDeviceSelect.Enable()
 			ocrPrecisionSelect.Enable()
 			aiModelType := s.Value
-			if s.Value == "easyocr" {
-				ocrAiDeviceSelect.SetSelected("cpu")
+			if s.Value != "" {
+				if s.Value == "easyocr" {
+					ocrAiDeviceSelect.SetSelected("cpu")
+					ocrAiDeviceSelect.Disable()
+					ocrPrecisionSelect.Disable()
+				} else if s.Value == sttTypeSelect.GetSelected().Value {
+					ocrAiDeviceSelect.Disable()
+					if ocrAiDeviceSelect.ContainsEntry(sttAiDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
+						ocrAiDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
+					}
+					ocrPrecisionSelect.Disable()
+					if ocrPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
+						ocrPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
+					}
+				} else if s.Value == txtTranslatorTypeSelect.GetSelected().Value {
+					ocrAiDeviceSelect.Disable()
+					if ocrAiDeviceSelect.ContainsEntry(txtTranslatorDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
+						ocrAiDeviceSelect.SetSelected(txtTranslatorDeviceSelect.GetSelected().Value)
+					}
+					ocrPrecisionSelect.Disable()
+					if ocrPrecisionSelect.ContainsEntry(txtTranslatorPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
+						ocrPrecisionSelect.SetSelected(txtTranslatorPrecisionSelect.GetSelected().Value)
+					}
+				}
+			} else {
 				ocrAiDeviceSelect.Disable()
 				ocrPrecisionSelect.Disable()
-			} else if s.Value == sttTypeSelect.GetSelected().Value {
-				ocrAiDeviceSelect.Disable()
-				if ocrAiDeviceSelect.ContainsEntry(sttAiDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
-					ocrAiDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
-				}
-				ocrPrecisionSelect.Disable()
-				if ocrPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
-					ocrPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
-				}
-				//aiModelType = "disabled"
-			} else if s.Value == txtTranslatorTypeSelect.GetSelected().Value {
-				ocrAiDeviceSelect.Disable()
-				if ocrAiDeviceSelect.ContainsEntry(txtTranslatorDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
-					ocrAiDeviceSelect.SetSelected(txtTranslatorDeviceSelect.GetSelected().Value)
-				}
-				ocrPrecisionSelect.Disable()
-				if ocrPrecisionSelect.ContainsEntry(txtTranslatorPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
-					ocrPrecisionSelect.SetSelected(txtTranslatorPrecisionSelect.GetSelected().Value)
-				}
 				//aiModelType = "disabled"
 			}
 
