@@ -123,7 +123,7 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 		}
 		c.device.Uninit()
 		c.device = nil
-		time.Sleep(500 * time.Millisecond) // Increased wait time for WASAPI cleanup
+		time.Sleep(200 * time.Millisecond) // Increased wait time for WASAPI cleanup
 	}
 
 	// wait in a loop until c.Context is not nil before trying to initialize
@@ -131,14 +131,13 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 		if c.Context != nil {
 			break
 		}
-		time.Sleep(500 * time.Millisecond)
+		time.Sleep(100 * time.Millisecond)
 	}
 
 	if c.Context == nil {
-		time.Sleep(500 * time.Millisecond)
 		if c.Context == nil {
 			c.Init()
-			time.Sleep(500 * time.Millisecond)
+			time.Sleep(200 * time.Millisecond)
 		}
 	}
 
@@ -325,7 +324,7 @@ func (c *CurrentPlaybackDevice) UnInitDevices() {
 		}
 		c.device.Uninit()
 		c.device = nil
-		time.Sleep(500 * time.Millisecond) // Increased wait time for WASAPI cleanup
+		time.Sleep(200 * time.Millisecond) // Increased wait time for WASAPI cleanup
 	}
 }
 
@@ -474,11 +473,11 @@ func stopAndClose(playBackDevice CurrentPlaybackDevice, onClose func()) {
 	})
 
 	// Pause a bit until the server is closed
-	time.Sleep(500 * time.Millisecond)
+	time.Sleep(200 * time.Millisecond)
 
 	// Closes profile window, stop audio device, and call onClose
 	playBackDevice.Stop()
-	time.Sleep(500 * time.Millisecond) // wait for device to stop (hopefully fixes a crash when closing the profile window)
+	time.Sleep(200 * time.Millisecond) // wait for device to stop (hopefully fixes a crash when closing the profile window)
 	onClose()
 }
 
@@ -758,7 +757,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				oldAudioOutputSelection := audioOutputSelect.GetSelected()
 
 				playBackDevice.Stop()
-				time.Sleep(500 * time.Millisecond)
 				playBackDevice.AudioAPI = value
 
 				audioInputDevicesOptions, _, err = GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0, "", "")
