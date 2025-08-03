@@ -396,6 +396,69 @@ func (c *CurrentPlaybackDevice) Init() {
 	}
 }
 
+// isMultiModalModelPair checks if two model selections represent the same multi-modal model
+// Multi-modal models (seamless_m4t, phi4, voxtral) can be shared between different AI tasks
+func isMultiModalModelPair(select1, select2 *CustomWidget.TextValueSelect) bool {
+	if select1.GetSelected() == nil || select2.GetSelected() == nil {
+		return false
+	}
+
+	model1 := select1.GetSelected().Value
+	model2 := select2.GetSelected().Value
+
+	multiModalModels := []string{"seamless_m4t", "phi4", "voxtral"}
+
+	for _, model := range multiModalModels {
+		if model1 == model && model2 == model {
+			return true
+		}
+	}
+
+	return false
+}
+
+// syncMultiModalWidgets synchronizes settings between related widgets when using the same multi-modal model
+func syncMultiModalWidgets(
+	sourceValue string,
+	sourcePrecision, sourceDevice *CustomWidget.TextValueSelect,
+	targetSize, targetPrecision, targetDevice *CustomWidget.TextValueSelect,
+) {
+	// Set the target size to the source value
+	targetSize.SetSelected(sourceValue)
+
+	// Sync precision if the target contains the same option
+	if sourcePrecision.GetSelected() != nil && targetPrecision.ContainsEntry(sourcePrecision.GetSelected(), CustomWidget.CompareValue) {
+		targetPrecision.SetSelected(sourcePrecision.GetSelected().Value)
+	}
+
+	// Sync device if the target contains the same option
+	if sourceDevice.GetSelected() != nil && targetDevice.ContainsEntry(sourceDevice.GetSelected(), CustomWidget.CompareValue) {
+		targetDevice.SetSelected(sourceDevice.GetSelected().Value)
+	}
+
+	// Disable the target widgets since they're now synced
+	targetSize.Disable()
+	targetPrecision.Disable()
+	targetDevice.Disable()
+}
+
+// handleMultiModalModelSync handles the special case for multi-modal models and widget synchronization
+func handleMultiModalModelSync(
+	modelSelect1, modelSelect2 *CustomWidget.TextValueSelect,
+	sourceValue string,
+	sourcePrecision, sourceDevice *CustomWidget.TextValueSelect,
+	targetSize, targetPrecision, targetDevice *CustomWidget.TextValueSelect,
+) {
+	if isMultiModalModelPair(modelSelect1, modelSelect2) {
+		syncMultiModalWidgets(sourceValue, sourcePrecision, sourceDevice, targetSize, targetPrecision, targetDevice)
+	} else if modelSelect1.GetSelected() != nil && modelSelect1.GetSelected().Value != "" {
+		// Enable widgets when not using the same multi-modal model
+		targetSize.Enable()
+		targetPrecision.Enable()
+		targetDevice.Enable()
+	}
+}
+
 func GetAudioDevices(audioApi malgo.Backend, deviceTypes []malgo.DeviceType, deviceIndexStartPoint int, specialValueSuffix string, specialTextSuffix string) ([]CustomWidget.TextValueOption, []Utilities.AudioDevice, error) {
 	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
 		scope.SetTag("GoRoutine", "Pages\\Profiles->GetAudioDevices")
@@ -998,10 +1061,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			if !Hardwareinfo.IsNVIDIACard(nil) && s.Value == "cuda" {
 				dialog.ShowInformation(lang.L("No NVIDIA Card found"), lang.L("No NVIDIA Card found. You might need to use CPU instead for it to work."), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
-			if s.Value == "cpu" && (sttPrecisionSelect.GetSelected().Value == "float16" || sttPrecisionSelect.GetSelected().Value == "int8_float16") {
+			if s.Value == "cpu" && (sttPrecisionSelect.GetSelected() == nil || sttPrecisionSelect.GetSelected().Value == "float16" || sttPrecisionSelect.GetSelected().Value == "int8_float16") {
 				sttPrecisionSelect.SetSelected("float32")
 			}
-			if s.Value == "cuda" && sttPrecisionSelect.GetSelected().Value == "int16" {
+			if s.Value == "cuda" && (sttPrecisionSelect.GetSelected() == nil || sttPrecisionSelect.GetSelected().Value == "int16") {
 				sttPrecisionSelect.SetSelected("float16")
 			}
 			// calculate memory consumption
@@ -1011,25 +1074,13 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			}
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 
-			/**
-			special case for Seamless M4T since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
-			*/
-			if txtTranslatorTypeSelect.GetSelected().Value == "seamless_m4t" && sttTypeSelect.GetSelected().Value == "seamless_m4t" || txtTranslatorTypeSelect.GetSelected().Value == "phi4" && sttTypeSelect.GetSelected().Value == "phi4" || txtTranslatorTypeSelect.GetSelected().Value == "voxtral" && sttTypeSelect.GetSelected().Value == "voxtral" {
-				txtTranslatorSizeSelect.SetSelected(s.Value)
-				if txtTranslatorPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
-					txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
-				}
-				if txtTranslatorDeviceSelect.ContainsEntry(sttAiDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
-					txtTranslatorDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
-				}
-				txtTranslatorSizeSelect.Disable()
-				txtTranslatorPrecisionSelect.Disable()
-				txtTranslatorDeviceSelect.Disable()
-			} else if txtTranslatorTypeSelect.GetSelected().Value != "" {
-				txtTranslatorSizeSelect.Enable()
-				txtTranslatorPrecisionSelect.Enable()
-				txtTranslatorDeviceSelect.Enable()
-			}
+			// Handle multi-modal model synchronization for text translator
+			handleMultiModalModelSync(
+				sttTypeSelect, txtTranslatorTypeSelect,
+				s.Value,
+				sttPrecisionSelect, sttAiDeviceSelect,
+				txtTranslatorSizeSelect, txtTranslatorPrecisionSelect, txtTranslatorDeviceSelect,
+			)
 
 			if sttTypeSelect.GetSelected().Value == ocrTypeSelect.GetSelected().Value {
 				ocrAiDeviceSelect.Disable()
@@ -1089,25 +1140,13 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			}
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 
-			/**
-			special case for Seamless M4T since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
-			*/
-			if sttTypeSelect.GetSelected().Value == "seamless_m4t" && txtTranslatorTypeSelect.GetSelected().Value == "seamless_m4t" || sttTypeSelect.GetSelected().Value == "phi4" && txtTranslatorTypeSelect.GetSelected().Value == "phi4" || sttTypeSelect.GetSelected().Value == "voxtral" && txtTranslatorTypeSelect.GetSelected().Value == "voxtral" {
-				txtTranslatorSizeSelect.SetSelected(s.Value)
-				if txtTranslatorPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
-					txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
-				}
-				if txtTranslatorDeviceSelect.ContainsEntry(sttAiDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
-					txtTranslatorDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
-				}
-				txtTranslatorSizeSelect.Disable()
-				txtTranslatorPrecisionSelect.Disable()
-				txtTranslatorDeviceSelect.Disable()
-			} else if txtTranslatorTypeSelect.GetSelected().Value != "" {
-				txtTranslatorSizeSelect.Enable()
-				txtTranslatorPrecisionSelect.Enable()
-				txtTranslatorDeviceSelect.Enable()
-			}
+			// Handle multi-modal model synchronization for text translator
+			handleMultiModalModelSync(
+				sttTypeSelect, txtTranslatorTypeSelect,
+				s.Value,
+				sttPrecisionSelect, sttAiDeviceSelect,
+				txtTranslatorSizeSelect, txtTranslatorPrecisionSelect, txtTranslatorDeviceSelect,
+			)
 
 			if sttTypeSelect.GetSelected().Value == ocrTypeSelect.GetSelected().Value {
 				ocrAiDeviceSelect.Disable()
@@ -1243,22 +1282,12 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			/**
 			special case for Seamless M4T since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
 			*/
-			if txtTranslatorTypeSelect.GetSelected().Value == "seamless_m4t" && sttTypeSelect.GetSelected().Value == "seamless_m4t" {
-				txtTranslatorSizeSelect.SetSelected(s.Value)
-				if txtTranslatorPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
-					txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
-				}
-				if txtTranslatorDeviceSelect.ContainsEntry(sttAiDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
-					txtTranslatorDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
-				}
-				txtTranslatorSizeSelect.Disable()
-				txtTranslatorPrecisionSelect.Disable()
-				txtTranslatorDeviceSelect.Disable()
-			} else if txtTranslatorTypeSelect.GetSelected().Value != "" {
-				txtTranslatorSizeSelect.Enable()
-				txtTranslatorPrecisionSelect.Enable()
-				txtTranslatorDeviceSelect.Enable()
-			}
+			handleMultiModalModelSync(
+				txtTranslatorTypeSelect, sttTypeSelect,
+				s.Value,
+				sttPrecisionSelect, sttAiDeviceSelect,
+				txtTranslatorSizeSelect, txtTranslatorPrecisionSelect, txtTranslatorDeviceSelect,
+			)
 
 			if sttTypeSelect.GetSelected().Value == ocrTypeSelect.GetSelected().Value {
 				ocrAiDeviceSelect.Disable()
@@ -1519,24 +1548,12 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			/**
 			special case for Seamless M4T or Phi4 since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
 			*/
-			if s.Value == "seamless_m4t" && txtTranslatorTypeSelect.GetSelected().Value == "seamless_m4t" || s.Value == "phi4" && txtTranslatorTypeSelect.GetSelected().Value == "phi4" || s.Value == "voxtral" && txtTranslatorTypeSelect.GetSelected().Value == "voxtral" {
-				if txtTranslatorSizeSelect.ContainsEntry(sttModelSize.GetSelected(), CustomWidget.CompareValue) {
-					txtTranslatorSizeSelect.SetSelected(sttModelSize.GetSelected().Value)
-				}
-				if txtTranslatorPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
-					txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
-				}
-				if txtTranslatorDeviceSelect.ContainsEntry(sttAiDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
-					txtTranslatorDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
-				}
-				txtTranslatorSizeSelect.Disable()
-				txtTranslatorPrecisionSelect.Disable()
-				txtTranslatorDeviceSelect.Disable()
-			} else if txtTranslatorTypeSelect.GetSelected().Value != "" {
-				txtTranslatorSizeSelect.Enable()
-				txtTranslatorPrecisionSelect.Enable()
-				txtTranslatorDeviceSelect.Enable()
-			}
+			handleMultiModalModelSync(
+				txtTranslatorTypeSelect, sttTypeSelect,
+				s.Value,
+				sttPrecisionSelect, sttAiDeviceSelect,
+				txtTranslatorSizeSelect, txtTranslatorPrecisionSelect, txtTranslatorDeviceSelect,
+			)
 
 			if s.Value == ocrTypeSelect.GetSelected().Value {
 				ocrAiDeviceSelect.Disable()
@@ -1772,21 +1789,12 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			/**
 			special case for Seamless M4T, Phi4 or voxtral since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
 			*/
-			if s.Value == "seamless_m4t" && sttTypeSelect.GetSelected().Value == "seamless_m4t" || s.Value == "phi4" && sttTypeSelect.GetSelected().Value == "phi4" || s.Value == "voxtral" && sttTypeSelect.GetSelected().Value == "voxtral" {
-				//modelType = "N"
-				if txtTranslatorSizeSelect.ContainsEntry(sttModelSize.GetSelected(), CustomWidget.CompareValue) {
-					txtTranslatorSizeSelect.SetSelected(sttModelSize.GetSelected().Value)
-				}
-				if txtTranslatorPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
-					txtTranslatorPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
-				}
-				if txtTranslatorDeviceSelect.ContainsEntry(sttAiDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
-					txtTranslatorDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
-				}
-				txtTranslatorSizeSelect.Disable()
-				txtTranslatorPrecisionSelect.Disable()
-				txtTranslatorDeviceSelect.Disable()
-			}
+			handleMultiModalModelSync(
+				txtTranslatorTypeSelect, sttTypeSelect,
+				s.Value,
+				sttPrecisionSelect, sttAiDeviceSelect,
+				txtTranslatorSizeSelect, txtTranslatorPrecisionSelect, txtTranslatorDeviceSelect,
+			)
 
 			if s.Value == ocrTypeSelect.GetSelected().Value {
 				ocrAiDeviceSelect.Disable()
