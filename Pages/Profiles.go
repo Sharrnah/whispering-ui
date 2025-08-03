@@ -2306,12 +2306,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					backendCheckDialog.Hide()
 				}))
 				quitButton := widget.NewButtonWithIcon(lang.L("Quit running backend"), theme.ConfirmIcon(), func() {
-					err := Utilities.KillProcessById(Settings.Config.Process_id)
+					// Use the robust quit function with 3 retries
+					err := Utilities.QuitBackendRobust(websocketAddr, Settings.Config.Process_id, 3)
 					if err != nil {
-						err = Utilities.SendQuitMessage(websocketAddr)
-					}
-					if err != nil {
-						fmt.Printf("Failed to send quit message: %v\n", err)
+						fmt.Printf("Failed to quit backend: %v\n", err)
 						Logging.CaptureException(err)
 						dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
 					} else {
