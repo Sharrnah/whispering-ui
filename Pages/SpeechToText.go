@@ -130,6 +130,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 			// set to first language if auto is selected
 			if len(filteredValues) > 0 && strings.ToLower(text) == "auto" {
 				Fields.Field.TranscriptionSpeakerLanguageCombo.Text = filteredValues[0]
+				Fields.Field.TranscriptionSpeakerLanguageCombo.OnSubmitted(filteredValues[0])
 				Fields.Field.TranscriptionSpeakerLanguageCombo.Refresh()
 			}
 			return filteredValues
