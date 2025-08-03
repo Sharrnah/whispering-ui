@@ -2338,16 +2338,20 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 
 		// go through all profiles in the list and check if the file exists. if not, remove it from the list
-		for i := len(settingsFiles) - 1; i >= 0; i-- {
-			// check if the file is currently in use
-			if strings.EqualFold(settingsFiles[i], settingsFiles[id]) {
+		filteredFiles := make([]string, 0, len(settingsFiles))
+		for i, filename := range settingsFiles {
+			// skip the currently selected file
+			if i == id {
+				filteredFiles = append(filteredFiles, filename)
 				continue
 			}
-			// if the file does not exist, remove it from the list
-			if !Utilities.FileExists(filepath.Join(profilesDir, settingsFiles[i])) {
-				settingsFiles = append(settingsFiles[:i], settingsFiles[i+1:]...)
+			// only keep files that exist
+			if Utilities.FileExists(filepath.Join(profilesDir, filename)) {
+				filteredFiles = append(filteredFiles, filename)
 			}
 		}
+		settingsFiles = filteredFiles
+
 		profileList.Refresh()
 
 		profileForm.Refresh()
