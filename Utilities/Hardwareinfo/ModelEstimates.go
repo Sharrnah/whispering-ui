@@ -73,6 +73,8 @@ var Models = []AIModel{
 	{"TxtTranslator", "seamless_m4t", "large-v2", 10518.0},
 	// Phi-4 model
 	{"TxtTranslator", "phi4", "", 22531.0},
+	// Voxtral model
+	{"TxtTranslator", "voxtral", "Voxtral-Mini-3B-2507", 18852.0},
 	// TTS types
 	{"ttsType", "silero", "", 1533.0},
 	{"ttsType", "f5_e2", "", 1200.0},
