@@ -343,5 +343,11 @@
     "tts_streamed_chunk_size.Name": "Størrelsen på den streamede afspilning",
     "Reset Plugin Settings": "Nulstil plugin-indstillinger -. {{.PluginClassName}}",
     "Are you sure you want to reset the settings for this plugin?": "Er du sikker på, at du vil nulstille indstillingerne for {{.PluginClassName}}?",
-    "Reset": "Nulstil"
+    "Reset": "Nulstil",
+    "It looks like you are running Whispering Tiger from a temporary directory. Please extract the application and run it from a different folder.": "Det ser ud til, at du kører Whispering Tiger fra en midlertidig mappe.\n\nUdpak venligst programmet, og kør det fra en anden mappe.",
+    "Low Disk Space": "Lav diskplads",
+    "Only ? GB free space remaining. The space might not be enough.": "Der er kun {{.SpaceRemaining}} GB ledig plads tilbage på {{.Directory}}.\n\nPladsen er måske ikke tilstrækkelig.",
+    "Quit running backend": "Stop med at køre backend",
+    "Integrated Image-to-Text": "Integreret billede-til-tekst",
+    "A.I. Device for Image-to-Text": "A.I.-enhed til billede-til-tekst"
 }
