@@ -343,5 +343,11 @@
     "tts_streamed_chunk_size.Description": "ストリーミング音声のチャンクサイズ（TTSサービスがサポートしている場合）",
     "Reset": "リセット",
     "Reset Plugin Settings": "プラグインの設定をリセットする{{.PluginClassName}}",
-    "Are you sure you want to reset the settings for this plugin?": "本当に{{.PluginClassName}} の設定をリセットしたいのですか？"
+    "Are you sure you want to reset the settings for this plugin?": "本当に{{.PluginClassName}} の設定をリセットしたいのですか？",
+    "Quit running backend": "バックエンドの実行を終了する",
+    "Integrated Image-to-Text": "画像とテキストの統合",
+    "A.I. Device for Image-to-Text": "画像からテキストへのA.I.デバイス",
+    "It looks like you are running Whispering Tiger from a temporary directory. Please extract the application and run it from a different folder.": "一時ディレクトリからWhispering Tigerを実行しているようです。\n\nアプリケーションを解凍し、別のフォルダから実行してください。",
+    "Low Disk Space": "ディスク容量が少ない",
+    "Only ? GB free space remaining. The space might not be enough.": "{{.Directory}} に残っている空き容量は{{.SpaceRemaining}} GB だけです。\n\n空き容量が足りないかもしれません。"
 }
