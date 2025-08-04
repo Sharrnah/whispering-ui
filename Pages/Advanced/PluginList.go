@@ -111,6 +111,8 @@ func CreatePluginListWindow(closeFunction func(), backendRunning bool) {
 	// Show and run the application
 	pluginListWindow.Show()
 
+	loadingBar.Start()
+
 	// iterate over the table data and create a new widget for each row
 	for _, row := range tableData {
 
@@ -203,36 +205,73 @@ func CreatePluginListWindow(closeFunction func(), backendRunning bool) {
 		previewLink := row.PreviewLink
 
 		previewImageContainer := container.NewStack()
-		previewBorder := container.NewBorder(container.NewPadded(titleLabel), nil, nil, previewImageContainer, descriptionLabel)
-
+		previewBorder := CustomWidget.NewHoverableBorder(container.NewBorder(container.NewPadded(titleLabel), nil, nil, previewImageContainer, descriptionLabel),
+			nil, nil)
 		go func() {
 			if previewLink != "" {
 				previewFileUri, err := storage.ParseURI(previewLink)
 				if err == nil {
 					// is preview an image?
 					if previewFileUri.Extension() == ".png" || previewFileUri.Extension() == ".jpg" || previewFileUri.Extension() == ".jpeg" {
-						var previewImageStatic *canvas.Image = nil
-						previewImageStatic = canvas.NewImageFromURI(previewFileUri)
-						if previewImageContainer != nil && previewImageStatic != nil {
-							previewImageStatic.ScaleMode = canvas.ImageScaleFastest
-							previewImageStatic.FillMode = canvas.ImageFillContain
-							previewImageStatic.SetMinSize(fyne.NewSize(220, 120))
-							previewImageContainer.Add(previewImageStatic)
-						}
+						fyne.Do(func() {
+							var previewImageStatic *canvas.Image = nil
+							previewImageStatic = canvas.NewImageFromURI(previewFileUri)
+							if previewImageContainer != nil && previewImageStatic != nil {
+								previewImageStatic.ScaleMode = canvas.ImageScaleFastest
+								previewImageStatic.FillMode = canvas.ImageFillContain
+								previewImageStatic.SetMinSize(fyne.NewSize(220, 120))
+								previewImageContainer.Add(previewImageStatic)
+							}
+						})
 					}
 					if previewFileUri.Extension() == ".gif" {
-						previewImageAni, err := CustomWidget.NewAnimatedGif(previewFileUri)
-						if err == nil {
-							if previewImageContainer != nil {
-								previewImageAni.SetMinSize(fyne.NewSize(230, 130))
-								previewImageContainer.Add(previewImageAni)
-								previewImageAni.Start()
+						fyne.Do(func() {
+							previewImageAni, err := CustomWidget.NewAnimatedGif(previewFileUri)
+							if err == nil {
+								if previewImageContainer != nil {
+									previewImageAni.SetMinSize(fyne.NewSize(230, 130))
+									previewImageContainer.Add(previewImageAni)
+									//previewImageAni.Start()
+									previewImageAni.Stop()
+								}
 							}
-						}
+						})
 					}
 				}
 			}
 		}()
+		previewBorder.SetOnMouseEnter(func() {
+			if len(previewBorder.GetContainer().Objects) == 0 {
+				return
+			}
+			previewImageBorderContainer := previewBorder.GetContainer().Objects[2].(*fyne.Container)
+			if len(previewImageBorderContainer.Objects) == 0 {
+				return
+			}
+			previewImageObject := previewImageBorderContainer.Objects[0]
+			// check if the previewImageObject is a AnimatedGif
+			if previewImageObject != nil {
+				if gif, ok := previewImageObject.(*CustomWidget.AnimatedGif); ok {
+					gif.Start()
+				}
+			}
+		})
+		previewBorder.SetOnMouseLeave(func() {
+			if len(previewBorder.GetContainer().Objects) == 0 {
+				return
+			}
+			previewImageBorderContainer := previewBorder.GetContainer().Objects[2].(*fyne.Container)
+			if len(previewImageBorderContainer.Objects) == 0 {
+				return
+			}
+			previewImageObject := previewImageBorderContainer.Objects[0]
+			// check if the previewImageObject is a AnimatedGif
+			if previewImageObject != nil {
+				if gif, ok := previewImageObject.(*CustomWidget.AnimatedGif); ok {
+					gif.Stop()
+				}
+			}
+		})
 
 		descriptionBorder := container.NewBorder(nil, nil, nil, rightColumn, previewBorder)
 
@@ -242,6 +281,7 @@ func CreatePluginListWindow(closeFunction func(), backendRunning bool) {
 		grid.Add(widget.NewSeparator())
 	}
 
+	loadingBar.Stop()
 	loadingBar.Hide()
 
 	// run the check all button once at window showing

@@ -1,6 +1,7 @@
 package Hardwareinfo
 
 import (
+	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/widget"
 	"strings"
 )
@@ -53,6 +54,8 @@ var Models = []AIModel{
 	{"Whisper", "mms", "mms-1b-l1107", 4623.0},
 	// Phi-4 model
 	{"Whisper", "phi4", "", 22531.0},
+	// Voxtral model
+	{"Whisper", "voxtral", "Voxtral-Mini-3B-2507", 18852.0},
 	// NLLB200CT2 models
 	{"TxtTranslator", "NLLB200_CT2", "small", 3087.0},
 	{"TxtTranslator", "NLLB200_CT2", "medium", 6069.0},
@@ -70,6 +73,8 @@ var Models = []AIModel{
 	{"TxtTranslator", "seamless_m4t", "large-v2", 10518.0},
 	// Phi-4 model
 	{"TxtTranslator", "phi4", "", 22531.0},
+	// Voxtral model
+	{"TxtTranslator", "voxtral", "Voxtral-Mini-3B-2507", 18852.0},
 	// TTS types
 	{"ttsType", "silero", "", 1533.0},
 	{"ttsType", "f5_e2", "", 1200.0},
@@ -166,29 +171,31 @@ func (p ProfileAIModelOption) CalculateMemoryConsumption(CPUBar *widget.Progress
 	}
 
 	// Reset progress bars
-	GPUBar.Value = 0.0
-	CPUBar.Value = 0.0
+	fyne.Do(func() {
+		GPUBar.Value = 0.0
+		CPUBar.Value = 0.0
 
-	// Sum up the memory consumption for each unique option
-	//for _, profileAIModelOption := range AllProfileAIModelOptions {
-	for _, profileAIModelOption := range uniqueOptions {
-		println(profileAIModelOption.AIModel, profileAIModelOption.MemoryConsumption)
-		deviceLower := strings.ToLower(profileAIModelOption.Device)
-		println(profileAIModelOption.AIModel, profileAIModelOption.MemoryConsumption)
-		if strings.HasPrefix(deviceLower, "cuda") ||
-			strings.HasPrefix(deviceLower, "direct-ml") {
-			println("CUDA MEMORY:")
-			println(int(profileAIModelOption.MemoryConsumption))
-			if totalGPUMemory == 0 {
-				GPUBar.Max = GPUBar.Value + profileAIModelOption.MemoryConsumption
+		// Sum up the memory consumption for each unique option
+		//for _, profileAIModelOption := range AllProfileAIModelOptions {
+		for _, profileAIModelOption := range uniqueOptions {
+			println(profileAIModelOption.AIModel, profileAIModelOption.MemoryConsumption)
+			deviceLower := strings.ToLower(profileAIModelOption.Device)
+			println(profileAIModelOption.AIModel, profileAIModelOption.MemoryConsumption)
+			if strings.HasPrefix(deviceLower, "cuda") ||
+				strings.HasPrefix(deviceLower, "direct-ml") {
+				println("CUDA MEMORY:")
+				println(int(profileAIModelOption.MemoryConsumption))
+				if totalGPUMemory == 0 {
+					GPUBar.Max = GPUBar.Value + profileAIModelOption.MemoryConsumption
+				}
+				GPUBar.Value += profileAIModelOption.MemoryConsumption
+			} else if strings.HasPrefix(deviceLower, "cpu") {
+				println("CPU MEMORY:")
+				println(int(profileAIModelOption.MemoryConsumption))
+				CPUBar.Value += profileAIModelOption.MemoryConsumption
 			}
-			GPUBar.Value += profileAIModelOption.MemoryConsumption
-		} else if strings.HasPrefix(deviceLower, "cpu") {
-			println("CPU MEMORY:")
-			println(int(profileAIModelOption.MemoryConsumption))
-			CPUBar.Value += profileAIModelOption.MemoryConsumption
 		}
-	}
-	CPUBar.Refresh()
-	GPUBar.Refresh()
+		CPUBar.Refresh()
+		GPUBar.Refresh()
+	})
 }

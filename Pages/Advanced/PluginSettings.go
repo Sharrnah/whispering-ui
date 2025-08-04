@@ -168,7 +168,6 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 	pluginToWindowButton := widget.NewButtonWithIcon("", theme.ViewFullScreenIcon(), nil)
 	pluginToWindowButton.OnTapped = func() {
 		pluginWindow := fyne.CurrentApp().NewWindow(pluginClassName + " " + lang.L("Settings"))
-
 		reloadButton := widget.NewButtonWithIcon(lang.L("Reload"), theme.ViewRefreshIcon(), nil)
 
 		pluginContentWin := BuildSinglePluginSettings(pluginClassName, nil, nil, reloadButton, pluginWindow)
@@ -459,6 +458,7 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 		pluginWindow.CenterOnScreen()
 
 		pluginWindow.Show()
+		// loop while pluginWindow is open, do refresh
 	}
 
 	downloadButton := widget.NewButton(lang.L("Download / Update Plugins"), nil)

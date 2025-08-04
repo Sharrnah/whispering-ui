@@ -1,6 +1,9 @@
 package Messages
 
-import "whispering-tiger-ui/Fields"
+import (
+	"fyne.io/fyne/v2"
+	"whispering-tiger-ui/Fields"
+)
 
 type WhisperResult struct {
 	Text                 string `json:"text"`
@@ -21,6 +24,9 @@ func (res WhisperResult) Update() {
 	}
 
 	// prepend to slice Fields.DataBindings.WhisperResultsData
-	Fields.DataBindings.WhisperResultsData = append([]Fields.WhisperResult{FieldsWhisperResultData}, Fields.DataBindings.WhisperResultsData...)
-	Fields.Field.WhisperResultList.Refresh()
+
+	fyne.Do(func() {
+		Fields.DataBindings.WhisperResultsData = append([]Fields.WhisperResult{FieldsWhisperResultData}, Fields.DataBindings.WhisperResultsData...)
+		Fields.Field.WhisperResultList.Refresh()
+	})
 }

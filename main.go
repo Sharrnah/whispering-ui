@@ -26,8 +26,11 @@ import (
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/UpdateUtility"
 	"whispering-tiger-ui/Utilities"
+	"whispering-tiger-ui/Utilities/Hardwareinfo"
 	"whispering-tiger-ui/Websocket"
 )
+
+const minFreeSpace uint64 = 8 * Utilities.GiB
 
 var WebsocketClient = Websocket.NewClient("127.0.0.1:5000")
 
@@ -85,7 +88,7 @@ func main() {
 	if langOk && langVal != "" {
 		lang.SetPreferredLocale(langVal)
 	}
-	lang.AddTranslationsFS(Resources.Translations, "translations")
+	_ = lang.AddTranslationsFS(Resources.Translations, "translations")
 
 	a := app.NewWithID("io.github.whispering-tiger")
 	a.SetIcon(Resources.ResourceAppIconPng)
@@ -211,8 +214,12 @@ func main() {
 						tabContent.OnSelected(tabContent.Items[tabContent.SelectedIndex()])
 					}
 					if tabContent.Selected().Text == lang.L("Logs") {
-						Fields.Field.LogText.SetText("")
-						Fields.Field.LogText.Write([]byte(strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\r\n") + "\r\n"))
+						//Fields.Field.LogText.SetText("")
+						//Fields.Field.LogText.Write([]byte(strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\r\n") + "\r\n"))
+
+						fyne.Do(func() {
+							Fields.Field.LogText.SetText(strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\n") + "\r\n")
+						})
 					}
 				}
 			}
@@ -239,12 +246,16 @@ func main() {
 		fyne.CurrentApp().Preferences().SetFloat("ProfileWindowHeight", float64(profileWindow.Canvas().Size().Height))
 
 		// close profile window
+		profileWindow.SetOnClosed(func() {}) // disable quit handler for programmatic close
 		profileWindow.Close()
 	}
 
 	profilePage := Pages.CreateProfileWindow(onProfileClose)
 	profileWindow.SetContent(profilePage)
-
+	// quit application if profile window is closed without using the button
+	profileWindow.SetOnClosed(func() {
+		fyne.CurrentApp().Quit()
+	})
 	// set profile window size
 	profileWindowWidth := fyne.CurrentApp().Preferences().FloatWithFallback("ProfileWindowWidth", 1400)
 	profileWindowHeight := fyne.CurrentApp().Preferences().FloatWithFallback("ProfileWindowHeight", 600)
@@ -253,48 +264,33 @@ func main() {
 	profileWindow.CenterOnScreen()
 	profileWindow.Show()
 
-	if !fyne.CurrentApp().Preferences().BoolWithFallback("SendErrorsToServerInit", false) {
-		confirmErrorReportingDialog := dialog.NewConfirm(lang.L("Automatically Report Errors"), lang.L("Do you want to automatically report errors?"),
-			func(b bool) {
-				Logging.EnableReporting(b)
-				fyne.CurrentApp().Preferences().SetBool("SendErrorsToServerInit", true) // Set Init to mark that it was already shown
-			},
-			profileWindow)
-		confirmErrorReportingDialog.Show()
-	}
-	SendErrorsToServerSetting := fyne.CurrentApp().Preferences().BoolWithFallback("SendErrorsToServer", false)
-	Logging.EnableReporting(SendErrorsToServerSetting)
+	if exePath, err := os.Executable(); err == nil {
+		exeDir := filepath.Dir(exePath)
 
-	Logging.ErrorHandlerInit(Utilities.AppVersion+"."+Utilities.AppBuild, UpdateUtility.GetCurrentPlatformVersion())
-	defer Logging.ErrorHandlerRecover()
+		// check if enough free space is available if no whisper executable is found
+		if !Utilities.FileExists("audioWhisper/audioWhisper.exe") && !Utilities.FileExists("audioWhisper.py") {
+			checkFreeSpace(profileWindow, exeDir, minFreeSpace)
+		}
 
-	// check for updates
-	if fyne.CurrentApp().Preferences().BoolWithFallback("CheckForUpdateAtStartup", true) || (!Utilities.FileExists("audioWhisper/audioWhisper.exe") && !Utilities.FileExists("audioWhisper.py")) {
-		go func() {
-			if len(fyne.CurrentApp().Driver().AllWindows()) == 2 {
-				UpdateUtility.VersionCheck(fyne.CurrentApp().Driver().AllWindows()[1], false)
-			}
-		}()
-	}
-	if fyne.CurrentApp().Preferences().BoolWithFallback("CheckForPluginUpdatesAtStartup", true) {
-		go func() {
-			lastCheckTimestamp := fyne.CurrentApp().Preferences().IntWithFallback("CheckForPluginUpdatesAtStartupLastTime", 0)
-			lastCheckTime := time.Unix(int64(lastCheckTimestamp), 0)
-			currentTime := time.Now()
-
-			// make sure to check for plugin updates only every day
-			if lastCheckTime.Year() != currentTime.Year() || lastCheckTime.YearDay() != currentTime.YearDay() {
-				fyne.CurrentApp().Preferences().SetInt("CheckForPluginUpdatesAtStartupLastTime", int(currentTime.Unix()))
-
-				if UpdateUtility.PluginsUpdateAvailable() {
-					dialog.ShowConfirm(lang.L("New Plugin updates available"), lang.L("Whispering Tiger has new Plugin updates available. Go to Plugin List now?"), func(b bool) {
-						if b {
-							Advanced.CreatePluginListWindow(nil, false)
-						}
-					}, fyne.CurrentApp().Driver().AllWindows()[1])
-				}
-			}
-		}()
+		// priority: warn if running from temp directory, then ask about error reporting
+		if strings.HasPrefix(strings.ToLower(exeDir), strings.ToLower(os.TempDir())) {
+			//goland:noinspection GoErrorStringFormat
+			dlg := dialog.NewError(
+				fmt.Errorf(lang.L("It looks like you are running Whispering Tiger from a temporary directory. Please extract the application and run it from a different folder.")),
+				profileWindow,
+			)
+			dlg.SetOnClosed(func() {
+				requestErrorReporting(profileWindow)
+				startBackgroundTasks()
+			})
+			dlg.Show()
+		} else {
+			requestErrorReporting(profileWindow)
+			startBackgroundTasks()
+		}
+	} else {
+		requestErrorReporting(profileWindow)
+		startBackgroundTasks()
 	}
 
 	a.Lifecycle().SetOnStopped(func() {
@@ -307,4 +303,79 @@ func main() {
 	})
 
 	a.Run()
+}
+
+// new helper – ask about error reporting once, then start background tasks
+func requestErrorReporting(parentWindow fyne.Window) {
+	if !fyne.CurrentApp().Preferences().BoolWithFallback("SendErrorsToServerInit", false) {
+		dialog.NewConfirm(
+			lang.L("Automatically Report Errors"),
+			lang.L("Do you want to automatically report errors?"),
+			func(b bool) {
+				Logging.EnableReporting(b)
+				fyne.CurrentApp().Preferences().SetBool("SendErrorsToServerInit", true)
+			},
+			parentWindow,
+		).Show()
+	}
+}
+
+func checkFreeSpace(window fyne.Window, directory string, spaceRequired uint64) {
+	// check free space
+	if free, err := Hardwareinfo.GetFreeSpace(directory); err == nil && free < spaceRequired {
+		dialog.NewInformation(
+			lang.L("Low Disk Space"),
+			lang.L("Only ? GB free space remaining. The space might not be enough.", map[string]interface{}{
+				"SpaceRemaining": fmt.Sprintf("%.2f", float64(free)/float64(Utilities.GiB)),
+				"Directory":      directory,
+			}),
+			window).Show()
+	}
+}
+
+// startBackgroundTasks encapsulates what used to run immediately after confirm
+func startBackgroundTasks() {
+	// apply saved setting
+	send := fyne.CurrentApp().Preferences().BoolWithFallback("SendErrorsToServer", false)
+	Logging.EnableReporting(send)
+	Logging.ErrorHandlerInit(Utilities.AppVersion+"."+Utilities.AppBuild, UpdateUtility.GetCurrentPlatformVersion())
+	defer Logging.ErrorHandlerRecover()
+
+	// check for app updates
+	if fyne.CurrentApp().Preferences().BoolWithFallback("CheckForUpdateAtStartup", true) ||
+		(!Utilities.FileExists("audioWhisper/audioWhisper.exe") && !Utilities.FileExists("audioWhisper.py")) {
+		go func() {
+			fyne.Do(func() {
+				wList := fyne.CurrentApp().Driver().AllWindows()
+				if len(wList) >= 2 {
+					UpdateUtility.VersionCheck(wList[1], false)
+				}
+			})
+		}()
+	}
+
+	// check for plugin updates
+	if fyne.CurrentApp().Preferences().BoolWithFallback("CheckForPluginUpdatesAtStartup", true) {
+		go func() {
+			fyne.Do(func() {
+				last := fyne.CurrentApp().Preferences().IntWithFallback("CheckForPluginUpdatesAtStartupLastTime", 0)
+				now := time.Now()
+				if time.Unix(int64(last), 0).YearDay() != now.YearDay() {
+					fyne.CurrentApp().Preferences().SetInt("CheckForPluginUpdatesAtStartupLastTime", int(now.Unix()))
+					if UpdateUtility.PluginsUpdateAvailable() {
+						dialog.ShowConfirm(
+							lang.L("New Plugin updates available"),
+							lang.L("Whispering Tiger has new Plugin updates available. Go to Plugin List now?"),
+							func(goNow bool) {
+								if goNow {
+									Advanced.CreatePluginListWindow(nil, false)
+								}
+							},
+							fyne.CurrentApp().Driver().AllWindows()[1],
+						)
+					}
+				}
+			})
+		}()
+	}
 }

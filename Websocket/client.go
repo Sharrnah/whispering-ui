@@ -8,6 +8,7 @@ import (
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/lang"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"github.com/getsentry/sentry-go"
 	"github.com/gorilla/websocket"
@@ -16,8 +17,12 @@ import (
 	"net/url"
 	"os"
 	"os/signal"
+	"strings"
 	"time"
+	"whispering-tiger-ui/CustomWidget"
+	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Logging"
+	"whispering-tiger-ui/RuntimeBackend"
 	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
@@ -54,19 +59,37 @@ func (c *Client) Start() {
 	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
 		scope.SetTag("GoRoutine", "Websocket\\client->Start")
 	})
-
 	previouslyConnected := false
 
 	runBackend := Settings.Config.Run_backend
 
 	statusBar := widget.NewProgressBarInfinite()
 	connectingStateContainer := container.NewVBox()
-	connectingStateDialog := dialog.NewCustom(
+	connectingStateDialog := dialog.NewCustomWithoutButtons(
 		"",
-		lang.L("Hide"),
 		container.NewBorder(statusBar, nil, nil, nil, connectingStateContainer),
 		fyne.CurrentApp().Driver().AllWindows()[0],
 	)
+	connectingStateDialog.SetButtons([]fyne.CanvasObject{
+		&widget.Button{
+			Text: lang.L("Show Log"),
+			OnTapped: func() {
+				logWindow := fyne.CurrentApp().NewWindow(lang.L("Logs"))
+				copyLogButton := widget.NewButtonWithIcon(lang.L("Copy Log"), theme.ContentCopyIcon(), func() {
+					fyne.CurrentApp().Driver().AllWindows()[0].Clipboard().SetContent(
+						strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\n"),
+					)
+				})
+				LogText := CustomWidget.NewLogTextWithData(Fields.DataBindings.LogBinding)
+				LogText.AutoScroll = true
+				LogText.ReadOnly = true
+				sendErrorReportButton := widget.NewButtonWithIcon(lang.L("Send error report"), theme.MailSendIcon(), func() { RuntimeBackend.ErrorReportWithLog(logWindow) })
+				logWindow.SetContent(container.NewBorder(nil, container.NewHBox(copyLogButton, sendErrorReportButton), nil, nil, LogText))
+				logWindow.Resize(fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size())
+				logWindow.Show()
+			},
+		},
+	})
 
 	go processingStopTimer()
 	go realtimeLabelHideTimer()
@@ -81,8 +104,10 @@ func (c *Client) Start() {
 	u := url.URL{Scheme: "ws", Host: c.Addr, Path: "/"}
 	log.Printf("connecting to %s", u.String())
 
-	connectingStateContainer.Add(widget.NewLabel(lang.L("Connecting to Server", map[string]interface{}{"ServerUri": u.String()})))
-	connectingStateDialog.Show()
+	fyne.Do(func() {
+		connectingStateContainer.Add(widget.NewLabel(lang.L("Connecting to Server", map[string]interface{}{"ServerUri": u.String()})))
+		connectingStateDialog.Show()
+	})
 
 	// create websocket dialer
 	dialer := websocket.DefaultDialer
@@ -101,7 +126,9 @@ func (c *Client) Start() {
 	}
 	time.Sleep(100)
 
-	connectingStateDialog.Hide()
+	fyne.Do(func() {
+		connectingStateDialog.Hide()
+	})
 	previouslyConnected = true
 
 	defer c.Conn.Close()
@@ -134,12 +161,16 @@ func (c *Client) Start() {
 				for err != nil {
 					log.Println("retrying after disconnect... ")
 					if previouslyConnected {
-						connectingStateDialog.Show()
+						fyne.Do(func() {
+							connectingStateDialog.Show()
+						})
 						previouslyConnected = false
 					}
 					c.Conn, _, err = dialer.Dial(u.String(), nil)
 					time.Sleep(500 * time.Millisecond) // make sure to multiply by time.Millisecond
-					connectingStateDialog.Hide()
+					fyne.Do(func() {
+						connectingStateDialog.Hide()
+					})
 				}
 				if runBackend {
 					log.Println("send ui_connected")

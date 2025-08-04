@@ -96,6 +96,7 @@ type Conf struct {
 	Thread_per_transcription              bool        `yaml:"thread_per_transcription" json:"thread_per_transcription"`                           // Enable a new thread for each transcription. (can improve speed)
 	Only_no_speech_threshold_for_segments bool        `yaml:"only_no_speech_threshold_for_segments" json:"only_no_speech_threshold_for_segments"` //  if enabled, only use no_speech_threshold for silence detection in segments.
 	Language_detection_on_each_segment    bool        `yaml:"language_detection_on_each_segment" json:"language_detection_on_each_segment"`       //  if enabled, perform language detection on each segment. (faster-whisper only)
+	Stt_llm_prompt                        string      `yaml:"stt_llm_prompt" json:"stt_llm_prompt"`                                               // LLM prompt for STT (if using LLM for STT)
 
 	Transcription_auto_save_file            string `yaml:"transcription_auto_save_file" json:"transcription_auto_save_file"`
 	Transcription_auto_save_continuous_text bool   `yaml:"transcription_auto_save_continuous_text" json:"transcription_auto_save_continuous_text"`

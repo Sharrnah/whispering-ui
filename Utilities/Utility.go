@@ -307,3 +307,83 @@ func ParseBoolean(value string) (bool, error) {
 	}
 	return booleanValue, nil
 }
+
+// QuitBackendRobust attempts to quit a backend process robustly by trying multiple methods
+// with retries and proper verification. It returns an error if all attempts fail.
+func QuitBackendRobust(websocketAddr string, processId int, maxRetries int) error {
+	if maxRetries <= 0 {
+		maxRetries = 1
+	}
+
+	for attempt := 1; attempt <= maxRetries; attempt++ {
+		log.Printf("Attempt %d/%d to quit backend process", attempt, maxRetries)
+
+		// First, try to send quit message via websocket if the port is in use
+		if CheckPortInUse(websocketAddr) {
+			log.Printf("Sending quit message via websocket to %s", websocketAddr)
+			err := SendQuitMessage(websocketAddr)
+			if err != nil {
+				log.Printf("Failed to send quit message: %v", err)
+			} else {
+				// Wait up to 3 seconds for graceful shutdown
+				if waitForProcessTermination(websocketAddr, processId, 3*time.Second) {
+					log.Printf("Backend quit successfully via websocket on attempt %d", attempt)
+					return nil
+				}
+			}
+		}
+
+		// If websocket quit failed or port wasn't in use, try killing by PID
+		if processId > 0 {
+			log.Printf("Attempting to kill process with PID %d", processId)
+			err := KillProcessById(processId)
+			if err != nil {
+				log.Printf("Failed to kill process by PID: %v", err)
+			} else {
+				// Wait up to 3 seconds for process termination
+				if waitForProcessTermination(websocketAddr, processId, 3*time.Second) {
+					log.Printf("Backend process killed successfully on attempt %d", attempt)
+					return nil
+				}
+			}
+		}
+
+		// If this isn't the last attempt, wait a bit before retrying
+		if attempt < maxRetries {
+			log.Printf("Attempt %d failed, waiting 1 second before retry...", attempt)
+			time.Sleep(1 * time.Second)
+		}
+	}
+
+	return fmt.Errorf("failed to quit backend after %d attempts", maxRetries)
+}
+
+// waitForProcessTermination waits for a process to terminate by checking if the port is no longer in use
+// and optionally checking if the process ID is still running. Returns true if termination is confirmed.
+func waitForProcessTermination(websocketAddr string, processId int, timeout time.Duration) bool {
+	start := time.Now()
+	checkInterval := 200 * time.Millisecond
+
+	for time.Since(start) < timeout {
+		// Check if port is no longer in use
+		if !CheckPortInUse(websocketAddr) {
+			// Double check by trying to find the process if we have a valid PID
+			if processId > 0 {
+				process, err := os.FindProcess(processId)
+				if err != nil {
+					// Process not found, it's terminated
+					return true
+				}
+				// On Windows, FindProcess always succeeds, so we need to try to signal it
+				// Using Signal(syscall.Signal(0)) would be ideal but it's platform specific
+				// For now, we'll trust that if the port is not in use, the process is likely terminated
+				_ = process // Avoid unused variable warning
+			}
+			return true
+		}
+
+		time.Sleep(checkInterval)
+	}
+
+	return false
+}

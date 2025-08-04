@@ -68,9 +68,13 @@ func ProcessLoadingMessage(line string) bool {
 
 	// Show or hide the dialog based on the current loading states
 	if hasActiveLoadingStates() {
-		loadingStateDialog.Show()
+		fyne.Do(func() {
+			loadingStateDialog.Show()
+		})
 	} else {
-		loadingStateDialog.Hide()
+		fyne.Do(func() {
+			loadingStateDialog.Hide()
+		})
 	}
 	return true
 }
@@ -80,11 +84,14 @@ func updateLoadingStateContainer() {
 
 	for name, value := range loadingStates {
 		if value {
-			loadingStateContainer.Add(widget.NewLabel(strings.ReplaceAll(name, "_", " ")))
+			fyne.Do(func() {
+				loadingStateContainer.Add(widget.NewLabel(strings.ReplaceAll(name, "_", " ")))
+			})
 		}
 	}
-
-	loadingStateContainer.Refresh()
+	fyne.Do(func() {
+		loadingStateContainer.Refresh()
+	})
 }
 
 func hasActiveLoadingStates() bool {

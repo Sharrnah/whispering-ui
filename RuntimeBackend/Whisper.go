@@ -153,11 +153,13 @@ func (c *WhisperProcessConfig) AttachEnvironment(envName, envValue string) {
 func (c *WhisperProcessConfig) processLogOutputLine(line string, isUpdating bool) {
 	// Try to decode if the line contains a progress percentage
 	progress, err := Utilities.ParseProgressFromString(line)
-	if err == nil {
-		Fields.Field.StatusBar.SetValue(progress)
-	} else {
-		Fields.Field.StatusBar.SetValue(0)
-	}
+	fyne.Do(func() {
+		if err == nil {
+			Fields.Field.StatusBar.SetValue(progress)
+		} else {
+			Fields.Field.StatusBar.SetValue(0)
+		}
+	})
 
 	if !isUpdating {
 		// Try to decode the line as loading JSON message
@@ -186,10 +188,15 @@ func (c *WhisperProcessConfig) processLogOutputLine(line string, isUpdating bool
 func (c *WhisperProcessConfig) processErrorOutputLine(line string, isUpdating bool) {
 	// Try to decode if the line contains a progress percentage
 	progress, err := Utilities.ParseProgressFromString(line)
+
 	if err == nil {
-		Fields.Field.StatusBar.SetValue(progress)
+		fyne.Do(func() {
+			Fields.Field.StatusBar.SetValue(progress)
+		})
 	} else {
-		Fields.Field.StatusBar.SetValue(0)
+		fyne.Do(func() {
+			Fields.Field.StatusBar.SetValue(0)
+		})
 	}
 
 	if !isUpdating {
@@ -220,7 +227,9 @@ func (c *WhisperProcessConfig) processErrorOutputLine(line string, isUpdating bo
 				})
 				localHub.Flush(Logging.FlushTimeoutDefault)
 			}
-			dialog.ShowError(newError, currentMainWindow)
+			fyne.Do(func() {
+				dialog.ShowError(newError, currentMainWindow)
+			})
 		}
 
 		// Try to decode the line as loading JSON message
@@ -243,7 +252,9 @@ func (c *WhisperProcessConfig) processErrorOutputLine(line string, isUpdating bo
 	}
 
 	// set last log line to status bar text.
-	Fields.DataBindings.StatusTextBinding.Set(line)
+	fyne.Do(func() {
+		Fields.DataBindings.StatusTextBinding.Set(line)
+	})
 }
 
 func (c *WhisperProcessConfig) SetOutputHandling(stderr io.Reader, processLineFunc func(string, bool)) {
@@ -383,17 +394,21 @@ func RestartBackend(confirmation bool, confirmationText string) {
 		// close running backend process
 		if len(BackendsList) > 0 && BackendsList[0].IsRunning() {
 			infinityProcessDialog := dialog.NewCustom(lang.L("Restarting Backend"), lang.L("OK"), container.NewVBox(widget.NewLabel(lang.L("Restarting Backend")+"..."), widget.NewProgressBarInfinite()), currentMainWindow)
-			infinityProcessDialog.Show()
-			infinityProcessDialog.SetOnClosed(func() {
-				if isNewWindow {
-					currentMainWindow.Close()
-				}
+			fyne.Do(func() {
+				infinityProcessDialog.Show()
+				infinityProcessDialog.SetOnClosed(func() {
+					if isNewWindow {
+						currentMainWindow.Close()
+					}
+				})
 			})
 			BackendsList[0].Stop()
 			time.Sleep(2 * time.Second)
 			BackendsList[0].Start()
-			infinityProcessDialog.Hide()
-			Fields.DataBindings.SpeechToTextEnabledDataBinding.Set(true)
+			fyne.Do(func() {
+				infinityProcessDialog.Hide()
+				Fields.DataBindings.SpeechToTextEnabledDataBinding.Set(true)
+			})
 		}
 	}
 	if confirmation {
@@ -402,8 +417,57 @@ func RestartBackend(confirmation bool, confirmationText string) {
 				restartFunction()
 			}
 		}, currentMainWindow)
-		confirmationDialog.Show()
+		fyne.Do(func() {
+			confirmationDialog.Show()
+		})
 	} else {
 		restartFunction()
 	}
+}
+
+func ErrorReportWithLog(errorReportWindow fyne.Window) {
+	infoTitle := widget.NewLabel(lang.L("Please enter a description of the error."))
+	attachLogCheckbox := widget.NewCheck(lang.L("Attach log file"), nil)
+	attachLogCheckbox.SetChecked(true)
+	attachHardwareCheckbox := widget.NewCheck(lang.L("Attach hardware information (GPU Memory, GPU Vendor, GPU Adapter)"), nil)
+	attachHardwareCheckbox.SetChecked(true)
+	emailEntry := widget.NewEntry()
+	emailEntry.PlaceHolder = lang.L("E-Mail Address (Optional)")
+	textErrorReportInput := widget.NewMultiLineEntry()
+	if errorReportWindow == nil {
+		errorReportWindow, _ = Utilities.GetCurrentMainWindow("Error Report")
+	}
+	errorReportDialog := dialog.NewCustomConfirm(lang.L("Send error report"), lang.L("Send"), lang.L("Cancel"),
+		container.NewBorder(container.NewVBox(emailEntry, infoTitle), container.NewVBox(attachLogCheckbox, attachHardwareCheckbox), nil, nil, textErrorReportInput),
+		func(confirm bool) {
+			if confirm {
+				// Send error to Server
+				localHub := Logging.CloneHub()
+				logfile := "-"
+				if attachLogCheckbox.Checked {
+					logfile = strings.Join(BackendsList[0].RecentLog, "\n")
+				}
+				localHub.WithScope(func(scope *sentry.Scope) {
+					scope.SetTag("report_type", "User Report")
+					if !attachHardwareCheckbox.Checked {
+						scope.RemoveTag("GPU Memory")
+						scope.RemoveTag("GPU Vendor")
+						scope.RemoveTag("GPU Adapter")
+						scope.RemoveTag("GPU Compute Capability")
+					}
+					scope.SetUser(sentry.User{Email: emailEntry.Text})
+					scope.SetContext("report", map[string]interface{}{
+						"log": logfile,
+					})
+					localHub.CaptureMessage(textErrorReportInput.Text)
+				})
+				localHub.Flush(Logging.FlushTimeoutDefault)
+				dialog.NewInformation(lang.L("Error Report Sent"), lang.L("Your error report has been sent."), errorReportWindow).Show()
+			}
+		},
+		errorReportWindow,
+	)
+	windowSize := Utilities.GetInlineDialogSize(errorReportWindow, fyne.NewSize(100, 200), fyne.NewSize(200, 200), errorReportWindow.Canvas().Size())
+	errorReportDialog.Resize(windowSize)
+	errorReportDialog.Show()
 }
