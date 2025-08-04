@@ -354,5 +354,11 @@
     "tts_streamed_chunk_size.Description": "Taille des blocs pour le streaming audio (si pris en charge par le service TTS)",
     "Reset": "Remise à zéro",
     "Reset Plugin Settings": "Réinitialiser les paramètres du plugin - {{.PluginClassName}}",
-    "Are you sure you want to reset the settings for this plugin?": "Êtes-vous sûr de vouloir réinitialiser les paramètres de {{.PluginClassName}}?"
+    "Are you sure you want to reset the settings for this plugin?": "Êtes-vous sûr de vouloir réinitialiser les paramètres de {{.PluginClassName}}?",
+    "It looks like you are running Whispering Tiger from a temporary directory. Please extract the application and run it from a different folder.": "Il semble que vous exécutiez Whispering Tiger à partir d'un répertoire temporaire.\n\nVeuillez extraire l'application et l'exécuter à partir d'un autre dossier.",
+    "Low Disk Space": "Espace disque réduit",
+    "Only ? GB free space remaining. The space might not be enough.": "Il ne reste plus que {{.SpaceRemaining}} Go d'espace libre sur {{.Directory}}.\n\nIl se peut que l'espace soit insuffisant.",
+    "Quit running backend": "Quitter l'exécution du backend",
+    "Integrated Image-to-Text": "Intégration de l'image au texte",
+    "A.I. Device for Image-to-Text": "Dispositif d'I.A. pour la conversion d'images en textes"
 }
