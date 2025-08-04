@@ -343,5 +343,11 @@
     "tts_streamed_playback.Name": "如果支持流式播放",
     "Reset": "重置",
     "Reset Plugin Settings": "重置插件设置{{.PluginClassName}}",
-    "Are you sure you want to reset the settings for this plugin?": "您确定要重置{{.PluginClassName}} 的设置吗？"
+    "Are you sure you want to reset the settings for this plugin?": "您确定要重置{{.PluginClassName}} 的设置吗？",
+    "It looks like you are running Whispering Tiger from a temporary directory. Please extract the application and run it from a different folder.": "看起来你是从临时目录运行 Whispering Tiger 的。\n\n请解压缩应用程序，然后从其他文件夹运行。",
+    "Low Disk Space": "磁盘空间小",
+    "Only ? GB free space remaining. The space might not be enough.": "{{.Directory}} 仅剩余{{.SpaceRemaining}} GB 可用空间。\n\n空间可能不够。",
+    "Quit running backend": "退出后台运行",
+    "Integrated Image-to-Text": "集成图像到文本",
+    "A.I. Device for Image-to-Text": "图像到文本的人工智能设备"
 }
