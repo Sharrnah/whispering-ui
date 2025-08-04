@@ -343,5 +343,11 @@
     "Additional Translation Languages": "لغات الترجمة الإضافية",
     "Reset": "إعادة تعيين",
     "Reset Plugin Settings": "إعادة تعيين إعدادات المكون الإضافي - {{.PluginClassName}}",
-    "Are you sure you want to reset the settings for this plugin?": "هل أنت متأكد من أنك تريد إعادة تعيين الإعدادات لـ {{.PluginClassName}} ؟"
+    "Are you sure you want to reset the settings for this plugin?": "هل أنت متأكد من أنك تريد إعادة تعيين الإعدادات لـ {{.PluginClassName}} ؟",
+    "It looks like you are running Whispering Tiger from a temporary directory. Please extract the application and run it from a different folder.": "يبدو أنك تقوم بتشغيل Whispering Tiger من دليل مؤقت.\n\nيرجى استخراج التطبيق وتشغيله من مجلد مختلف.",
+    "Low Disk Space": "انخفاض مساحة القرص",
+    "Only ? GB free space remaining. The space might not be enough.": "فقط {{.SpaceRemaining}} جيجابايت المساحة الخالية المتبقية في {{.Directory}}.\n\nقد لا تكون المساحة كافية.",
+    "Quit running backend": "إنهاء تشغيل الواجهة الخلفية",
+    "Integrated Image-to-Text": "صورة مدمجة إلى نص مدمجة",
+    "A.I. Device for Image-to-Text": "جهاز الذكاء الاصطناعي لتحويل الصور إلى نصوص"
 }
