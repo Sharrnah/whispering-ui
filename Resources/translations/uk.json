@@ -343,5 +343,11 @@
     "tts_streamed_chunk_size.Description": "Розмір фрагмента для потокового аудіо (якщо підтримується службою TTS)",
     "Reset Plugin Settings": "Скинути налаштування плагіна - {{.PluginClassName}}",
     "Are you sure you want to reset the settings for this plugin?": "Ви впевнені, що хочете скинути налаштування для {{.PluginClassName}}?",
-    "Reset": "Перезавантаження"
+    "Reset": "Перезавантаження",
+    "It looks like you are running Whispering Tiger from a temporary directory. Please extract the application and run it from a different folder.": "Схоже, що ви запускаєте Whispering Tiger з тимчасового каталогу.\n\nБудь ласка, розпакуйте програму і запустіть її з іншої теки.",
+    "Low Disk Space": "Мало місця на диску",
+    "Only ? GB free space remaining. The space might not be enough.": "На {{.Directory}} залишилося лише {{.SpaceRemaining}} ГБ вільного місця.\n\nМісця може не вистачити.",
+    "Quit running backend": "Припиніть запускати бекенд",
+    "Integrated Image-to-Text": "Інтегроване перетворення зображення в текст",
+    "A.I. Device for Image-to-Text": "Пристрій штучного інтелекту для перетворення зображень на текст"
 }
