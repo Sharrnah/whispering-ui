@@ -343,5 +343,11 @@
     "tts_streamed_chunk_size.Description": "오디오 스트리밍을 위한 청크 크기(TTS 서비스에서 지원하는 경우)",
     "Reset Plugin Settings": "플러그인 설정 재설정 - {{.PluginClassName}}",
     "Are you sure you want to reset the settings for this plugin?": "{{.PluginClassName}} 설정을 재설정하시겠습니까?",
-    "Reset": "초기화"
+    "Reset": "초기화",
+    "It looks like you are running Whispering Tiger from a temporary directory. Please extract the application and run it from a different folder.": "임시 디렉토리에서 위스퍼링 타이거를 실행하고 있는 것 같습니다.\n\n애플리케이션을 압축을 풀고 다른 폴더에서 실행하세요.",
+    "Low Disk Space": "디스크 공간 부족",
+    "Only ? GB free space remaining. The space might not be enough.": "{{.Directory}} 에 남은 여유 공간은 {{.SpaceRemaining}} GB 뿐입니다.\n\n공간이 부족할 수 있습니다.",
+    "Quit running backend": "백엔드 실행 종료",
+    "Integrated Image-to-Text": "통합 이미지-텍스트 변환",
+    "A.I. Device for Image-to-Text": "이미지-텍스트 변환을 위한 인공지능 장치"
 }
