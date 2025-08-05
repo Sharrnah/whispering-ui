@@ -17,7 +17,7 @@ Supported Tags are:
 F5-TTS is a TTS Model that supports voice cloning based on an audio sample with fast inference and Multi-Style / Multi-Speaker Generation.
 
 Demo:
-<video src='https://github.com/user-attachments/assets/4a283d33-59cd-42bf-8209-172fcecc0ad7' width=100></video>
+<video src='https://github.com/user-attachments/assets/eac658cc-13aa-482d-93a8-fb38ca410dbc' width=300></video>
 
 The speed can be set globally in the Settings.
 
@@ -40,13 +40,13 @@ To generate audio with different speakers, you can add the Speaker name at the b
 Kokoro-TTS is a multi-lingual TTS Model that supports fast inference with high quality.
 
 Demo:
-<video src='https://github.com/user-attachments/assets/cdef92d3-059e-4197-a0cf-2630c4b77c66' width=100></video>
+<video src='https://github.com/user-attachments/assets/8bd6ecb8-1f67-4b97-abac-dc218d8590fa' width=300></video>
 
 ## Zonos-TTS
 Zonos-TTS is a TTS Model that supports voice cloning based on an audio samples.
 
 Demo:
-<video src='https://github.com/user-attachments/assets/5bfb475d-8baa-40b1-8b77-05d7f3dc3033' width=100></video>
+<video src='https://github.com/user-attachments/assets/b1641287-43c9-4b96-946a-3f62112037f2' width=300></video>
 
 The model is also multi-lingual and supports emotion settings.
 
@@ -60,11 +60,12 @@ To add your own voice, go to the `.cache\zonos-tts-cache\voices` directory
 Orpheus TTS is a TTS Model that supports natural intonation, emotion, and rhythm.
 
 Demo:
-<video src='https://github.com/user-attachments/assets/53e3996b-366c-4ea7-a10b-442a8359fecb' width=100></video>
+<video src='https://github.com/user-attachments/assets/a5d2b890-4b98-4d08-b5bb-5f3fd24fc51c' width=300></video>
 
 Tags to control speech and emotion characteristics:
 
 `<laugh>`, `<chuckle>`, `<sigh>`, `<cough>`, `<sniffle>`, `<groan>`, `<yawn>`, `<gasp>`
+
 
 
 
