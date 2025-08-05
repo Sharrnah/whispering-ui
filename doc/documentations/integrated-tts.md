@@ -5,7 +5,7 @@ Silero-TTS is the simplest solution and supports different models for different 
 Silero-TTS supports SSML by which you can change the behaviour in the text.
 
 Demo:
-<video src='https://github.com/user-attachments/assets/05803372-0e53-431a-a99e-e067de0e6982' width=200></video>
+<video src='https://github.com/user-attachments/assets/05803372-0e53-431a-a99e-e067de0e6982' width=300></video>
 
 Supported Tags are:
 - break `<break time="2000ms" strength="x-weak"/>` where _time_ can be in milliseconds (**ms**) or seconds (**s**) and _strength_ can be **x-weak, weak, medium, strong, x-strong** 
@@ -65,5 +65,6 @@ Demo:
 Tags to control speech and emotion characteristics:
 
 `<laugh>`, `<chuckle>`, `<sigh>`, `<cough>`, `<sniffle>`, `<groan>`, `<yawn>`, `<gasp>`
+
 
 
