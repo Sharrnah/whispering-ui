@@ -46,7 +46,7 @@ Demo:
 Zonos-TTS is a TTS Model that supports voice cloning based on an audio samples.
 
 Demo:
-<video src='https://github.com/user-attachments/assets/b1641287-43c9-4b96-946a-3f62112037f2' width=300></video>
+<video src='https://github.com/user-attachments/assets/9e7121e5-6321-47d0-a3b2-e99d2dba46ed' width=300></video>
 
 The model is also multi-lingual and supports emotion settings.
 
@@ -65,6 +65,7 @@ Demo:
 Tags to control speech and emotion characteristics:
 
 `<laugh>`, `<chuckle>`, `<sigh>`, `<cough>`, `<sniffle>`, `<groan>`, `<yawn>`, `<gasp>`
+
 
 
 
