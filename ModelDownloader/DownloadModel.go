@@ -128,12 +128,17 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 	os.MkdirAll(downloadTargetDir, 0755)
 	//downloadTargetFile := filepath.Join(downloadTargetDir, filename)
 
+	// guard for adding the infinite bar only once
+	var infiniteOnce sync.Once
+
 	downloader.WriteCounter.OnProgress = func(progress, total uint64, speed float64) {
 		if int64(total) == -1 {
-			fyne.Do(func() {
-				statusBarContainer.Remove(statusBar)
-				statusBarContainer.Add(widget.NewProgressBarInfinite())
-				statusBarContainer.Refresh()
+			infiniteOnce.Do(func() {
+				fyne.Do(func() {
+					statusBarContainer.Remove(statusBar)
+					statusBarContainer.Add(widget.NewProgressBarInfinite())
+					statusBarContainer.Refresh()
+				})
 			})
 		} else {
 			fyne.Do(func() {
