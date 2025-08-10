@@ -292,6 +292,9 @@ func (c *CompletionEntry) selectCurrentItem() {
 }
 
 func (c *CompletionEntry) SelectItemByValue(s string) {
+	if c.navigableList == nil {
+		return
+	}
 	c.navigableList.navigating = true
 	c.navigableList.UnselectAll()
 	c.navigableList.selected = -1
