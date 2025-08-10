@@ -120,9 +120,9 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 	}
 	if Settings.Config.Stt_type == "voxtral" {
 
-		noAutoFilterFunc := func(text string) []string {
+		noAutoFilterFunc := func(text string, itemList []string) []string {
 			var filteredValues []string
-			for _, option := range Fields.Field.TranscriptionSpeakerLanguageCombo.Options {
+			for _, option := range itemList {
 				if option != "" && strings.ToLower(option) != "auto" {
 					filteredValues = append(filteredValues, option)
 				}
@@ -166,7 +166,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 			} else if s.Value == "translate" {
 				Fields.Field.TranscriptionSpeakerLanguageCombo.Enable()
 				Fields.Field.TranscriptionSpeakerLanguageCombo.SetBaseFilterFunc(noAutoFilterFunc)
-				_ = noAutoFilterFunc(Fields.Field.TranscriptionSpeakerLanguageCombo.Text)
+				_ = noAutoFilterFunc(Fields.Field.TranscriptionSpeakerLanguageCombo.Text, Fields.Field.TranscriptionSpeakerLanguageCombo.Options)
 				speechLanguageLabel.SetText(lang.L("Target Language") + ":")
 			} else {
 				Fields.Field.TranscriptionSpeakerLanguageCombo.Enable()
@@ -240,7 +240,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		} else if Settings.Config.Whisper_task == "translate" {
 			Fields.Field.TranscriptionSpeakerLanguageCombo.Enable()
 			Fields.Field.TranscriptionSpeakerLanguageCombo.SetBaseFilterFunc(noAutoFilterFunc)
-			_ = noAutoFilterFunc(Fields.Field.TranscriptionSpeakerLanguageCombo.Text)
+			_ = noAutoFilterFunc(Fields.Field.TranscriptionSpeakerLanguageCombo.Text, Fields.Field.TranscriptionSpeakerLanguageCombo.Options)
 			speechLanguageLabel.SetText(lang.L("Target Language") + ":")
 		} else {
 			Fields.Field.TranscriptionSpeakerLanguageCombo.Enable()
