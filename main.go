@@ -150,11 +150,12 @@ func main() {
 		// AMD ROCm support (Todo: does this work with NVIDIA?)
 		RuntimeBackend.BackendsList[0].AttachEnvironment("HSA_OVERRIDE_GFX_VERSION", "10.3.0")
 
+		// get ui exe path
+		appExec, _ := os.Executable()
+		appPath := filepath.Dir(appExec)
+
 		// RuntimeBackend.BackendsList[0].AttachEnvironment("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
 		if Utilities.FileExists("ffmpeg/bin/ffmpeg.exe") {
-			appExec, _ := os.Executable()
-			appPath := filepath.Dir(appExec)
-
 			RuntimeBackend.BackendsList[0].AttachEnvironment("Path", filepath.Join(appPath, "ffmpeg/bin"))
 		}
 		if Settings.Config.Run_backend {
