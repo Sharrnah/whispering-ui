@@ -441,8 +441,15 @@ func ErrorReportWithLog(errorReportWindow fyne.Window) {
 		container.NewBorder(container.NewVBox(emailEntry, infoTitle), container.NewVBox(attachLogCheckbox, attachHardwareCheckbox), nil, nil, textErrorReportInput),
 		func(confirm bool) {
 			if confirm {
-				// Send error to Server
+				// Prepare report message with fallback if empty
 				localHub := Logging.CloneHub()
+				var message string
+				if textErrorReportInput != nil && textErrorReportInput.Text != "" {
+					message = strings.TrimSpace(textErrorReportInput.Text)
+				}
+				if message == "" {
+					message = "(No description provided)"
+				}
 				logfile := "-"
 				if attachLogCheckbox.Checked {
 					logfile = strings.Join(BackendsList[0].RecentLog, "\n")
@@ -459,7 +466,7 @@ func ErrorReportWithLog(errorReportWindow fyne.Window) {
 					scope.SetContext("report", map[string]interface{}{
 						"log": logfile,
 					})
-					localHub.CaptureMessage(textErrorReportInput.Text)
+					localHub.CaptureMessage(message)
 				})
 				localHub.Flush(Logging.FlushTimeoutDefault)
 				dialog.NewInformation(lang.L("Error Report Sent"), lang.L("Your error report has been sent."), errorReportWindow).Show()
