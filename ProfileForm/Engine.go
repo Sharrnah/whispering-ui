@@ -1,4 +1,4 @@
-package Pages
+package ProfileForm
 
 import (
 	"fmt"
@@ -64,11 +64,11 @@ type FormEngine struct {
 	Coord    *Coordinator
 	// Bindings map profile setting field names (lowercase) to concrete controls
 	// so generic load/save can work without manual wiring per field in loader code.
-	Bindings map[string]interface{}
+	Bindings map[string]any
 }
 
 func NewFormEngine(c *AllProfileControls, coord *Coordinator) *FormEngine {
-	return &FormEngine{Controls: c, Coord: coord, Bindings: map[string]interface{}{}}
+	return &FormEngine{Controls: c, Coord: coord, Bindings: map[string]any{}}
 }
 
 // Helper to set options for a select with graceful fallback to a valid selection
@@ -94,12 +94,12 @@ func (e *FormEngine) SetOptionsWithFallback(sel *CustomWidget.TextValueSelect, o
 }
 
 // Register binds a settings field name to a control for generic load/save
-func (e *FormEngine) Register(settingKey string, control interface{}) {
+func (e *FormEngine) Register(settingKey string, control any) {
 	if e == nil || settingKey == "" || control == nil {
 		return
 	}
 	if e.Bindings == nil {
-		e.Bindings = map[string]interface{}{}
+		e.Bindings = map[string]any{}
 	}
 	e.Bindings[settingKey] = control
 }
@@ -202,7 +202,7 @@ func (e *FormEngine) LoadFromSettings(conf *Settings.Conf) {
 }
 
 // getOptionByLowercase retrieves a field value from Settings.Conf by matching the lowercase key
-func (e *FormEngine) getOptionByLowercase(conf *Settings.Conf, key string) interface{} {
+func (e *FormEngine) getOptionByLowercase(conf *Settings.Conf, key string) any {
 	if conf == nil || key == "" {
 		return nil
 	}
