@@ -5,17 +5,6 @@ import (
 	"encoding/binary"
 	"errors"
 	"fmt"
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/canvas"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
-	"fyne.io/fyne/v2/lang"
-	"fyne.io/fyne/v2/layout"
-	"fyne.io/fyne/v2/theme"
-	"fyne.io/fyne/v2/widget"
-	"github.com/gen2brain/malgo"
-	"github.com/getsentry/sentry-go"
-	"github.com/youpy/go-wav"
 	"image/color"
 	"io"
 	"math"
@@ -37,6 +26,18 @@ import (
 	"whispering-tiger-ui/Utilities"
 	"whispering-tiger-ui/Utilities/AudioAPI"
 	"whispering-tiger-ui/Utilities/Hardwareinfo"
+
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/lang"
+	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/theme"
+	"fyne.io/fyne/v2/widget"
+	"github.com/gen2brain/malgo"
+	"github.com/getsentry/sentry-go"
+	"github.com/youpy/go-wav"
 )
 
 type CurrentPlaybackDevice struct {
@@ -381,83 +382,19 @@ func (c *CurrentPlaybackDevice) Init() {
 		}
 	}()
 
-	// run as long as no stop signal is received
+	// wait for a single stop signal and then clean up
 	c.stopChannel = make(chan bool)
-	for {
-		select {
-		case <-c.stopChannel:
-			fmt.Println("stopping...")
-			if c.device != nil {
-				c.device.Uninit()
-				c.device = nil
-			}
-			return
-		}
+	<-c.stopChannel
+	fmt.Println("stopping...")
+	if c.device != nil {
+		c.device.Uninit()
+		c.device = nil
 	}
 }
 
 // isMultiModalModelPair checks if two model selections represent the same multi-modal model
 // Multi-modal models (seamless_m4t, phi4, voxtral) can be shared between different AI tasks
-func isMultiModalModelPair(select1, select2 *CustomWidget.TextValueSelect) bool {
-	if select1.GetSelected() == nil || select2.GetSelected() == nil {
-		return false
-	}
-
-	model1 := select1.GetSelected().Value
-	model2 := select2.GetSelected().Value
-
-	multiModalModels := []string{"seamless_m4t", "phi4", "voxtral"}
-
-	for _, model := range multiModalModels {
-		if model1 == model && model2 == model {
-			return true
-		}
-	}
-
-	return false
-}
-
-// syncMultiModalWidgets synchronizes settings between related widgets when using the same multi-modal model
-func syncMultiModalWidgets(
-	sourceValue string,
-	sourcePrecision, sourceDevice *CustomWidget.TextValueSelect,
-	targetSize, targetPrecision, targetDevice *CustomWidget.TextValueSelect,
-) {
-	// Set the target size to the source value
-	targetSize.SetSelected(sourceValue)
-
-	// Sync precision if the target contains the same option
-	if sourcePrecision.GetSelected() != nil && targetPrecision.ContainsEntry(sourcePrecision.GetSelected(), CustomWidget.CompareValue) {
-		targetPrecision.SetSelected(sourcePrecision.GetSelected().Value)
-	}
-
-	// Sync device if the target contains the same option
-	if sourceDevice.GetSelected() != nil && targetDevice.ContainsEntry(sourceDevice.GetSelected(), CustomWidget.CompareValue) {
-		targetDevice.SetSelected(sourceDevice.GetSelected().Value)
-	}
-
-	// Disable the target widgets since they're now synced
-	targetSize.Disable()
-	targetPrecision.Disable()
-	targetDevice.Disable()
-}
-
-// handleMultiModalModelSync handles the special case for multi-modal models and widget synchronization
-func handleMultiModalModelSync(
-	modelSelect1, modelSelect2 *CustomWidget.TextValueSelect,
-	sourceValue string,
-	sourcePrecision, sourceDevice *CustomWidget.TextValueSelect,
-	targetSize, targetPrecision, targetDevice *CustomWidget.TextValueSelect,
-) {
-	if isMultiModalModelPair(modelSelect1, modelSelect2) {
-		syncMultiModalWidgets(sourceValue, sourcePrecision, sourceDevice, targetSize, targetPrecision, targetDevice)
-	} else if modelSelect1.GetSelected() != nil && modelSelect1.GetSelected().Value != "" {
-		// Enable widgets when not using the same multi-modal model
-		targetSize.Enable()
-		targetPrecision.Enable()
-		targetDevice.Enable()
-	}
-}
+// (legacy multi-modal helpers removed; coordination handled by Coordinator)
 
 func GetAudioDevices(audioApi malgo.Backend, deviceTypes []malgo.DeviceType, deviceIndexStartPoint int, specialValueSuffix string, specialTextSuffix string) ([]CustomWidget.TextValueOption, []Utilities.AudioDevice, error) {
 	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
@@ -481,7 +418,7 @@ func GetAudioDevices(audioApi malgo.Backend, deviceTypes []malgo.DeviceType, dev
 		deviceList = append(deviceList, deviceListPart...)
 	}
 
-	if deviceList == nil || len(deviceList) == 0 {
+	if len(deviceList) == 0 {
 		return devicesOptions, nil, fmt.Errorf("no devices found")
 	}
 
@@ -530,7 +467,7 @@ func appendWidgetToForm(form *widget.Form, text string, itemWidget fyne.CanvasOb
 	form.AppendItem(item)
 }
 
-func stopAndClose(playBackDevice CurrentPlaybackDevice, onClose func()) {
+func stopAndClose(playBackDevice *CurrentPlaybackDevice, onClose func()) {
 	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
 		scope.SetTag("GoRoutine", "Pages\\Profiles->stopAndClose")
 	})
@@ -551,6 +488,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
 		scope.SetTag("GoRoutine", "Pages\\Profiles->CreateProfileWindow")
 	})
+
+	// Reset memory aggregation for a fresh session in this window
+	Hardwareinfo.AllProfileAIModelOptions = make([]Hardwareinfo.ProfileAIModelOption, 0)
 
 	createProfilePresetSelect := CustomWidget.NewTextValueSelect("Profile Preset", []CustomWidget.TextValueOption{
 		{Text: lang.L("(Select Preset)"), Value: ""},
@@ -583,56 +523,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	// fill audio device lists for later access
 	fillAudioDeviceLists()
 
-	audioInputSelect := CustomWidget.NewTextValueSelect("device_index", audioInputDevicesOptions,
-		func(s CustomWidget.TextValueOption) {
-			println(s.Value)
-			if s.Text != "" {
-				playBackDevice.InputDeviceName = s.Text
-				err := playBackDevice.InitDevices(false)
-				if err != nil {
-					var newError = fmt.Errorf("audio Input (mic): %v", err)
-					Logging.CaptureException(newError)
-					dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
-				}
-			} else {
-				var newError = fmt.Errorf("audio Input (mic): No device selected")
-				Logging.CaptureException(newError)
-				dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
-			}
-		},
-		0)
-
-	audioOutputSelect := CustomWidget.NewTextValueSelect("device_out_index", audioOutputDevicesOptions,
-		func(s CustomWidget.TextValueOption) {
-			println(s.Value)
-			if s.Text != "" {
-				playBackDevice.OutputDeviceName = s.Text
-				err := playBackDevice.InitDevices(true)
-				if err != nil {
-					var newError = fmt.Errorf("audio Output (speaker): %v", err)
-					Logging.CaptureException(newError)
-					dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
-				}
-			} else {
-				var newError = fmt.Errorf("audio Output (speaker): No device selected")
-				Logging.CaptureException(newError)
-				dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
-			}
-		},
-		0)
-
-	var audioOptions []CustomWidget.TextValueOption
-	for _, backend := range AudioAPI.AudioBackends {
-		audioOptions = append(audioOptions, CustomWidget.TextValueOption{
-			Text:  backend.Name,
-			Value: backend.Name,
-		})
-	}
-
-	audioApiSelect := CustomWidget.NewTextValueSelect("audio_api",
-		audioOptions,
-		func(s CustomWidget.TextValueOption) {},
-		0)
+	// Audio section will be built inside BuildProfileForm after engine initialization
 
 	// show memory usage
 	CPUMemoryBar := widget.NewProgressBar()
@@ -647,6 +538,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	GPUMemoryBar := widget.NewProgressBar()
 	totalGPUMemory := int64(0)
 	var ComputeCapability float32 = 0.0
+	HasNvidiaGPU := false
+	// Coordinator-Zeiger früh deklarieren, damit spätere Async-Updates zugreifen können
+	var coord *Coordinator
 	go func() {
 		foundGPUVendorName := "Unknown"
 		foundGPUAdapterName := ""
@@ -661,7 +555,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			if totalGPUMemory <= 0 {
 				// fall back to registry reading of Video Memory
 				foundGPU, _ := Hardwareinfo.FindDedicatedGPUByVendor([]string{"nvidia"})
-				if foundGPU != nil && len(foundGPU) > 0 {
+				if len(foundGPU) > 0 {
 					foundGPUAdapterName = foundGPU[0].AdapterName
 					totalGPUMemory = foundGPU[0].MemoryMB
 				}
@@ -670,12 +564,17 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		} else {
 			foundGPUVendorName = "Other"
 			foundGPU, _ := Hardwareinfo.FindDedicatedGPUByVendor([]string{"nvidia", "amd", "intel"})
-			if foundGPU != nil && len(foundGPU) > 0 {
+			if len(foundGPU) > 0 {
 				foundGPUVendorName = foundGPU[0].VendorName
 				foundGPUAdapterName = foundGPU[0].AdapterName
 				totalGPUMemory = foundGPU[0].MemoryMB
 			}
 			GPUMemoryBar.Max = float64(totalGPUMemory)
+		}
+
+		// Cache, ob NVIDIA vorhanden ist
+		if strings.Contains(strings.ToLower(foundGPUVendorName), "nvidia") {
+			HasNvidiaGPU = true
 		}
 		ComputeCapability = Hardwareinfo.GetGPUComputeCapability()
 
@@ -690,62 +589,76 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		fyne.Do(func() {
 			GPUInformationLabel.SetText("Compute Capability: " + fmt.Sprintf("%.1f", ComputeCapability))
 		})
+
 		// refresh memory consumption labels
 		AIModel := Hardwareinfo.ProfileAIModelOption{}
 		AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
+
+		// Aktualisiere ggf. den Coordinator mit dem ermittelten Gesamt-GPU-RAM,
+		// damit spätere Modellwechsel den Maximalwert korrekt setzen können
+		fyne.Do(func() {
+			if coord != nil {
+				coord.TotalGPUMemoryMiB = totalGPUMemory
+				if GPUMemoryBar.Max <= 0 && totalGPUMemory > 0 {
+					GPUMemoryBar.Max = float64(totalGPUMemory)
+					GPUMemoryBar.Refresh()
+				}
+			}
+		})
 	}()
 
 	GPUMemoryBar.TextFormatter = func() string {
-		if totalGPUMemory == 0 {
+		// Zeige den Maximalwert aus der ProgressBar (wird nach GPU-Detect gesetzt)
+		if GPUMemoryBar.Max <= 0 {
 			return lang.L("Estimated Video-RAM Usage:") + " " + strconv.Itoa(int(GPUMemoryBar.Value)) + " MiB"
 		}
 		return lang.L("Estimated Video-RAM Usage:") + " " + strconv.Itoa(int(GPUMemoryBar.Value)) + " / " + strconv.Itoa(int(GPUMemoryBar.Max)) + " MiB"
 	}
 
 	isLoadingSettingsFile := false
+	// Controls struct holds all widget references for clean load/save
+	controls := &AllProfileControls{}
+	// Form engine for generic load/save mapping
+	var engine *FormEngine
+	// Coordinator wird weiter unten initialisiert (siehe coord = &Coordinator{...})
 
 	BuildProfileForm := func() fyne.CanvasObject {
 		profileForm := widget.NewForm()
-		websocketIp := widget.NewEntry()
-		websocketIp.SetText("127.0.0.1")
-		websocketPort := widget.NewEntry()
-		websocketPort.SetText("5000")
+		// Form engine to centralize option updates and fallbacks
+		engine = NewFormEngine(controls, nil)
+		// Use builder for connection row
+		builder := NewProfileBuilder()
+		connectionRow := builder.BuildConnectionSection(engine)
+		// Build audio section now that engine exists
+		audioSection := builder.BuildAudioSection(engine, audioInputDevicesOptions, audioOutputDevicesOptions)
 
 		audioInputProgress := playBackDevice.InputWaveWidget
 		audioOutputProgress := container.NewBorder(nil, nil, nil, widget.NewButtonWithIcon(lang.L("Test"), theme.MediaPlayIcon(), func() {
 			playBackDevice.PlayStopTestAudio()
 		}), playBackDevice.OutputWaveWidget)
 
-		runBackendCheckbox := widget.NewCheck(lang.L("Run Backend"), func(b bool) {
+		runBackendCheckbox := engine.Controls.RunBackend
+		runBackendCheckbox.OnChanged = func(b bool) {
 			if !b {
 				dialog.ShowInformation(lang.L("Information"), lang.L("The backend will not be started. You will have to start it manually or remotely. Without it, the UI will have no function."), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
-		})
+		}
+		engine.Register("run_backend", runBackendCheckbox)
 
-		ocrAiDeviceSelect := CustomWidget.NewTextValueSelect("ocr_ai_device", []CustomWidget.TextValueOption{
-			{Text: "CPU", Value: "cpu"},
-			{Text: "CUDA", Value: "cuda"},
-		}, func(s CustomWidget.TextValueOption) {
-			// calculate memory consumption
-			AIModel := Hardwareinfo.ProfileAIModelOption{
-				AIModel: "ocrType",
-				Device:  s.Value,
-			}
+		// Build OCR section via builder
+		ocrSection := builder.BuildOCRSection(engine)
+		controls.OCRDevice = ocrSection.DeviceSelect
+		controls.OCRType = ocrSection.TypeSelect
+		controls.OCRPrecision = ocrSection.PrecisionSelect
+		// Memory calc handlers preserved
+		ocrSection.DeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+			AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: "ocrType", Device: s.Value}
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
-		}, 0)
-
-		ocrTypeSelect := CustomWidget.NewTextValueSelect("ocr_type", []CustomWidget.TextValueOption{
-			{Text: "Easy OCR", Value: "easyocr"},
-			{Text: "GOT OCR 2.0", Value: "got_ocr_20"},
-			{Text: "Phi-4", Value: "phi4"},
-			{Text: lang.L("Disabled"), Value: ""},
-		}, func(s CustomWidget.TextValueOption) {}, 0)
-
-		ocrPrecisionSelect := CustomWidget.NewTextValueSelect("ocr_precision", []CustomWidget.TextValueOption{
-			{Text: "float32 " + lang.L("precision"), Value: "float32"},
-			{Text: "float16 " + lang.L("precision"), Value: "float16"},
-			{Text: "bfloat16 " + lang.L("precision"), Value: "bfloat16"},
-		}, func(s CustomWidget.TextValueOption) {
+			if coord != nil && !coord.InProgrammaticUpdate {
+				coord.HandleMultiModalAllSync()
+			}
+		}
+		ocrSection.PrecisionSelect.OnChanged = func(s CustomWidget.TextValueOption) {
 			precisionType := Hardwareinfo.Float32
 			switch s.Value {
 			case "float32":
@@ -769,55 +682,81 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			case "4bit":
 				precisionType = Hardwareinfo.Bit4
 			}
-			// calculate memory consumption
-			AIModel := Hardwareinfo.ProfileAIModelOption{
-				AIModel:   "ocrType",
-				Precision: precisionType,
-			}
+			AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: "ocrType", Precision: precisionType}
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
-		}, 0)
+			if coord != nil && !coord.InProgrammaticUpdate {
+				coord.HandleMultiModalAllSync()
+			}
+		}
 
-		appendWidgetToForm(profileForm, lang.L("Websocket IP + Port"), container.NewGridWithColumns(3, websocketIp, websocketPort, runBackendCheckbox), lang.L("IP + Port of the websocket server the backend will start and the UI will connect to."))
+		appendWidgetToForm(profileForm, lang.L("Websocket IP + Port"), connectionRow, lang.L("IP + Port of the websocket server the backend will start and the UI will connect to."))
 		profileForm.Append("", layout.NewSpacer())
 
-		appendWidgetToForm(profileForm, lang.L("Audio API"), audioApiSelect, "")
+		appendWidgetToForm(profileForm, lang.L("Audio API"), audioSection.ApiSelect, "")
+		controls.AudioAPI = audioSection.ApiSelect
+		engine.Register("audio_api", audioSection.ApiSelect)
 
-		appendWidgetToForm(profileForm, lang.L("Audio Input (mic)"), audioInputSelect, "")
+		appendWidgetToForm(profileForm, lang.L("Audio Input (mic)"), audioSection.InputSelect, "")
+		controls.AudioInput = audioSection.InputSelect
+		engine.Register("device_index", audioSection.InputSelect)
 
 		profileForm.Append("", audioInputProgress)
 
-		appendWidgetToForm(profileForm, lang.L("Audio Output (speaker)"), audioOutputSelect, "")
+		appendWidgetToForm(profileForm, lang.L("Audio Output (speaker)"), audioSection.OutputSelect, "")
+		controls.AudioOutput = audioSection.OutputSelect
+		engine.Register("device_out_index", audioSection.OutputSelect)
 
 		profileForm.Append("", audioOutputProgress)
 
-		vadConfidenceSliderState := widget.NewLabel("0.00")
-		vadConfidenceSliderWidget := widget.NewSlider(0, 1)
-		vadConfidenceSliderWidget.Step = 0.01
-		vadConfidenceSliderWidget.OnChanged = func(value float64) {
-			vadConfidenceSliderState.SetText(fmt.Sprintf("%.2f", value))
+		// Build VAD section via UI builder
+		vadSection := builder.BuildVADSection(engine)
+		controls.VadEnable = vadSection.EnableCheck
+		controls.VadOnFullClip = vadSection.OnFullClipCheck
+		controls.VadRealtime = vadSection.RealtimeCheck
+		controls.PushToTalk = vadSection.PushToTalk
+		controls.VadConfidence = vadSection.ConfidenceSlider
+
+		// Wire audio input/output selection behavior
+		audioSection.InputSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+			println(s.Value)
+			if s.Text != "" {
+				playBackDevice.InputDeviceName = s.Text
+				if err := playBackDevice.InitDevices(false); err != nil {
+					var newError = fmt.Errorf("audio Input (mic): %v", err)
+					Logging.CaptureException(newError)
+					dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
+				}
+			} else {
+				var newError = fmt.Errorf("audio Input (mic): No device selected")
+				Logging.CaptureException(newError)
+				dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
+			}
+		}
+		audioSection.OutputSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+			println(s.Value)
+			if s.Text != "" {
+				playBackDevice.OutputDeviceName = s.Text
+				if err := playBackDevice.InitDevices(true); err != nil {
+					var newError = fmt.Errorf("audio Output (speaker): %v", err)
+					Logging.CaptureException(newError)
+					dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
+				}
+			} else {
+				var newError = fmt.Errorf("audio Output (speaker): No device selected")
+				Logging.CaptureException(newError)
+				dialog.ShowError(newError, fyne.CurrentApp().Driver().AllWindows()[1])
+			}
 		}
 
-		vadOnFullClipCheckbox := widget.NewCheck("+ Check on Full Clip", func(b bool) {})
-		vadOnFullClipCheckbox.Hide() // hide for now as it does not seem very useful
-
-		vadRealtimeCheckbox := widget.NewCheck(lang.L("Realtime"), func(b bool) {})
-
-		PushToTalkInput := CustomWidget.NewHotKeyEntry()
-		PushToTalkInput.PlaceHolder = lang.L("Keypress")
-
-		pushToTalkBlock := container.NewBorder(nil, nil, container.NewHBox(widget.NewLabel(lang.L("Push to Talk")), widget.NewIcon(theme.ComputerIcon())), nil, PushToTalkInput)
-
-		vadEnableCheckbox := widget.NewCheck(lang.L("Enable"), func(b bool) {})
-
-		audioApiSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+		audioSection.ApiSelect.OnChanged = func(s CustomWidget.TextValueOption) {
 			var value malgo.Backend = AudioAPI.AudioBackends[0].Backend
 			value = AudioAPI.GetAudioBackendByName(s.Value).Backend
-			if value != malgo.BackendWinmm && !vadEnableCheckbox.Checked && !isLoadingSettingsFile {
+			if value != malgo.BackendWinmm && !controls.VadEnable.Checked && !isLoadingSettingsFile {
 				dialog.ShowInformation(lang.L("Information"), lang.L("Disabled VAD is only supported with MME Audio API. Please make sure MME is selected as audio API. (Enabling VAD is highly recommended)"), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 			if playBackDevice.AudioAPI != value && playBackDevice.AudioAPI != malgo.BackendNull {
-				oldAudioInputSelection := audioInputSelect.GetSelected()
-				oldAudioOutputSelection := audioOutputSelect.GetSelected()
+				oldAudioInputSelection := audioSection.InputSelect.GetSelected()
+				oldAudioOutputSelection := audioSection.OutputSelect.GetSelected()
 
 				playBackDevice.Stop()
 				playBackDevice.AudioAPI = value
@@ -835,25 +774,27 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 				playBackDevice.WaitUntilInitialized(5)
 
-				audioInputSelect.Options = audioInputDevicesOptions
-				if audioInputSelect.ContainsEntry(oldAudioInputSelection, CustomWidget.CompareText) {
-					audioInputSelect.SetSelectedByText(oldAudioInputSelection.Text)
+				audioSection.InputSelect.Options = audioInputDevicesOptions
+				if audioSection.InputSelect.ContainsEntry(oldAudioInputSelection, CustomWidget.CompareText) {
+					audioSection.InputSelect.SetSelectedByText(oldAudioInputSelection.Text)
 				} else {
-					audioInputSelect.SetSelectedIndex(0)
+					engine.SetOptionsWithFallback(audioSection.InputSelect, audioInputDevicesOptions)
 				}
-				audioOutputSelect.Options = audioOutputDevicesOptions
-				if audioOutputSelect.ContainsEntry(oldAudioOutputSelection, CustomWidget.CompareText) {
-					audioOutputSelect.SetSelectedByText(oldAudioOutputSelection.Text)
+				audioSection.OutputSelect.Options = audioOutputDevicesOptions
+				if audioSection.OutputSelect.ContainsEntry(oldAudioOutputSelection, CustomWidget.CompareText) {
+					audioSection.OutputSelect.SetSelectedByText(oldAudioOutputSelection.Text)
 				} else {
-					audioOutputSelect.SetSelectedIndex(0)
+					engine.SetOptionsWithFallback(audioSection.OutputSelect, audioOutputDevicesOptions)
 				}
 			}
 		}
 
-		appendWidgetToForm(profileForm, lang.L("VAD (Voice activity detection)"), container.NewGridWithColumns(3, vadEnableCheckbox, vadOnFullClipCheckbox, vadRealtimeCheckbox, pushToTalkBlock), lang.L("Press ESC in Push to Talk field to clear the keybinding."))
-		appendWidgetToForm(profileForm, lang.L("vad_confidence_threshold.Name"), container.NewBorder(nil, nil, nil, vadConfidenceSliderState, vadConfidenceSliderWidget), lang.L("The confidence level required to detect speech."))
+		appendWidgetToForm(profileForm, lang.L("VAD (Voice activity detection)"), vadSection.GroupRow, lang.L("Press ESC in Push to Talk field to clear the keybinding."))
+		appendWidgetToForm(profileForm, lang.L("vad_confidence_threshold.Name"), vadSection.ConfidenceRow, lang.L("The confidence level required to detect speech."))
 
 		energySliderWidget := widget.NewSlider(0, EnergySliderMax)
+		controls.Energy = energySliderWidget
+		engine.Register("energy", energySliderWidget)
 
 		// energy autodetect
 		autoDetectEnergyDialog := dialog.NewCustomConfirm(lang.L("This will detect the current noise level."), lang.L("Detect noise level now."), lang.L("Cancel"),
@@ -871,7 +812,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 					cmd := exec.Command("---")
 					// start application that detects the energy level and returns the value before exiting.
-					cmdArguments := []string{"--audio_api", audioApiSelect.GetSelected().Value, "--device_index", audioInputSelect.GetSelected().Value, "--audio_input_device", audioInputSelect.GetSelected().Text, "--detect_energy", "--detect_energy_time", strconv.Itoa(energyDetectionTime)}
+					cmdArguments := []string{"--audio_api", audioSection.ApiSelect.GetSelected().Value, "--device_index", audioSection.InputSelect.GetSelected().Value, "--audio_input_device", audioSection.InputSelect.GetSelected().Text, "--detect_energy", "--detect_energy_time", strconv.Itoa(energyDetectionTime)}
 					if Utilities.FileExists("audioWhisper.py") {
 						cmdArguments = append([]string{"-u", "audioWhisper.py"}, cmdArguments...)
 						cmd = exec.Command("python", cmdArguments...)
@@ -911,14 +852,14 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			autoDetectEnergyDialog.Show()
 		})
 		energySliderState := widget.NewLabel("0.0")
-		energySliderWidgetZeroValueInfo := dialog.NewError(fmt.Errorf(lang.L("You did set Speech volume level to 0 and have no PushToTalk Button set.This would prevent the app from recording anything.")), fyne.CurrentApp().Driver().AllWindows()[1])
+		energySliderWidgetZeroValueInfo := dialog.NewError(errors.New(lang.L("You did set Speech volume level to 0 and have no PushToTalk Button set.This would prevent the app from recording anything.")), fyne.CurrentApp().Driver().AllWindows()[1])
 		energySliderWidget.OnChanged = func(value float64) {
 			if value >= energySliderWidget.Max {
 				energySliderWidget.Max += 10
 			}
 			energySliderState.SetText(fmt.Sprintf("%.0f", value))
 
-			if PushToTalkInput.Text == "" && value == 0 {
+			if controls.PushToTalk.Text == "" && value == 0 {
 				energySliderWidget.SetValue(1)
 				energySliderWidgetZeroValueInfo.Show()
 			}
@@ -930,17 +871,21 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			{Text: "Noise Reduce", Value: "noise_reduce"},
 			{Text: "DeepFilterNet", Value: "deepfilter"},
 		}, func(s CustomWidget.TextValueOption) {}, 0)
+		controls.DenoiseAudio = denoiseSelect
+		engine.Register("denoise_audio", denoiseSelect)
 
-		profileForm.Append(lang.L("denoise_audio.Name"), denoiseSelect)
+		appendWidgetToForm(profileForm, lang.L("denoise_audio.Name"), denoiseSelect, "")
 
 		pauseSliderState := widget.NewLabel("0.0")
 		pauseSliderWidget := widget.NewSlider(0, 5)
 		pauseSliderWidget.Step = 0.1
-		pauseSliderWidgetZeroValueInfo := dialog.NewError(fmt.Errorf(lang.L("You did set Speech pause detection to 0 and have no PushToTalk Button set.This would prevent the app from stopping recording automatically.")), fyne.CurrentApp().Driver().AllWindows()[1])
+		controls.PauseSeconds = pauseSliderWidget
+		engine.Register("pause", pauseSliderWidget)
+		pauseSliderWidgetZeroValueInfo := dialog.NewError(errors.New(lang.L("You did set Speech pause detection to 0 and have no PushToTalk Button set.This would prevent the app from stopping recording automatically.")), fyne.CurrentApp().Driver().AllWindows()[1])
 		pauseSliderWidget.OnChanged = func(value float64) {
 			pauseSliderState.SetText(fmt.Sprintf("%.1f", value))
 
-			if PushToTalkInput.Text == "" && value == 0 {
+			if controls.PushToTalk.Text == "" && value == 0 {
 				pauseSliderWidget.SetValue(0.5)
 				pauseSliderWidgetZeroValueInfo.Show()
 			}
@@ -950,26 +895,28 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		phraseLimitSliderState := widget.NewLabel("0.0")
 		phraseLimitSliderWidget := widget.NewSlider(0, 30)
 		phraseLimitSliderWidget.Step = 0.1
+		controls.PhraseTimeLimit = phraseLimitSliderWidget
+		engine.Register("phrase_time_limit", phraseLimitSliderWidget)
 		phraseLimitSliderWidget.OnChanged = func(value float64) {
 			phraseLimitSliderState.SetText(fmt.Sprintf("%.1f", value))
 		}
 		appendWidgetToForm(profileForm, lang.L("phrase_time_limit.Name"), container.NewBorder(nil, nil, nil, phraseLimitSliderState, phraseLimitSliderWidget), lang.L("phrase_time_limit.Description"))
 
-		vadEnableCheckbox.OnChanged = func(b bool) {
+		controls.VadEnable.OnChanged = func(b bool) {
 			if b {
 				pauseSliderWidget.Min = 0.0
 				phraseLimitSliderWidget.Min = 0.0
 
-				vadConfidenceSliderWidget.Show()
+				controls.VadConfidence.Show()
 				// vadOnFullClipCheckbox.Show()
-				vadRealtimeCheckbox.Show()
-				pushToTalkBlock.Show()
+				controls.VadRealtime.Show()
+				vadSection.PushToTalkBlock.Show()
 			} else {
-				vadConfidenceSliderWidget.Hide()
-				vadOnFullClipCheckbox.Hide()
-				vadRealtimeCheckbox.Hide()
-				pushToTalkBlock.Hide()
-				if audioApiSelect.Selected != "MME" && !isLoadingSettingsFile {
+				controls.VadConfidence.Hide()
+				controls.VadOnFullClip.Hide()
+				controls.VadRealtime.Hide()
+				vadSection.PushToTalkBlock.Hide()
+				if audioSection.ApiSelect.Selected != "MME" && !isLoadingSettingsFile {
 					dialog.ShowInformation(lang.L("Information"), lang.L("Disabled VAD is only supported with MME Audio API. Please make sure MME is selected as audio API. (Enabling VAD is highly recommended)"), fyne.CurrentApp().Driver().AllWindows()[1])
 				}
 				if pauseSliderWidget.Value == 0 || phraseLimitSliderWidget.Value == 0 && !isLoadingSettingsFile {
@@ -987,116 +934,39 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			}
 		}
 
-		txtTranslatorSizeSelect := CustomWidget.NewTextValueSelect("txt_translator_size", []CustomWidget.TextValueOption{
-			{Text: "Small", Value: "small"},
-			{Text: "Medium", Value: "medium"},
-			{Text: "Large", Value: "large"},
-		}, func(s CustomWidget.TextValueOption) {}, 0)
+		// Build STT section via builder
+		sttSection := builder.BuildSTTSection(engine)
+		sttTypeSelect := sttSection.TypeSelect
+		sttAiDeviceSelect := sttSection.DeviceSelect
+		sttPrecisionSelect := sttSection.PrecisionSelect
+		sttModelSize := sttSection.SizeSelect
 
-		txtTranslatorPrecisionSelect := CustomWidget.NewTextValueSelect("txt_translator_precision", []CustomWidget.TextValueOption{
-			{Text: "float32 " + lang.L("precision"), Value: "float32"},
-			{Text: "float16 " + lang.L("precision"), Value: "float16"},
-			{Text: "int16 " + lang.L("precision"), Value: "int16"},
-			{Text: "int8_float16 " + lang.L("precision"), Value: "int8_float16"},
-			{Text: "int8 " + lang.L("precision"), Value: "int8"},
-			{Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"},
-			{Text: "int8_bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "int8_bfloat16"},
-		}, func(s CustomWidget.TextValueOption) {}, 0)
+		appendWidgetToForm(profileForm, lang.L("Speech-to-Text Type"), container.NewGridWithColumns(2, sttTypeSelect), "")
+		appendWidgetToForm(profileForm, lang.L("A.I. Device for Speech-to-Text"), sttAiDeviceSelect, "")
+		appendWidgetToForm(profileForm, lang.L("Speech-to-Text A.I. Size"), container.NewGridWithColumns(2, sttModelSize, sttPrecisionSelect), "")
 
-		txtTranslatorTypeSelect := CustomWidget.NewTextValueSelect("txt_translator", []CustomWidget.TextValueOption{
-			{Text: "Faster NLLB200 (200 languages)", Value: "NLLB200_CT2"},
-			{Text: "Original NLLB200 (200 languages)", Value: "NLLB200"},
-			{Text: "M2M100 (100 languages)", Value: "M2M100"},
-			{Text: "Seamless M4T (101 languages)", Value: "seamless_m4t"},
-			{Text: "Phi-4 (23 languages)", Value: "phi4"},
-			{Text: "Voxtral (13 languages)", Value: "voxtral"},
-			{Text: lang.L("Disabled"), Value: ""},
-		}, func(s CustomWidget.TextValueOption) {}, 0)
-
-		txtTranslatorDeviceSelect := CustomWidget.NewTextValueSelect("txt_translator_device", []CustomWidget.TextValueOption{
-			{Text: "CUDA", Value: "cuda"},
-			{Text: "CPU", Value: "cpu"},
-			//{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
-			//{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
-		}, func(s CustomWidget.TextValueOption) {}, 0)
-
-		sttAiDeviceSelect := CustomWidget.NewTextValueSelect("ai_device", []CustomWidget.TextValueOption{
-			{Text: "CUDA", Value: "cuda"},
-			{Text: "CPU", Value: "cpu"},
-			//{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
-			//{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
-		}, func(s CustomWidget.TextValueOption) {}, 0)
-
-		sttPrecisionSelect := CustomWidget.NewTextValueSelect("Precision", []CustomWidget.TextValueOption{
-			{Text: "float32 " + lang.L("precision"), Value: "float32"},
-			{Text: "float16 " + lang.L("precision"), Value: "float16"},
-			{Text: "int16 " + lang.L("precision"), Value: "int16"},
-			{Text: "int8_float16 " + lang.L("precision"), Value: "int8_float16"},
-			{Text: "int8 " + lang.L("precision"), Value: "int8"},
-			{Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"},
-			{Text: "int8_bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "int8_bfloat16"},
-			{Text: "8bit " + lang.L("precision"), Value: "8bit"},
-			{Text: "4bit " + lang.L("precision"), Value: "4bit"},
-		}, func(s CustomWidget.TextValueOption) {}, 0)
-
-		sttTypeSelect := CustomWidget.NewTextValueSelect("stt_type", []CustomWidget.TextValueOption{
-			{Text: "Faster Whisper", Value: "faster_whisper"},
-			{Text: "Original Whisper", Value: "original_whisper"},
-			{Text: "Transformer Whisper", Value: "transformer_whisper"},
-			//{Text: "Medusa Whisper", Value: "medusa_whisper"},
-			//{Text: "TensorRT Whisper", Value: "tensorrt_whisper"},
-			//{Text: "Whisper CPP", Value: "whisper_cpp"},
-			{Text: "Seamless M4T", Value: "seamless_m4t"},
-			{Text: "MMS", Value: "mms"},
-			{Text: "Speech T5 (English only)", Value: "speech_t5"},
-			{Text: "Wav2Vec Bert 2.0", Value: "wav2vec_bert"},
-			{Text: "NeMo Canary", Value: "nemo_canary"},
-			{Text: "Phi-4", Value: "phi4"},
-			{Text: "Voxtral", Value: "voxtral"},
-			//{Text: "Phi-4 ONNX", Value: "phi4-onnx"},
-			{Text: lang.L("Disabled"), Value: ""},
-		}, func(s CustomWidget.TextValueOption) {}, 0)
-
-		sttAiDeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {
-			if !Hardwareinfo.IsNVIDIACard(nil) && s.Value == "cuda" {
-				dialog.ShowInformation(lang.L("No NVIDIA Card found"), lang.L("No NVIDIA Card found. You might need to use CPU instead for it to work."), fyne.CurrentApp().Driver().AllWindows()[1])
-			}
-			if s.Value == "cpu" && (sttPrecisionSelect.GetSelected() == nil || sttPrecisionSelect.GetSelected().Value == "float16" || sttPrecisionSelect.GetSelected().Value == "int8_float16") {
-				sttPrecisionSelect.SetSelected("float32")
-			}
-			if s.Value == "cuda" && (sttPrecisionSelect.GetSelected() == nil || sttPrecisionSelect.GetSelected().Value == "int16") {
-				sttPrecisionSelect.SetSelected("float16")
-			}
-			// calculate memory consumption
-			AIModel := Hardwareinfo.ProfileAIModelOption{
-				AIModel: "Whisper",
-				Device:  s.Value,
-			}
-			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
-
-			// Handle multi-modal model synchronization for text translator
-			handleMultiModalModelSync(
-				sttTypeSelect, txtTranslatorTypeSelect,
-				s.Value,
-				sttPrecisionSelect, sttAiDeviceSelect,
-				txtTranslatorSizeSelect, txtTranslatorPrecisionSelect, txtTranslatorDeviceSelect,
-			)
-
-			if sttTypeSelect.GetSelected().Value == ocrTypeSelect.GetSelected().Value {
-				ocrAiDeviceSelect.Disable()
-				if ocrAiDeviceSelect.ContainsEntry(sttAiDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
-					ocrAiDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
-				}
-				ocrPrecisionSelect.Disable()
-				if ocrPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
-					ocrPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
-				}
-			} else if ocrTypeSelect.GetSelected().Value != "" {
-				ocrAiDeviceSelect.Enable()
-				ocrPrecisionSelect.Enable()
+		// STT handlers: memory + coordinator
+		sttTypeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+			if coord != nil && !coord.InProgrammaticUpdate {
+				coord.ApplySTTTypeChange(s.Value)
 			}
 		}
-
+		sttAiDeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+			AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: "Whisper", Device: s.Value}
+			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
+			// Hinweis bei potenziell inkompatiblen Kombinationen
+			if coord != nil {
+				prec := ""
+				if sttPrecisionSelect.GetSelected() != nil {
+					prec = sttPrecisionSelect.GetSelected().Value
+				}
+				coord.EnsurePrecisionDeviceCompatibility(s.Value, prec)
+				// Multimodal sync ggf. anstoßen
+				if !coord.InProgrammaticUpdate {
+					coord.HandleMultiModalAllSync()
+				}
+			}
+		}
 		sttPrecisionSelect.OnChanged = func(s CustomWidget.TextValueOption) {
 			precisionType := Hardwareinfo.Float32
 			switch s.Value {
@@ -1121,478 +991,38 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			case "4bit":
 				precisionType = Hardwareinfo.Bit4
 			}
-			if sttAiDeviceSelect.GetSelected().Value == "cpu" && (s.Value == "float16" || s.Value == "int8_float16") {
-				dialog.ShowInformation(lang.L("Information"), lang.L("Most Devices of this type do not support this precision computation. Please consider switching to some other precision.", map[string]interface{}{"Device": "CPU's", "Precision": "float16"}), fyne.CurrentApp().Driver().AllWindows()[1])
-			}
-			if sttAiDeviceSelect.GetSelected().Value == "cpu" && (s.Value == "bfloat16" || s.Value == "int8_bfloat16") {
-				dialog.ShowInformation(lang.L("Information"), lang.L("Most Devices of this type do not support this precision computation. Please consider switching to some other precision.", map[string]interface{}{"Device": "CPU's", "Precision": "bfloat16"}), fyne.CurrentApp().Driver().AllWindows()[1])
-			}
-			if sttAiDeviceSelect.GetSelected().Value == "cuda" && (s.Value == "int16") {
-				dialog.ShowInformation(lang.L("Information"), lang.L("Most Devices of this type do not support this precision computation. Please consider switching to some other precision.", map[string]interface{}{"Device": "CUDA GPU's", "Precision": "int16"}), fyne.CurrentApp().Driver().AllWindows()[1])
-			}
-			if sttAiDeviceSelect.GetSelected().Value == "cuda" && (s.Value == "bfloat16" || s.Value == "int8_bfloat16") && ComputeCapability < 8.0 {
-				dialog.ShowInformation(lang.L("Information"), lang.L("Your Device most likely does not support this precision computation. Please consider switching to some other precision.", map[string]interface{}{"Device": "CUDA GPU", "Precision": "bfloat16"}), fyne.CurrentApp().Driver().AllWindows()[1])
-			}
-			// calculate memory consumption
-			AIModel := Hardwareinfo.ProfileAIModelOption{
-				AIModel:   "Whisper",
-				Precision: precisionType,
-			}
+			AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: "Whisper", Precision: precisionType}
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
-
-			// Handle multi-modal model synchronization for text translator
-			handleMultiModalModelSync(
-				sttTypeSelect, txtTranslatorTypeSelect,
-				s.Value,
-				sttPrecisionSelect, sttAiDeviceSelect,
-				txtTranslatorSizeSelect, txtTranslatorPrecisionSelect, txtTranslatorDeviceSelect,
-			)
-
-			if sttTypeSelect.GetSelected().Value == ocrTypeSelect.GetSelected().Value {
-				ocrAiDeviceSelect.Disable()
-				if ocrAiDeviceSelect.ContainsEntry(sttAiDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
-					ocrAiDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
+			// Hinweis bei potenziell inkompatiblen Kombinationen
+			if coord != nil && sttAiDeviceSelect.GetSelected() != nil {
+				coord.EnsurePrecisionDeviceCompatibility(sttAiDeviceSelect.GetSelected().Value, s.Value)
+				// Multimodal sync ggf. anstoßen
+				if !coord.InProgrammaticUpdate {
+					coord.HandleMultiModalAllSync()
 				}
-				ocrPrecisionSelect.Disable()
-				if ocrPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
-					ocrPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
-				}
-			} else if ocrTypeSelect.GetSelected().Value != "" {
-				ocrAiDeviceSelect.Enable()
-				ocrPrecisionSelect.Enable()
 			}
 		}
-
-		originalWhisperModelList := []CustomWidget.TextValueOption{
-			{Text: "Tiny", Value: "tiny"},
-			{Text: "Tiny (English only)", Value: "tiny.en"},
-			{Text: "Base", Value: "base"},
-			{Text: "Base (English only)", Value: "base.en"},
-			{Text: "Small", Value: "small"},
-			{Text: "Small (English only)", Value: "small.en"},
-			{Text: "Medium", Value: "medium"},
-			{Text: "Medium (English only)", Value: "medium.en"},
-			{Text: "Large V1", Value: "large-v1"},
-			{Text: "Large V2", Value: "large-v2"},
-			{Text: "Large V3", Value: "large-v3"},
-			{Text: "Large V3 Turbo", Value: "large-v3-turbo"},
-			{Text: "Custom (Place in '.cache/whisper/custom' directory)", Value: "custom"},
-		}
-
-		transformerWhisperModelList := []CustomWidget.TextValueOption{
-			{Text: "Tiny", Value: "tiny"},
-			{Text: "Tiny (English only)", Value: "tiny.en"},
-			{Text: "Base", Value: "base"},
-			{Text: "Base (English only)", Value: "base.en"},
-			{Text: "Small", Value: "small"},
-			{Text: "Small (English only)", Value: "small.en"},
-			{Text: "Medium", Value: "medium"},
-			{Text: "Medium (English only)", Value: "medium.en"},
-			{Text: "Large V1", Value: "large-v1"},
-			{Text: "Large V2", Value: "large-v2"},
-			{Text: "Large V3", Value: "large-v3"},
-			{Text: "Large V3 Turbo", Value: "large-v3-turbo"},
-			{Text: "Custom (Place in '.cache/whisper-transformer/custom' directory)", Value: "custom"},
-		}
-
-		medusaWhisperModelList := []CustomWidget.TextValueOption{
-			{Text: "V1", Value: "v1"},
-		}
-
-		fasterWhisperModelList := []CustomWidget.TextValueOption{
-			{Text: "Tiny", Value: "tiny"},
-			{Text: "Tiny (English only)", Value: "tiny.en"},
-			{Text: "Base", Value: "base"},
-			{Text: "Base (English only)", Value: "base.en"},
-			{Text: "Small", Value: "small"},
-			{Text: "Small (English only)", Value: "small.en"},
-			{Text: "Medium", Value: "medium"},
-			{Text: "Medium (English only)", Value: "medium.en"},
-			//{Text: "Large (Defaults to V3)", Value: "large-v3"},
-			{Text: "Large V1", Value: "large-v1"},
-			{Text: "Large V2", Value: "large-v2"},
-			{Text: "Large V3", Value: "large-v3"},
-			{Text: "Large V3 Turbo", Value: "large-v3-turbo"},
-			{Text: "Medium Distilled (English)", Value: "medium-distilled.en"},
-			{Text: "Large V2 Distilled (English)", Value: "large-distilled-v2.en"},
-			{Text: "Large V3 Distilled (English)", Value: "large-distilled-v3.en"},
-			{Text: "Large V3.5 Distilled (English)", Value: "large-distilled-v3.5.en"},
-			{Text: "Crisper", Value: "crisper"},
-			{Text: "Small (European finetune)", Value: "small.eu"},
-			{Text: "Medium (European finetune)", Value: "medium.eu"},
-			{Text: "Small (German finetune)", Value: "small.de"},
-			{Text: "Medium (German finetune)", Value: "medium.de"},
-			{Text: "Large V2 (German finetune)", Value: "large-v2.de2"},
-			{Text: "Large V3 Distilled (German finetune)", Value: "large-distilled-v3.de"},
-			{Text: "Small (German-Swiss finetune)", Value: "small.de-swiss"},
-			{Text: "Medium (Mix-Japanese-v2 finetune)", Value: "medium.mix-jpv2"},
-			{Text: "Large V2 (Mix-Japanese finetune)", Value: "large-v2.mix-jp"},
-			{Text: "Small (Japanese finetune)", Value: "small.jp"},
-			{Text: "Medium (Japanese finetune)", Value: "medium.jp"},
-			{Text: "Large V2 (Japanese finetune)", Value: "large-v2.jp"},
-			{Text: "Medium (Korean finetune)", Value: "medium.ko"},
-			{Text: "Large V2 (Korean finetune)", Value: "large-v2.ko"},
-			{Text: "Small (Chinese finetune)", Value: "small.zh"},
-			{Text: "Medium (Chinese finetune)", Value: "medium.zh"},
-			{Text: "Large V2 (Chinese finetune)", Value: "large-v2.zh"},
-			{Text: "Custom (Place in '.cache/whisper/custom-ct2' directory)", Value: "custom"},
-		}
-
-		originalSeamlessM4TModelList := []CustomWidget.TextValueOption{
-			{Text: "Medium", Value: "medium"},
-			{Text: "Large", Value: "large"},
-			{Text: "Large V2", Value: "large-v2"},
-		}
-
-		nemoCanaryModelList := []CustomWidget.TextValueOption{
-			{Text: "Nemo Canary 1b", Value: "canary-1b"},
-			{Text: "Nemo Canary 180m flash", Value: "canary-180m-flash"},
-			{Text: "Nemo Canary 1b flash", Value: "canary-1b-flash"},
-			{Text: "Parakeet TDT 0.6B V2 (English)", Value: "parakeet-tdt-0_6b-v2"},
-		}
-
-		originalMmsModelList := []CustomWidget.TextValueOption{
-			{Text: "1b-fl102 (102 languages)", Value: "mms-1b-fl102"},
-			{Text: "1b-l1107 (1107 languages)", Value: "mms-1b-l1107"},
-			{Text: "1b-all (1162 languages)", Value: "1b-all"},
-		}
-
-		phi4ModelList := []CustomWidget.TextValueOption{
-			{Text: "Large", Value: "large"},
-		}
-
-		voxtralModelList := []CustomWidget.TextValueOption{
-			{Text: "Voxtral-Mini-3B-2507", Value: "Voxtral-Mini-3B-2507"},
-		}
-
-		sttModelSize := CustomWidget.NewTextValueSelect("model", fasterWhisperModelList, func(s CustomWidget.TextValueOption) {
-			// remove last suffix starting with a dot
-			sizeName := strings.Split(s.Value, ".")[0]
-			sizeName, _ = strings.CutSuffix(sizeName, "-v1")
-			sizeName, _ = strings.CutSuffix(sizeName, "-v2")
-			sizeName, _ = strings.CutSuffix(sizeName, "-v3")
-
-			// calculate memory consumption
-			AIModel := Hardwareinfo.ProfileAIModelOption{
-				AIModel:     "Whisper",
-				AIModelSize: sizeName,
-			}
+		sttModelSize.OnChanged = func(s CustomWidget.TextValueOption) {
+			AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: "Whisper", AIModelSize: s.Value}
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
-
-			/**
-			special case for Seamless M4T since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
-			*/
-			handleMultiModalModelSync(
-				txtTranslatorTypeSelect, sttTypeSelect,
-				s.Value,
-				sttPrecisionSelect, sttAiDeviceSelect,
-				txtTranslatorSizeSelect, txtTranslatorPrecisionSelect, txtTranslatorDeviceSelect,
-			)
-
-			if sttTypeSelect.GetSelected().Value == ocrTypeSelect.GetSelected().Value {
-				ocrAiDeviceSelect.Disable()
-				if ocrAiDeviceSelect.ContainsEntry(sttAiDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
-					ocrAiDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
-				}
-				ocrPrecisionSelect.Disable()
-				if ocrPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
-					ocrPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
-				}
-			} else if ocrTypeSelect.GetSelected().Value != "" {
-				ocrAiDeviceSelect.Enable()
-				ocrPrecisionSelect.Enable()
+			if coord != nil && !coord.InProgrammaticUpdate {
+				coord.HandleMultiModalAllSync()
 			}
-		}, 0)
-
-		sttTypeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
-			sttPrecisionSelectOption := sttPrecisionSelect.GetSelected()
-			selectedPrecision := ""
-			if sttPrecisionSelectOption != nil {
-				selectedPrecision = sttPrecisionSelect.GetSelected().Value
-			}
-			AIModelType := ""
-			sttPrecisionSelect.Enable()
-			sttModelSize.Enable()
-			sttAiDeviceSelect.Enable()
-
-			selectedModelSizeOption := sttModelSize.GetSelected()
-
-			sttAiDeviceSelect.Options = []CustomWidget.TextValueOption{
-				{Text: "CUDA", Value: "cuda"},
-				{Text: "CPU", Value: "cpu"},
-				//{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
-				//{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
-			}
-
-			if s.Value == "faster_whisper" {
-				sttModelSize.Options = fasterWhisperModelList
-				// unselect if not in list
-				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption, CustomWidget.CompareValue) {
-					sttModelSize.SetSelectedIndex(0)
-				}
-
-				sttAiDeviceSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "CUDA", Value: "cuda"},
-					{Text: "CPU", Value: "cpu"},
-				}
-
-				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 " + lang.L("precision"), Value: "float32"},
-					{Text: "float16 " + lang.L("precision"), Value: "float16"},
-					{Text: "int16 " + lang.L("precision"), Value: "int16"},
-					{Text: "int8_float16 " + lang.L("precision"), Value: "int8_float16"},
-					{Text: "int8 " + lang.L("precision"), Value: "int8"},
-					{Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"},
-					{Text: "int8_bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "int8_bfloat16"},
-				}
-				AIModelType = "faster_whisper"
-			} else if s.Value == "original_whisper" {
-				sttModelSize.Options = originalWhisperModelList
-				// unselect if not in list
-				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption, CustomWidget.CompareValue) {
-					sttModelSize.SetSelectedIndex(0)
-				}
-
-				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 " + lang.L("precision"), Value: "float32"},
-					{Text: "float16 " + lang.L("precision"), Value: "float16"},
-				}
-				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "bfloat16" || selectedPrecision == "int8_bfloat16" {
-					sttPrecisionSelect.SetSelected("float16")
-				}
-				AIModelType = "O"
-			} else if s.Value == "transformer_whisper" {
-				sttModelSize.Options = transformerWhisperModelList
-				// unselect if not in list
-				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption, CustomWidget.CompareValue) {
-					sttModelSize.SetSelectedIndex(0)
-				}
-
-				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 " + lang.L("precision"), Value: "float32"},
-					{Text: "float16 " + lang.L("precision"), Value: "float16"},
-					{Text: "8bit " + lang.L("precision"), Value: "8bit"},
-					{Text: "4bit " + lang.L("precision"), Value: "4bit"},
-				}
-				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "bfloat16" || selectedPrecision == "int8_bfloat16" {
-					sttPrecisionSelect.SetSelected("float16")
-				}
-				AIModelType = "O"
-				//} else if s.Value == "tensorrt_whisper" {
-				//	sttModelSize.Options = originalWhisperModelList
-				//	// unselect if not in list
-				//	if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption, CustomWidget.CompareValue) {
-				//		sttModelSize.SetSelectedIndex(0)
-				//	}
-				//
-				//	sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
-				//		{Text: "float32 " + lang.L("precision"), Value: "float32"},
-				//		{Text: "float16 " + lang.L("precision"), Value: "float16"},
-				//		{Text: "8bit " + lang.L("precision"), Value: "8bit"},
-				//		{Text: "4bit " + lang.L("precision"), Value: "4bit"},
-				//	}
-				//	if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "bfloat16" || selectedPrecision == "int8_bfloat16" {
-				//		sttPrecisionSelect.SetSelected("float16")
-				//	}
-				//	AIModelType = "O"
-			} else if s.Value == "medusa_whisper" {
-				sttModelSize.Options = medusaWhisperModelList
-				// unselect if not in list
-				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption, CustomWidget.CompareValue) {
-					sttModelSize.SetSelectedIndex(0)
-				}
-
-				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 " + lang.L("precision"), Value: "float32"},
-					{Text: "float16 " + lang.L("precision"), Value: "float16"},
-				}
-				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "bfloat16" || selectedPrecision == "int8_bfloat16" {
-					sttPrecisionSelect.SetSelected("float16")
-				}
-				AIModelType = "O"
-			} else if s.Value == "seamless_m4t" {
-				sttModelSize.Options = originalSeamlessM4TModelList
-				// unselect if not in list
-				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption, CustomWidget.CompareValue) {
-					sttModelSize.SetSelectedIndex(1)
-				}
-
-				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 " + lang.L("precision"), Value: "float32"},
-					{Text: "float16 " + lang.L("precision"), Value: "float16"},
-					{Text: "int8_float16 " + lang.L("precision"), Value: "int8_float16"},
-					{Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"},
-					{Text: "int8_bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "int8_bfloat16"},
-				}
-				if selectedPrecision == "int8" || selectedPrecision == "int16" {
-					sttPrecisionSelect.SetSelected("float32")
-				}
-				AIModelType = "seamless_m4t"
-
-				if txtTranslatorTypeSelect.GetSelected().Value != "seamless_m4t" && !isLoadingSettingsFile {
-					dialog.NewConfirm(lang.L("Usage of Multi-Modal Model."), lang.L("Use Multi-Modal model for Text-Translation as well?"), func(b bool) {
-						if b {
-							txtTranslatorTypeSelect.SetSelected("seamless_m4t")
-						}
-					}, fyne.CurrentApp().Driver().AllWindows()[1]).Show()
-				}
-			} else if s.Value == "speech_t5" {
-				sttPrecisionSelect.Disable()
-				sttModelSize.Disable()
-				AIModelType = "speech_t5"
-			} else if s.Value == "wav2vec_bert" {
-				sttModelSize.Disable()
-				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 " + lang.L("precision"), Value: "float32"},
-					{Text: "float16 " + lang.L("precision"), Value: "float16"},
-					{Text: "8bit " + lang.L("precision"), Value: "8bit"},
-					{Text: "4bit " + lang.L("precision"), Value: "4bit"},
-				}
-				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "bfloat16" || selectedPrecision == "int8_bfloat16" {
-					sttPrecisionSelect.SetSelected("float16")
-				}
-				AIModelType = "wav2vec_bert"
-			} else if s.Value == "mms" {
-				sttModelSize.Options = originalMmsModelList
-				// unselect if not in list
-				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption, CustomWidget.CompareValue) {
-					sttModelSize.SetSelectedIndex(1)
-				}
-				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 " + lang.L("precision"), Value: "float32"},
-					{Text: "float16 " + lang.L("precision"), Value: "float16"},
-					{Text: "8bit " + lang.L("precision"), Value: "8bit"},
-					{Text: "4bit " + lang.L("precision"), Value: "4bit"},
-				}
-				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "bfloat16" || selectedPrecision == "int8_bfloat16" {
-					sttPrecisionSelect.SetSelected("float16")
-				}
-				AIModelType = "mms"
-			} else if s.Value == "nemo_canary" {
-				sttModelSize.Options = nemoCanaryModelList
-				sttPrecisionSelect.Disable()
-				sttPrecisionSelect.SetSelected("float32") // only available in float32
-				AIModelType = "nemo_canary"
-			} else if s.Value == "phi4" {
-				sttModelSize.Options = phi4ModelList
-				// unselect if not in list
-				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption, CustomWidget.CompareValue) {
-					sttModelSize.SetSelectedIndex(0)
-				}
-				sttModelSize.Disable()
-				AIModelType = "phi4"
-
-				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 " + lang.L("precision"), Value: "float32"},
-					{Text: "float16 " + lang.L("precision"), Value: "float16"},
-					{Text: "bfloat16 " + lang.L("precision"), Value: "bfloat16"},
-				}
-				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "int8_bfloat16" {
-					sttPrecisionSelect.SetSelected("float32")
-				}
-
-				//AIModel := ProfileAIModelOption{
-				//	AIModel:     "Whisper",
-				//	AIModelType: AIModelType,
-				//	AIModelSize: "large",
-				//}
-				//AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
-
-				if txtTranslatorTypeSelect.GetSelected().Value != "phi4" && !isLoadingSettingsFile {
-					dialog.NewConfirm(lang.L("Usage of Multi-Modal Model."), lang.L("Use Multi-Modal model for Text-Translation as well?"), func(b bool) {
-						if b {
-							txtTranslatorTypeSelect.SetSelected("phi4")
-						}
-					}, fyne.CurrentApp().Driver().AllWindows()[1]).Show()
-				}
-				if ocrTypeSelect.GetSelected().Value != "phi4" && !isLoadingSettingsFile {
-					dialog.NewConfirm(lang.L("Usage of Multi-Modal Model."), lang.L("Use Multi-Modal model for Image-to-Text as well?"), func(b bool) {
-						if b {
-							ocrTypeSelect.SetSelected("phi4")
-						}
-					}, fyne.CurrentApp().Driver().AllWindows()[1]).Show()
-				}
-			} else if s.Value == "voxtral" {
-				sttModelSize.Options = voxtralModelList
-				// unselect if not in list
-				if selectedModelSizeOption == nil || !sttModelSize.ContainsEntry(selectedModelSizeOption, CustomWidget.CompareValue) {
-					sttModelSize.SetSelectedIndex(0)
-				}
-				AIModelType = "voxtral"
-
-				sttPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 " + lang.L("precision"), Value: "float32"},
-					{Text: "float16 " + lang.L("precision"), Value: "float16"},
-					{Text: "8bit " + lang.L("precision"), Value: "8bit"},
-					{Text: "4bit " + lang.L("precision"), Value: "4bit"},
-				}
-				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" || selectedPrecision == "bfloat16" || selectedPrecision == "int8_bfloat16" {
-					sttPrecisionSelect.SetSelected("float16")
-				}
-
-				if txtTranslatorTypeSelect.GetSelected().Value != "voxtral" && !isLoadingSettingsFile {
-					dialog.NewConfirm(lang.L("Usage of Multi-Modal Model."), lang.L("Use Multi-Modal model for Text-Translation as well?"), func(b bool) {
-						if b {
-							txtTranslatorTypeSelect.SetSelected("voxtral")
-						}
-					}, fyne.CurrentApp().Driver().AllWindows()[1]).Show()
-				}
-			} else {
-				sttPrecisionSelect.Disable()
-				sttModelSize.Disable()
-				sttAiDeviceSelect.Disable()
-				//AIModelType = "disabled"
-			}
-
-			sttAiDeviceSelect.Refresh()
-			/**
-			special case for Seamless M4T or Phi4 since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
-			*/
-			handleMultiModalModelSync(
-				txtTranslatorTypeSelect, sttTypeSelect,
-				s.Value,
-				sttPrecisionSelect, sttAiDeviceSelect,
-				txtTranslatorSizeSelect, txtTranslatorPrecisionSelect, txtTranslatorDeviceSelect,
-			)
-
-			if s.Value == ocrTypeSelect.GetSelected().Value {
-				ocrAiDeviceSelect.Disable()
-				if ocrAiDeviceSelect.ContainsEntry(sttAiDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
-					ocrAiDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
-				}
-				ocrPrecisionSelect.Disable()
-				if ocrPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
-					ocrPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
-				}
-			} else if ocrTypeSelect.GetSelected().Value != "" {
-				ocrAiDeviceSelect.Enable()
-				ocrPrecisionSelect.Enable()
-			}
-
-			// calculate memory consumption
-			if AIModelType == "" {
-				AIModelType = "-"
-			}
-			AIModel := Hardwareinfo.ProfileAIModelOption{
-				AIModel:     "Whisper",
-				AIModelType: AIModelType,
-			}
-			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
-
 		}
-
-		profileForm.Append(lang.L("Speech-to-Text Type"), container.NewGridWithColumns(2, sttTypeSelect))
-
-		profileForm.Append(lang.L("A.I. Device for Speech-to-Text"), sttAiDeviceSelect)
-
-		profileForm.Append(lang.L("Speech-to-Text A.I. Size"), container.NewGridWithColumns(2, sttModelSize, sttPrecisionSelect))
 
 		profileForm.Append("", layout.NewSpacer())
 
-		profileForm.Append(lang.L("Text-Translation Type"), container.NewGridWithColumns(2, txtTranslatorTypeSelect))
+		// Build TXT section via builder
+		txtSection := builder.BuildTXTSection(engine)
+		txtTranslatorTypeSelect := txtSection.TypeSelect
+		txtTranslatorDeviceSelect := txtSection.DeviceSelect
+		txtTranslatorPrecisionSelect := txtSection.PrecisionSelect
+		txtTranslatorSizeSelect := txtSection.SizeSelect
+
+		appendWidgetToForm(profileForm, lang.L("Text-Translation Type"), container.NewGridWithColumns(2, txtTranslatorTypeSelect), "")
 
 		txtTranslatorDeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {
-			if !Hardwareinfo.IsNVIDIACard(nil) && s.Value == "cuda" {
+			if s.Value == "cuda" && !HasNvidiaGPU && (coord == nil || !coord.InProgrammaticUpdate) {
 				dialog.ShowInformation(lang.L("No NVIDIA Card found"), lang.L("No NVIDIA Card found. You might need to use CPU instead for it to work."), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
 			if s.Value == "cpu" && txtTranslatorPrecisionSelect.GetSelected() != nil && (txtTranslatorPrecisionSelect.GetSelected().Value == "float16" || txtTranslatorPrecisionSelect.GetSelected().Value == "int8_float16") {
@@ -1610,6 +1040,16 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				Device:  s.Value,
 			}
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
+			if coord != nil {
+				prec := ""
+				if txtTranslatorPrecisionSelect.GetSelected() != nil {
+					prec = txtTranslatorPrecisionSelect.GetSelected().Value
+				}
+				coord.EnsurePrecisionDeviceCompatibility(s.Value, prec)
+				if !coord.InProgrammaticUpdate {
+					coord.HandleMultiModalAllSync()
+				}
+			}
 		}
 
 		txtTranslatorPrecisionSelect.OnChanged = func(s CustomWidget.TextValueOption) {
@@ -1654,9 +1094,12 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				Precision: precisionType,
 			}
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
+			if coord != nil && !coord.InProgrammaticUpdate {
+				coord.HandleMultiModalAllSync()
+			}
 		}
 
-		profileForm.Append(lang.L("A.I. Device for Text-Translation"), txtTranslatorDeviceSelect)
+		appendWidgetToForm(profileForm, lang.L("A.I. Device for Text-Translation"), txtTranslatorDeviceSelect, "")
 
 		txtTranslatorSizeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
 			// calculate memory consumption
@@ -1665,298 +1108,67 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				AIModelSize: s.Value,
 			}
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
+			if coord != nil && !coord.InProgrammaticUpdate {
+				coord.HandleMultiModalAllSync()
+			}
 		}
 
 		txtTranslatorTypeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
-			selectedPrecisionOption := txtTranslatorPrecisionSelect.GetSelected()
-			selectedPrecision := ""
-			if selectedPrecisionOption != nil {
-				selectedPrecision = selectedPrecisionOption.Value
+			if coord != nil && !coord.InProgrammaticUpdate {
+				coord.ApplyTXTTypeChange(s.Value)
 			}
-			selectedSizeOption := txtTranslatorSizeSelect.GetSelected()
-			selectedSize := ""
-			if selectedSizeOption != nil {
-				selectedSize = selectedSizeOption.Value
-			}
-
-			txtTranslatorDeviceSelect.Enable()
-			txtTranslatorPrecisionSelect.Enable()
-			txtTranslatorSizeSelect.Enable()
-
-			modelType := s.Value
-
-			txtTranslatorDeviceSelect.Options = []CustomWidget.TextValueOption{
-				{Text: "CUDA", Value: "cuda"},
-				{Text: "CPU", Value: "cpu"},
-				//{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
-				//{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
-			}
-
-			if s.Value == "NLLB200" {
-				txtTranslatorPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 " + lang.L("precision"), Value: "float32"},
-					{Text: "float16 " + lang.L("precision"), Value: "float16"},
-				}
-				if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" {
-					txtTranslatorPrecisionSelect.SetSelected("float16")
-				}
-			} else if s.Value == "NLLB200_CT2" || s.Value == "M2M100" {
-				txtTranslatorPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 " + lang.L("precision"), Value: "float32"},
-					{Text: "float16 " + lang.L("precision"), Value: "float16"},
-					{Text: "int16 " + lang.L("precision"), Value: "int16"},
-					{Text: "int8_float16 " + lang.L("precision"), Value: "int8_float16"},
-					{Text: "int8 " + lang.L("precision"), Value: "int8"},
-					{Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"},
-					{Text: "int8_bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "int8_bfloat16"},
-				}
-				// CTranslate2 models do not support direct-ml
-				txtTranslatorDeviceSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "CUDA", Value: "cuda"},
-					{Text: "CPU", Value: "cpu"},
-				}
-			} else if s.Value == "seamless_m4t" {
-				txtTranslatorPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 " + lang.L("precision"), Value: "float32"},
-					{Text: "float16 " + lang.L("precision"), Value: "float16"},
-					{Text: "int8_float16 " + lang.L("precision"), Value: "int8_float16"},
-					{Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"},
-					{Text: "int8_bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "int8_bfloat16"},
-				}
-			} else if s.Value == "phi4" {
-				txtTranslatorPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 " + lang.L("precision"), Value: "float32"},
-					{Text: "float16 " + lang.L("precision"), Value: "float16"},
-					{Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"},
-				}
-			} else if s.Value == "voxtral" {
-				txtTranslatorPrecisionSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "float32 " + lang.L("precision"), Value: "float32"},
-					{Text: "float16 " + lang.L("precision"), Value: "float16"},
-					{Text: "8bit " + lang.L("precision"), Value: "8bit"},
-					{Text: "4bit " + lang.L("precision"), Value: "4bit"},
-				}
-			} else if s.Value == "" {
-				txtTranslatorPrecisionSelect.Disable()
-				txtTranslatorSizeSelect.Disable()
-				txtTranslatorDeviceSelect.Disable()
-				//modelType = "N"
-			}
-
-			txtTranslatorDeviceSelect.Refresh()
-
-			if s.Value == "M2M100" {
-				txtTranslatorSizeSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "Small", Value: "small"},
-					{Text: "Large", Value: "large"},
-				}
-				if selectedSize == "medium" {
-					txtTranslatorSizeSelect.SetSelected("small")
-				}
-			} else if s.Value == "NLLB200_CT2" || s.Value == "NLLB200" {
-				txtTranslatorSizeSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "Small", Value: "small"},
-					{Text: "Medium", Value: "medium"},
-					{Text: "Large", Value: "large"},
-				}
-			} else if s.Value == "seamless_m4t" {
-				txtTranslatorSizeSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "Medium", Value: "medium"},
-					{Text: "Large", Value: "large"},
-					{Text: "Large V2", Value: "large-v2"},
-				}
-				if selectedSize == "small" {
-					txtTranslatorSizeSelect.SetSelected("medium")
-				}
-			} else if s.Value == "phi4" {
-				txtTranslatorSizeSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "Large", Value: "large"},
-				}
-				if selectedSize != "large" {
-					txtTranslatorSizeSelect.SetSelected("large")
-				}
-				txtTranslatorSizeSelect.Disable()
-			} else if s.Value == "voxtral" {
-				txtTranslatorSizeSelect.Options = []CustomWidget.TextValueOption{
-					{Text: "Voxtral-Mini-3B-2507", Value: "Voxtral-Mini-3B-2507"},
-				}
-				if selectedSize != "Voxtral-Mini-3B-2507" {
-					txtTranslatorSizeSelect.SetSelected("Voxtral-Mini-3B-2507")
-				}
-				txtTranslatorSizeSelect.Disable()
-			}
-
-			/**
-			special case for Seamless M4T, Phi4 or voxtral since its a multi-modal model and does not need additional memory when used for Text translation and Speech-to-text
-			*/
-			handleMultiModalModelSync(
-				txtTranslatorTypeSelect, sttTypeSelect,
-				s.Value,
-				sttPrecisionSelect, sttAiDeviceSelect,
-				txtTranslatorSizeSelect, txtTranslatorPrecisionSelect, txtTranslatorDeviceSelect,
-			)
-
-			if s.Value == ocrTypeSelect.GetSelected().Value {
-				ocrAiDeviceSelect.Disable()
-				if ocrAiDeviceSelect.ContainsEntry(txtTranslatorDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
-					ocrAiDeviceSelect.SetSelected(txtTranslatorDeviceSelect.GetSelected().Value)
-				}
-				ocrPrecisionSelect.Disable()
-				if ocrPrecisionSelect.ContainsEntry(txtTranslatorPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
-					ocrPrecisionSelect.SetSelected(txtTranslatorPrecisionSelect.GetSelected().Value)
-				}
-			} else if ocrTypeSelect.GetSelected().Value != "" {
-				ocrAiDeviceSelect.Enable()
-				ocrPrecisionSelect.Enable()
-			}
-
-			if modelType == "" {
-				modelType = "-"
-			}
-			AIModel := Hardwareinfo.ProfileAIModelOption{
-				AIModel:     "TxtTranslator",
-				AIModelType: modelType,
-			}
-
-			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 		}
 
-		profileForm.Append(lang.L("Text-Translation A.I. Size"), container.NewGridWithColumns(2, txtTranslatorSizeSelect, txtTranslatorPrecisionSelect))
+		appendWidgetToForm(profileForm, lang.L("Text-Translation A.I. Size"), container.NewGridWithColumns(2, txtTranslatorSizeSelect, txtTranslatorPrecisionSelect), "")
 
 		profileForm.Append("", layout.NewSpacer())
 
-		ttsAiDeviceSelect := CustomWidget.NewTextValueSelect("tts_ai_device", []CustomWidget.TextValueOption{
-			{Text: "CUDA", Value: "cuda"},
-			{Text: "CPU", Value: "cpu"},
-			//{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
-			//{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
-		}, func(s CustomWidget.TextValueOption) {
-			if !Hardwareinfo.IsNVIDIACard(nil) && s.Value == "cuda" {
+		// Build TTS section via builder
+		ttsSection := builder.BuildTTSSection(engine)
+		ttsTypeSelect := ttsSection.TypeSelect
+		ttsAiDeviceSelect := ttsSection.DeviceSelect
+		controls.TTSDevice = ttsAiDeviceSelect
+		controls.TTSType = ttsTypeSelect
+		// retain memory calc/info dialogs for TTS device
+		ttsAiDeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+			if s.Value == "cuda" && !HasNvidiaGPU && (coord == nil || !coord.InProgrammaticUpdate) {
 				dialog.ShowInformation(lang.L("No NVIDIA Card found"), lang.L("No NVIDIA Card found. You might need to use CPU instead for it to work."), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
-			// calculate memory consumption
-			AIModel := Hardwareinfo.ProfileAIModelOption{
-				AIModel:   "ttsType",
-				Device:    s.Value,
-				Precision: Hardwareinfo.Float32,
-			}
-			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
-		}, 0)
-
-		ttsTypeSelect := CustomWidget.NewTextValueSelect("tts_type", []CustomWidget.TextValueOption{
-			{Text: "Silero", Value: "silero"},
-			{Text: "F5/E2", Value: "f5_e2"},
-			{Text: "Zonos", Value: "zonos"},
-			{Text: "Kokoro", Value: "kokoro"},
-			{Text: "Orpheus", Value: "orpheus"},
-			{Text: lang.L("Disabled"), Value: ""},
-		}, func(s CustomWidget.TextValueOption) {}, 0)
-
-		ttsTypeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
-			//AIModelType := "disabled"
-			AIModelType := s.Value
-			if s.Value != "" {
-				ttsAiDeviceSelect.Enable()
-
-				selectedDeviceOption := ttsAiDeviceSelect.GetSelected()
-
-				if s.Value == "f5_e2" {
-					ttsAiDeviceSelect.Options = []CustomWidget.TextValueOption{
-						{Text: "CUDA", Value: "cuda"},
-						{Text: "CPU", Value: "cpu"},
-					}
-				} else {
-					ttsAiDeviceSelect.Options = []CustomWidget.TextValueOption{
-						{Text: "CUDA", Value: "cuda"},
-						{Text: "CPU", Value: "cpu"},
-						//{Text: "DIRECT-ML - Device 0", Value: "direct-ml:0"},
-						//{Text: "DIRECT-ML - Device 1", Value: "direct-ml:1"},
-					}
-				}
-				if !ttsAiDeviceSelect.ContainsEntry(selectedDeviceOption, CustomWidget.CompareValue) {
-					ttsAiDeviceSelect.SetSelectedIndex(0)
-				}
-				ttsAiDeviceSelect.Refresh()
-
-			} else {
-				ttsAiDeviceSelect.Disable()
-			}
-			// calculate memory consumption
-			if AIModelType == "" {
-				AIModelType = "-"
-			}
-			AIModel := Hardwareinfo.ProfileAIModelOption{
-				AIModel:     "ttsType",
-				AIModelType: AIModelType,
-				Precision:   Hardwareinfo.Float32,
-			}
+			AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: "ttsType", Device: s.Value, Precision: Hardwareinfo.Float32}
 			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 		}
 
-		profileForm.Append(lang.L("Integrated Text-to-Speech"), container.NewGridWithColumns(2, ttsTypeSelect))
+		ttsTypeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+			if coord != nil && !coord.InProgrammaticUpdate {
+				coord.ApplyTTSTypeChange(s.Value)
+			}
+		}
 
-		profileForm.Append(lang.L("A.I. Device for Text-to-Speech"), ttsAiDeviceSelect)
+		appendWidgetToForm(profileForm, lang.L("Integrated Text-to-Speech"), container.NewGridWithColumns(2, ttsTypeSelect), "")
+
+		appendWidgetToForm(profileForm, lang.L("A.I. Device for Text-to-Speech"), ttsAiDeviceSelect, "")
 
 		profileForm.Append("", layout.NewSpacer())
 
-		ocrTypeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
-			ocrAiDeviceSelect.Enable()
-			ocrPrecisionSelect.Enable()
-			aiModelType := s.Value
-			if s.Value != "" {
-				if s.Value == "easyocr" {
-					ocrAiDeviceSelect.SetSelected("cpu")
-					ocrAiDeviceSelect.Disable()
-					ocrPrecisionSelect.Disable()
-				} else if s.Value == sttTypeSelect.GetSelected().Value {
-					ocrAiDeviceSelect.Disable()
-					if ocrAiDeviceSelect.ContainsEntry(sttAiDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
-						ocrAiDeviceSelect.SetSelected(sttAiDeviceSelect.GetSelected().Value)
-					}
-					ocrPrecisionSelect.Disable()
-					if ocrPrecisionSelect.ContainsEntry(sttPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
-						ocrPrecisionSelect.SetSelected(sttPrecisionSelect.GetSelected().Value)
-					}
-				} else if s.Value == txtTranslatorTypeSelect.GetSelected().Value {
-					ocrAiDeviceSelect.Disable()
-					if ocrAiDeviceSelect.ContainsEntry(txtTranslatorDeviceSelect.GetSelected(), CustomWidget.CompareValue) {
-						ocrAiDeviceSelect.SetSelected(txtTranslatorDeviceSelect.GetSelected().Value)
-					}
-					ocrPrecisionSelect.Disable()
-					if ocrPrecisionSelect.ContainsEntry(txtTranslatorPrecisionSelect.GetSelected(), CustomWidget.CompareValue) {
-						ocrPrecisionSelect.SetSelected(txtTranslatorPrecisionSelect.GetSelected().Value)
-					}
-				}
-			} else {
-				ocrAiDeviceSelect.Disable()
-				ocrPrecisionSelect.Disable()
-				//aiModelType = "disabled"
+		ocrSection.TypeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+			if coord != nil && !coord.InProgrammaticUpdate {
+				coord.ApplyOCRTypeChange(s.Value)
 			}
-
-			// calculate memory consumption
-			if aiModelType == "" {
-				aiModelType = "-"
-			}
-			AIModel := Hardwareinfo.ProfileAIModelOption{
-				AIModel:     "ocrType",
-				AIModelType: aiModelType,
-			}
-			AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 		}
-		profileForm.Append(lang.L("Integrated Image-to-Text"), ocrTypeSelect)
+		appendWidgetToForm(profileForm, lang.L("Integrated Image-to-Text"), ocrSection.TypeSelect, "")
 		//profileForm.Append(lang.L("Integrated Image-to-Text"), container.NewGridWithColumns(2, ocrTypeSelect))
-		profileForm.Append(lang.L("A.I. Device for Image-to-Text"), container.NewGridWithColumns(2, ocrAiDeviceSelect, ocrPrecisionSelect))
+		appendWidgetToForm(profileForm, lang.L("A.I. Device for Image-to-Text"), container.NewGridWithColumns(2, ocrSection.DeviceSelect, ocrSection.PrecisionSelect), "")
 		//profileForm.Append(lang.L("A.I. Device for Image-to-Text"), ocrAiDeviceSelect)
 
 		profileForm.Append("", layout.NewSpacer())
 		pushToTalkChanged := false
-		PushToTalkInput.OnChanged = func(s string) {
+		controls.PushToTalk.OnChanged = func(s string) {
 			if s != "" && !isLoadingSettingsFile {
 				pushToTalkChanged = true
 			}
 		}
-		PushToTalkInput.OnFocusChanged = func(focusGained bool) {
-			if !focusGained && pushToTalkChanged && PushToTalkInput.Text != "" {
+		controls.PushToTalk.OnFocusChanged = func(focusGained bool) {
+			if !focusGained && pushToTalkChanged && controls.PushToTalk.Text != "" {
 				dialog.NewConfirm(lang.L("Change speech trigger settings?"), lang.L("You did set a PushToTalk Button. Do you want to set settings to trigger with only a Button press?"), func(b bool) {
 					if b {
 						energySliderWidget.SetValue(0)
@@ -1967,6 +1179,59 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				pushToTalkChanged = false
 			}
 		}
+
+		// Initialize coordinator now that all relevant controls exist
+		coord = &Coordinator{
+			Controls: &ProfileControls{
+				STTType:      sttTypeSelect,
+				STTDevice:    sttAiDeviceSelect,
+				STTPrecision: sttPrecisionSelect,
+				STTModelSize: sttModelSize,
+				TxtType:      txtTranslatorTypeSelect,
+				TxtDevice:    txtTranslatorDeviceSelect,
+				TxtPrecision: txtTranslatorPrecisionSelect,
+				TxtSize:      txtTranslatorSizeSelect,
+				OCRType:      ocrSection.TypeSelect,
+				OCRDevice:    ocrSection.DeviceSelect,
+				OCRPrecision: ocrSection.PrecisionSelect,
+				TTSType:      ttsTypeSelect,
+				TTSDevice:    ttsAiDeviceSelect,
+			},
+			IsLoadingSettings: &isLoadingSettingsFile,
+			ComputeCapability: ComputeCapability,
+			CPUMemoryBar:      CPUMemoryBar,
+			GPUMemoryBar:      GPUMemoryBar,
+			TotalGPUMemoryMiB: totalGPUMemory,
+		}
+
+		// Nach Initialisierung: Falls GPU-Total bereits ermittelt wurde, direkt setzen
+		if totalGPUMemory > 0 {
+			coord.TotalGPUMemoryMiB = totalGPUMemory
+			if GPUMemoryBar.Max <= 0 {
+				GPUMemoryBar.Max = float64(totalGPUMemory)
+				GPUMemoryBar.Refresh()
+			}
+		} else {
+			// Warte kurz asynchron auf GPU-Erkennung und setze dann den Max-Wert
+			go func() {
+				for i := 0; i < 50; i++ { // bis zu ~5s warten
+					if totalGPUMemory > 0 {
+						fyne.Do(func() {
+							coord.TotalGPUMemoryMiB = totalGPUMemory
+							if GPUMemoryBar.Max <= 0 {
+								GPUMemoryBar.Max = float64(totalGPUMemory)
+								GPUMemoryBar.Refresh()
+							}
+						})
+						break
+					}
+					time.Sleep(100 * time.Millisecond)
+				}
+			}()
+		}
+
+		// Attach coordinator to engine for centralized fallbacks and sync helpers
+		engine.Coord = coord
 
 		return profileForm
 	}
@@ -2063,171 +1328,45 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			}
 		}
 		profileSettings.SettingsFilename = settingsFiles[id]
-		//profileForm := profileListContent.Content.(*widget.Form)
-		profileForm := profileFormBuild.(*widget.Form)
-		profileForm.SubmitText = lang.L("Save and Load Profile")
-		profileForm.Items[0].Widget.(*fyne.Container).Objects[0].(*widget.Entry).SetText(profileSettings.Websocket_ip)
-		profileForm.Items[0].Widget.(*fyne.Container).Objects[1].(*widget.Entry).SetText(strconv.Itoa(profileSettings.Websocket_port))
-		profileForm.Items[0].Widget.(*fyne.Container).Objects[2].(*widget.Check).SetChecked(profileSettings.Run_backend)
-		// spacer
-		profileForm.Items[2].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Audio_api)
-
-		deviceInValue := "-1"
-		deviceInWidget := profileForm.Items[3].Widget.(*CustomWidget.TextValueSelect)
-		if profileSettings.Device_index != nil {
-			switch profileSettings.Device_index.(type) {
-			case int:
-				deviceInValue = strconv.Itoa(profileSettings.Device_index.(int))
-			case string:
-				deviceInValue = profileSettings.Device_index.(string)
+		// Generic load of all registered controls
+		engine.LoadFromSettings(&profileSettings)
+		// Ensure dynamic option sets and group sync are applied post-load
+		if coord != nil {
+			if controls.STTType != nil && controls.STTType.GetSelected() != nil {
+				coord.ApplySTTTypeChange(controls.STTType.GetSelected().Value)
+			}
+			if controls.TxtType != nil && controls.TxtType.GetSelected() != nil {
+				coord.ApplyTXTTypeChange(controls.TxtType.GetSelected().Value)
+			}
+			if controls.TTSType != nil && controls.TTSType.GetSelected() != nil {
+				coord.ApplyTTSTypeChange(controls.TTSType.GetSelected().Value)
+			}
+			if controls.OCRType != nil && controls.OCRType.GetSelected() != nil {
+				coord.ApplyOCRTypeChange(controls.OCRType.GetSelected().Value)
+			}
+			// Initiale Memory-Berechnungen für Balken, damit VRAM sofort korrekt erscheint
+			AIModel := Hardwareinfo.ProfileAIModelOption{}
+			if controls.STTType != nil && controls.STTType.GetSelected() != nil {
+				AIModel = Hardwareinfo.ProfileAIModelOption{AIModel: "Whisper", AIModelType: controls.STTType.GetSelected().Value}
+				AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
+			}
+			if controls.TxtType != nil && controls.TxtType.GetSelected() != nil {
+				AIModel = Hardwareinfo.ProfileAIModelOption{AIModel: "TxtTranslator", AIModelType: controls.TxtType.GetSelected().Value}
+				AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
+			}
+			if controls.TTSType != nil && controls.TTSType.GetSelected() != nil {
+				AIModel = Hardwareinfo.ProfileAIModelOption{AIModel: "ttsType", AIModelType: controls.TTSType.GetSelected().Value, Precision: Hardwareinfo.Float32}
+				AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
+			}
+			if controls.OCRType != nil && controls.OCRType.GetSelected() != nil {
+				AIModel = Hardwareinfo.ProfileAIModelOption{AIModel: "ocrType", AIModelType: controls.OCRType.GetSelected().Value}
+				AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 			}
 		}
-		// select audio input device by name instead of index if possible
-		if profileSettings.Audio_input_device != "" && profileSettings.Audio_input_device != "Default" && deviceInValue != "-1" {
-			for i := 0; i < len(audioInputDevicesOptions); i++ {
-				if audioInputDevicesOptions[i].Value != deviceInValue && audioInputDevicesOptions[i].Text == profileSettings.Audio_input_device {
-					deviceInValue = audioInputDevicesOptions[i].Value
-					break
-				}
-			}
-		}
-		deviceInWidgetOption := deviceInWidget.GetSelected()
-		if deviceInWidgetOption != nil && deviceInWidgetOption.Value != deviceInValue {
-			deviceInWidget.SetSelected(deviceInValue)
-		}
-		// audio progressbar
-		deviceOutValue := "-1"
-		deviceOutWidget := profileForm.Items[5].Widget.(*CustomWidget.TextValueSelect)
-		if profileSettings.Device_out_index != nil {
-			switch profileSettings.Device_out_index.(type) {
-			case int:
-				deviceOutValue = strconv.Itoa(profileSettings.Device_out_index.(int))
-			case string:
-				deviceOutValue = profileSettings.Device_out_index.(string)
-			}
-		}
-		// select audio output device by name instead of index if possible
-		if profileSettings.Audio_output_device != "" && profileSettings.Audio_output_device != "Default" && deviceOutValue != "-1" {
-			for i := 0; i < len(audioOutputDevicesOptions); i++ {
-				if audioOutputDevicesOptions[i].Value != deviceOutValue && audioOutputDevicesOptions[i].Text == profileSettings.Audio_output_device {
-					deviceOutValue = audioOutputDevicesOptions[i].Value
-					break
-				}
-			}
-		}
-		deviceOutWidgetOption := deviceOutWidget.GetSelected()
-		if deviceOutWidgetOption != nil && deviceOutWidgetOption.Value != deviceOutValue {
-			deviceOutWidget.SetSelected(deviceOutValue)
-		}
-
-		// audio progressbar
-		// spacer
-		profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Check).SetChecked(profileSettings.Vad_enabled)
-		profileForm.Items[7].Widget.(*fyne.Container).Objects[1].(*widget.Check).SetChecked(profileSettings.Vad_on_full_clip)
-		profileForm.Items[7].Widget.(*fyne.Container).Objects[2].(*widget.Check).SetChecked(profileSettings.Realtime)
-		profileForm.Items[7].Widget.(*fyne.Container).Objects[3].(*fyne.Container).Objects[0].(*CustomWidget.HotKeyEntry).SetText(profileSettings.Push_to_talk_key)
-
-		profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Vad_confidence_threshold))
-		if profileSettings.Vad_enabled {
-			profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Show()
-		} else {
-			profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Hide()
-		}
-
-		profileForm.Items[9].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Max = EnergySliderMax
-		if float64(profileSettings.Energy) >= profileForm.Items[9].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Max-10 {
-			profileForm.Items[9].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Max = float64(profileSettings.Energy + 200)
-		}
-		profileForm.Items[9].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Energy))
-		profileForm.Items[10].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Denoise_audio) // !!!!!!!!
-		profileForm.Items[11].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Pause))
-		profileForm.Items[12].Widget.(*fyne.Container).Objects[0].(*widget.Slider).SetValue(float64(profileSettings.Phrase_time_limit))
-
-		profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Stt_type)
-
-		if profileSettings.Ai_device != nil {
-			profileForm.Items[14].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Ai_device.(string))
-		}
-		profileForm.Items[15].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Model)
-		profileForm.Items[15].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Whisper_precision)
-		// show only available precision options depending on whisper project
-		selectedPrecisionOption := profileForm.Items[15].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected()
-		selectedPrecision := ""
-		if selectedPrecisionOption != nil {
-			selectedPrecision = selectedPrecisionOption.Value
-		}
-		if profileSettings.Stt_type == "faster_whisper" {
-			profileForm.Items[15].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
-				{Text: "float32 " + lang.L("precision"), Value: "float32"},
-				{Text: "float16 " + lang.L("precision"), Value: "float16"},
-				{Text: "int16 " + lang.L("precision"), Value: "int16"},
-				{Text: "int8_float16 " + lang.L("precision"), Value: "int8_float16"},
-				{Text: "int8 " + lang.L("precision"), Value: "int8"},
-				{Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"},
-				{Text: "int8_bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "int8_bfloat16"},
-			}
-		} else if profileSettings.Stt_type == "original_whisper" {
-			profileForm.Items[15].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).Options = []CustomWidget.TextValueOption{
-				{Text: "float32 " + lang.L("precision"), Value: "float32"},
-				{Text: "float16 " + lang.L("precision"), Value: "float16"},
-			}
-			if selectedPrecision == "int8_float16" || selectedPrecision == "int8" || selectedPrecision == "int16" {
-				profileForm.Items[15].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected("float16")
-			}
-		}
-
-		// spacer (15)
-		profileForm.Items[17].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator)
-		profileForm.Items[18].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_device)
-		profileForm.Items[19].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_size)
-		profileForm.Items[19].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Txt_translator_precision)
-		// spacer (19)
-		profileForm.Items[21].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Tts_type)
-		profileForm.Items[22].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Tts_ai_device)
-		// spacer (23)
-		profileForm.Items[24].Widget.(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Ocr_type)
-		profileForm.Items[25].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Ocr_ai_device)
-		profileForm.Items[25].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).SetSelected(profileSettings.Ocr_precision)
 
 		formSubmitFunction = func() {
-			profileSettings.Websocket_ip = profileForm.Items[0].Widget.(*fyne.Container).Objects[0].(*widget.Entry).Text
-			profileSettings.Websocket_port, _ = strconv.Atoi(profileForm.Items[0].Widget.(*fyne.Container).Objects[1].(*widget.Entry).Text)
-			profileSettings.Run_backend = profileForm.Items[0].Widget.(*fyne.Container).Objects[2].(*widget.Check).Checked
-
-			profileSettings.Audio_api = profileForm.Items[2].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Device_index, _ = strconv.Atoi(profileForm.Items[3].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value)
-			profileSettings.Audio_input_device = profileForm.Items[3].Widget.(*CustomWidget.TextValueSelect).GetSelected().Text
-
-			profileSettings.Device_out_index, _ = strconv.Atoi(profileForm.Items[5].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value)
-			profileSettings.Audio_output_device = profileForm.Items[5].Widget.(*CustomWidget.TextValueSelect).GetSelected().Text
-
-			profileSettings.Vad_enabled = profileForm.Items[7].Widget.(*fyne.Container).Objects[0].(*widget.Check).Checked
-			profileSettings.Vad_on_full_clip = profileForm.Items[7].Widget.(*fyne.Container).Objects[1].(*widget.Check).Checked
-			profileSettings.Realtime = profileForm.Items[7].Widget.(*fyne.Container).Objects[2].(*widget.Check).Checked
-			profileSettings.Push_to_talk_key = profileForm.Items[7].Widget.(*fyne.Container).Objects[3].(*fyne.Container).Objects[0].(*CustomWidget.HotKeyEntry).Text
-			profileSettings.Vad_confidence_threshold = profileForm.Items[8].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value
-
-			profileSettings.Energy = int(profileForm.Items[9].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value)
-			profileSettings.Denoise_audio = profileForm.Items[10].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value // !!!!!!
-			profileSettings.Pause = profileForm.Items[11].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value
-			profileSettings.Phrase_time_limit = profileForm.Items[12].Widget.(*fyne.Container).Objects[0].(*widget.Slider).Value
-
-			profileSettings.Stt_type = profileForm.Items[13].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Ai_device = profileForm.Items[14].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Model = profileForm.Items[15].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Whisper_precision = profileForm.Items[15].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected().Value
-
-			profileSettings.Txt_translator = profileForm.Items[17].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Txt_translator_device = profileForm.Items[18].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Txt_translator_size = profileForm.Items[19].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Txt_translator_precision = profileForm.Items[19].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected().Value
-
-			profileSettings.Tts_type = profileForm.Items[21].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Tts_ai_device = profileForm.Items[22].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
-
-			profileSettings.Ocr_type = profileForm.Items[24].Widget.(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Ocr_ai_device = profileForm.Items[25].Widget.(*fyne.Container).Objects[0].(*CustomWidget.TextValueSelect).GetSelected().Value
-			profileSettings.Ocr_precision = profileForm.Items[25].Widget.(*fyne.Container).Objects[1].(*CustomWidget.TextValueSelect).GetSelected().Value
+			// Generic save of all registered controls
+			engine.SaveToSettings(&profileSettings)
 
 			// update existing settings or create new one if it does not exist yet
 			if Utilities.FileExists(filepath.Join(profilesDir, settingsFiles[id])) {
@@ -2302,7 +1441,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				buttonList := container.New(layout.NewGridLayout(2))
 				buttonList.Add(widget.NewButtonWithIcon(lang.L("Reconnect"), theme.MediaReplayIcon(), func() {
 					Settings.Config.Run_backend_reconnect = true
-					stopAndClose(playBackDevice, onClose)
+					stopAndClose(&playBackDevice, onClose)
 					backendCheckDialog.Hide()
 				}))
 				quitButton := widget.NewButtonWithIcon(lang.L("Quit running backend"), theme.ConfirmIcon(), func() {
@@ -2313,7 +1452,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 						Logging.CaptureException(err)
 						dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
 					} else {
-						stopAndClose(playBackDevice, onClose)
+						stopAndClose(&playBackDevice, onClose)
 					}
 					backendCheckDialog.Hide()
 				})
@@ -2331,7 +1470,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				backendCheckDialog.Show()
 			} else {
 				backendCheckStateDialog.Hide()
-				stopAndClose(playBackDevice, onClose)
+				stopAndClose(&playBackDevice, onClose)
 			}
 		}
 
@@ -2352,8 +1491,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		profileList.Refresh()
 
-		profileForm.Refresh()
-
 		err = playBackDevice.InitDevices(false)
 		if err != nil {
 			Logging.CaptureException(err)
@@ -2368,15 +1505,15 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	newProfileEntry.Validator = func(s string) error {
 		s = strings.TrimSpace(s)
 		if len(s) == 0 {
-			return fmt.Errorf(lang.L("please enter a profile name"))
+			return errors.New(lang.L("please enter a profile name"))
 		}
 		if strings.HasSuffix(s, ".yaml") || strings.HasSuffix(s, ".yml") {
-			return fmt.Errorf(lang.L("please do not include file extension"))
+			return errors.New(lang.L("please do not include file extension"))
 		}
 		// check if profile name already exists
 		for _, file := range settingsFiles {
 			if strings.EqualFold(file, s+".yaml") || strings.EqualFold(file, s+".yml") {
-				return fmt.Errorf(lang.L("profile name already exists"))
+				return errors.New(lang.L("profile name already exists"))
 			}
 		}
 		return nil

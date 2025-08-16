@@ -100,7 +100,6 @@ func (s *TextValueSelect) SetSelectedIndex(index int) {
 	if index < 0 || index >= len(s.Options) {
 		return
 	}
-
 	s.updateSelected(s.Options[index].Text)
 }
 
@@ -131,12 +130,12 @@ func (s *TextValueSelect) ContainsEntry(compareEntry *TextValueOption, compareTy
 	}
 	for i := 0; i < len(s.Options); i++ {
 		if compareType == CompareValue {
-			if compareEntry != nil && s.Options[i].Value == compareEntry.Value {
+			if s.Options[i].Value == compareEntry.Value {
 				return true
 			}
 		}
 		if compareType == CompareText {
-			if compareEntry != nil && s.Options[i].Text == compareEntry.Text {
+			if s.Options[i].Text == compareEntry.Text {
 				return true
 			}
 		}
@@ -150,12 +149,12 @@ func (s *TextValueSelect) GetEntry(compareEntry *TextValueOption, compareType in
 	}
 	for i := 0; i < len(s.Options); i++ {
 		if compareType == CompareValue {
-			if compareEntry != nil && s.Options[i].Value == compareEntry.Value {
+			if s.Options[i].Value == compareEntry.Value {
 				return &s.Options[i]
 			}
 		}
 		if compareType == CompareText {
-			if compareEntry != nil && s.Options[i].Text == compareEntry.Text {
+			if s.Options[i].Text == compareEntry.Text {
 				return &s.Options[i]
 			}
 		}
