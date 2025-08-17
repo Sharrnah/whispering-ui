@@ -101,10 +101,9 @@ func (b *ProfileBuilder) BuildAll(engine *FormEngine, inputOptions, outputOption
 	sttDevice := b.newSelect(engine, "ai_device", DefaultDeviceOptions())
 	sttPrecision := b.newSelect(engine, "Precision", GenericWhisperPrecisionOptions())
 	sttType := b.newSelect(engine, "stt_type", STTTypeOptions())
-	if sttOpts, _, ok := STTModelOptions("faster_whisper"); ok {
-		sttModel := b.newSelect(engine, "model", sttOpts)
-		engine.Controls.STTDevice, engine.Controls.STTPrecision, engine.Controls.STTType, engine.Controls.STTModelSize = sttDevice, sttPrecision, sttType, sttModel
-	}
+	sttOpts, _, _ := STTModelOptions("faster_whisper")
+	sttModel := b.newSelect(engine, "model", sttOpts)
+	engine.Controls.STTDevice, engine.Controls.STTPrecision, engine.Controls.STTType, engine.Controls.STTModelSize = sttDevice, sttPrecision, sttType, sttModel
 	engine.Register("whisper_precision", sttPrecision)
 
 	// TXT
