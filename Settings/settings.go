@@ -23,7 +23,22 @@ import (
 )
 
 func GetConfProfileDir() string {
-	return filepath.Join(".", "Profiles")
+	exe, err := os.Executable()
+	if err != nil {
+		// Fallback to current working directory
+		dir := filepath.Join(".", "Profiles")
+		_ = os.MkdirAll(dir, 0o755)
+		return dir
+	}
+
+	// Resolve symlinks where possible
+	if realExe, e := filepath.EvalSymlinks(exe); e == nil {
+		exe = realExe
+	}
+
+	dir := filepath.Join(filepath.Dir(exe), "Profiles")
+	_ = os.MkdirAll(dir, 0o755)
+	return dir
 }
 
 //goland:noinspection GoSnakeCaseUsage

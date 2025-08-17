@@ -226,7 +226,7 @@ func main() {
 			}
 		}
 
-		Fields.Field.StatusText.Wrapping = fyne.TextTruncate
+		Fields.Field.StatusText.Truncation = fyne.TextTruncateClip
 		w.SetContent(container.NewBorder(nil, Fields.Field.StatusRow, nil, nil, appTabs))
 
 		// set main window size
@@ -265,34 +265,40 @@ func main() {
 	profileWindow.CenterOnScreen()
 	profileWindow.Show()
 
-	if exePath, err := os.Executable(); err == nil {
-		exeDir := filepath.Dir(exePath)
+	exePath, err := os.Executable()
 
-		// check if enough free space is available if no whisper executable is found
-		if !Utilities.FileExists("audioWhisper/audioWhisper.exe") && !Utilities.FileExists("audioWhisper.py") {
-			checkFreeSpace(profileWindow, exeDir, minFreeSpace)
-		}
+	go func() {
+		if err == nil && exePath != "" {
+			exeDir := filepath.Dir(exePath)
+			// check if enough free space is available if no whisper executable is found
+			if !Utilities.FileExists("audioWhisper/audioWhisper.exe") && !Utilities.FileExists("audioWhisper.py") {
+				checkFreeSpace(profileWindow, exeDir, minFreeSpace)
+			}
 
-		// priority: warn if running from temp directory, then ask about error reporting
-		if strings.HasPrefix(strings.ToLower(exeDir), strings.ToLower(os.TempDir())) {
-			//goland:noinspection GoErrorStringFormat
-			dlg := dialog.NewError(
-				fmt.Errorf(lang.L("It looks like you are running Whispering Tiger from a temporary directory. Please extract the application and run it from a different folder.")),
-				profileWindow,
-			)
-			dlg.SetOnClosed(func() {
+			// priority: warn if running from temp directory, then ask about error reporting
+			if strings.HasPrefix(strings.ToLower(exeDir), strings.ToLower(os.TempDir())) {
+				//goland:noinspection GoErrorStringFormat
+				dlg := dialog.NewError(
+					fmt.Errorf(lang.L("It looks like you are running Whispering Tiger from a temporary directory. Please extract the application and run it from a different folder.")),
+					profileWindow,
+				)
+				dlg.SetOnClosed(func() {
+					requestErrorReporting(profileWindow)
+					startBackgroundTasks()
+				})
+
+				fyne.Do(func() {
+					dlg.Show()
+				})
+			} else {
 				requestErrorReporting(profileWindow)
 				startBackgroundTasks()
-			})
-			dlg.Show()
+			}
 		} else {
 			requestErrorReporting(profileWindow)
 			startBackgroundTasks()
 		}
-	} else {
-		requestErrorReporting(profileWindow)
-		startBackgroundTasks()
-	}
+	}()
 
 	a.Lifecycle().SetOnStopped(func() {
 		// after run (app exit), send whisper process signal to stop
@@ -309,28 +315,32 @@ func main() {
 // new helper – ask about error reporting once, then start background tasks
 func requestErrorReporting(parentWindow fyne.Window) {
 	if !fyne.CurrentApp().Preferences().BoolWithFallback("SendErrorsToServerInit", false) {
-		dialog.NewConfirm(
-			lang.L("Automatically Report Errors"),
-			lang.L("Do you want to automatically report errors?"),
-			func(b bool) {
-				Logging.EnableReporting(b)
-				fyne.CurrentApp().Preferences().SetBool("SendErrorsToServerInit", true)
-			},
-			parentWindow,
-		).Show()
+		fyne.Do(func() {
+			dialog.NewConfirm(
+				lang.L("Automatically Report Errors"),
+				lang.L("Do you want to automatically report errors?"),
+				func(b bool) {
+					Logging.EnableReporting(b)
+					fyne.CurrentApp().Preferences().SetBool("SendErrorsToServerInit", true)
+				},
+				parentWindow,
+			).Show()
+		})
 	}
 }
 
 func checkFreeSpace(window fyne.Window, directory string, spaceRequired uint64) {
 	// check free space
 	if free, err := Hardwareinfo.GetFreeSpace(directory); err == nil && free < spaceRequired {
-		dialog.NewInformation(
-			lang.L("Low Disk Space"),
-			lang.L("Only ? GB free space remaining. The space might not be enough.", map[string]interface{}{
-				"SpaceRemaining": fmt.Sprintf("%.2f", float64(free)/float64(Utilities.GiB)),
-				"Directory":      directory,
-			}),
-			window).Show()
+		fyne.Do(func() {
+			dialog.NewInformation(
+				lang.L("Low Disk Space"),
+				lang.L("Only ? GB free space remaining. The space might not be enough.", map[string]interface{}{
+					"SpaceRemaining": fmt.Sprintf("%.2f", float64(free)/float64(Utilities.GiB)),
+					"Directory":      directory,
+				}),
+				window).Show()
+		})
 	}
 }
 
