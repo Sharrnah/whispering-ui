@@ -54,10 +54,24 @@ type CurrentPlaybackDevice struct {
 	testAudioSampleRate uint32
 	isInitializing      bool       // Add this flag
 	initMutex           sync.Mutex // Add this mutex
+	// stop-Koordination, um verlorene Stop-Signale vor Kanal-Initialisierung zu vermeiden
+	stopPending bool
+	stopMu      sync.Mutex
 }
 
 func (c *CurrentPlaybackDevice) Stop() {
-	c.stopChannel <- true
+	// Nicht-blockierendes Stop-Signal. Falls der Kanal noch nicht existiert,
+	// merken wir uns das Stoppen als Pending und liefern es nach.
+	c.stopMu.Lock()
+	defer c.stopMu.Unlock()
+	if c.stopChannel != nil {
+		select { // try non-blocking
+		case c.stopChannel <- true:
+		default:
+		}
+	} else {
+		c.stopPending = true
+	}
 }
 
 func (c *CurrentPlaybackDevice) PlayStopTestAudio() {
@@ -212,7 +226,9 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 	sizeInBytesPlayback := uint32(malgo.SampleSizeInBytes(deviceConfig.Playback.Format))
 
 	c.InputWaveWidget.Max = 0.1
-	c.InputWaveWidget.Refresh()
+	fyne.Do(func() {
+		c.InputWaveWidget.Refresh()
+	})
 
 	// Add mutex for test audio synchronization
 	var testAudioMutex sync.Mutex
@@ -381,14 +397,39 @@ func (c *CurrentPlaybackDevice) Init() {
 		}
 	}()
 
-	// wait for a single stop signal and then clean up
-	c.stopChannel = make(chan bool)
+	// Warte auf ein einzelnes Stop-Signal und dann aufräumen
+	// Verwende einen gepufferten Kanal, sodass Stop() schon vorher senden kann
+	c.stopChannel = make(chan bool, 1)
+	// Wenn Stop() bereits vor der Kanal-Erstellung aufgerufen wurde, Signal nachliefern
+	c.stopMu.Lock()
+	if c.stopPending {
+		c.stopPending = false
+		select { // non-blocking in case receiver not ready yet (buffered channel)
+		case c.stopChannel <- true:
+		default:
+		}
+	}
+	c.stopMu.Unlock()
 	<-c.stopChannel
+	// Kanal schließen und auf nil setzen, um künftige Stop()-Aufrufe als pending markieren zu können
+	c.stopMu.Lock()
+	close(c.stopChannel)
+	c.stopChannel = nil
+	c.stopMu.Unlock()
 	fmt.Println("stopping...")
+	// Schütze Geräte-Cleanup mit dem gleichen Mutex wie die (Re-)Initialisierung,
+	// um Race-Conditions zwischen InitDevices/UnInitDevices/Init zu vermeiden.
+	c.initMutex.Lock()
 	if c.device != nil {
+		// sicherheitshalber stoppen, wenn noch gestartet
+		if c.device.IsStarted() {
+			c.device.Stop()
+			time.Sleep(200 * time.Millisecond)
+		}
 		c.device.Uninit()
 		c.device = nil
 	}
+	c.initMutex.Unlock()
 }
 
 // isMultiModalModelPair checks if two model selections represent the same multi-modal model
@@ -629,19 +670,137 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 		// Define local handlers for deps
 		onAudioAPIChanged := func(opt CustomWidget.TextValueOption) {
-			// When API changes, we should refresh device options from Utilities.AudioDeviceMemory
-			backendId := ""
-			if parts := strings.Split(opt.Value, "|"); len(parts) > 0 {
-				backendId = parts[0]
+			// Resolve backend by display name
+			backend := AudioAPI.GetAudioBackendByName(opt.Text)
+
+			// Stop current context/device and switch backend
+			playBackDevice.Stop()          // end malgo context goroutine
+			playBackDevice.UnInitDevices() // ensure device is stopped/uninitialized
+			playBackDevice.AudioAPI = backend.Backend
+
+			// Start a fresh malgo context for the new backend
+			go playBackDevice.Init()
+
+			// Try to refresh device option lists for this backend (plain values)
+			// Remember previously selected labels (text) to attempt preservation
+			prevInputLabel := ""
+			prevOutputLabel := ""
+			if engine.Controls.AudioInput != nil {
+				prevInputLabel = engine.Controls.AudioInput.Selected
 			}
-			// No-op: actual device lists are provided via InputOptions/OutputOptions at build-time
-			_ = backendId
+			if engine.Controls.AudioOutput != nil {
+				prevOutputLabel = engine.Controls.AudioOutput.Selected
+			}
+
+			// Helper to normalize names and detect truncated (MME) matches
+			normalize := func(s string) string {
+				s = strings.TrimSpace(s)
+				// remove optional loopback suffix used by capture listing
+				s = strings.TrimSuffix(s, " [Loopback]")
+				return s
+			}
+			namesEqualOrTruncated := func(a, b string) bool {
+				aN := strings.ToLower(normalize(a))
+				bN := strings.ToLower(normalize(b))
+				if aN == bN {
+					return true
+				}
+				// consider truncated prefix (MME shorter)
+				if len(aN) > len(bN) && strings.HasPrefix(aN, bN) {
+					return true
+				}
+				if len(bN) > len(aN) && strings.HasPrefix(bN, aN) {
+					return true
+				}
+				return false
+			}
+
+			inOpts, _, _ := GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0, "", "")
+			outOpts, _, _ := GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Playback}, len(inOpts), "", "")
+			if engine.Controls.AudioInput != nil {
+				engine.Controls.AudioInput.Options = inOpts
+				preserved := false
+				if prevInputLabel != "" {
+					// try exact or truncated match
+					for _, o := range inOpts {
+						if namesEqualOrTruncated(o.Text, prevInputLabel) {
+							engine.Controls.AudioInput.SetSelectedByText(o.Text)
+							preserved = true
+							break
+						}
+					}
+					// prefer Default if previous sounded like Default
+					if !preserved && strings.HasPrefix(strings.ToLower(prevInputLabel), "default") {
+						for _, o := range inOpts {
+							if strings.HasPrefix(strings.ToLower(o.Text), "default") {
+								engine.Controls.AudioInput.SetSelectedByText(o.Text)
+								preserved = true
+								break
+							}
+						}
+					}
+				}
+				if !preserved {
+					if len(inOpts) > 0 {
+						engine.Controls.AudioInput.SetSelectedIndex(0)
+					} else {
+						engine.Controls.AudioInput.ClearSelected()
+					}
+				}
+			}
+			if engine.Controls.AudioOutput != nil {
+				engine.Controls.AudioOutput.Options = outOpts
+				preserved := false
+				if prevOutputLabel != "" {
+					for _, o := range outOpts {
+						if namesEqualOrTruncated(o.Text, prevOutputLabel) {
+							engine.Controls.AudioOutput.SetSelectedByText(o.Text)
+							preserved = true
+							break
+						}
+					}
+					if !preserved && strings.HasPrefix(strings.ToLower(prevOutputLabel), "default") {
+						for _, o := range outOpts {
+							if strings.HasPrefix(strings.ToLower(o.Text), "default") {
+								engine.Controls.AudioOutput.SetSelectedByText(o.Text)
+								preserved = true
+								break
+							}
+						}
+					}
+				}
+				if !preserved {
+					if len(outOpts) > 0 {
+						engine.Controls.AudioOutput.SetSelectedIndex(0)
+					} else {
+						engine.Controls.AudioOutput.ClearSelected()
+					}
+				}
+			}
+
+			// Apply current selections to playback device and re-init
+			go func() {
+				// Update names from current selection texts
+				if engine.Controls.AudioInput != nil && engine.Controls.AudioInput.GetSelected() != nil {
+					playBackDevice.InputDeviceName = engine.Controls.AudioInput.GetSelected().Text
+				}
+				if engine.Controls.AudioOutput != nil && engine.Controls.AudioOutput.GetSelected() != nil {
+					playBackDevice.OutputDeviceName = engine.Controls.AudioOutput.GetSelected().Text
+				}
+				// Wait shortly for context to be ready, then init devices
+				playBackDevice.WaitUntilInitialized(5)
+				_ = playBackDevice.InitDevices(false)
+			}()
 		}
 		onAudioInputChanged := func(opt CustomWidget.TextValueOption) {
 			playBackDevice.InputDeviceName = opt.Text
+			// Re-init to apply new input immediately
+			go func() { _ = playBackDevice.InitDevices(false) }()
 		}
 		onAudioOutputChanged := func(opt CustomWidget.TextValueOption) {
 			playBackDevice.OutputDeviceName = opt.Text
+			// Re-init to apply new output immediately (playback)
+			go func() { _ = playBackDevice.InitDevices(false) }()
 		}
 		onDetectEnergy := func(apiValue, deviceIndexValue, deviceText string) (float64, error) {
 			// Reuse existing energy detection logic: temporarily start capture for a short burst and compute level
