@@ -4,6 +4,7 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
+	"strings"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Pages/SettingsMappings"
 	"whispering-tiger-ui/Utilities/Hardwareinfo"
@@ -74,7 +75,7 @@ func BuildFullProfileLayout() []RowSpec {
 	)
 	rows = append(rows,
 		RowSpec{Label: lang.L("energy.Name"), Hint: lang.L("The volume level at which the speech detection will trigger. (0 = Disabled, useful for Push2Talk)"), CustomKey: "EnergyRow"},
-		RowSpec{Label: lang.L("Noise Filter"), Hint: lang.L("Requires a restart when switching the Noise Filter type. Disabling will stop applying it even without restart."), ControlNames: []string{"DenoiseAudio"}, Cols: 1},
+		RowSpec{Label: lang.L("denoise_audio.Name"), Hint: strings.Replace(lang.L("denoise_audio.Description"), "\n", " ", -1), ControlNames: []string{"DenoiseAudio"}, Cols: 1},
 		RowSpec{Label: lang.L("pause.Name"), Hint: lang.L("pause.Description"), CustomKey: "PauseRow"},
 		RowSpec{Label: lang.L("phrase_time_limit.Name"), Hint: lang.L("phrase_time_limit.Description"), CustomKey: "PhraseRow"},
 	)

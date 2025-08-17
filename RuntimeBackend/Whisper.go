@@ -152,28 +152,30 @@ func (c *WhisperProcessConfig) AttachEnvironment(envName, envValue string) {
 }
 
 func (c *WhisperProcessConfig) processLogOutputLine(line string, isUpdating bool) {
-	// Try to decode if the line contains a progress percentage
-	progress, err := Utilities.ParseProgressFromString(line)
-	fyne.Do(func() {
-		if err == nil {
-			Fields.Field.StatusBar.SetValue(progress)
-		} else {
-			Fields.Field.StatusBar.SetValue(0)
-		}
-	})
+	// Detect loading JSON (unconditional to prevent status bar updates for such lines)
+	isLoading := ProcessLoadingMessage(line)
+
+	// Try to decode if the line contains a progress percentage (skip for loading JSON)
+	if !isLoading {
+		progress, err := Utilities.ParseProgressFromString(line)
+		fyne.Do(func() {
+			if err == nil {
+				Fields.Field.StatusBar.SetValue(progress)
+			} else {
+				Fields.Field.StatusBar.SetValue(0)
+			}
+		})
+	}
 
 	if !isUpdating {
 		// Try to decode the line as loading JSON message
-		if ProcessLoadingMessage(line) {
-			// if it is a loading message, do not add to log
-			return
-		}
+		isLoading = ProcessLoadingMessage(line)
 
-		// write to log.txt file if WriteLogFile is enabled
-		if fyne.CurrentApp().Preferences().BoolWithFallback("WriteLogfile", false) {
+		// write to log.txt file if WriteLogFile is enabled (skip loading messages to avoid noise)
+		if !isLoading && fyne.CurrentApp().Preferences().BoolWithFallback("WriteLogfile", false) {
 			Utilities.WriteLog("log.txt", line)
 		}
-		// Mirror to RecentLog only for non-updating final lines
+		// Mirror to RecentLog only for non-updating final lines (include loading JSON for refresh parity)
 		if strings.TrimSpace(line) != "" {
 			c.RecentLog = append(c.RecentLog, line)
 			if len(c.RecentLog) > MaxClipboardLogLines {
@@ -182,22 +184,24 @@ func (c *WhisperProcessConfig) processLogOutputLine(line string, isUpdating bool
 		}
 	}
 
-	// set last log line to status bar text.
-	Fields.DataBindings.StatusTextBinding.Set(line)
+	// set last log line to status bar text (skip loading JSON)
+	if !isLoading {
+		Fields.DataBindings.StatusTextBinding.Set(line)
+	}
 }
 
 func (c *WhisperProcessConfig) processErrorOutputLine(line string, isUpdating bool) {
-	// Try to decode if the line contains a progress percentage
-	progress, err := Utilities.ParseProgressFromString(line)
+	// Detect loading JSON (unconditional to prevent status bar updates for such lines)
+	isLoading := ProcessLoadingMessage(line)
 
-	if err == nil {
-		fyne.Do(func() {
-			Fields.Field.StatusBar.SetValue(progress)
-		})
-	} else {
-		fyne.Do(func() {
-			Fields.Field.StatusBar.SetValue(0)
-		})
+	// Try to decode if the line contains a progress percentage (skip for loading JSON)
+	if !isLoading {
+		progress, err := Utilities.ParseProgressFromString(line)
+		if err == nil {
+			fyne.Do(func() { Fields.Field.StatusBar.SetValue(progress) })
+		} else {
+			fyne.Do(func() { Fields.Field.StatusBar.SetValue(0) })
+		}
 	}
 
 	if !isUpdating {
@@ -209,7 +213,7 @@ func (c *WhisperProcessConfig) processErrorOutputLine(line string, isUpdating bo
 		}
 		if err := json.Unmarshal([]byte(line), &exceptionMessage); err == nil {
 			lastTraceback := ""
-			if exceptionMessage.Traceback != nil && len(exceptionMessage.Traceback) > 0 {
+			if len(exceptionMessage.Traceback) > 0 {
 				lastTraceback = exceptionMessage.Traceback[len(exceptionMessage.Traceback)-1]
 			}
 			// Handle error message
@@ -233,17 +237,14 @@ func (c *WhisperProcessConfig) processErrorOutputLine(line string, isUpdating bo
 			})
 		}
 
-		// Try to decode the line as loading JSON message
-		if ProcessLoadingMessage(line) {
-			// if it is a loading message, do not add to log
-			return
-		}
+		// Try to decode the line as loading JSON message (do not early-return; we still mirror to RecentLog)
+		isLoading = ProcessLoadingMessage(line)
 
 		// write to log.txt file if WriteLogFile is enabled
-		if fyne.CurrentApp().Preferences().BoolWithFallback("WriteLogfile", false) {
+		if !isLoading && fyne.CurrentApp().Preferences().BoolWithFallback("WriteLogfile", false) {
 			Utilities.WriteLog("log.txt", line)
 		}
-		// Mirror to RecentLog only for non-updating final lines
+		// Mirror to RecentLog only for non-updating final lines (include loading JSON for refresh parity)
 		if strings.TrimSpace(line) != "" {
 			c.RecentLog = append(c.RecentLog, line)
 			if len(c.RecentLog) > MaxClipboardLogLines {
@@ -252,10 +253,10 @@ func (c *WhisperProcessConfig) processErrorOutputLine(line string, isUpdating bo
 		}
 	}
 
-	// set last log line to status bar text.
-	fyne.Do(func() {
-		Fields.DataBindings.StatusTextBinding.Set(line)
-	})
+	// set last log line to status bar text (skip loading JSON)
+	if !isLoading {
+		fyne.Do(func() { Fields.DataBindings.StatusTextBinding.Set(line) })
+	}
 }
 
 func (c *WhisperProcessConfig) SetOutputHandling(stderr io.Reader, processLineFunc func(string, bool)) {

@@ -146,7 +146,7 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 		}
 		if tab.Text == lang.L("Logs") {
 			fyne.Do(func() {
-				Fields.Field.LogText.SetText(strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\n") + "\r\n")
+				Fields.Field.LogText.SetText(strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\n"))
 			})
 		}
 	}

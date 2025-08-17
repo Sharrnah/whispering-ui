@@ -2,14 +2,6 @@ package main
 
 import (
 	"fmt"
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/app"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
-	"fyne.io/fyne/v2/lang"
-	"fyne.io/fyne/v2/layout"
-	"fyne.io/fyne/v2/theme"
-	"fyne.io/fyne/v2/widget"
 	"log"
 	"os"
 	"path/filepath"
@@ -28,6 +20,15 @@ import (
 	"whispering-tiger-ui/Utilities"
 	"whispering-tiger-ui/Utilities/Hardwareinfo"
 	"whispering-tiger-ui/Websocket"
+
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/app"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/lang"
+	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/theme"
+	"fyne.io/fyne/v2/widget"
 )
 
 const minFreeSpace uint64 = 8 * Utilities.GiB
@@ -215,11 +216,9 @@ func main() {
 						tabContent.OnSelected(tabContent.Items[tabContent.SelectedIndex()])
 					}
 					if tabContent.Selected().Text == lang.L("Logs") {
-						//Fields.Field.LogText.SetText("")
-						//Fields.Field.LogText.Write([]byte(strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\r\n") + "\r\n"))
-
 						fyne.Do(func() {
-							Fields.Field.LogText.SetText(strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\n") + "\r\n")
+							// Set the log text without additional CRLF at the end to keep the line count stable
+							Fields.Field.LogText.SetText(strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\n"))
 						})
 					}
 				}
