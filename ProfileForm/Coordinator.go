@@ -359,32 +359,28 @@ func (c *Coordinator) ApplySTTTypeChange(modelType string) {
 	}
 	c.Enable(sttSize, sttPrec, sttDev)
 	c.SetOptionsWithFallback(sttDev, DefaultDeviceOptions())
-	if opts, defIdx, enable := STTModelOptions(modelType); enable {
+	// Model size options and enable/disable come from Schema.go
+	if opts, defIdx, _ := STTModelOptions(modelType); opts != nil {
 		c.SetOptionsWithFallback(sttSize, opts)
 		if sttSize.GetSelected() == nil && len(opts) > defIdx {
 			sttSize.SetSelectedIndex(defIdx)
 		}
-	} else {
-		sttSize.Disable()
 	}
-	if pOpts, pEnable := STTPrecisionOptions(modelType); pEnable {
-		c.SetOptionsWithFallback(sttPrec, pOpts)
+	if _, _, enable := STTModelOptions(modelType); !enable {
+		sttSize.Disable()
 	} else {
-		if modelType == "nemo_canary" {
-			c.SetOptionsWithFallback(sttPrec, []CustomWidget.TextValueOption{{Text: "float32 " + lang.L("precision"), Value: "float32"}})
-			sttPrec.Disable()
+		sttSize.Enable()
+	}
+	// Precision options and enable/disable come from Schema.go
+	if pOpts, pEnable := STTPrecisionOptions(modelType); pOpts != nil {
+		c.SetOptionsWithFallback(sttPrec, pOpts)
+		if pEnable {
+			sttPrec.Enable()
 		} else {
 			sttPrec.Disable()
 		}
-	}
-	switch modelType {
-	case "speech_t5":
+	} else {
 		sttPrec.Disable()
-		sttSize.Disable()
-	case "phi4":
-		c.SetOptionsWithFallback(sttSize, []CustomWidget.TextValueOption{{Text: "Large", Value: "large"}})
-		sttSize.Disable()
-		c.SetOptionsWithFallback(sttPrec, []CustomWidget.TextValueOption{{Text: "float32 " + lang.L("precision"), Value: "float32"}, {Text: "float16 " + lang.L("precision"), Value: "float16"}, {Text: "bfloat16 " + lang.L("precision"), Value: "bfloat16"}})
 	}
 	AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: "Whisper", AIModelType: firstNonEmpty(modelType, "-")}
 	AIModel.CalculateMemoryConsumption(c.CPUMemoryBar, c.GPUMemoryBar, c.TotalGPUMemoryMiB)
@@ -415,13 +411,6 @@ func (c *Coordinator) ApplyTXTTypeChange(modelType string) {
 	}
 	c.Enable(txtDev, txtPrec, txtSize)
 	c.SetOptionsWithFallback(txtDev, DefaultDeviceOptions())
-	switch modelType {
-	case "NLLB200":
-		if txtDev != nil {
-			txtDev.SetSelected("cpu")
-			txtDev.Disable()
-		}
-	}
 	if pOpts, pEnable := TXTPrecisionOptions(modelType); pEnable {
 		c.SetOptionsWithFallback(txtPrec, pOpts)
 	} else {
@@ -478,30 +467,46 @@ func (c *Coordinator) ApplyOCRTypeChange(modelType string) {
 	c.Enable(oDev, oPrec)
 	if modelType == "" {
 		c.Disable(oDev, oPrec)
-	} else if modelType == "easyocr" {
+	} else {
+		// Device options are narrowed by OCR type
 		if oDev != nil {
-			oDev.SetSelected("cpu")
-			oDev.Disable()
+			devOpts := OCRDeviceOptions(modelType)
+			c.SetOptionsWithFallback(oDev, devOpts)
+			if len(devOpts) == 1 {
+				oDev.SetSelected(devOpts[0].Value)
+				oDev.Disable()
+			} else {
+				oDev.Enable()
+			}
 		}
-		if oPrec != nil {
+		if pOpts, pEnable := OCRPrecisionOptions(modelType); pEnable {
+			c.SetOptionsWithFallback(oPrec, pOpts)
+		} else if oPrec != nil {
+			// Populate minimal list (if any) and disable when not enabled for this type
+			if pOpts != nil {
+				c.SetOptionsWithFallback(oPrec, pOpts)
+			}
 			oPrec.Disable()
 		}
-	} else if c.Controls.STTType != nil && c.getSelectedType(c.Controls.STTType) == modelType {
-		if oDev != nil && c.Controls.STTDevice != nil && c.Controls.STTDevice.GetSelected() != nil && oDev.ContainsEntry(c.Controls.STTDevice.GetSelected(), CustomWidget.CompareValue) {
-			oDev.SetSelected(c.Controls.STTDevice.GetSelected().Value)
+
+		// If OCR type equals selected STT or TXT multimodal model, mirror their device/precision and lock controls
+		if c.Controls.STTType != nil && c.getSelectedType(c.Controls.STTType) == modelType {
+			if oDev != nil && c.Controls.STTDevice != nil && c.Controls.STTDevice.GetSelected() != nil && oDev.ContainsEntry(c.Controls.STTDevice.GetSelected(), CustomWidget.CompareValue) {
+				oDev.SetSelected(c.Controls.STTDevice.GetSelected().Value)
+			}
+			if oPrec != nil && c.Controls.STTPrecision != nil && c.Controls.STTPrecision.GetSelected() != nil && oPrec.ContainsEntry(c.Controls.STTPrecision.GetSelected(), CustomWidget.CompareValue) {
+				oPrec.SetSelected(c.Controls.STTPrecision.GetSelected().Value)
+			}
+			c.Disable(oDev, oPrec)
+		} else if c.Controls.TxtType != nil && c.getSelectedType(c.Controls.TxtType) == modelType {
+			if oDev != nil && c.Controls.TxtDevice != nil && c.Controls.TxtDevice.GetSelected() != nil && oDev.ContainsEntry(c.Controls.TxtDevice.GetSelected(), CustomWidget.CompareValue) {
+				oDev.SetSelected(c.Controls.TxtDevice.GetSelected().Value)
+			}
+			if oPrec != nil && c.Controls.TxtPrecision != nil && c.Controls.TxtPrecision.GetSelected() != nil && oPrec.ContainsEntry(c.Controls.TxtPrecision.GetSelected(), CustomWidget.CompareValue) {
+				oPrec.SetSelected(c.Controls.TxtPrecision.GetSelected().Value)
+			}
+			c.Disable(oDev, oPrec)
 		}
-		if oPrec != nil && c.Controls.STTPrecision != nil && c.Controls.STTPrecision.GetSelected() != nil && oPrec.ContainsEntry(c.Controls.STTPrecision.GetSelected(), CustomWidget.CompareValue) {
-			oPrec.SetSelected(c.Controls.STTPrecision.GetSelected().Value)
-		}
-		c.Disable(oDev, oPrec)
-	} else if c.Controls.TxtType != nil && c.getSelectedType(c.Controls.TxtType) == modelType {
-		if oDev != nil && c.Controls.TxtDevice != nil && c.Controls.TxtDevice.GetSelected() != nil && oDev.ContainsEntry(c.Controls.TxtDevice.GetSelected(), CustomWidget.CompareValue) {
-			oDev.SetSelected(c.Controls.TxtDevice.GetSelected().Value)
-		}
-		if oPrec != nil && c.Controls.TxtPrecision != nil && c.Controls.TxtPrecision.GetSelected() != nil && oPrec.ContainsEntry(c.Controls.TxtPrecision.GetSelected(), CustomWidget.CompareValue) {
-			oPrec.SetSelected(c.Controls.TxtPrecision.GetSelected().Value)
-		}
-		c.Disable(oDev, oPrec)
 	}
 	AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: "ocrType", AIModelType: firstNonEmpty(modelType, "-")}
 	AIModel.CalculateMemoryConsumption(c.CPUMemoryBar, c.GPUMemoryBar, c.TotalGPUMemoryMiB)

@@ -90,7 +90,8 @@ func STTModelOptions(modelType string) (options []TVO, defaultIndex int, enableS
 	case "nemo_canary":
 		return []TVO{{Text: "Nemo Canary 1b", Value: "canary-1b"}, {Text: "Nemo Canary 180m flash", Value: "canary-180m-flash"}, {Text: "Nemo Canary 1b flash", Value: "canary-1b-flash"}, {Text: "Parakeet TDT 0.6B V2 (English)", Value: "parakeet-tdt-0_6b-v2"}}, 0, true
 	case "phi4":
-		return []TVO{{Text: "Large", Value: "large"}}, 0, true
+		// Phi-4 has a fixed model size; provide option for display but disable the selector in Coordinator
+		return []TVO{{Text: "Large", Value: "large"}}, 0, false
 	case "voxtral":
 		return []TVO{{Text: "Voxtral-Mini-3B-2507", Value: "Voxtral-Mini-3B-2507"}}, 0, true
 	case "speech_t5":
@@ -153,5 +154,34 @@ func TXTPrecisionOptions(modelType string) (options []TVO, enablePrecision bool)
 		return []TVO{{Text: "float32 " + lang.L("precision"), Value: "float32"}, {Text: "float16 " + lang.L("precision"), Value: "float16"}, {Text: "8bit " + lang.L("precision"), Value: "8bit"}, {Text: "4bit " + lang.L("precision"), Value: "4bit"}}, true
 	default:
 		return nil, false
+	}
+}
+
+// OCRPrecisionOptions returns precision lists for OCR types and whether the precision selector should be enabled.
+// Mirrors the pattern of STTPrecisionOptions/TXTPrecisionOptions for consistency.
+func OCRPrecisionOptions(modelType string) (options []TVO, enablePrecision bool) {
+	switch modelType {
+	case "easyocr":
+		// EasyOCR is CPU-only in our app and does not expose precision tuning
+		return []TVO{{Text: "float32 " + lang.L("precision"), Value: "float32"}}, false
+	case "got_ocr_20":
+		return []TVO{{Text: "float32 " + lang.L("precision"), Value: "float32"}, {Text: "float16 " + lang.L("precision"), Value: "float16"}, {Text: "bfloat16 " + lang.L("precision"), Value: "bfloat16"}}, true
+	case "phi4":
+		return []TVO{{Text: "float32 " + lang.L("precision"), Value: "float32"}, {Text: "float16 " + lang.L("precision"), Value: "float16"}, {Text: "bfloat16 " + lang.L("precision"), Value: "bfloat16"}}, true
+	default:
+		return nil, false
+	}
+}
+
+// OCRDeviceOptions returns allowed AI device options by OCR model type.
+// For easyocr we only allow CPU; others default to CPU/CUDA like the rest of the app.
+func OCRDeviceOptions(modelType string) []TVO {
+	switch modelType {
+	case "easyocr":
+		return []TVO{{Text: "CPU", Value: "cpu"}}
+	case "got_ocr_20", "phi4":
+		return DefaultDeviceOptions()
+	default:
+		return DefaultDeviceOptions()
 	}
 }
