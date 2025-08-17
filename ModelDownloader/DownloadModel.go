@@ -111,12 +111,12 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 		needsExtract = true
 		extractType = "tar.gz"
 	}
-	if extractFormat != "" {
-		needsExtract = true
-		extractType = extractFormat
-	} else if extractFormat == "none" {
+	if extractFormat == "none" {
 		needsExtract = false
 		extractType = ""
+	} else if extractFormat != "" {
+		needsExtract = true
+		extractType = extractFormat
 	}
 
 	// get subdomain from download url
@@ -142,7 +142,13 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 			})
 		} else {
 			fyne.Do(func() {
+				if total < 0 {
+					total = 0
+				}
 				statusBar.Max = float64(total)
+				if progress < 0 {
+					progress = 0
+				}
 				statusBar.SetValue(float64(progress))
 			})
 			resumeStatusText := ""
@@ -240,18 +246,16 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 		}
 	}
 
-	if err == nil {
-		fyne.Do(func() {
-			statusBarContainer.Add(widget.NewLabel("Finished."))
-			downloadDialog.SetDismissText("Close")
-			downloadDialog.Refresh()
-			if reOpenAfterHide {
-				downloadDialog.Show()
-			} else {
-				downloadDialog.Hide()
-			}
-		})
-	}
+	fyne.Do(func() {
+		statusBarContainer.Add(widget.NewLabel("Finished."))
+		downloadDialog.SetDismissText("Close")
+		downloadDialog.Refresh()
+		if reOpenAfterHide {
+			downloadDialog.Show()
+		} else {
+			downloadDialog.Hide()
+		}
+	})
 
 	fyne.Do(func() {
 		statusBarContainer.Refresh()
