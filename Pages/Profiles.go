@@ -522,8 +522,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	// fill audio device lists for later access
 	fillAudioDeviceLists()
 
-	// Audio section will be built inside BuildProfileForm after engine initialization
-
 	// show memory usage
 	CPUMemoryBar := widget.NewProgressBar()
 	totalCPUMemory := Hardwareinfo.GetCPUMemory()
@@ -593,8 +591,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		AIModel := Hardwareinfo.ProfileAIModelOption{}
 		AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 
-		// Aktualisiere ggf. den Coordinator mit dem ermittelten Gesamt-GPU-RAM,
-		// damit spätere Modellwechsel den Maximalwert korrekt setzen können
+		// Actualize the coordinator with the detected total GPU RAM,
+		// so that later model changes can set the maximum value correctly
 		fyne.Do(func() {
 			if coord != nil {
 				coord.TotalGPUMemoryMiB = totalGPUMemory
@@ -607,7 +605,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	}()
 
 	GPUMemoryBar.TextFormatter = func() string {
-		// Zeige den Maximalwert aus der ProgressBar (wird nach GPU-Detect gesetzt)
+		// Show the maximum value from the ProgressBar (set after GPU detection)
 		if GPUMemoryBar.Max <= 0 {
 			return lang.L("Estimated Video-RAM Usage:") + " " + strconv.Itoa(int(GPUMemoryBar.Value)) + " MiB"
 		}
@@ -619,13 +617,12 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	controls := &PF.AllProfileControls{}
 	// Form engine for generic load/save mapping
 	var engine *PF.FormEngine
-	// Coordinator wird weiter unten initialisiert (siehe coord = &Coordinator{...})
 
 	BuildProfileForm := func() fyne.CanvasObject {
 		profileForm := widget.NewForm()
 		// Form engine to centralize option updates and fallbacks
 		engine = PF.NewFormEngine(controls, nil)
-		// Rendering und Control-Erstellung erfolgt zentral in BuildAndRenderFullProfile
+		// Rendering and control creation is done centrally in BuildAndRenderFullProfile
 
 		audioInputProgress := playBackDevice.InputWaveWidget
 		audioOutputProgress := container.NewBorder(nil, nil, nil, widget.NewButtonWithIcon(lang.L("Test"), theme.MediaPlayIcon(), func() { playBackDevice.PlayStopTestAudio() }), playBackDevice.OutputWaveWidget)
@@ -654,32 +651,21 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		afterDetectEnergy := func() {}
 
 		deps := PF.FullFormDeps{
-			InputOptions:        audioInputDevicesOptions,
-			OutputOptions:       audioOutputDevicesOptions,
-			AudioInputProgress:  audioInputProgress,
-			AudioOutputProgress: audioOutputProgress,
-			OnAudioAPIChanged:   onAudioAPIChanged,
-			OnAudioInputChanged: onAudioInputChanged,
+			InputOptions:         audioInputDevicesOptions,
+			OutputOptions:        audioOutputDevicesOptions,
+			AudioInputProgress:   audioInputProgress,
+			AudioOutputProgress:  audioOutputProgress,
+			OnAudioAPIChanged:    onAudioAPIChanged,
+			OnAudioInputChanged:  onAudioInputChanged,
 			OnAudioOutputChanged: onAudioOutputChanged,
-			OnDetectEnergy:      onDetectEnergy,
-			AfterDetectEnergy:   afterDetectEnergy,
-			CPUMemoryBar:        CPUMemoryBar,
-			GPUMemoryBar:        GPUMemoryBar,
-			TotalGPUMemory:      func() int64 { return totalGPUMemory },
-			HasNvidiaGPU:        func() bool { return HasNvidiaGPU },
+			OnDetectEnergy:       onDetectEnergy,
+			AfterDetectEnergy:    afterDetectEnergy,
+			CPUMemoryBar:         CPUMemoryBar,
+			GPUMemoryBar:         GPUMemoryBar,
+			TotalGPUMemory:       func() int64 { return totalGPUMemory },
+			HasNvidiaGPU:         func() bool { return HasNvidiaGPU },
 		}
 		controls = PF.BuildAndRenderFullProfile(profileForm, engine, deps)
-
-		// VAD/Sliders Logik bleibt unten erhalten (OnChanged etc.)
-
-		// Audio-Handlers sind bereits zentral in BuildAndRenderFullProfile verdrahtet
-
-		// VAD/Sliders: OnChanged- und Dialog-Logik (UI ist über BuildFullProfileLayout bereits gerendert)
-
-		// energy autodetect
-		// Energie/Pause/Phrase/VAD-Logik ist in BuildAndRenderFullProfile gekapselt
-
-		// STT/TXT/TTS/OCR-Handler werden zentral im Builder gesetzt; hier sind keine zusätzlichen OnChanged nötig
 
 		profileForm.Append("", layout.NewSpacer())
 
@@ -693,7 +679,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			TotalGPUMemoryMiB: totalGPUMemory,
 		}
 
-		// Nach Initialisierung: Falls GPU-Total bereits ermittelt wurde, direkt setzen
+		// After initialization: if total GPU memory is already detected, set it directly
 		if totalGPUMemory > 0 {
 			coord.TotalGPUMemoryMiB = totalGPUMemory
 			if GPUMemoryBar.Max <= 0 {
@@ -701,9 +687,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				GPUMemoryBar.Refresh()
 			}
 		} else {
-			// Warte kurz asynchron auf GPU-Erkennung und setze dann den Max-Wert
+			// Wait shortly for GPU detection and then set the Max value
 			go func() {
-				for i := 0; i < 50; i++ { // bis zu ~5s warten
+				for i := 0; i < 50; i++ { // Wait up to ~5 seconds
 					if totalGPUMemory > 0 {
 						fyne.Do(func() {
 							coord.TotalGPUMemoryMiB = totalGPUMemory
@@ -729,10 +715,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	submitButton := widget.NewButtonWithIcon(lang.L("Save and Load Profile"), theme.ConfirmIcon(), func() {})
 	profileFormBuild := BuildProfileForm()
 	submitButton.OnTapped = func() {
-		formSubmitFunction()
+		go formSubmitFunction()
 	}
-
-	//profileListContent := container.NewVScroll(profileForm)
 
 	submitButton.Importance = widget.HighImportance
 	profileListContent := container.NewBorder(
@@ -773,6 +757,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	)
 	beginLine.Resize(fyne.NewSize(profileHelpTextContent.Size().Width, 2))
 
+	// Run migrations
 	Utilities.MigrateProfileSettingsLocation1704429446()
 
 	// build profile list
@@ -854,6 +839,14 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 
 		formSubmitFunction = func() {
+			loadingDialog := dialog.NewCustomWithoutButtons(lang.L("Loading..."), widget.NewProgressBarInfinite(), fyne.CurrentApp().Driver().AllWindows()[1])
+			fyne.Do(func() {
+				loadingDialog.Show()
+			})
+			defer fyne.Do(func() {
+				loadingDialog.Hide()
+			})
+
 			// Generic save of all registered controls
 			engine.SaveToSettings(&profileSettings)
 
