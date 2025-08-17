@@ -349,50 +349,18 @@ func (c *Coordinator) ApplySTTTypeChange(modelType string) {
 	}
 	c.InProgrammaticUpdate = true
 	defer func() { c.InProgrammaticUpdate = false }()
-	sttSize, sttPrec, sttDev := c.Controls.STTModelSize, c.Controls.STTPrecision, c.Controls.STTDevice
-	if modelType == "" {
-		c.Disable(sttSize, sttPrec, sttDev)
-		AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: "Whisper", AIModelType: "-"}
-		AIModel.CalculateMemoryConsumption(c.CPUMemoryBar, c.GPUMemoryBar, c.TotalGPUMemoryMiB)
-		c.HandleMultiModalAllSync()
-		return
-	}
-	c.Enable(sttSize, sttPrec, sttDev)
-	c.SetOptionsWithFallback(sttDev, DefaultDeviceOptions())
-	// Model size options and enable/disable come from Schema.go
-	if opts, defIdx, _ := STTModelOptions(modelType); opts != nil {
-		c.SetOptionsWithFallback(sttSize, opts)
-		if sttSize.GetSelected() == nil && len(opts) > defIdx {
-			sttSize.SetSelectedIndex(defIdx)
-		}
-	}
-	if _, _, enable := STTModelOptions(modelType); !enable {
-		sttSize.Disable()
-	} else {
-		sttSize.Enable()
-	}
-	// Precision options and enable/disable come from Schema.go
-	if pOpts, pEnable := STTPrecisionOptions(modelType); pOpts != nil {
-		c.SetOptionsWithFallback(sttPrec, pOpts)
-		if pEnable {
-			sttPrec.Enable()
-		} else {
-			sttPrec.Disable()
-		}
-	} else {
-		sttPrec.Disable()
-	}
-	AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: "Whisper", AIModelType: firstNonEmpty(modelType, "-")}
-	AIModel.CalculateMemoryConsumption(c.CPUMemoryBar, c.GPUMemoryBar, c.TotalGPUMemoryMiB)
-	if !c.SuppressPrompts && MultiModalModels()[modelType] {
-		if c.Controls.TxtType != nil && c.getSelectedType(c.Controls.TxtType) != modelType {
-			c.ConfirmOption("Usage of Multi-Modal Model.", "Use Multi-Modal model for Text-Translation as well?", func() { c.Controls.TxtType.SetSelected(modelType); c.ApplyTXTTypeChange(modelType) })
-		}
-		if multiModalCapabilities[modelType].OCR && c.Controls.OCRType != nil && c.getSelectedType(c.Controls.OCRType) != modelType {
-			c.ConfirmOption("Usage of Multi-Modal Model.", "Use Multi-Modal model for Image-to-Text as well?", func() { c.Controls.OCRType.SetSelected(modelType); c.ApplyOCRTypeChange(modelType) })
-		}
-	}
-	c.HandleMultiModalAllSync()
+	c.applyTypeChangeGeneric(
+		modelType,
+		c.Controls.STTModelSize,
+		c.Controls.STTPrecision,
+		c.Controls.STTDevice,
+		STTModelOptions,
+		STTPrecisionOptions,
+		nil, // default device options
+		"Whisper",
+		false,
+	)
+	c.promptMultiModalAdoption(modelType, groupSTT)
 }
 
 func (c *Coordinator) ApplyTXTTypeChange(modelType string) {
@@ -401,40 +369,18 @@ func (c *Coordinator) ApplyTXTTypeChange(modelType string) {
 	}
 	c.InProgrammaticUpdate = true
 	defer func() { c.InProgrammaticUpdate = false }()
-	txtDev, txtPrec, txtSize := c.Controls.TxtDevice, c.Controls.TxtPrecision, c.Controls.TxtSize
-	if modelType == "" {
-		c.Disable(txtDev, txtPrec, txtSize)
-		AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: "TxtTranslator", AIModelType: "-"}
-		AIModel.CalculateMemoryConsumption(c.CPUMemoryBar, c.GPUMemoryBar, c.TotalGPUMemoryMiB)
-		c.HandleMultiModalAllSync()
-		return
-	}
-	c.Enable(txtDev, txtPrec, txtSize)
-	c.SetOptionsWithFallback(txtDev, DefaultDeviceOptions())
-	if pOpts, pEnable := TXTPrecisionOptions(modelType); pEnable {
-		c.SetOptionsWithFallback(txtPrec, pOpts)
-	} else {
-		c.Disable(txtPrec)
-	}
-	if sOpts, defIdx, sEnable := TXTSizeOptions(modelType); sEnable {
-		c.SetOptionsWithFallback(txtSize, sOpts)
-		if txtSize.GetSelected() == nil && len(sOpts) > defIdx {
-			txtSize.SetSelectedIndex(defIdx)
-		}
-	} else {
-		c.Disable(txtSize)
-	}
-	AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: "TxtTranslator", AIModelType: firstNonEmpty(modelType, "-")}
-	AIModel.CalculateMemoryConsumption(c.CPUMemoryBar, c.GPUMemoryBar, c.TotalGPUMemoryMiB)
-	c.HandleMultiModalAllSync()
-	if !c.SuppressPrompts && MultiModalModels()[modelType] {
-		if c.Controls.STTType != nil && c.getSelectedType(c.Controls.STTType) != modelType {
-			c.ConfirmOption("Usage of Multi-Modal Model.", "Use Multi-Modal model for Speech-to-Text as well?", func() { c.Controls.STTType.SetSelected(modelType); c.ApplySTTTypeChange(modelType) })
-		}
-		if multiModalCapabilities[modelType].OCR && c.Controls.OCRType != nil && c.getSelectedType(c.Controls.OCRType) != modelType {
-			c.ConfirmOption("Usage of Multi-Modal Model.", "Use Multi-Modal model for Image-to-Text as well?", func() { c.Controls.OCRType.SetSelected(modelType); c.ApplyOCRTypeChange(modelType) })
-		}
-	}
+	c.applyTypeChangeGeneric(
+		modelType,
+		c.Controls.TxtSize,
+		c.Controls.TxtPrecision,
+		c.Controls.TxtDevice,
+		TXTSizeOptions,
+		TXTPrecisionOptions,
+		nil, // default device options
+		"TxtTranslator",
+		false,
+	)
+	c.promptMultiModalAdoption(modelType, groupTXT)
 }
 
 func (c *Coordinator) ApplyTTSTypeChange(modelType string) {
@@ -443,18 +389,17 @@ func (c *Coordinator) ApplyTTSTypeChange(modelType string) {
 	}
 	c.InProgrammaticUpdate = true
 	defer func() { c.InProgrammaticUpdate = false }()
-	ttsDev := c.Controls.TTSDevice
-	if ttsDev == nil {
-		return
-	}
-	if modelType != "" {
-		c.Enable(ttsDev)
-		c.SetOptionsWithFallback(ttsDev, DefaultDeviceOptions())
-	} else {
-		c.Disable(ttsDev)
-	}
-	AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: "ttsType", AIModelType: firstNonEmpty(modelType, "-"), Precision: Hardwareinfo.Float32}
-	AIModel.CalculateMemoryConsumption(c.CPUMemoryBar, c.GPUMemoryBar, c.TotalGPUMemoryMiB)
+	c.applyTypeChangeGeneric(
+		modelType,
+		nil,
+		nil,
+		c.Controls.TTSDevice,
+		nil,
+		nil,
+		nil, // default device options
+		"ttsType",
+		true, // fixed float32 precision for memory estimation
+	)
 }
 
 func (c *Coordinator) ApplyOCRTypeChange(modelType string) {
@@ -463,62 +408,18 @@ func (c *Coordinator) ApplyOCRTypeChange(modelType string) {
 	}
 	c.InProgrammaticUpdate = true
 	defer func() { c.InProgrammaticUpdate = false }()
-	oDev, oPrec := c.Controls.OCRDevice, c.Controls.OCRPrecision
-	c.Enable(oDev, oPrec)
-	if modelType == "" {
-		c.Disable(oDev, oPrec)
-	} else {
-		// Device options are narrowed by OCR type
-		if oDev != nil {
-			devOpts := OCRDeviceOptions(modelType)
-			c.SetOptionsWithFallback(oDev, devOpts)
-			if len(devOpts) == 1 {
-				oDev.SetSelected(devOpts[0].Value)
-				oDev.Disable()
-			} else {
-				oDev.Enable()
-			}
-		}
-		if pOpts, pEnable := OCRPrecisionOptions(modelType); pEnable {
-			c.SetOptionsWithFallback(oPrec, pOpts)
-		} else if oPrec != nil {
-			// Populate minimal list (if any) and disable when not enabled for this type
-			if pOpts != nil {
-				c.SetOptionsWithFallback(oPrec, pOpts)
-			}
-			oPrec.Disable()
-		}
-
-		// If OCR type equals selected STT or TXT multimodal model, mirror their device/precision and lock controls
-		if c.Controls.STTType != nil && c.getSelectedType(c.Controls.STTType) == modelType {
-			if oDev != nil && c.Controls.STTDevice != nil && c.Controls.STTDevice.GetSelected() != nil && oDev.ContainsEntry(c.Controls.STTDevice.GetSelected(), CustomWidget.CompareValue) {
-				oDev.SetSelected(c.Controls.STTDevice.GetSelected().Value)
-			}
-			if oPrec != nil && c.Controls.STTPrecision != nil && c.Controls.STTPrecision.GetSelected() != nil && oPrec.ContainsEntry(c.Controls.STTPrecision.GetSelected(), CustomWidget.CompareValue) {
-				oPrec.SetSelected(c.Controls.STTPrecision.GetSelected().Value)
-			}
-			c.Disable(oDev, oPrec)
-		} else if c.Controls.TxtType != nil && c.getSelectedType(c.Controls.TxtType) == modelType {
-			if oDev != nil && c.Controls.TxtDevice != nil && c.Controls.TxtDevice.GetSelected() != nil && oDev.ContainsEntry(c.Controls.TxtDevice.GetSelected(), CustomWidget.CompareValue) {
-				oDev.SetSelected(c.Controls.TxtDevice.GetSelected().Value)
-			}
-			if oPrec != nil && c.Controls.TxtPrecision != nil && c.Controls.TxtPrecision.GetSelected() != nil && oPrec.ContainsEntry(c.Controls.TxtPrecision.GetSelected(), CustomWidget.CompareValue) {
-				oPrec.SetSelected(c.Controls.TxtPrecision.GetSelected().Value)
-			}
-			c.Disable(oDev, oPrec)
-		}
-	}
-	AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: "ocrType", AIModelType: firstNonEmpty(modelType, "-")}
-	AIModel.CalculateMemoryConsumption(c.CPUMemoryBar, c.GPUMemoryBar, c.TotalGPUMemoryMiB)
-	c.HandleMultiModalAllSync()
-	if !c.SuppressPrompts && MultiModalModels()[modelType] {
-		if multiModalCapabilities[modelType].STT && c.Controls.STTType != nil && c.getSelectedType(c.Controls.STTType) != modelType {
-			c.ConfirmOption("Usage of Multi-Modal Model.", "Use Multi-Modal model for Speech-to-Text as well?", func() { c.Controls.STTType.SetSelected(modelType); c.ApplySTTTypeChange(modelType) })
-		}
-		if multiModalCapabilities[modelType].TXT && c.Controls.TxtType != nil && c.getSelectedType(c.Controls.TxtType) != modelType {
-			c.ConfirmOption("Usage of Multi-Modal Model.", "Use Multi-Modal model for Text-Translation as well?", func() { c.Controls.TxtType.SetSelected(modelType); c.ApplyTXTTypeChange(modelType) })
-		}
-	}
+	c.applyTypeChangeGeneric(
+		modelType,
+		nil,
+		c.Controls.OCRPrecision,
+		c.Controls.OCRDevice,
+		nil,
+		OCRPrecisionOptions,
+		OCRDeviceOptions,
+		"ocrType",
+		false,
+	)
+	c.promptMultiModalAdoption(modelType, groupOCR)
 }
 
 func firstNonEmpty(a, b string) string {
@@ -526,4 +427,132 @@ func firstNonEmpty(a, b string) string {
 		return a
 	}
 	return b
+}
+
+// applyTypeChangeGeneric centralizes option population, enable/disable logic, and memory estimation.
+func (c *Coordinator) applyTypeChangeGeneric(
+	modelType string,
+	sizeSel, precSel, devSel *CustomWidget.TextValueSelect,
+	getSizeOptions func(string) ([]TVO, int, bool),
+	getPrecisionOptions func(string) ([]TVO, bool),
+	getDeviceOptions func(string) []TVO,
+	aiModel string,
+	setFixedFloat32Precision bool,
+) {
+	// Handle empty model: disable relevant controls and update memory with placeholder
+	if modelType == "" {
+		if sizeSel != nil {
+			sizeSel.Disable()
+		}
+		if precSel != nil {
+			precSel.Disable()
+		}
+		if devSel != nil {
+			devSel.Disable()
+		}
+		AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: aiModel, AIModelType: "-"}
+		if setFixedFloat32Precision {
+			AIModel.Precision = Hardwareinfo.Float32
+		}
+		AIModel.CalculateMemoryConsumption(c.CPUMemoryBar, c.GPUMemoryBar, c.TotalGPUMemoryMiB)
+		c.HandleMultiModalAllSync()
+		return
+	}
+
+	// Device options
+	if devSel != nil {
+		var devOpts []TVO
+		if getDeviceOptions != nil {
+			devOpts = getDeviceOptions(modelType)
+		} else {
+			devOpts = DefaultDeviceOptions()
+		}
+		c.SetOptionsWithFallback(devSel, devOpts)
+		if len(devOpts) == 1 {
+			devSel.SetSelected(devOpts[0].Value)
+			devSel.Disable()
+		} else {
+			devSel.Enable()
+		}
+	}
+
+	// Size options
+	if sizeSel != nil && getSizeOptions != nil {
+		if sOpts, defIdx, sEnable := getSizeOptions(modelType); sOpts != nil {
+			c.SetOptionsWithFallback(sizeSel, sOpts)
+			if sizeSel.GetSelected() == nil && len(sOpts) > defIdx {
+				sizeSel.SetSelectedIndex(defIdx)
+			}
+			if !sEnable {
+				sizeSel.Disable()
+			} else if len(sOpts) == 1 {
+				sizeSel.SetSelected(sOpts[0].Value)
+				sizeSel.Disable()
+			} else {
+				sizeSel.Enable()
+			}
+		} else {
+			sizeSel.Disable()
+		}
+	} else if sizeSel != nil {
+		sizeSel.Disable()
+	}
+
+	// Precision options
+	if precSel != nil && getPrecisionOptions != nil {
+		if pOpts, pEnable := getPrecisionOptions(modelType); pOpts != nil {
+			c.SetOptionsWithFallback(precSel, pOpts)
+			if !pEnable {
+				precSel.Disable()
+			} else if len(pOpts) == 1 {
+				precSel.SetSelected(pOpts[0].Value)
+				precSel.Disable()
+			} else {
+				precSel.Enable()
+			}
+		} else {
+			precSel.Disable()
+		}
+	} else if precSel != nil {
+		precSel.Disable()
+	}
+
+	// Memory estimation
+	AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: aiModel, AIModelType: firstNonEmpty(modelType, "-")}
+	if setFixedFloat32Precision {
+		AIModel.Precision = Hardwareinfo.Float32
+	}
+	AIModel.CalculateMemoryConsumption(c.CPUMemoryBar, c.GPUMemoryBar, c.TotalGPUMemoryMiB)
+
+	// Central sync (mirrors device/precision for multi-modal combos and locks targets)
+	c.HandleMultiModalAllSync()
+}
+
+// promptMultiModalAdoption asks to reuse multi-modal models across groups except the one that initiated the change.
+func (c *Coordinator) promptMultiModalAdoption(modelType string, excludeGroup string) {
+	if c.SuppressPrompts || !MultiModalModels()[modelType] {
+		return
+	}
+	caps, ok := multiModalCapabilities[modelType]
+	if !ok {
+		return
+	}
+	if caps.STT && excludeGroup != groupSTT && c.Controls.STTType != nil && c.getSelectedType(c.Controls.STTType) != modelType {
+		c.ConfirmOption("Usage of Multi-Modal Model.", "Use Multi-Modal model for Speech-to-Text as well?", func() {
+			c.Controls.STTType.SetSelected(modelType)
+			c.ApplySTTTypeChange(modelType)
+		})
+	}
+	if caps.TXT && excludeGroup != groupTXT && c.Controls.TxtType != nil && c.getSelectedType(c.Controls.TxtType) != modelType {
+		c.ConfirmOption("Usage of Multi-Modal Model.", "Use Multi-Modal model for Text-Translation as well?", func() {
+			c.Controls.TxtType.SetSelected(modelType)
+			c.ApplyTXTTypeChange(modelType)
+		})
+	}
+	if caps.OCR && excludeGroup != groupOCR && c.Controls.OCRType != nil && c.getSelectedType(c.Controls.OCRType) != modelType {
+		c.ConfirmOption("Usage of Multi-Modal Model.", "Use Multi-Modal model for Image-to-Text as well?", func() {
+			c.Controls.OCRType.SetSelected(modelType)
+			c.ApplyOCRTypeChange(modelType)
+		})
+	}
 }
