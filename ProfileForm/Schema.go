@@ -20,6 +20,66 @@ func DefaultDeviceOptions() []TVO {
 	return []TVO{{Text: "CUDA", Value: "cuda"}, {Text: "CPU", Value: "cpu"}}
 }
 
+// Device option helpers (ordering variants)
+func DeviceOptionsCUDAFirst() []TVO {
+	return []TVO{{Text: "CUDA", Value: "cuda"}, {Text: "CPU", Value: "cpu"}}
+}
+func DeviceOptionsCPUFirst() []TVO {
+	return []TVO{{Text: "CPU", Value: "cpu"}, {Text: "CUDA", Value: "cuda"}}
+}
+
+// Generic precision lists used for initial population; Coordinator will narrow them by type later
+func GenericWhisperPrecisionOptions() []TVO {
+	return []TVO{
+		{Text: "float32 " + lang.L("precision"), Value: "float32"},
+		{Text: "float16 " + lang.L("precision"), Value: "float16"},
+		{Text: "int16 " + lang.L("precision"), Value: "int16"},
+		{Text: "int8_float16 " + lang.L("precision"), Value: "int8_float16"},
+		{Text: "int8 " + lang.L("precision"), Value: "int8"},
+		{Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"},
+		{Text: "int8_bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "int8_bfloat16"},
+		{Text: "8bit " + lang.L("precision"), Value: "8bit"},
+		{Text: "4bit " + lang.L("precision"), Value: "4bit"},
+	}
+}
+
+func GenericTextPrecisionOptions() []TVO {
+	return []TVO{
+		{Text: "float32 " + lang.L("precision"), Value: "float32"},
+		{Text: "float16 " + lang.L("precision"), Value: "float16"},
+		{Text: "int16 " + lang.L("precision"), Value: "int16"},
+		{Text: "int8_float16 " + lang.L("precision"), Value: "int8_float16"},
+		{Text: "int8 " + lang.L("precision"), Value: "int8"},
+		{Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"},
+		{Text: "int8_bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "int8_bfloat16"},
+	}
+}
+
+func GenericOcrPrecisionOptions() []TVO {
+	return []TVO{
+		{Text: "float32 " + lang.L("precision"), Value: "float32"},
+		{Text: "float16 " + lang.L("precision"), Value: "float16"},
+		{Text: "bfloat16 " + lang.L("precision"), Value: "bfloat16"},
+	}
+}
+
+// Base type-option providers for initial selects
+func STTTypeOptions() []TVO {
+	return []TVO{{Text: "Faster Whisper", Value: "faster_whisper"}, {Text: "Original Whisper", Value: "original_whisper"}, {Text: "Transformer Whisper", Value: "transformer_whisper"}, {Text: "Seamless M4T", Value: "seamless_m4t"}, {Text: "MMS", Value: "mms"}, {Text: "Speech T5 (English only)", Value: "speech_t5"}, {Text: "Wav2Vec Bert 2.0", Value: "wav2vec_bert"}, {Text: "NeMo Canary", Value: "nemo_canary"}, {Text: "Phi-4", Value: "phi4"}, {Text: "Voxtral", Value: "voxtral"}, {Text: lang.L("Disabled"), Value: ""}}
+}
+
+func TXTTypeOptions() []TVO {
+	return []TVO{{Text: "Faster NLLB200 (200 languages)", Value: "NLLB200_CT2"}, {Text: "Original NLLB200 (200 languages)", Value: "NLLB200"}, {Text: "M2M100 (100 languages)", Value: "M2M100"}, {Text: "Seamless M4T (101 languages)", Value: "seamless_m4t"}, {Text: "Phi-4 (23 languages)", Value: "phi4"}, {Text: "Voxtral (13 languages)", Value: "voxtral"}, {Text: lang.L("Disabled"), Value: ""}}
+}
+
+func TTSTypeOptions() []TVO {
+	return []TVO{{Text: "Silero", Value: "silero"}, {Text: "F5/E2", Value: "f5_e2"}, {Text: "Zonos", Value: "zonos"}, {Text: "Kokoro", Value: "kokoro"}, {Text: "Orpheus", Value: "orpheus"}, {Text: lang.L("Disabled"), Value: ""}}
+}
+
+func OcrTypeOptions() []TVO {
+	return []TVO{{Text: "Easy OCR", Value: "easyocr"}, {Text: "GOT OCR 2.0", Value: "got_ocr_20"}, {Text: "Phi-4", Value: "phi4"}, {Text: lang.L("Disabled"), Value: ""}}
+}
+
 func STTModelOptions(modelType string) (options []TVO, defaultIndex int, enableSize bool) {
 	enableSize = true
 	switch modelType {
