@@ -98,29 +98,31 @@ func (b *ProfileBuilder) BuildAll(engine *FormEngine, inputOptions, outputOption
 	engine.Register("push_to_talk_key", pushToTalk)
 
 	// STT
-	sttDevice := b.newSelect(engine, "ai_device", DeviceOptionsCUDAFirst())
+	sttDevice := b.newSelect(engine, "ai_device", DefaultDeviceOptions())
 	sttPrecision := b.newSelect(engine, "Precision", GenericWhisperPrecisionOptions())
 	sttType := b.newSelect(engine, "stt_type", STTTypeOptions())
-	fasterWhisperModelList := []CustomWidget.TextValueOption{{Text: "Tiny", Value: "tiny"}, {Text: "Tiny (English only)", Value: "tiny.en"}, {Text: "Base", Value: "base"}, {Text: "Base (English only)", Value: "base.en"}, {Text: "Small", Value: "small"}, {Text: "Small (English only)", Value: "small.en"}, {Text: "Medium", Value: "medium"}, {Text: "Medium (English only)", Value: "medium.en"}, {Text: "Large V1", Value: "large-v1"}, {Text: "Large V2", Value: "large-v2"}, {Text: "Large V3", Value: "large-v3"}, {Text: "Large V3 Turbo", Value: "large-v3-turbo"}, {Text: "Medium Distilled (English)", Value: "medium-distilled.en"}, {Text: "Large V2 Distilled (English)", Value: "large-distilled-v2.en"}, {Text: "Large V3 Distilled (English)", Value: "large-distilled-v3.en"}, {Text: "Large V3.5 Distilled (English)", Value: "large-distilled-v3.5.en"}, {Text: "Crisper", Value: "crisper"}, {Text: "Small (European finetune)", Value: "small.eu"}, {Text: "Medium (European finetune)", Value: "medium.eu"}, {Text: "Small (German finetune)", Value: "small.de"}, {Text: "Medium (German finetune)", Value: "medium.de"}, {Text: "Large V2 (German finetune)", Value: "large-v2.de2"}, {Text: "Large V3 Distilled (German finetune)", Value: "large-distilled-v3.de"}, {Text: "Small (German-Swiss finetune)", Value: "small.de-swiss"}, {Text: "Medium (Mix-Japanese-v2 finetune)", Value: "medium.mix-jpv2"}, {Text: "Large V2 (Mix-Japanese finetune)", Value: "large-v2.mix-jp"}, {Text: "Small (Japanese finetune)", Value: "small.jp"}, {Text: "Medium (Japanese finetune)", Value: "medium.jp"}, {Text: "Large V2 (Japanese finetune)", Value: "large-v2.jp"}, {Text: "Medium (Korean finetune)", Value: "medium.ko"}, {Text: "Large V2 (Korean finetune)", Value: "large-v2.ko"}, {Text: "Small (Chinese finetune)", Value: "small.zh"}, {Text: "Medium (Chinese finetune)", Value: "medium.zh"}, {Text: "Large V2 (Chinese finetune)", Value: "large-v2.zh"}, {Text: "Custom (Place in '.cache/whisper/custom-ct2' directory)", Value: "custom"}}
-	sttModel := b.newSelect(engine, "model", fasterWhisperModelList)
-	engine.Controls.STTDevice, engine.Controls.STTPrecision, engine.Controls.STTType, engine.Controls.STTModelSize = sttDevice, sttPrecision, sttType, sttModel
+	if sttOpts, _, ok := STTModelOptions("faster_whisper"); ok {
+		sttModel := b.newSelect(engine, "model", sttOpts)
+		engine.Controls.STTDevice, engine.Controls.STTPrecision, engine.Controls.STTType, engine.Controls.STTModelSize = sttDevice, sttPrecision, sttType, sttModel
+	}
 	engine.Register("whisper_precision", sttPrecision)
 
 	// TXT
 	txtType := b.newSelect(engine, "txt_translator", TXTTypeOptions())
-	txtDevice := b.newSelect(engine, "txt_translator_device", DeviceOptionsCUDAFirst())
-	txtSize := b.newSelect(engine, "txt_translator_size", []CustomWidget.TextValueOption{{Text: "Small", Value: "small"}, {Text: "Medium", Value: "medium"}, {Text: "Large", Value: "large"}})
+	txtDevice := b.newSelect(engine, "txt_translator_device", DefaultDeviceOptions())
+	sOpts, _, _ := TXTSizeOptions("NLLB200_CT2")
+	txtSize := b.newSelect(engine, "txt_translator_size", sOpts)
 	txtPrecision := b.newSelect(engine, "txt_translator_precision", GenericTextPrecisionOptions())
 	engine.Controls.TxtType, engine.Controls.TxtDevice, engine.Controls.TxtSize, engine.Controls.TxtPrecision = txtType, txtDevice, txtSize, txtPrecision
 
 	// TTS
 	ttsType := b.newSelect(engine, "tts_type", TTSTypeOptions())
-	ttsDevice := b.newSelect(engine, "tts_ai_device", DeviceOptionsCUDAFirst())
+	ttsDevice := b.newSelect(engine, "tts_ai_device", DefaultDeviceOptions())
 	engine.Controls.TTSType, engine.Controls.TTSDevice = ttsType, ttsDevice
 
 	// OCR
 	ocrType := b.newSelect(engine, "ocr_type", OcrTypeOptions())
-	ocrDevice := b.newSelect(engine, "ocr_ai_device", DeviceOptionsCPUFirst())
+	ocrDevice := b.newSelect(engine, "ocr_ai_device", DefaultDeviceOptions())
 	ocrPrecision := b.newSelect(engine, "ocr_precision", GenericOcrPrecisionOptions())
 	engine.Controls.OCRType, engine.Controls.OCRDevice, engine.Controls.OCRPrecision = ocrType, ocrDevice, ocrPrecision
 

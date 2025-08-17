@@ -17,14 +17,6 @@ func MultiModalModels() map[string]bool {
 }
 
 func DefaultDeviceOptions() []TVO {
-	return []TVO{{Text: "CUDA", Value: "cuda"}, {Text: "CPU", Value: "cpu"}}
-}
-
-// Device option helpers (ordering variants)
-func DeviceOptionsCUDAFirst() []TVO {
-	return []TVO{{Text: "CUDA", Value: "cuda"}, {Text: "CPU", Value: "cpu"}}
-}
-func DeviceOptionsCPUFirst() []TVO {
 	return []TVO{{Text: "CPU", Value: "cpu"}, {Text: "CUDA", Value: "cuda"}}
 }
 
@@ -163,6 +155,3 @@ func TXTPrecisionOptions(modelType string) (options []TVO, enablePrecision bool)
 		return nil, false
 	}
 }
-
-func TXTDeviceOptions(modelType string) []TVO { return DefaultDeviceOptions() }
-func TTSDeviceOptions(modelType string) []TVO { return DefaultDeviceOptions() }

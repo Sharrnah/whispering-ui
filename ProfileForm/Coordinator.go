@@ -414,7 +414,7 @@ func (c *Coordinator) ApplyTXTTypeChange(modelType string) {
 		return
 	}
 	c.Enable(txtDev, txtPrec, txtSize)
-	c.SetOptionsWithFallback(txtDev, TXTDeviceOptions(modelType))
+	c.SetOptionsWithFallback(txtDev, DefaultDeviceOptions())
 	switch modelType {
 	case "NLLB200":
 		if txtDev != nil {
@@ -460,7 +460,7 @@ func (c *Coordinator) ApplyTTSTypeChange(modelType string) {
 	}
 	if modelType != "" {
 		c.Enable(ttsDev)
-		c.SetOptionsWithFallback(ttsDev, TTSDeviceOptions(modelType))
+		c.SetOptionsWithFallback(ttsDev, DefaultDeviceOptions())
 	} else {
 		c.Disable(ttsDev)
 	}
