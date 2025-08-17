@@ -1,13 +1,6 @@
 package Pages
 
 import (
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/canvas"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/lang"
-	"fyne.io/fyne/v2/theme"
-	"fyne.io/fyne/v2/widget"
-	"github.com/getsentry/sentry-go"
 	"io"
 	"net/url"
 	"path/filepath"
@@ -19,6 +12,14 @@ import (
 	"whispering-tiger-ui/RuntimeBackend"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
+
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/canvas"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/lang"
+	"fyne.io/fyne/v2/theme"
+	"fyne.io/fyne/v2/widget"
+	"github.com/getsentry/sentry-go"
 )
 
 func parseURL(urlStr string) *url.URL {

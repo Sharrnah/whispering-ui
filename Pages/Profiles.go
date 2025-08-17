@@ -95,9 +95,7 @@ func int32Map(x int32, in_min int32, in_max int32, out_min int32, out_max int32)
 
 func (c *CurrentPlaybackDevice) InitTestAudio() (*bytes.Reader, *wav.Reader) {
 	byteReader := bytes.NewReader(Resources.ResourceTestWav.Content())
-
 	testAudioReader := wav.NewReader(byteReader)
-
 	testAudioFormat, err := testAudioReader.Format()
 	if err != nil {
 		fmt.Println(err)
@@ -105,10 +103,8 @@ func (c *CurrentPlaybackDevice) InitTestAudio() (*bytes.Reader, *wav.Reader) {
 		Logging.Flush(Logging.FlushTimeoutDefault)
 		os.Exit(1)
 	}
-
 	c.testAudioChannels = uint32(testAudioFormat.NumChannels)
 	c.testAudioSampleRate = testAudioFormat.SampleRate
-
 	return byteReader, testAudioReader
 }
 
@@ -119,9 +115,7 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 		return nil // Prevent concurrent initialization
 	}
 	c.isInitializing = true
-	defer func() {
-		c.isInitializing = false
-	}()
+	defer func() { c.isInitializing = false }()
 
 	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
 		scope.SetTag("GoRoutine", "Pages\\Profiles->InitDevices")
@@ -673,13 +667,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			// Resolve backend by display name
 			backend := AudioAPI.GetAudioBackendByName(opt.Text)
 
-			// Stop current context/device and switch backend
-			playBackDevice.Stop()          // end malgo context goroutine
-			playBackDevice.UnInitDevices() // ensure device is stopped/uninitialized
+			// Backend im Gerät setzen (UI-Optionen aktualisieren wir gleich); teure Re-Inits nur wenn nicht geladen wird
 			playBackDevice.AudioAPI = backend.Backend
-
-			// Start a fresh malgo context for the new backend
-			go playBackDevice.Init()
 
 			// Try to refresh device option lists for this backend (plain values)
 			// Remember previously selected labels (text) to attempt preservation
@@ -778,27 +767,43 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				}
 			}
 
+			// Während Profil-Laden keine Re-Init/Context-Neustarts
+			if isLoadingSettingsFile {
+				return
+			}
+
+			// Stop current context/device and switch backend (teuer)
+			playBackDevice.Stop()          // end malgo context goroutine
+			playBackDevice.UnInitDevices() // ensure device is stopped/uninitialized
+			// Start a fresh malgo context for the new backend
+			go playBackDevice.Init()
 			// Apply current selections to playback device and re-init
 			go func() {
-				// Update names from current selection texts
 				if engine.Controls.AudioInput != nil && engine.Controls.AudioInput.GetSelected() != nil {
 					playBackDevice.InputDeviceName = engine.Controls.AudioInput.GetSelected().Text
 				}
 				if engine.Controls.AudioOutput != nil && engine.Controls.AudioOutput.GetSelected() != nil {
 					playBackDevice.OutputDeviceName = engine.Controls.AudioOutput.GetSelected().Text
 				}
-				// Wait shortly for context to be ready, then init devices
 				playBackDevice.WaitUntilInitialized(5)
 				_ = playBackDevice.InitDevices(false)
 			}()
 		}
 		onAudioInputChanged := func(opt CustomWidget.TextValueOption) {
 			playBackDevice.InputDeviceName = opt.Text
+			// Während Profil-Laden kein Re-Init
+			if isLoadingSettingsFile {
+				return
+			}
 			// Re-init to apply new input immediately
 			go func() { _ = playBackDevice.InitDevices(false) }()
 		}
 		onAudioOutputChanged := func(opt CustomWidget.TextValueOption) {
 			playBackDevice.OutputDeviceName = opt.Text
+			// Während Profil-Laden kein Re-Init
+			if isLoadingSettingsFile {
+				return
+			}
 			// Re-init to apply new output immediately (playback)
 			go func() { _ = playBackDevice.InitDevices(false) }()
 		}

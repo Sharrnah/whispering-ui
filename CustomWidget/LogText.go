@@ -1,11 +1,12 @@
 package CustomWidget
 
 import (
+	"strings"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/data/binding"
 	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
-	"strings"
 )
 
 type LogText struct {
@@ -62,16 +63,32 @@ func (l *LogText) Resize(size fyne.Size) {
 func (l *LogText) Bind(data binding.String) {
 	l.Data = data
 	l.Entry.Bind(data)
-	// initialize internal lines from binding
+	// initialize internal state from binding and enforce MaxLines once
 	if text, err := data.Get(); err == nil {
-		l.TextLines = strings.Split(text, "\n")
+		l.setTextTrimmed(text)
+	} else {
+		l.TextLines = []string{}
 	}
-	// subscribe to data changes and trigger scroll when AutoScroll is enabled
+	// subscribe to data changes to enforce MaxLines and optional autoscroll
 	l.dataListener = binding.NewDataListener(func() {
-		if l.AutoScroll {
-			fyne.Do(func() {
-				l.ScrollToBottom()
-			})
+		if l.Data == nil {
+			return
+		}
+		if text, err := l.Data.Get(); err == nil {
+			// Enforce MaxLines locally and update UI immediately; avoid writing back into the binding here
+			// to prevent recursive updates and potential delays.
+			trimmed := l.normalizeAndTrim(text)
+			if l.Entry.Text != trimmed {
+				fyne.Do(func() {
+					l.Entry.SetText(trimmed)
+					l.TextLines = strings.Split(trimmed, "\n")
+					if l.AutoScroll {
+						l.ScrollToBottom()
+					}
+				})
+			} else if l.AutoScroll {
+				fyne.Do(func() { l.ScrollToBottom() })
+			}
 		}
 	})
 	data.AddListener(l.dataListener)
@@ -80,6 +97,7 @@ func (l *LogText) Bind(data binding.String) {
 		l.ScrollToBottom()
 	}
 }
+
 func (l *LogText) Unbind() {
 	if l.Data != nil && l.dataListener != nil {
 		l.Data.RemoveListener(l.dataListener)
@@ -92,13 +110,11 @@ func (l *LogText) Unbind() {
 func NewLogText() *LogText {
 	c := &LogText{
 		TextLines: []string{},
-		MaxLines:  100,
+		MaxLines:  10,
 	}
 	c.MultiLine = true
 	c.Wrapping = fyne.TextWrapOff
-	c.TextStyle = fyne.TextStyle{
-		Monospace: true,
-	}
+	c.TextStyle = fyne.TextStyle{Monospace: true}
 	c.ExtendBaseWidget(c)
 	return c
 }
@@ -111,41 +127,17 @@ func NewLogTextWithData(data binding.String) *LogText {
 }
 
 func (l *LogText) GetText() string {
-	if l.Data != nil {
-		if text, err := l.Data.Get(); err == nil {
-			return text
-		}
-	}
-	return strings.Join(l.TextLines, "")
+	// Prefer the actual Entry text, which reflects trimming and UI state.
+	return l.Entry.Text
 }
 
 func (l *LogText) SetText(text string) {
-	l.TextLines = strings.Split(text, "\n")
-	if len(l.TextLines) > l.MaxLines {
-		l.TextLines = l.TextLines[len(l.TextLines)-l.MaxLines:]
-	}
-	if l.Data != nil {
-		_ = l.Data.Set(text)
-	}
-	l.Entry.SetText(text)
-	if l.AutoScroll {
-		l.ScrollToBottom()
-	}
+	l.setTextTrimmed(text)
 }
 
 func (l *LogText) Append(text string) {
-	l.TextLines = append(l.TextLines, text)
-	if len(l.TextLines) > l.MaxLines {
-		l.TextLines = l.TextLines[len(l.TextLines)-l.MaxLines:]
-	}
-	l.Entry.Append(text)
-	if l.Data != nil {
-		// update bound data to current full content
-		_ = l.Data.Set(l.Entry.Text)
-	}
-	if l.AutoScroll {
-		l.ScrollToBottom()
-	}
+	// Einfaches Anhängen und danach MaxLines durchsetzen.
+	l.setTextTrimmed(l.Entry.Text + text)
 }
 
 func (l *LogText) ScrollToBottom() {
@@ -156,6 +148,7 @@ func (l *LogText) ScrollToBottom() {
 	//lastLine := lines[len(lines)-1]
 	l.CursorRow = len(lines) - 1
 	//entry.CursorColumn = len([]rune(lastLine))
+
 	l.Refresh()
 }
 
@@ -208,3 +201,53 @@ func (l *LogText) TypedShortcut(s fyne.Shortcut) {
 	}
 	l.Entry.TypedShortcut(s)
 }
+
+// normalizeAndTrim converts CRLF to LF and limits the text to the last MaxLines lines (if MaxLines > 0).
+func (l *LogText) normalizeAndTrim(text string) string {
+	// Keine Zeilenenden-Manipulation; nur auf die letzten N Zeilen begrenzen.
+	// Besonderheit: Die aktuell „laufende“ (nicht mit \n terminierte) Zeile wird nicht als volle Zeile gezählt,
+	// damit sie beim Trimmen nicht verloren geht.
+	if l.MaxLines <= 0 {
+		return text
+	}
+	tokens := strings.SplitAfter(text, "\n") // Tokens enthalten das abschließende \n, falls die Zeile abgeschlossen ist.
+	if len(tokens) <= l.MaxLines {
+		return text
+	}
+	last := tokens[len(tokens)-1]
+	if strings.HasSuffix(last, "\n") {
+		// Letzte Zeile ist abgeschlossen -> behalte die letzten MaxLines Zeilentokens
+		return strings.Join(tokens[len(tokens)-l.MaxLines:], "")
+	}
+	// Letzte Zeile ist unvollständig -> behalte (MaxLines-1) vollständige Zeilen + die unvollständige
+	completed := tokens[:len(tokens)-1]
+	if l.MaxLines-1 <= 0 {
+		// nur die unvollständige behalten
+		return last
+	}
+	if len(completed) > l.MaxLines-1 {
+		completed = completed[len(completed)-(l.MaxLines-1):]
+	}
+	return strings.Join(append(completed, last), "")
+}
+
+// setTextTrimmed applies text with normalization and line limit enforcement, updates internal state, and auto-scrolls if enabled.
+func (l *LogText) setTextTrimmed(text string) {
+	trimmed := l.normalizeAndTrim(text)
+	// Update UI immediately to avoid perceived missing content while binding events propagate.
+	if l.Entry.Text != trimmed {
+		l.Entry.SetText(trimmed)
+	}
+	l.TextLines = strings.Split(trimmed, "\n")
+	if l.AutoScroll {
+		l.ScrollToBottom()
+	}
+	// Then synchronize the bound data if needed (no-op if already equal).
+	if l.Data != nil {
+		if current, err := l.Data.Get(); err != nil || current != trimmed {
+			_ = l.Data.Set(trimmed)
+		}
+	}
+}
+
+// (CR wird nicht speziell behandelt – reine Append-Logik und Zeilenlimit.)

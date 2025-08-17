@@ -3,12 +3,6 @@ package RuntimeBackend
 import (
 	"encoding/json"
 	"errors"
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/container"
-	"fyne.io/fyne/v2/dialog"
-	"fyne.io/fyne/v2/lang"
-	"fyne.io/fyne/v2/widget"
-	"github.com/getsentry/sentry-go"
 	"io"
 	"log"
 	"os"
@@ -21,6 +15,13 @@ import (
 	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Utilities"
+
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/lang"
+	"fyne.io/fyne/v2/widget"
+	"github.com/getsentry/sentry-go"
 )
 
 var BackendsList []WhisperProcessConfig
@@ -172,12 +173,12 @@ func (c *WhisperProcessConfig) processLogOutputLine(line string, isUpdating bool
 		if fyne.CurrentApp().Preferences().BoolWithFallback("WriteLogfile", false) {
 			Utilities.WriteLog("log.txt", line)
 		}
-
-		// write to c.RecentLog
-		c.RecentLog = append(c.RecentLog, line)
-		// remove excess elements if length is greater than 2000
-		if len(c.RecentLog) > MaxClipboardLogLines {
-			c.RecentLog = c.RecentLog[len(c.RecentLog)-MaxClipboardLogLines:]
+		// Mirror to RecentLog only for non-updating final lines
+		if strings.TrimSpace(line) != "" {
+			c.RecentLog = append(c.RecentLog, line)
+			if len(c.RecentLog) > MaxClipboardLogLines {
+				c.RecentLog = c.RecentLog[len(c.RecentLog)-MaxClipboardLogLines:]
+			}
 		}
 	}
 
@@ -242,12 +243,12 @@ func (c *WhisperProcessConfig) processErrorOutputLine(line string, isUpdating bo
 		if fyne.CurrentApp().Preferences().BoolWithFallback("WriteLogfile", false) {
 			Utilities.WriteLog("log.txt", line)
 		}
-
-		// write to c.RecentLog
-		c.RecentLog = append(c.RecentLog, line)
-		// remove excess elements if length is greater than 2000
-		if len(c.RecentLog) > MaxClipboardLogLines {
-			c.RecentLog = c.RecentLog[len(c.RecentLog)-MaxClipboardLogLines:]
+		// Mirror to RecentLog only for non-updating final lines
+		if strings.TrimSpace(line) != "" {
+			c.RecentLog = append(c.RecentLog, line)
+			if len(c.RecentLog) > MaxClipboardLogLines {
+				c.RecentLog = c.RecentLog[len(c.RecentLog)-MaxClipboardLogLines:]
+			}
 		}
 	}
 
