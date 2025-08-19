@@ -2,12 +2,14 @@ package RuntimeBackend
 
 import (
 	"encoding/json"
+	"strings"
+	"sync"
+
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
-	"strings"
 )
 
 type LoadingMessage struct {
@@ -19,6 +21,7 @@ type LoadingMessage struct {
 }
 
 var loadingStates = make(map[string]bool)
+var loadingStatesMu sync.RWMutex
 var loadingStateContainer *fyne.Container
 var loadingStateDialog dialog.Dialog = nil
 
@@ -60,45 +63,37 @@ func ProcessLoadingMessage(line string) bool {
 	name := loadingMessage.Data.Name
 	value := loadingMessage.Data.Value
 
-	// Update the loading states map
+	// Update the loading states map (thread-safe)
+	loadingStatesMu.Lock()
 	loadingStates[name] = value
+	// Build a snapshot of active names to render without holding the lock during UI ops
+	activeNames := make([]string, 0, len(loadingStates))
+	for n, v := range loadingStates {
+		if v {
+			activeNames = append(activeNames, n)
+		}
+	}
+	loadingStatesMu.Unlock()
 
-	// Update the loading state container
-	updateLoadingStateContainer()
+	// Update the loading state container atomically in a single UI pass
+	updateLoadingStateContainer(activeNames)
 
 	// Show or hide the dialog based on the current loading states
-	if hasActiveLoadingStates() {
-		fyne.Do(func() {
-			loadingStateDialog.Show()
-		})
+	if len(activeNames) > 0 {
+		fyne.Do(func() { loadingStateDialog.Show() })
 	} else {
-		fyne.Do(func() {
-			loadingStateDialog.Hide()
-		})
+		fyne.Do(func() { loadingStateDialog.Hide() })
 	}
 	return true
 }
 
-func updateLoadingStateContainer() {
-	loadingStateContainer.Objects = nil // Clear current items
-
-	for name, value := range loadingStates {
-		if value {
-			fyne.Do(func() {
-				loadingStateContainer.Add(widget.NewLabel(strings.ReplaceAll(name, "_", " ")))
-			})
-		}
-	}
+func updateLoadingStateContainer(activeNames []string) {
 	fyne.Do(func() {
+		// Replace the entire content in one go to avoid duplicates
+		loadingStateContainer.Objects = nil
+		for _, name := range activeNames {
+			loadingStateContainer.Add(widget.NewLabel(strings.ReplaceAll(name, "_", " ")))
+		}
 		loadingStateContainer.Refresh()
 	})
-}
-
-func hasActiveLoadingStates() bool {
-	for _, value := range loadingStates {
-		if value {
-			return true
-		}
-	}
-	return false
 }
