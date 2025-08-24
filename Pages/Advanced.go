@@ -100,7 +100,7 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 
 	copyLogButton := widget.NewButtonWithIcon(lang.L("Copy Log"), theme.ContentCopyIcon(), func() {
 		fyne.CurrentApp().Driver().AllWindows()[0].Clipboard().SetContent(
-			strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\n"),
+			strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\n") + "\n",
 		)
 	})
 
@@ -116,7 +116,7 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 		logWindow := fyne.CurrentApp().NewWindow(lang.L("Logs"))
 		copyLogButtonB := widget.NewButtonWithIcon(lang.L("Copy Log"), theme.ContentCopyIcon(), func() {
 			fyne.CurrentApp().Driver().AllWindows()[0].Clipboard().SetContent(
-				strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\n"),
+				strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\n") + "\n",
 			)
 		})
 		LogText := CustomWidget.NewLogTextWithData(Fields.DataBindings.LogBinding)
@@ -146,7 +146,7 @@ func CreateAdvancedWindow() fyne.CanvasObject {
 		}
 		if tab.Text == lang.L("Logs") {
 			fyne.Do(func() {
-				Fields.Field.LogText.SetText(strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\n"))
+				Fields.Field.LogText.SetText(strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\n") + "\n")
 			})
 		}
 	}

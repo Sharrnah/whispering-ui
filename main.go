@@ -219,7 +219,7 @@ func main() {
 					if tabContent.Selected().Text == lang.L("Logs") {
 						fyne.Do(func() {
 							// Set the log text without additional CRLF at the end to keep the line count stable
-							Fields.Field.LogText.SetText(strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\n"))
+							Fields.Field.LogText.SetText(strings.Join(RuntimeBackend.BackendsList[0].RecentLog, "\n") + "\n")
 						})
 					}
 				}

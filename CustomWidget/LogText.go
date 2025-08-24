@@ -76,7 +76,7 @@ func (l *LogText) Unbind() {
 func NewLogText() *LogText {
 	c := &LogText{
 		TextLines: []string{},
-		MaxLines:  10,
+		MaxLines:  200,
 	}
 	c.MultiLine = true
 	c.Wrapping = fyne.TextWrapOff
