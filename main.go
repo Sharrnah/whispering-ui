@@ -1,6 +1,7 @@
 package main
 
 import (
+	"errors"
 	"fmt"
 	"log"
 	"os"
@@ -228,11 +229,8 @@ func main() {
 		Fields.Field.StatusText.Truncation = fyne.TextTruncateClip
 		w.SetContent(container.NewBorder(nil, Fields.Field.StatusRow, nil, nil, appTabs))
 
-		// set main window size
-		mainWindowWidth := fyne.CurrentApp().Preferences().FloatWithFallback("MainWindowWidth", 1200)
-		mainWindowHeight := fyne.CurrentApp().Preferences().FloatWithFallback("MainWindowHeight", 600)
-
-		w.Resize(fyne.NewSize(float32(mainWindowWidth), float32(mainWindowHeight)))
+		// set (and clamp) main window size to fit on the current screen
+		clampAndApplyWindowSize(w, "MainWindowWidth", "MainWindowHeight", 1200, 600)
 
 		// show main window
 		w.Show()
@@ -256,10 +254,8 @@ func main() {
 	profileWindow.SetOnClosed(func() {
 		fyne.CurrentApp().Quit()
 	})
-	// set profile window size
-	profileWindowWidth := fyne.CurrentApp().Preferences().FloatWithFallback("ProfileWindowWidth", 1400)
-	profileWindowHeight := fyne.CurrentApp().Preferences().FloatWithFallback("ProfileWindowHeight", 600)
-	profileWindow.Resize(fyne.NewSize(float32(profileWindowWidth), float32(profileWindowHeight)))
+	// set (and clamp) profile window size to fit on the current screen
+	clampAndApplyWindowSize(profileWindow, "ProfileWindowWidth", "ProfileWindowHeight", 1400, 600)
 
 	profileWindow.CenterOnScreen()
 	profileWindow.Show()
@@ -278,7 +274,7 @@ func main() {
 			if strings.HasPrefix(strings.ToLower(exeDir), strings.ToLower(os.TempDir())) {
 				//goland:noinspection GoErrorStringFormat
 				dlg := dialog.NewError(
-					fmt.Errorf(lang.L("It looks like you are running Whispering Tiger from a temporary directory. Please extract the application and run it from a different folder.")),
+					errors.New(lang.L("It looks like you are running Whispering Tiger from a temporary directory. Please extract the application and run it from a different folder.")),
 					profileWindow,
 				)
 				dlg.SetOnClosed(func() {
@@ -389,3 +385,86 @@ func startBackgroundTasks() {
 		}()
 	}
 }
+
+// clampAndApplyWindowSize reads the stored window size, clamps it to the current screen area
+// (with a small margin) and applies + saves adjusted values if necessary.
+// keys: Preference keys for width and height. Default values are used if not present.
+func clampAndApplyWindowSize(win fyne.Window, widthKey, heightKey string, defW, defH float64) {
+	// Loaded values
+	pref := fyne.CurrentApp().Preferences()
+	w := pref.FloatWithFallback(widthKey, defW)
+	h := pref.FloatWithFallback(heightKey, defH)
+
+	// Fallback when 0 or negative
+	if w <= 0 {
+		w = defW
+	}
+	if h <= 0 {
+		h = defH
+	}
+	// Heuristic minimum size
+	const minW, minH = 120.0, 100.0
+
+	// Cache for one-time detection of the maximum usable start size
+	// (package-level variables so multiple windows share the first measurement)
+	// Note: intentionally not exported
+	if maxCanvasW == 0 || maxCanvasH == 0 {
+		// Only on the first call: temporarily go fullscreen to detect maximum usable area.
+		// Reduces flicker for multiple windows (e.g. profile and main window).
+		win.Show()
+		win.SetFullScreen(true)
+		// Wait until a meaningful size is available
+		for win.Canvas().Size().Width <= 0 || win.Canvas().Size().Height <= 0 {
+			time.Sleep(10 * time.Millisecond)
+		}
+		maxCanvasW = float64(win.Canvas().Size().Width)
+		maxCanvasH = float64(win.Canvas().Size().Height)
+		win.SetFullScreen(false)
+		// Hide again; actual target size will be applied later
+		win.Hide()
+	}
+
+	// Step 1: hard clamp based on cached maximum size
+	if maxCanvasW > 0 && w > maxCanvasW {
+		w = maxCanvasW
+	}
+	if maxCanvasH > 0 && h > maxCanvasH {
+		h = maxCanvasH
+	}
+	win.Resize(fyne.NewSize(float32(w), float32(h)))
+
+	// Step 2: final clamp after layout – uses already known maximum dimensions
+	fyne.Do(func() {
+		c := win.Canvas()
+		if c == nil {
+			return
+		}
+		canvasSize := c.Size()
+		if canvasSize.Width < float32(minW) || canvasSize.Height < float32(minH) {
+			return
+		}
+		// Safety margin
+		const margin float32 = 49 + 31 + 20 // 49px Taskleiste + 31px Fensterrahmen + etwas Toleranz (20px)
+		maxW := float64(canvasSize.Width - margin)
+		maxH := float64(canvasSize.Height - margin)
+		if maxW < 200 {
+			maxW = 200
+		}
+		if maxH < 120 {
+			maxH = 120
+		}
+		if w > maxW {
+			w = maxW
+		}
+		if h > maxH {
+			h = maxH
+		}
+		win.Resize(fyne.NewSize(float32(w), float32(h)))
+	})
+}
+
+// Package-scope cache variables (below the function so Go can use them above)
+var (
+	maxCanvasW float64
+	maxCanvasH float64
+)
