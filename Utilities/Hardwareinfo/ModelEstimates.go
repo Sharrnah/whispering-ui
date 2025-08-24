@@ -68,7 +68,7 @@ var Models = []AIModel{
 	// Phi-4 model
 	{"Whisper", "phi4", "", 22531.0},
 	// Voxtral model
-	{"Whisper", "voxtral", "Voxtral-Mini-3B-2507", 18852.0},
+	{"Whisper", "voxtral", "", 18852.0},
 	// NLLB200CT2 models
 	{"TxtTranslator", "NLLB200_CT2", "small", 3087.0},
 	{"TxtTranslator", "NLLB200_CT2", "medium", 6069.0},
@@ -87,7 +87,7 @@ var Models = []AIModel{
 	// Phi-4 model
 	{"TxtTranslator", "phi4", "", 22531.0},
 	// Voxtral model
-	{"TxtTranslator", "voxtral", "Voxtral-Mini-3B-2507", 18852.0},
+	{"TxtTranslator", "voxtral", "", 18852.0},
 	// TTS types
 	{"ttsType", "silero", "", 1533.0},
 	{"ttsType", "f5_e2", "", 1200.0},
