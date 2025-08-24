@@ -227,13 +227,17 @@ func main() {
 		}
 
 		Fields.Field.StatusText.Truncation = fyne.TextTruncateClip
-		w.SetContent(container.NewBorder(nil, Fields.Field.StatusRow, nil, nil, appTabs))
+		fyne.Do(func() {
+			w.SetContent(container.NewBorder(nil, Fields.Field.StatusRow, nil, nil, appTabs))
+		})
 
 		// set (and clamp) main window size to fit on the current screen
 		clampAndApplyWindowSize(w, "MainWindowWidth", "MainWindowHeight", 1200, 600)
 
 		// show main window
-		w.Show()
+		fyne.Do(func() {
+			w.Show()
+		})
 
 		// set websocket client to configured ip+port
 		WebsocketClient.Addr = Settings.Config.Websocket_ip + ":" + strconv.Itoa(Settings.Config.Websocket_port)
@@ -245,7 +249,9 @@ func main() {
 
 		// close profile window
 		profileWindow.SetOnClosed(func() {}) // disable quit handler for programmatic close
-		profileWindow.Close()
+		fyne.Do(func() {
+			profileWindow.Close()
+		})
 	}
 
 	profilePage := Pages.CreateProfileWindow(onProfileClose)
@@ -444,7 +450,7 @@ func clampAndApplyWindowSize(win fyne.Window, widthKey, heightKey string, defW, 
 			return
 		}
 		// Safety margin
-		const margin float32 = 49 + 31 + 20 // 49px Taskleiste + 31px Fensterrahmen + etwas Toleranz (20px)
+		const margin float32 = 49 + 31 + 20 // 49px Taskbar + 31px Window-border/title + some tolerance (20px)
 		maxW := float64(canvasSize.Width - margin)
 		maxH := float64(canvasSize.Height - margin)
 		if maxW < 200 {
