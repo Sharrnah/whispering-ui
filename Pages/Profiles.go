@@ -54,14 +54,107 @@ type CurrentPlaybackDevice struct {
 	testAudioSampleRate uint32
 	isInitializing      bool       // Add this flag
 	initMutex           sync.Mutex // Add this mutex
-	// stop-Koordination, um verlorene Stop-Signale vor Kanal-Initialisierung zu vermeiden
+	// Stop coordination to avoid losing stop signals before channel initialization
 	stopPending bool
 	stopMu      sync.Mutex
+
+	// contextShutdown indicates an Init() goroutine has finished and context was freed.
+	// We wait on this (via polling) before starting a new context when switching APIs
+	// to avoid racing between freeing the underlying C context and creating devices.
+	contextWG sync.WaitGroup
+}
+
+// Context lifecycle overview:
+//  - StartContext(): kicks off a new Init() goroutine run (Add(1) + go Init()).
+//  - Init(): Creates the malgo.Context for the currently selected backend, waits for a stop signal and performs cleanup.
+//            Always calls contextWG.Done() at the end.
+//  - Stop(): Sends (non-blocking) a signal to the running Init() goroutine so its <-c.stopChannel returns.
+//  - StopAndWaitContext(timeout): Combines Stop()+UnInitDevices() and waits (with timeout) for the Init goroutine to fully finish.
+//  - SwitchBackend(): High-level backend change (stop, wait, swap backend, start new context, re-initialize devices).
+//
+// This keeps UI code free from WaitGroup/channel boilerplate; it only calls SwitchBackend or StartContext.
+
+// StartContext starts (or restarts) the audio context initialization goroutine for the current backend.
+// It is safe to call multiple times; a previous context should be stopped first via StopAndWaitContext.
+func (c *CurrentPlaybackDevice) StartContext() {
+	c.contextWG.Add(1)
+	go c.Init()
+}
+
+// StopAndWaitContext signals the Init goroutine to stop (via Stop()) and waits until it has fully exited.
+// Returns true if the context goroutine finished before timeout.
+func (c *CurrentPlaybackDevice) StopAndWaitContext(timeout time.Duration) bool {
+	// signal stop (idempotent)
+	c.Stop()
+	// also ensure device is uninitialized early to reduce callbacks during shutdown
+	c.UnInitDevices()
+
+	doneCh := make(chan struct{})
+	go func() {
+		c.contextWG.Wait() // will return immediately if no active goroutine (mismatched Add/Done would panic earlier)
+		close(doneCh)
+	}()
+	select {
+	case <-doneCh:
+		return true
+	case <-time.After(timeout):
+		fmt.Println("Timeout waiting for audio context shutdown")
+		return false
+	}
+}
+
+// SwitchBackend encapsulates full backend change: stop old, wait, set backend, start new context, then re-init devices.
+// inputName/outputName may be empty to keep current selection. Returns first encountered error.
+func (c *CurrentPlaybackDevice) SwitchBackend(newBackend malgo.Backend, inputName, outputName string) error {
+	// If backend unchanged, just optionally re-init devices.
+	if c.AudioAPI == newBackend {
+		if inputName != "" {
+			c.InputDeviceName = inputName
+		}
+		if outputName != "" {
+			c.OutputDeviceName = outputName
+		}
+		// attempt device reinit async
+		go func() { _ = c.InitDevices(false) }()
+		return nil
+	}
+
+	// Stop and wait for previous context (max 3s)
+	c.StopAndWaitContext(3 * time.Second)
+
+	// Assign new backend and start a fresh context
+	c.AudioAPI = newBackend
+	if inputName != "" {
+		c.InputDeviceName = inputName
+	}
+	if outputName != "" {
+		c.OutputDeviceName = outputName
+	}
+	c.StartContext()
+
+	// After (at most) 5s wait for initialization, then init devices.
+	go func() {
+		c.WaitUntilInitialized(5)
+		_ = c.InitDevices(false)
+	}()
+	return nil
+}
+
+// WaitForContextShutdown waits until c.Context is nil (meaning prior Init goroutine fully cleaned up)
+// or the timeout (in seconds) expires.
+func (c *CurrentPlaybackDevice) WaitForContextShutdown(timeout time.Duration) {
+	start := time.Now()
+	for time.Since(start) < timeout*time.Second { // keep existing style (seconds multiplication)
+		if c.Context == nil { // previous context fully cleaned
+			return
+		}
+		time.Sleep(50 * time.Millisecond)
+	}
 }
 
 func (c *CurrentPlaybackDevice) Stop() {
-	// Nicht-blockierendes Stop-Signal. Falls der Kanal noch nicht existiert,
-	// merken wir uns das Stoppen als Pending und liefern es nach.
+	// Non-blocking stop signal. If the channel does not yet exist,
+	// mark stop as pending and deliver it later.
 	c.stopMu.Lock()
 	defer c.stopMu.Unlock()
 	if c.stopChannel != nil {
@@ -109,6 +202,10 @@ func (c *CurrentPlaybackDevice) InitTestAudio() (*bytes.Reader, *wav.Reader) {
 }
 
 func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
+	// If context is not yet present, we should not attempt to init devices.
+	if c.Context == nil {
+		return errors.New("cannot init devices: context not ready")
+	}
 	c.initMutex.Lock()
 	defer c.initMutex.Unlock()
 	if c.isInitializing {
@@ -308,7 +405,23 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 	captureCallbacks := malgo.DeviceCallbacks{
 		Data: onRecvFrames,
 	}
-	c.device, err = malgo.InitDevice(c.Context.Context, deviceConfig, captureCallbacks)
+	// Additional safety: context may have been freed concurrently when switching APIs.
+	if c.Context == nil { // context freed or not yet initialized
+		return errors.New("audio context not initialized (nil) - aborting device init to avoid panic")
+	}
+	// Wrap InitDevice in recover to guard against rare races where underlying C context was freed.
+	func() {
+		defer func() {
+			if r := recover(); r != nil {
+				err = fmt.Errorf("panic during InitDevice (likely freed context): %v", r)
+			}
+		}()
+		c.device, err = malgo.InitDevice(
+			c.Context.Context,
+			deviceConfig,
+			captureCallbacks,
+		)
+	}()
 	if err != nil {
 		fmt.Println(err)
 		return err
@@ -356,6 +469,11 @@ func (c *CurrentPlaybackDevice) Init() {
 		scope.SetTag("GoRoutine", "Pages\\Profiles->Init")
 	})
 
+	// Ensure Done() is always called even on early return/panic
+	defer func() {
+		c.contextWG.Done()
+	}()
+
 	if c.OutputWaveWidget == nil {
 		c.OutputWaveWidget = widget.NewProgressBar()
 		c.OutputWaveWidget.Max = 100.0
@@ -391,10 +509,10 @@ func (c *CurrentPlaybackDevice) Init() {
 		}
 	}()
 
-	// Warte auf ein einzelnes Stop-Signal und dann aufräumen
-	// Verwende einen gepufferten Kanal, sodass Stop() schon vorher senden kann
+	// Wait for a single stop signal and then clean up
+	// Use a buffered channel so Stop() can send beforehand
 	c.stopChannel = make(chan bool, 1)
-	// Wenn Stop() bereits vor der Kanal-Erstellung aufgerufen wurde, Signal nachliefern
+	// If Stop() was already called before channel creation, deliver the signal now
 	c.stopMu.Lock()
 	if c.stopPending {
 		c.stopPending = false
@@ -405,14 +523,14 @@ func (c *CurrentPlaybackDevice) Init() {
 	}
 	c.stopMu.Unlock()
 	<-c.stopChannel
-	// Kanal schließen und auf nil setzen, um künftige Stop()-Aufrufe als pending markieren zu können
+	// Close channel and set to nil so future Stop() calls can be marked as pending
 	c.stopMu.Lock()
 	close(c.stopChannel)
 	c.stopChannel = nil
 	c.stopMu.Unlock()
 	fmt.Println("stopping...")
-	// Schütze Geräte-Cleanup mit dem gleichen Mutex wie die (Re-)Initialisierung,
-	// um Race-Conditions zwischen InitDevices/UnInitDevices/Init zu vermeiden.
+	// Protect device cleanup with the same mutex as (re-)initialization
+	// to avoid race conditions between InitDevices/UnInitDevices/Init.
 	c.initMutex.Lock()
 	if c.device != nil {
 		// sicherheitshalber stoppen, wenn noch gestartet
@@ -543,7 +661,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	playBackDevice := CurrentPlaybackDevice{}
 
 	playBackDevice.AudioAPI = AudioAPI.AudioBackends[0].Backend
-	go playBackDevice.Init()
+	playBackDevice.StartContext()
 
 	audioInputDevicesOptions, _, err := GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0, "", "")
 	if err != nil {
@@ -571,7 +689,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	totalGPUMemory := int64(0)
 	var ComputeCapability float32 = 0.0
 	HasNvidiaGPU := false
-	// Coordinator-Zeiger früh deklarieren, damit spätere Async-Updates zugreifen können
+	// Declare coordinator pointer early so later async updates can access it
 	var coord *PF.Coordinator
 	go func() {
 		foundGPUVendorName := "Unknown"
@@ -604,7 +722,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			GPUMemoryBar.Max = float64(totalGPUMemory)
 		}
 
-		// Cache, ob NVIDIA vorhanden ist
+		// Cache whether an NVIDIA GPU is present
 		if strings.Contains(strings.ToLower(foundGPUVendorName), "nvidia") {
 			HasNvidiaGPU = true
 		}
@@ -666,9 +784,6 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		onAudioAPIChanged := func(opt CustomWidget.TextValueOption) {
 			// Resolve backend by display name
 			backend := AudioAPI.GetAudioBackendByName(opt.Text)
-
-			// Backend im Gerät setzen (UI-Optionen aktualisieren wir gleich); teure Re-Inits nur wenn nicht geladen wird
-			playBackDevice.AudioAPI = backend.Backend
 
 			// Try to refresh device option lists for this backend (plain values)
 			// Remember previously selected labels (text) to attempt preservation
@@ -767,31 +882,25 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				}
 			}
 
-			// Während Profil-Laden keine Re-Init/Context-Neustarts
+			// During profile loading no re-init/context restarts
 			if isLoadingSettingsFile {
 				return
 			}
 
-			// Stop current context/device and switch backend (teuer)
-			playBackDevice.Stop()          // end malgo context goroutine
-			playBackDevice.UnInitDevices() // ensure device is stopped/uninitialized
-			// Start a fresh malgo context for the new backend
-			go playBackDevice.Init()
-			// Apply current selections to playback device and re-init
-			go func() {
-				if engine.Controls.AudioInput != nil && engine.Controls.AudioInput.GetSelected() != nil {
-					playBackDevice.InputDeviceName = engine.Controls.AudioInput.GetSelected().Text
-				}
-				if engine.Controls.AudioOutput != nil && engine.Controls.AudioOutput.GetSelected() != nil {
-					playBackDevice.OutputDeviceName = engine.Controls.AudioOutput.GetSelected().Text
-				}
-				playBackDevice.WaitUntilInitialized(5)
-				_ = playBackDevice.InitDevices(false)
-			}()
+			// Extract currently selected device labels (if present)
+			inName := ""
+			outName := ""
+			if engine.Controls.AudioInput != nil && engine.Controls.AudioInput.GetSelected() != nil {
+				inName = engine.Controls.AudioInput.GetSelected().Text
+			}
+			if engine.Controls.AudioOutput != nil && engine.Controls.AudioOutput.GetSelected() != nil {
+				outName = engine.Controls.AudioOutput.GetSelected().Text
+			}
+			_ = playBackDevice.SwitchBackend(backend.Backend, inName, outName)
 		}
 		onAudioInputChanged := func(opt CustomWidget.TextValueOption) {
 			playBackDevice.InputDeviceName = opt.Text
-			// Während Profil-Laden kein Re-Init
+			// During profile loading no re-init
 			if isLoadingSettingsFile {
 				return
 			}
@@ -800,7 +909,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 		onAudioOutputChanged := func(opt CustomWidget.TextValueOption) {
 			playBackDevice.OutputDeviceName = opt.Text
-			// Während Profil-Laden kein Re-Init
+			// During profile loading no re-init
 			if isLoadingSettingsFile {
 				return
 			}
@@ -968,6 +1077,16 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileSettings.SettingsFilename = settingsFiles[id]
 		// Generic load of all registered controls
 		engine.LoadFromSettings(&profileSettings)
+
+		// After loading: actively apply the profile's Audio API because onAudioAPIChanged is suppressed during loading.
+		if profileSettings.Audio_api != "" {
+			backend := AudioAPI.GetAudioBackendByName(profileSettings.Audio_api)
+			// Apply carried over device selection from settings (if present)
+			inputName := profileSettings.Audio_input_device
+			outputName := profileSettings.Audio_output_device
+			// Start backend switch (or re-init if equal) asynchronously
+			_ = playBackDevice.SwitchBackend(backend.Backend, inputName, outputName)
+		}
 		// Ensure dynamic option sets and group sync are applied post-load
 		if coord != nil {
 			if controls.STTType != nil && controls.STTType.GetSelected() != nil {
@@ -982,7 +1101,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			if controls.OCRType != nil && controls.OCRType.GetSelected() != nil {
 				coord.ApplyOCRTypeChange(controls.OCRType.GetSelected().Value)
 			}
-			// Initiale Memory-Berechnungen für Balken, damit VRAM sofort korrekt erscheint
+			// Initial memory calculations for bars so VRAM appears correct immediately
 			AIModel := Hardwareinfo.ProfileAIModelOption{}
 			if controls.STTType != nil && controls.STTType.GetSelected() != nil {
 				AIModel = Hardwareinfo.ProfileAIModelOption{AIModel: "Whisper", AIModelType: controls.STTType.GetSelected().Value}
