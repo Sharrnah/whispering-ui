@@ -349,5 +349,6 @@
     "Only ? GB free space remaining. The space might not be enough.": "فقط {{.SpaceRemaining}} جيجابايت المساحة الخالية المتبقية في {{.Directory}}.\n\nقد لا تكون المساحة كافية.",
     "Quit running backend": "إنهاء تشغيل الواجهة الخلفية",
     "Integrated Image-to-Text": "صورة مدمجة إلى نص مدمجة",
-    "A.I. Device for Image-to-Text": "جهاز الذكاء الاصطناعي لتحويل الصور إلى نصوص"
+    "A.I. Device for Image-to-Text": "جهاز الذكاء الاصطناعي لتحويل الصور إلى نصوص",
+    "Language": "اللغة"
 }
