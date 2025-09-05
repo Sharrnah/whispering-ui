@@ -130,6 +130,10 @@ func (c *Coordinator) ConfirmOption(titleKey, messageKey string, onYes func()) {
 }
 
 func (c *Coordinator) EnsurePrecisionDeviceCompatibility(device, precision string) {
+	// Do not show prompts while loading settings or during programmatic updates
+	if c == nil || c.InProgrammaticUpdate || c.SuppressPrompts || (c.IsLoadingSettings != nil && *c.IsLoadingSettings) {
+		return
+	}
 	switch device {
 	case "cpu":
 		if precision == "float16" || precision == "int8_float16" {

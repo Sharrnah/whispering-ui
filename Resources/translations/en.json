@@ -40,6 +40,7 @@
     "Support me on Ko-Fi": "Support me on {{.KofiUrl}}",
     "If you want to support the development of Whispering Tiger": "If you want to support the development of Whispering Tiger,\nyou can do so by supporting me on Ko-fi.",
     "precision": "precision",
+    "Language": "Language",
     "Checking backend state": "Checking backend state...",
     "Could not find audioWhisper.py or audioWhisper.exe": "Could not find audioWhisper.py or audioWhisper.exe",
     "Could not find detected_energy in output.": "Could not find detected_energy in output.",

@@ -423,7 +423,6 @@ func RestartBackend(confirmation bool, confirmationText string) {
 			BackendsList[0].Start()
 			fyne.Do(func() {
 				infinityProcessDialog.Hide()
-				Fields.DataBindings.SpeechToTextEnabledDataBinding.Set(true)
 			})
 		}
 	}
