@@ -360,5 +360,6 @@
     "Only ? GB free space remaining. The space might not be enough.": "Slechts {{.SpaceRemaining}} GB vrije ruimte over op {{.Directory}}.\n\nDe ruimte is mogelijk niet voldoende.",
     "Quit running backend": "Stoppen met draaien backend",
     "Integrated Image-to-Text": "Geïntegreerd beeld naar tekst",
-    "A.I. Device for Image-to-Text": "A.I.-apparaat voor beeld-naar-tekst"
+    "A.I. Device for Image-to-Text": "A.I.-apparaat voor beeld-naar-tekst",
+    "Language": "Taal"
 }
