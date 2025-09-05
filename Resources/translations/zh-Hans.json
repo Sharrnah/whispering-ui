@@ -349,5 +349,6 @@
     "Only ? GB free space remaining. The space might not be enough.": "{{.Directory}} 仅剩余{{.SpaceRemaining}} GB 可用空间。\n\n空间可能不够。",
     "Quit running backend": "退出后台运行",
     "Integrated Image-to-Text": "集成图像到文本",
-    "A.I. Device for Image-to-Text": "图像到文本的人工智能设备"
+    "A.I. Device for Image-to-Text": "图像到文本的人工智能设备",
+    "Language": "语言"
 }
