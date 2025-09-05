@@ -360,5 +360,6 @@
     "Integrated Image-to-Text": "Integrovaný převod obrázku na text",
     "A.I. Device for Image-to-Text": "Zařízení A.I. pro převod obrazu na text",
     "It looks like you are running Whispering Tiger from a temporary directory. Please extract the application and run it from a different folder.": "Vypadá to, že Whispering Tiger spouštíte z dočasného adresáře.\n\nRozbalte prosím aplikaci a spusťte ji z jiné složky.",
-    "Only ? GB free space remaining. The space might not be enough.": "Na adrese {{.Directory}} zbývá pouze {{.SpaceRemaining}} GB volného místa.\n\nTento prostor nemusí stačit."
+    "Only ? GB free space remaining. The space might not be enough.": "Na adrese {{.Directory}} zbývá pouze {{.SpaceRemaining}} GB volného místa.\n\nTento prostor nemusí stačit.",
+    "Language": "Jazyk"
 }
