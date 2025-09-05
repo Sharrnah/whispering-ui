@@ -349,5 +349,6 @@
     "A.I. Device for Image-to-Text": "画像からテキストへのA.I.デバイス",
     "It looks like you are running Whispering Tiger from a temporary directory. Please extract the application and run it from a different folder.": "一時ディレクトリからWhispering Tigerを実行しているようです。\n\nアプリケーションを解凍し、別のフォルダから実行してください。",
     "Low Disk Space": "ディスク容量が少ない",
-    "Only ? GB free space remaining. The space might not be enough.": "{{.Directory}} に残っている空き容量は{{.SpaceRemaining}} GB だけです。\n\n空き容量が足りないかもしれません。"
+    "Only ? GB free space remaining. The space might not be enough.": "{{.Directory}} に残っている空き容量は{{.SpaceRemaining}} GB だけです。\n\n空き容量が足りないかもしれません。",
+    "Language": "言語"
 }
