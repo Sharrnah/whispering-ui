@@ -349,5 +349,6 @@
     "Only ? GB free space remaining. The space might not be enough.": "Der er kun {{.SpaceRemaining}} GB ledig plads tilbage på {{.Directory}}.\n\nPladsen er måske ikke tilstrækkelig.",
     "Quit running backend": "Stop med at køre backend",
     "Integrated Image-to-Text": "Integreret billede-til-tekst",
-    "A.I. Device for Image-to-Text": "A.I.-enhed til billede-til-tekst"
+    "A.I. Device for Image-to-Text": "A.I.-enhed til billede-til-tekst",
+    "Language": "Sprog"
 }
