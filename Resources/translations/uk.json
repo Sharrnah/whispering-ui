@@ -349,5 +349,6 @@
     "Only ? GB free space remaining. The space might not be enough.": "На {{.Directory}} залишилося лише {{.SpaceRemaining}} ГБ вільного місця.\n\nМісця може не вистачити.",
     "Quit running backend": "Припиніть запускати бекенд",
     "Integrated Image-to-Text": "Інтегроване перетворення зображення в текст",
-    "A.I. Device for Image-to-Text": "Пристрій штучного інтелекту для перетворення зображень на текст"
+    "A.I. Device for Image-to-Text": "Пристрій штучного інтелекту для перетворення зображень на текст",
+    "Language": "Мова"
 }
