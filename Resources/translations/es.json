@@ -349,5 +349,6 @@
     "Only ? GB free space remaining. The space might not be enough.": "Sólo queda {{.SpaceRemaining}} GB de espacio libre en {{.Directory}}.\n\nEl espacio podría no ser suficiente.",
     "A.I. Device for Image-to-Text": "Dispositivo de inteligencia artificial para la conversión de imagen en texto",
     "Quit running backend": "Dejar de ejecutar el backend",
-    "Integrated Image-to-Text": "Imagen a texto integrada"
+    "Integrated Image-to-Text": "Imagen a texto integrada",
+    "Language": "Idioma"
 }
