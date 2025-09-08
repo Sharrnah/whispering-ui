@@ -152,14 +152,27 @@ func main() {
 		// AMD ROCm support (Todo: does this work with NVIDIA?)
 		RuntimeBackend.BackendsList[0].AttachEnvironment("HSA_OVERRIDE_GFX_VERSION", "10.3.0")
 
+		// RuntimeBackend.BackendsList[0].AttachEnvironment("PYTHONVERBOSE", "1")
+
+		// Kill the INFO log that triggers the bad __repr__ path --- see https://github.com/huggingface/parler-tts/issues/219
+		RuntimeBackend.BackendsList[0].AttachEnvironment("TRANSFORMERS_VERBOSITY", "error")
+
 		// get ui exe path
 		appExec, _ := os.Executable()
 		appPath := filepath.Dir(appExec)
 
 		// RuntimeBackend.BackendsList[0].AttachEnvironment("CUBLAS_WORKSPACE_CONFIG", ":4096:8")
-		if Utilities.FileExists("ffmpeg/bin/ffmpeg.exe") {
-			RuntimeBackend.BackendsList[0].AttachEnvironment("Path", filepath.Join(appPath, "ffmpeg/bin"))
+		if Utilities.FileExists(filepath.Join("toolchain", "ffmpeg", "bin", "ffmpeg.exe")) {
+			RuntimeBackend.BackendsList[0].AttachEnvironment("Path", filepath.Join(appPath, "toolchain", "ffmpeg", "bin"))
 		}
+		// Add toolchain to path
+		RuntimeBackend.BackendsList[0].AttachEnvironment("Path", filepath.Join(appPath, "toolchain", "llvm", "bin"))
+		RuntimeBackend.BackendsList[0].AttachEnvironment("Path", filepath.Join(appPath, "toolchain", "clang", "bin"))
+		RuntimeBackend.BackendsList[0].AttachEnvironment("Path", filepath.Join(appPath, "toolchain", "msvc", "x64"))
+		RuntimeBackend.BackendsList[0].AttachEnvironment("CC", filepath.Join(appPath, "toolchain", "clang", "bin", "clang.exe"))
+		ld := filepath.Join(appPath, "audioWhisper", "_internal", "libs")
+		RuntimeBackend.BackendsList[0].AttachEnvironment("LDFLAGS", `-L"`+ld+`" -lpython311`)
+
 		if Settings.Config.Run_backend {
 			if !fyne.CurrentApp().Preferences().BoolWithFallback("DisableUiDownloads", false) {
 				RuntimeBackend.BackendsList[0].UiDownload = true
@@ -421,7 +434,7 @@ func clampAndApplyWindowSize(win fyne.Window, widthKey, heightKey string, defW, 
 		win.SetFullScreen(true)
 		// Wait until a meaningful size is available
 		for win.Canvas().Size().Width <= 0 || win.Canvas().Size().Height <= 0 {
-			time.Sleep(10 * time.Millisecond)
+			time.Sleep(100 * time.Millisecond)
 		}
 		maxCanvasW = float64(win.Canvas().Size().Width)
 		maxCanvasH = float64(win.Canvas().Size().Height)
