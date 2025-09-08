@@ -61,7 +61,7 @@ to a web browser using Websockets or over OSC (examples are **Streaming-overlays
 1. After downloading the latest version from the [**Releases**], extract it to a folder of your choice on a drive with enough free space.
    
    **(Do not run it directly from the zip file, do not run from external drive.)**
-2. [Install CUDA for GPU Acceleration](https://developer.nvidia.com/cuda-downloads) (Optional but recommended for NVIDIA GPUs).
+2. [Install CUDA for GPU Acceleration](https://developer.nvidia.com/cuda-12-8-1-download-archive) (Optional but recommended for NVIDIA GPUs).
 3. Run the **Whispering Tiger.exe** file.
 4. Let it download the latest version of **Whispering Tiger**. (It will ask to download the Platform.)
 5. After the download is finished, you can create a Profile and start using the **Whispering Tiger** application.
