@@ -3,11 +3,13 @@ package RuntimeBackend
 import (
 	"encoding/json"
 	"errors"
+	"fmt"
 	"io"
 	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"syscall"
 	"time"
@@ -130,25 +132,126 @@ func (c *WhisperProcessConfig) Stop() {
 	}
 }
 
+// init only once
+func (c *WhisperProcessConfig) ensureEnvInit() {
+	if c.environmentVars == nil {
+		c.environmentVars = append([]string(nil), os.Environ()...)
+
+		// Debug print
+		for _, e := range c.environmentVars {
+			if strings.HasPrefix(e, "PATH=") {
+				fmt.Println("Final PATH:", e)
+			}
+		}
+	}
+}
+
+func envKey(name string) string {
+	if runtime.GOOS == "windows" {
+		return strings.ToUpper(name)
+	}
+	return name
+}
+
+func (c *WhisperProcessConfig) getEnv(name string) (string, int, bool) {
+	key := envKey(name)
+	for i, kv := range c.environmentVars {
+		if eq := strings.IndexByte(kv, '='); eq > 0 {
+			k := kv[:eq]
+			if envKey(k) == key {
+				return kv[eq+1:], i, true
+			}
+		}
+	}
+	return "", -1, false
+}
+
+func (c *WhisperProcessConfig) setEnv(name, value string) {
+	_, idx, ok := c.getEnv(name)
+	entry := name + "=" + value
+	if ok {
+		c.environmentVars[idx] = entry
+		return
+	}
+	c.environmentVars = append(c.environmentVars, entry)
+}
+
+// PrependPath robustly prepends dirs to PATH (deduped, normalized)
+func (c *WhisperProcessConfig) PrependPath(dirs ...string) {
+	c.ensureEnvInit()
+	sep := string(os.PathListSeparator)
+
+	// normalize new dirs
+	norm := make([]string, 0, len(dirs))
+	seen := map[string]bool{}
+	for _, d := range dirs {
+		if d == "" {
+			continue
+		}
+		d = filepath.Clean(d)
+		d = strings.Trim(d, ` "'`)
+		key := d
+		if runtime.GOOS == "windows" {
+			key = strings.ToLower(d)
+		}
+		if !seen[key] {
+			seen[key] = true
+			norm = append(norm, d)
+		}
+	}
+
+	// existing PATH
+	cur, _, _ := c.getEnv("PATH")
+	parts := []string{}
+	if cur != "" {
+		parts = strings.Split(cur, sep)
+	}
+
+	exists := map[string]bool{}
+	for _, p := range parts {
+		pp := strings.TrimSpace(strings.Trim(p, `"'`))
+		if pp == "" {
+			continue
+		}
+		key := pp
+		if runtime.GOOS == "windows" {
+			key = strings.ToLower(pp)
+		}
+		exists[key] = true
+	}
+
+	// prepend new dirs
+	out := make([]string, 0, len(norm)+len(parts))
+	for _, d := range norm {
+		key := d
+		if runtime.GOOS == "windows" {
+			key = strings.ToLower(d)
+		}
+		if !exists[key] {
+			out = append(out, d)
+			exists[key] = true
+		}
+	}
+	// then old PATH parts
+	for _, p := range parts {
+		pp := strings.TrimSpace(strings.Trim(p, `"'`))
+		if pp != "" {
+			out = append(out, pp)
+		}
+	}
+
+	c.setEnv("PATH", strings.Join(out, sep))
+}
+
+// AttachEnvironment replaces or prepends a var
 func (c *WhisperProcessConfig) AttachEnvironment(envName, envValue string) {
-	c.environmentVars = os.Environ()
-
-	envIndex := -1
-	for index, element := range c.environmentVars {
-		if strings.HasPrefix(element, envName+"=") {
-			envIndex = index
-		}
+	c.ensureEnvInit()
+	if (runtime.GOOS == "windows" && strings.EqualFold(envName, "PATH")) || envName == "PATH" {
+		parts := strings.Split(envValue, string(os.PathListSeparator))
+		c.PrependPath(parts...)
+		return
 	}
-
-	if value, ok := os.LookupEnv(envName); !ok {
-		c.environmentVars = append(c.environmentVars, envName+"="+envValue)
-	} else {
-		if envIndex > -1 {
-			c.environmentVars[envIndex] = envName + "=" + envValue + ";" + value
-		} else {
-			c.environmentVars = append(c.environmentVars, envName+"="+envValue+";"+value)
-		}
-	}
+	c.setEnv(envName, envValue)
 }
 
 func (c *WhisperProcessConfig) processLogOutputLine(line string, isUpdating bool) {
