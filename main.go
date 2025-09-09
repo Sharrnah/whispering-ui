@@ -165,6 +165,9 @@ func main() {
 		if Utilities.FileExists(filepath.Join("toolchain", "ffmpeg", "bin", "ffmpeg.exe")) {
 			RuntimeBackend.BackendsList[0].AttachEnvironment("Path", filepath.Join(appPath, "toolchain", "ffmpeg", "bin"))
 		}
+		if Utilities.FileExists(filepath.Join("ffmpeg", "bin", "ffmpeg.exe")) {
+			RuntimeBackend.BackendsList[0].AttachEnvironment("Path", filepath.Join(appPath, "ffmpeg", "bin"))
+		}
 		// Add toolchain to path
 		RuntimeBackend.BackendsList[0].AttachEnvironment("Path", filepath.Join(appPath, "toolchain", "llvm", "bin"))
 		RuntimeBackend.BackendsList[0].AttachEnvironment("Path", filepath.Join(appPath, "toolchain", "clang", "bin"))
