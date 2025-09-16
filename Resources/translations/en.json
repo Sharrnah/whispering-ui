@@ -48,6 +48,7 @@
     "You did set Speech pause detection to 0 and have no PushToTalk Button set.This would prevent the app from stopping recording automatically.": "You did set Speech pause detection to 0 and have no PushToTalk Button set.\nThis would prevent the app from stopping recording automatically.",
     "Hide": "Hide",
     "Close": "Close",
+    "Show Log": "Show Log",
     "Websocket Port in use": "Websocket Port in use",
     "Reconnect": "Reconnect",
     "Enable": "Enable",
