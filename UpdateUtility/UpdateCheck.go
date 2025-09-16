@@ -21,6 +21,10 @@ import (
 
 var updateInfoUrl = "https://s3.libs.space:9000/projects/whispering/latest.yaml"
 
+var appExec, _ = os.Executable()
+var appPath = filepath.Dir(appExec)
+var currentPlatformFile = filepath.Join(appPath, ".current_platform.yaml")
+
 func versionDownload(updater Updater.UpdatePackages, packageName, filename string, window fyne.Window, startBackend bool, progressTitle string, noDismiss bool, cleanUpFunc func()) error {
 	statusBar := widget.NewProgressBar()
 	statusBarContainer := container.NewVBox(statusBar)
@@ -224,20 +228,18 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 		return err
 	}
 
-	if err == nil {
-		statusBarContainer.Add(widget.NewLabel(lang.L("Finished.")))
-		downloadDialog.SetButtons([]fyne.CanvasObject{
-			&widget.Button{
-				Text: lang.L("Close"),
-				OnTapped: func() {
-					downloadDialog.Hide()
-				},
+	statusBarContainer.Add(widget.NewLabel(lang.L("Finished.")))
+	downloadDialog.SetButtons([]fyne.CanvasObject{
+		&widget.Button{
+			Text: lang.L("Close"),
+			OnTapped: func() {
+				downloadDialog.Hide()
 			},
-		})
-		downloadDialog.Refresh()
-		if reOpenAfterHide {
-			downloadDialog.Show()
-		}
+		},
+	})
+	downloadDialog.Refresh()
+	if reOpenAfterHide {
+		downloadDialog.Show()
 	}
 
 	statusBarContainer.Refresh()
@@ -252,9 +254,9 @@ func versionDownload(updater Updater.UpdatePackages, packageName, filename strin
 }
 
 func GetCurrentPlatformVersion() string {
-	if Utilities.FileExists(".current_platform.yaml") {
+	if Utilities.FileExists(currentPlatformFile) {
 		currentPlatformVersion := Updater.UpdateInfo{}
-		data, err := os.ReadFile(".current_platform.yaml")
+		data, err := os.ReadFile(currentPlatformFile)
 		if err == nil {
 			_ = currentPlatformVersion.ReadYaml(data)
 			return currentPlatformVersion.Version
@@ -273,7 +275,7 @@ func VersionCheck(window fyne.Window, startBackend bool) bool {
 	}
 
 	// check platform version
-	platformFileWithoutVersion := !Utilities.FileExists(".current_platform.yaml") && (Utilities.FileExists("audioWhisper/audioWhisper.exe") || Utilities.FileExists("audioWhisper.py"))
+	platformFileWithoutVersion := !Utilities.FileExists(currentPlatformFile) && (Utilities.FileExists("audioWhisper/audioWhisper.exe") || Utilities.FileExists("audioWhisper.py"))
 	platformRequiresUpdate := false
 
 	if GetCurrentPlatformVersion() != updater.Packages["ai_platform"].Version {
@@ -308,13 +310,13 @@ func VersionCheck(window fyne.Window, startBackend bool) bool {
 					err = versionDownload(updater, "ai_platform", "audioWhisper_platform.zip", window, startBackend, progressTitle, true, cleanUpFunc)
 					if err == nil {
 						packageInfo := updater.Packages["ai_platform"]
-						packageInfo.WriteYaml(".current_platform.yaml")
+						packageInfo.WriteYaml(currentPlatformFile)
 					}
 				}()
 			} else {
 				if platformFileWithoutVersion {
 					packageInfo := updater.Packages["ai_platform"]
-					packageInfo.WriteYaml(".current_platform.yaml")
+					packageInfo.WriteYaml(currentPlatformFile)
 				}
 			}
 		}, window)
