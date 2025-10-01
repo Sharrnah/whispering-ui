@@ -296,6 +296,8 @@
     "osc_scroll_time_limit.Description": "Time between scrolling OSC messages in seconds.\n(Only used if OSC Send Type is set to 'Scroll')",
     "osc_send_type.Name": "OSC text splitting send type",
     "osc_send_type.Description": "How the OSC messages are send.\nChunks = Send the text in chunks if too long. Messages are separated via '...'.\nFull = Send the full text at once.\nFull or Scroll = Send the full text or scroll it if too long.\nScroll = Scroll the text.",
+    "mic_passthrough_routing.Name": "Microphone Passthrough",
+    "mic_passthrough_routing.Description": "Route microphone audio to output device. (passthrough)",
     "osc_send.option.Chunks": "Chunks",
     "osc_send.option.Full": "Full",
     "osc_send.option.Full or Scroll": "Full or Scroll",

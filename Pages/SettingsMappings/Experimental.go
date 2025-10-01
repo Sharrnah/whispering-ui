@@ -10,9 +10,9 @@ import (
 var ExperimentalSettingsMapping = SettingsMapping{
 	Mappings: []SettingMapping{
 		{
-			SettingsName:         "Microphone Passthrough Routing",
+			SettingsName:         "Microphone Passthrough",
 			SettingsInternalName: "mic_passthrough_routing",
-			SettingsDescription:  "Route microphone passthrough audio to output device.",
+			SettingsDescription:  "Route microphone audio to output device.",
 			_widget: func() fyne.CanvasObject {
 				return widget.NewCheck("", func(b bool) {})
 			},
