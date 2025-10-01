@@ -361,5 +361,8 @@
     "Quit running backend": "Stoppen met draaien backend",
     "Integrated Image-to-Text": "Geïntegreerd beeld naar tekst",
     "A.I. Device for Image-to-Text": "A.I.-apparaat voor beeld-naar-tekst",
-    "Language": "Taal"
+    "Language": "Taal",
+    "Show Log": "Logboek weergeven",
+    "mic_passthrough_routing.Name": "Microfoondoorvoer",
+    "mic_passthrough_routing.Description": "Routeer microfoonaudio naar uitvoerapparaat. (passthrough)"
 }
