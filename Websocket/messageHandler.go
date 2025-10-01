@@ -523,6 +523,8 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		}(download)
 	}
 
+	log.Printf("Received message of type: %s", c.Type)
+
 	// set focus to main window
 	if fyne.CurrentApp().Preferences().BoolWithFallback("AutoRefocusWindow", false) {
 		fyne.Do(func() {

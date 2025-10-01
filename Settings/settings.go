@@ -169,6 +169,7 @@ type Conf struct {
 	Osc_delay_until_audio_playback     bool    `yaml:"osc_delay_until_audio_playback" json:"osc_delay_until_audio_playback"`
 	Osc_delay_until_audio_playback_tag string  `yaml:"osc_delay_until_audio_playback_tag" json:"osc_delay_until_audio_playback_tag"`
 	Osc_delay_timeout                  float64 `yaml:"osc_delay_timeout" json:"osc_delay_timeout"`
+	Osc_force_activity_indication      bool    `yaml:"osc_force_activity_indication" json:"osc_force_activity_indication"`
 
 	Osc_server_ip   string `yaml:"osc_server_ip" json:"osc_server_ip"`
 	Osc_server_port int    `yaml:"osc_server_port" json:"osc_server_port"`
@@ -221,6 +222,7 @@ var ExcludeConfigFields = []string{
 	"websocket_ip",
 	"websocket_port",
 	"run_backend",
+	"ui_download",
 	"settingsfilename",
 	"tts_model",
 	"tts_answer",
@@ -238,6 +240,7 @@ var ExcludeConfigFields = []string{
 	"stt_enabled",
 	"ocr_txt_src_lang",
 	"ocr_txt_trg_lang",
+	"osc_force_activity_indication",
 }
 
 var Config Conf
