@@ -350,5 +350,8 @@
     "A.I. Device for Image-to-Text": "Dispositivo de inteligencia artificial para la conversión de imagen en texto",
     "Quit running backend": "Dejar de ejecutar el backend",
     "Integrated Image-to-Text": "Imagen a texto integrada",
-    "Language": "Idioma"
+    "Language": "Idioma",
+    "mic_passthrough_routing.Description": "Dirige el audio del micrófono al dispositivo de salida. (paso a través)",
+    "Show Log": "Mostrar registro",
+    "mic_passthrough_routing.Name": "Paso de micrófono"
 }
