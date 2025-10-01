@@ -361,5 +361,8 @@
     "A.I. Device for Image-to-Text": "A.I. Gerät für Bild-zu-Text",
     "It looks like you are running Whispering Tiger from a temporary directory. Please extract the application and run it from a different folder.": "Es sieht so aus, als würden Sie Whispering Tiger von einem temporären Verzeichnis aus starten.\n\nBitte entpacken Sie die Anwendung und führen Sie sie in einem anderen Ordner aus.",
     "Only ? GB free space remaining. The space might not be enough.": "Nur noch {{.SpaceRemaining}} GB freier Speicherplatz auf {{.Directory}}.\n\nDer Speicherplatz reicht möglicherweise nicht aus.",
-    "Language": "Sprache"
+    "Language": "Sprache",
+    "Show Log": "Logbuch anzeigen",
+    "mic_passthrough_routing.Description": "Mikrofonton an das Ausgabegerät weiterleiten. (Passthrough)",
+    "mic_passthrough_routing.Name": "Mikrofon Passthrough"
 }
