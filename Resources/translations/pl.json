@@ -350,5 +350,8 @@
     "It looks like you are running Whispering Tiger from a temporary directory. Please extract the application and run it from a different folder.": "Wygląda na to, że uruchamiasz Whispering Tiger z katalogu tymczasowego.\n\nRozpakuj aplikację i uruchom ją z innego folderu.",
     "Quit running backend": "Zakończenie działania backendu",
     "Low Disk Space": "Mało miejsca na dysku",
-    "Language": "Język"
+    "Language": "Język",
+    "mic_passthrough_routing.Name": "Przejście mikrofonu",
+    "mic_passthrough_routing.Description": "Przekierowanie dźwięku z mikrofonu do urządzenia wyjściowego. (passthrough)",
+    "Show Log": "Pokaż dziennik"
 }
