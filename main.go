@@ -170,16 +170,16 @@ func main() {
 		}
 
 		// Add toolchain to path
-		cudaVersion := "v12.8"
-		cudaVersionEnv := strings.ToUpper(strings.ReplaceAll(cudaVersion, ".", "_"))
+		//cudaVersion := "v12.8"
+		//cudaVersionEnv := strings.ToUpper(strings.ReplaceAll(cudaVersion, ".", "_"))
 
 		RuntimeBackend.BackendsList[0].AttachEnvironment("Path", filepath.Join(appPath, "toolchain", "llvm", "bin"))
 		RuntimeBackend.BackendsList[0].AttachEnvironment("Path", filepath.Join(appPath, "toolchain", "clang", "bin"))
 		RuntimeBackend.BackendsList[0].AttachEnvironment("Path", filepath.Join(appPath, "toolchain", "msvc", "x64"))
-		RuntimeBackend.BackendsList[0].AttachEnvironment("Path", filepath.Join(appPath, "toolchain", "cuda", cudaVersion, "bin"))
+		//RuntimeBackend.BackendsList[0].AttachEnvironment("Path", filepath.Join(appPath, "toolchain", "cuda", cudaVersion, "bin"))
 		RuntimeBackend.BackendsList[0].AttachEnvironment("CC", filepath.Join(appPath, "toolchain", "clang", "bin", "clang.exe"))
-		RuntimeBackend.BackendsList[0].AttachEnvironment("CUDA_PATH", filepath.Join(appPath, "toolchain", "cuda", cudaVersion))
-		RuntimeBackend.BackendsList[0].AttachEnvironment("CUDA_PATH_"+cudaVersionEnv, filepath.Join(appPath, "toolchain", "cuda", cudaVersion))
+		//RuntimeBackend.BackendsList[0].AttachEnvironment("CUDA_PATH", filepath.Join(appPath, "toolchain", "cuda", cudaVersion))
+		//RuntimeBackend.BackendsList[0].AttachEnvironment("CUDA_PATH_"+cudaVersionEnv, filepath.Join(appPath, "toolchain", "cuda", cudaVersion))
 		ld := filepath.Join(appPath, "audioWhisper", "_internal", "libs")
 		RuntimeBackend.BackendsList[0].AttachEnvironment("LDFLAGS", `-L"`+ld+`" -lpython311`)
 
