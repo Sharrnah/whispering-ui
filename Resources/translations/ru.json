@@ -350,5 +350,8 @@
     "Only ? GB free space remaining. The space might not be enough.": "На сайте {{.Directory}} осталось только {{.SpaceRemaining}} ГБ свободного места.\n\nЭтого пространства может быть недостаточно.",
     "Integrated Image-to-Text": "Интегрированные изображения в текст",
     "A.I. Device for Image-to-Text": "Устройство искусственного интеллекта для преобразования изображений в текст",
-    "Language": "Язык"
+    "Language": "Язык",
+    "Show Log": "Показать журнал",
+    "mic_passthrough_routing.Description": "Направьте звук с микрофона на устройство вывода. (passthrough)",
+    "mic_passthrough_routing.Name": "Микрофонный проход"
 }
