@@ -200,6 +200,9 @@ type Conf struct {
 	Tts_streamed_chunk_size       int      `yaml:"tts_streamed_chunk_size" json:"tts_streamed_chunk_size"`
 	Tts_queue_enabled             bool     `yaml:"tts_queue_enabled" json:"tts_queue_enabled"`
 
+	// others
+	Mic_passthrough_routing bool `yaml:"mic_passthrough_routing" json:"mic_passthrough_routing"`
+
 	// Plugin Settings
 	Plugins              map[string]bool `yaml:"plugins,omitempty" json:"plugins,omitempty"`
 	Plugin_settings      interface{}     `yaml:"plugin_settings,omitempty" json:"plugin_settings,omitempty"`
