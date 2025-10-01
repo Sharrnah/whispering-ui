@@ -350,5 +350,8 @@
     "Quit running backend": "Припиніть запускати бекенд",
     "Integrated Image-to-Text": "Інтегроване перетворення зображення в текст",
     "A.I. Device for Image-to-Text": "Пристрій штучного інтелекту для перетворення зображень на текст",
-    "Language": "Мова"
+    "Language": "Мова",
+    "Show Log": "Показати журнал",
+    "mic_passthrough_routing.Name": "Наскрізний мікрофон",
+    "mic_passthrough_routing.Description": "Спрямувати звук з мікрофона на пристрій виводу. (пропуск)"
 }
