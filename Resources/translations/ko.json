@@ -350,5 +350,8 @@
     "Quit running backend": "백엔드 실행 종료",
     "Integrated Image-to-Text": "통합 이미지-텍스트 변환",
     "A.I. Device for Image-to-Text": "이미지-텍스트 변환을 위한 인공지능 장치",
-    "Language": "언어"
+    "Language": "언어",
+    "mic_passthrough_routing.Description": "마이크 오디오를 출력 장치로 라우팅합니다. (패스스루)",
+    "Show Log": "로그 보기",
+    "mic_passthrough_routing.Name": "마이크 패스스루"
 }
