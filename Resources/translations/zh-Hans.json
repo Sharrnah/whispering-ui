@@ -350,5 +350,8 @@
     "Quit running backend": "退出后台运行",
     "Integrated Image-to-Text": "集成图像到文本",
     "A.I. Device for Image-to-Text": "图像到文本的人工智能设备",
-    "Language": "语言"
+    "Language": "语言",
+    "mic_passthrough_routing.Name": "麦克风直通",
+    "mic_passthrough_routing.Description": "将麦克风音频路由至输出设备。直通",
+    "Show Log": "显示日志"
 }
