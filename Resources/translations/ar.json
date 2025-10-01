@@ -350,5 +350,8 @@
     "Quit running backend": "إنهاء تشغيل الواجهة الخلفية",
     "Integrated Image-to-Text": "صورة مدمجة إلى نص مدمجة",
     "A.I. Device for Image-to-Text": "جهاز الذكاء الاصطناعي لتحويل الصور إلى نصوص",
-    "Language": "اللغة"
+    "Language": "اللغة",
+    "Show Log": "إظهار السجل",
+    "mic_passthrough_routing.Name": "تمرير الميكروفون",
+    "mic_passthrough_routing.Description": "توجيه صوت الميكروفون إلى جهاز الإخراج. (تمرير)"
 }
