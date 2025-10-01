@@ -361,5 +361,8 @@
     "Quit running backend": "Quitter l'exécution du backend",
     "Integrated Image-to-Text": "Intégration de l'image au texte",
     "A.I. Device for Image-to-Text": "Dispositif d'I.A. pour la conversion d'images en textes",
-    "Language": "Langue"
+    "Language": "Langue",
+    "Show Log": "Afficher le journal",
+    "mic_passthrough_routing.Name": "Passage du microphone",
+    "mic_passthrough_routing.Description": "Achemine le son du microphone vers le périphérique de sortie. (passage)"
 }
