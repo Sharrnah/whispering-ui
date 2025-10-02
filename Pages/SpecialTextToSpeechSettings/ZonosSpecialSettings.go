@@ -7,7 +7,6 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 	"whispering-tiger-ui/CustomWidget"
-	"whispering-tiger-ui/SendMessageChannel"
 )
 
 func BuildZonosSpecialSettings() fyne.CanvasObject {
@@ -129,35 +128,59 @@ func BuildZonosSpecialSettings() fyne.CanvasObject {
 		0,
 	)
 
-	languageSelect.SetSelected("en-us")
+	// Load language with safe fallback
+	language := GetSpecialSettingFallback("tts_zonos", "language", "en-us").(string)
+	languageSelect.SetSelected(language)
 
 	seedInput := widget.NewEntry()
 	seedInput.PlaceHolder = lang.L("Enter manual seed")
+	// Load seed (optional)
+	if seed := GetSpecialSettingFallback("tts_zonos", "seed", "").(string); seed != "" {
+		seedInput.SetText(seed)
+	}
+
+	// Clamp helper to keep values in [0,1]
+	clamp01 := func(v float64) float64 {
+		if v < 0 {
+			return 0
+		}
+		if v > 1 {
+			return 1
+		}
+		return v
+	}
 
 	happinessSlider := widget.NewSlider(0.0, 1.0)
 	happinessSlider.Step = 0.0001
-	happinessSlider.SetValue(0.3077)
+	happinessSlider.SetValue(clamp01(GetSpecialSettingFallback("tts_zonos", "happiness", 0.3077).(float64)))
+
 	sadnessSlider := widget.NewSlider(0.0, 1.0)
 	sadnessSlider.Step = 0.0001
-	sadnessSlider.SetValue(0.0256)
+	sadnessSlider.SetValue(clamp01(GetSpecialSettingFallback("tts_zonos", "sadness", 0.0256).(float64)))
+
 	disgustSlider := widget.NewSlider(0.0, 1.0)
 	disgustSlider.Step = 0.0001
-	disgustSlider.SetValue(0.0256)
+	disgustSlider.SetValue(clamp01(GetSpecialSettingFallback("tts_zonos", "disgust", 0.0256).(float64)))
+
 	fearSlider := widget.NewSlider(0.0, 1.0)
 	fearSlider.Step = 0.0001
-	fearSlider.SetValue(0.0256)
+	fearSlider.SetValue(clamp01(GetSpecialSettingFallback("tts_zonos", "fear", 0.0256).(float64)))
+
 	surpriseSlider := widget.NewSlider(0.0, 1.0)
 	surpriseSlider.Step = 0.0001
-	surpriseSlider.SetValue(0.0256)
+	surpriseSlider.SetValue(clamp01(GetSpecialSettingFallback("tts_zonos", "surprise", 0.0256).(float64)))
+
 	angerSlider := widget.NewSlider(0.0, 1.0)
 	angerSlider.Step = 0.0001
-	angerSlider.SetValue(0.0256)
+	angerSlider.SetValue(clamp01(GetSpecialSettingFallback("tts_zonos", "anger", 0.0256).(float64)))
+
 	otherSlider := widget.NewSlider(0.0, 1.0)
 	otherSlider.Step = 0.0001
-	otherSlider.SetValue(0.2564)
+	otherSlider.SetValue(clamp01(GetSpecialSettingFallback("tts_zonos", "other", 0.2564).(float64)))
+
 	neutralSlider := widget.NewSlider(0.0, 1.0)
 	neutralSlider.Step = 0.0001
-	neutralSlider.SetValue(0.3077)
+	neutralSlider.SetValue(clamp01(GetSpecialSettingFallback("tts_zonos", "neutral", 0.3077).(float64)))
 
 	// ignore list checkboxes
 	emotionCheck := widget.NewCheck("", func(b bool) {})
@@ -200,35 +223,48 @@ func BuildZonosSpecialSettings() fyne.CanvasObject {
 			ignoreList = []string{}
 		}
 
-		sendMessage := SendMessageChannel.SendMessageStruct{
-			Type: "tts_setting_special",
-			Value: struct {
-				Language   string   `json:"language"`
-				Seed       string   `json:"seed"`
-				Happiness  float64  `json:"happiness"`
-				Sadness    float64  `json:"sadness"`
-				Disgust    float64  `json:"disgust"`
-				Fear       float64  `json:"fear"`
-				Surprise   float64  `json:"surprise"`
-				Anger      float64  `json:"anger"`
-				Other      float64  `json:"other"`
-				Neutral    float64  `json:"neutral"`
-				IgnoreList []string `json:"ignore_list"`
-			}{
-				Language:   languageSelect.GetSelected().Value,
-				Seed:       seedInput.Text,
-				Happiness:  happinessSlider.Value,
-				Sadness:    sadnessSlider.Value,
-				Disgust:    disgustSlider.Value,
-				Fear:       fearSlider.Value,
-				Surprise:   surpriseSlider.Value,
-				Anger:      angerSlider.Value,
-				Other:      otherSlider.Value,
-				Neutral:    neutralSlider.Value,
-				IgnoreList: ignoreList,
-			},
-		}
-		sendMessage.SendMessage()
+		UpdateSpecialTTSSettings("tts_zonos", "language", languageSelect.GetSelected().Value)
+		UpdateSpecialTTSSettings("tts_zonos", "seed", seedInput.Text)
+		UpdateSpecialTTSSettings("tts_zonos", "happiness", happinessSlider.Value)
+		UpdateSpecialTTSSettings("tts_zonos", "sadness", sadnessSlider.Value)
+		UpdateSpecialTTSSettings("tts_zonos", "disgust", disgustSlider.Value)
+		UpdateSpecialTTSSettings("tts_zonos", "fear", fearSlider.Value)
+		UpdateSpecialTTSSettings("tts_zonos", "surprise", surpriseSlider.Value)
+		UpdateSpecialTTSSettings("tts_zonos", "anger", angerSlider.Value)
+		UpdateSpecialTTSSettings("tts_zonos", "other", otherSlider.Value)
+		UpdateSpecialTTSSettings("tts_zonos", "neutral", neutralSlider.Value)
+		UpdateSpecialTTSSettings("tts_zonos", "ignore_list", ignoreList)
+
+		//sendMessage := SendMessageChannel.SendMessageStruct{
+		//	Type: "special_settings",
+		//	Name: "tts_zonos",
+		//	Value: struct {
+		//		Language   string   `json:"language"`
+		//		Seed       string   `json:"seed"`
+		//		Happiness  float64  `json:"happiness"`
+		//		Sadness    float64  `json:"sadness"`
+		//		Disgust    float64  `json:"disgust"`
+		//		Fear       float64  `json:"fear"`
+		//		Surprise   float64  `json:"surprise"`
+		//		Anger      float64  `json:"anger"`
+		//		Other      float64  `json:"other"`
+		//		Neutral    float64  `json:"neutral"`
+		//		IgnoreList []string `json:"ignore_list"`
+		//	}{
+		//		Language:   languageSelect.GetSelected().Value,
+		//		Seed:       seedInput.Text,
+		//		Happiness:  happinessSlider.Value,
+		//		Sadness:    sadnessSlider.Value,
+		//		Disgust:    disgustSlider.Value,
+		//		Fear:       fearSlider.Value,
+		//		Surprise:   surpriseSlider.Value,
+		//		Anger:      angerSlider.Value,
+		//		Other:      otherSlider.Value,
+		//		Neutral:    neutralSlider.Value,
+		//		IgnoreList: ignoreList,
+		//	},
+		//}
+		//sendMessage.SendMessage()
 	}
 	languageSelect.OnChanged = func(option CustomWidget.TextValueOption) {
 		updateSpecialTTSSettings()

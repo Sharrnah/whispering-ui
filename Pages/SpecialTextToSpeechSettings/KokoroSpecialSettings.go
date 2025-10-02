@@ -7,7 +7,6 @@ import (
 	"fyne.io/fyne/v2/layout"
 	"fyne.io/fyne/v2/widget"
 	"whispering-tiger-ui/CustomWidget"
-	"whispering-tiger-ui/SendMessageChannel"
 )
 
 func BuildKokoroSpecialSettings() fyne.CanvasObject {
@@ -24,26 +23,43 @@ func BuildKokoroSpecialSettings() fyne.CanvasObject {
 			{Text: "Chinese", Value: "z"},
 		},
 		func(option CustomWidget.TextValueOption) {
-
 		},
 		0,
 	)
 
-	languageSelect.SetSelected("a")
+	// check if Settings.Config.Special_settings has tts_language key
+	//if val, ok := Settings.Config.Special_settings["tts_kokoro_language"]; ok {
+	//	languageSelect.SetSelected(val.(string))
+	//} else {
+	//	languageSelect.SetSelected("a")
+	//}
 
-	updateSpecialTTSSettings := func() {
-		sendMessage := SendMessageChannel.SendMessageStruct{
-			Type: "tts_setting_special",
-			Value: struct {
-				Language string `json:"language"`
-			}{
-				Language: languageSelect.GetSelected().Value,
-			},
-		}
-		sendMessage.SendMessage()
+	languageSetting := GetSpecialTTSSettings("tts_kokoro", "language")
+	if languageSetting != nil {
+		languageSelect.SetSelected(languageSetting.(string))
+	} else {
+		languageSelect.SetSelected("a")
+	}
+
+	updateSpecialTTSSettingsKokoro := func() {
+		languageSelection := languageSelect.GetSelected().Value
+
+		UpdateSpecialTTSSettings("tts_kokoro", "language", languageSelection)
+
+		//Settings.Config.Special_settings["tts_kokoro"].(map[string]interface{})["tts_kokoro_language"] = languageSelection
+		//sendMessage := SendMessageChannel.SendMessageStruct{
+		//	Type: "special_settings",
+		//	Name: "tts_kokoro",
+		//	Value: struct {
+		//		TtsLanguage string `json:"language"`
+		//	}{
+		//		TtsLanguage: languageSelection,
+		//	},
+		//}
+		//sendMessage.SendMessage()
 	}
 	languageSelect.OnChanged = func(option CustomWidget.TextValueOption) {
-		updateSpecialTTSSettings()
+		updateSpecialTTSSettingsKokoro()
 	}
 
 	advancedSettings := container.New(layout.NewVBoxLayout(),

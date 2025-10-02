@@ -212,6 +212,7 @@ type Conf struct {
 
 	// others
 	Last_auto_txt_translate_lang string
+	Special_settings             map[string]interface{} `yaml:"special_settings,omitempty" json:"special_settings,omitempty"`
 }
 
 var ConfigValues map[string]interface{} = nil
