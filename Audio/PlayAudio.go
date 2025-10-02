@@ -4,8 +4,8 @@ import (
 	"bytes"
 	"encoding/base64"
 	"fmt"
+	"github.com/ebitengine/oto/v3"
 	"github.com/gen2brain/malgo"
-	"github.com/hajimehoshi/oto/v2"
 	"io"
 	"os"
 	"time"
@@ -118,7 +118,12 @@ func (res *TtsResultRaw) PlayWAVFromBase64Oto() error {
 	bytesReader := bytes.NewReader(decodedBytes)
 
 	// Create a new audio context
-	context, readyChan, err := oto.NewContext(44800, 2, 2)
+	op := &oto.NewContextOptions{}
+	op.SampleRate = 44100
+	op.ChannelCount = 2
+	op.Format = oto.FormatSignedInt16LE
+	context, readyChan, err := oto.NewContext(op)
+	//context, readyChan, err := oto.NewContext(44800, 2, 2)
 	if err != nil {
 		return err
 	}
