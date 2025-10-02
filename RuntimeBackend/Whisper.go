@@ -47,6 +47,8 @@ func (c *WhisperProcessConfig) RunWithStreams(name string, arguments []string, s
 		proc.Env = c.environmentVars
 	}
 
+	setNewProcessGroup(proc)
+
 	// Create a new pipe for the StdErr field
 	stdErrPipeReader, stdErrPipeWriter := io.Pipe()
 	// Create a new pipe for the StdOut field
@@ -61,8 +63,19 @@ func (c *WhisperProcessConfig) RunWithStreams(name string, arguments []string, s
 
 	// parse for errors coming from the backend process and printed to stderr
 	go c.SetOutputHandling(stdErrPipeReader, c.processErrorOutputLine)
-
 	go c.SetOutputHandling(stdOutPipeReader, c.processLogOutputLine)
+
+	// === CHANGED: explicit Start/Wait so we can attach Job Object on Windows ===
+	if err := proc.Start(); err != nil {
+		return err
+	}
+
+	// === NEW (Windows): assign the process to a Job Object with KILL_ON_JOB_CLOSE ===
+	if err := c.assignProcessToJobObject(proc.Process.Pid); err != nil {
+		// If assignment fails, kill the just-started process to avoid orphans
+		_ = proc.Process.Kill()
+		return err
+	}
 
 	return proc.Run()
 }
@@ -77,6 +90,8 @@ type WhisperProcessConfig struct {
 	WriterBackend   *io.PipeWriter
 	environmentVars []string
 	RecentLog       []string
+	// Windows only: nonzero when the process is assigned to a Job Object.
+	jobObjectHandle uintptr
 }
 
 func NewWhisperProcess() WhisperProcessConfig {
@@ -119,7 +134,10 @@ func (c *WhisperProcessConfig) Stop() {
 			time.Sleep(timeout / 2)
 		}
 
+		closeJobObject(c) // NEW: kills entire tree on Windows; no-op elsewhere
+
 		if c.Program.Process != nil {
+			_ = c.Program.Process.Kill()
 			_ = c.Program.Process.Signal(syscall.SIGKILL)
 			_ = c.Program.Process.Signal(syscall.SIGTERM)
 		}
