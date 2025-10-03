@@ -83,14 +83,16 @@ func (s *TextValueSelect) SetSelected(value string) {
 	for _, option := range s.Options {
 		if value == option.Value {
 			s.updateSelected(option.Text)
+			break
 		}
 	}
 }
 
-func (s *TextValueSelect) SetSelectedByText(value string) {
+func (s *TextValueSelect) SetSelectedByText(text string) {
 	for _, option := range s.Options {
-		if value == option.Text {
+		if text == option.Text {
 			s.updateSelected(option.Text)
+			break
 		}
 	}
 }

@@ -4,6 +4,7 @@ package CustomWidget
 
 import (
 	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 	"strings"
@@ -33,7 +34,42 @@ type CompletionEntry struct {
 func NewCompletionEntry(options []string) *CompletionEntry {
 	c := &CompletionEntry{Options: options, FilteredOptions: options}
 	c.ExtendBaseWidget(c)
+
+	// set defaults
+	c.ShowAllEntryText = lang.L("... show all")
+	c.Entry.PlaceHolder = lang.L("Select a language")
+	c.OnChanged = func(value string) {
+		// filter out the values of Options that do not contain the value
+		var filteredValues []string
+		for i := 0; i < len(c.Options); i++ {
+			if len(c.Options) > i && strings.Contains(strings.ToLower(c.Options[i]), strings.ToLower(value)) {
+				filteredValues = append(filteredValues, c.Options[i])
+			}
+		}
+
+		c.SetOptionsFilter(filteredValues)
+		c.ShowCompletion()
+	}
 	return c
+}
+func (c *CompletionEntry) SetSelected(value string) {
+	for _, option := range c.OptionsTextValue {
+		if value == option.Value {
+			c.Text = option.Text
+			c.ResetOptionsFilter()
+			break
+		}
+	}
+}
+
+func (c *CompletionEntry) SetSelectedByText(text string) {
+	for _, option := range c.OptionsTextValue {
+		if text == option.Text {
+			c.Text = option.Text
+			c.ResetOptionsFilter()
+			break
+		}
+	}
 }
 
 func (c *CompletionEntry) SetValueOptions(valueOptions []TextValueOption) {

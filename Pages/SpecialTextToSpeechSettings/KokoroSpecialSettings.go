@@ -10,55 +10,30 @@ import (
 )
 
 func BuildKokoroSpecialSettings() fyne.CanvasObject {
-	languageSelect := CustomWidget.NewTextValueSelect("language",
-		[]CustomWidget.TextValueOption{
-			{Text: "English (US)", Value: "a"},
-			{Text: "English (British)", Value: "b"},
-			{Text: "Spanish", Value: "e"},
-			{Text: "French", Value: "f"},
-			{Text: "Hindi", Value: "h"},
-			{Text: "Italian", Value: "i"},
-			{Text: "Japanese", Value: "j"},
-			{Text: "Brazilian Portuguese", Value: "p"},
-			{Text: "Chinese", Value: "z"},
-		},
-		func(option CustomWidget.TextValueOption) {
-		},
-		0,
-	)
 
-	// check if Settings.Config.Special_settings has tts_language key
-	//if val, ok := Settings.Config.Special_settings["tts_kokoro_language"]; ok {
-	//	languageSelect.SetSelected(val.(string))
-	//} else {
-	//	languageSelect.SetSelected("a")
-	//}
+	languageSelect := CustomWidget.NewCompletionEntry([]string{})
+	languageSelect.SetValueOptions([]CustomWidget.TextValueOption{
+		{Text: "English (US)", Value: "a"},
+		{Text: "English (British)", Value: "b"},
+		{Text: "Spanish", Value: "e"},
+		{Text: "French", Value: "f"},
+		{Text: "Hindi", Value: "h"},
+		{Text: "Italian", Value: "i"},
+		{Text: "Japanese", Value: "j"},
+		{Text: "Brazilian Portuguese", Value: "p"},
+		{Text: "Chinese", Value: "z"},
+	})
 
-	languageSetting := GetSpecialTTSSettings("tts_kokoro", "language")
-	if languageSetting != nil {
-		languageSelect.SetSelected(languageSetting.(string))
-	} else {
-		languageSelect.SetSelected("a")
-	}
+	languageSetting := GetSpecialSettingFallback("tts_kokoro", "language", "a").(string)
+	languageSelect.SetSelected(languageSetting)
 
 	updateSpecialTTSSettingsKokoro := func() {
-		languageSelection := languageSelect.GetSelected().Value
+		languageSelection := languageSelect.GetCurrentValueOptionEntry().Value
 
 		UpdateSpecialTTSSettings("tts_kokoro", "language", languageSelection)
-
-		//Settings.Config.Special_settings["tts_kokoro"].(map[string]interface{})["tts_kokoro_language"] = languageSelection
-		//sendMessage := SendMessageChannel.SendMessageStruct{
-		//	Type: "special_settings",
-		//	Name: "tts_kokoro",
-		//	Value: struct {
-		//		TtsLanguage string `json:"language"`
-		//	}{
-		//		TtsLanguage: languageSelection,
-		//	},
-		//}
-		//sendMessage.SendMessage()
 	}
-	languageSelect.OnChanged = func(option CustomWidget.TextValueOption) {
+
+	languageSelect.OnSubmitted = func(value string) {
 		updateSpecialTTSSettingsKokoro()
 	}
 
