@@ -11,6 +11,7 @@ import (
 	"path/filepath"
 	"runtime"
 	"strings"
+	"sync"
 	"syscall"
 	"time"
 	"whispering-tiger-ui/Fields"
@@ -33,6 +34,14 @@ const MaxClipboardLogLines = 4000
 // RunWithStreams ComposeWithStreams executes a command
 // stdin/stdout/stderr
 func (c *WhisperProcessConfig) RunWithStreams(name string, arguments []string, stdIn io.Reader, stdOut io.Writer, stdErr io.Writer, action ...string) error {
+	// prevent double starts
+	c.runMu.Lock()
+	if c.running {
+		c.runMu.Unlock()
+		return fmt.Errorf("process already running")
+	}
+	c.runMu.Unlock()
+
 	var arg []string
 	for _, file := range arguments {
 		arg = append(arg, file)
@@ -59,7 +68,7 @@ func (c *WhisperProcessConfig) RunWithStreams(name string, arguments []string, s
 	proc.Stdin = stdIn
 	proc.Stderr = io.MultiWriter(stdErr, stdErrPipeWriter)
 
-	c.Program = proc
+	//c.Program = proc
 
 	// parse for errors coming from the backend process and printed to stderr
 	go c.SetOutputHandling(stdErrPipeReader, c.processErrorOutputLine)
@@ -67,17 +76,45 @@ func (c *WhisperProcessConfig) RunWithStreams(name string, arguments []string, s
 
 	// === CHANGED: explicit Start/Wait so we can attach Job Object on Windows ===
 	if err := proc.Start(); err != nil {
+		_ = stdOutPipeWriter.Close()
+		_ = stdErrPipeWriter.Close()
 		return err
 	}
+
+	// mark running and set Program only after Start succeeds
+	c.runMu.Lock()
+	c.Program = proc
+	c.running = true
+	c.runMu.Unlock()
 
 	// === NEW (Windows): assign the process to a Job Object with KILL_ON_JOB_CLOSE ===
 	if err := c.assignProcessToJobObject(proc.Process.Pid); err != nil {
 		// If assignment fails, kill the just-started process to avoid orphans
 		_ = proc.Process.Kill()
+		_ = stdOutPipeWriter.Close()
+		_ = stdErrPipeWriter.Close()
+
+		c.runMu.Lock()
+		c.running = false
+		c.Program = nil
+		c.runMu.Unlock()
 		return err
 	}
 
-	return proc.Run()
+	// Wait until exit
+	err := proc.Wait()
+
+	// close writers so SetOutputHandling goroutines can exit
+	_ = stdOutPipeWriter.Close()
+	_ = stdErrPipeWriter.Close()
+
+	// clear running state
+	c.runMu.Lock()
+	c.running = false
+	c.Program = nil
+	c.runMu.Unlock()
+
+	return err
 }
 
 type WhisperProcessConfig struct {
@@ -92,6 +129,9 @@ type WhisperProcessConfig struct {
 	RecentLog       []string
 	// Windows only: nonzero when the process is assigned to a Job Object.
 	jobObjectHandle uintptr
+	// guard against double starts
+	running bool
+	runMu   sync.Mutex
 }
 
 func NewWhisperProcess() WhisperProcessConfig {
@@ -107,47 +147,58 @@ func NewWhisperProcess() WhisperProcessConfig {
 }
 
 func (c *WhisperProcessConfig) IsRunning() bool {
-	if c.Program.Process == nil {
-		return false
-	}
-
-	return true
+	c.runMu.Lock()
+	defer c.runMu.Unlock()
+	return c.running
 }
 
 func (c *WhisperProcessConfig) Stop() {
-	timeout := 6 * time.Second
+	c.runMu.Lock()
+	running := c.running
+	proc := c.Program
+	c.runMu.Unlock()
 
-	if c.Program != nil && c.Program.Process != nil {
-		println("Terminating process")
-
-		sendMessage := SendMessageChannel.SendMessageStruct{
-			Type:  "quit",
-			Name:  "quit",
-			Value: "",
-		}
-		sendMessage.SendMessage()
-
-		time.Sleep(timeout)
-
-		if c.Program.Process != nil {
-			_ = c.Program.Process.Signal(syscall.SIGINT)
-			time.Sleep(timeout / 2)
-		}
-
-		closeJobObject(c) // NEW: kills entire tree on Windows; no-op elsewhere
-
-		if c.Program.Process != nil {
-			_ = c.Program.Process.Kill()
-			_ = c.Program.Process.Signal(syscall.SIGKILL)
-			_ = c.Program.Process.Signal(syscall.SIGTERM)
-		}
-
-		c.Program.Stdout = nil
-		c.Program.Stdin = nil
-		c.Program.Stderr = nil
-
-		c.Program.Process = nil
+	if !running || proc == nil || proc.Process == nil {
+		return
 	}
+
+	timeout := 6 * time.Second
+	println("Terminating process")
+
+	sendMessage := SendMessageChannel.SendMessageStruct{
+		Type:  "quit",
+		Name:  "quit",
+		Value: "",
+	}
+	sendMessage.SendMessage()
+
+	time.Sleep(timeout)
+
+	if c.Program.Process != nil {
+		// gentle
+		_ = proc.Process.Signal(syscall.SIGINT)
+		time.Sleep(timeout / 2)
+	}
+
+	closeJobObject(c) // NEW: kills entire tree on Windows; no-op elsewhere
+
+	if c.Program.Process != nil {
+		_ = c.Program.Process.Kill()
+		_ = c.Program.Process.Signal(syscall.SIGKILL)
+		_ = c.Program.Process.Signal(syscall.SIGTERM)
+	}
+
+	//c.Program.Stdout = nil
+	//c.Program.Stdin = nil
+	//c.Program.Stderr = nil
+	//
+	//c.Program.Process = nil
+
+	// clear state
+	c.runMu.Lock()
+	c.running = false
+	c.Program = nil
+	c.runMu.Unlock()
 }
 
 // init only once
