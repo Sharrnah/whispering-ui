@@ -299,10 +299,22 @@ func VersionCheck(window fyne.Window, startBackend bool) bool {
 			if b {
 				go func() {
 					cleanUpFunc := func() {
+						errors := []error{}
+						cleanupPaths := []string{
+							"audioWhisper",
+							"toolchain",
+							"ffmpeg",
+						}
 						appExec, _ := os.Executable()
-						oldVersionDir := filepath.Join(filepath.Dir(appExec), "audioWhisper")
-						err := os.RemoveAll(oldVersionDir)
-						if err != nil {
+						for _, relPath := range cleanupPaths {
+							oldVersionDir := filepath.Join(filepath.Dir(appExec), relPath)
+							err := os.RemoveAll(oldVersionDir)
+							if err != nil {
+								errors = append(errors, err)
+							}
+						}
+						if len(errors) > 0 {
+							err := fmt.Errorf("Errors during cleanup: %v", errors)
 							Logging.CaptureException(err)
 							dialog.ShowError(err, window)
 						}
