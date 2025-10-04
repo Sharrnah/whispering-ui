@@ -353,5 +353,7 @@
     "Language": "言語",
     "mic_passthrough_routing.Description": "マイクの音声を出力デバイスにルーティングする。(パススルー）",
     "Show Log": "ログを表示",
-    "mic_passthrough_routing.Name": "マイク・パススルー"
+    "mic_passthrough_routing.Name": "マイク・パススルー",
+    "tts_streamed_min_play_time.Description": "再生開始までの最短再生時間（秒）。\n再生開始時のギャップを減らすことができます。",
+    "tts_streamed_min_play_time.Name": "ストリーミング再生の最短再生時間"
 }
