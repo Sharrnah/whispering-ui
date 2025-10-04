@@ -353,5 +353,7 @@
     "Language": "Sprog",
     "Show Log": "Vis logbog",
     "mic_passthrough_routing.Name": "Gennemgang af mikrofon",
-    "mic_passthrough_routing.Description": "Før mikrofonens lyd til outputenheden. (gennemgang)"
+    "mic_passthrough_routing.Description": "Før mikrofonens lyd til outputenheden. (gennemgang)",
+    "tts_streamed_min_play_time.Name": "Streamet afspilning minimum spilletid",
+    "tts_streamed_min_play_time.Description": "Minimum afspilningstid før afspilning starter (i sekunder).\nKan reducere huller i starten af afspilningen."
 }
