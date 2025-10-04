@@ -353,5 +353,7 @@
     "Language": "언어",
     "mic_passthrough_routing.Description": "마이크 오디오를 출력 장치로 라우팅합니다. (패스스루)",
     "Show Log": "로그 보기",
-    "mic_passthrough_routing.Name": "마이크 패스스루"
+    "mic_passthrough_routing.Name": "마이크 패스스루",
+    "tts_streamed_min_play_time.Name": "스트리밍 재생 최소 재생 시간",
+    "tts_streamed_min_play_time.Description": "재생 시작 전 최소 재생 시간(초).\n재생 시작 시 간격을 줄일 수 있습니다."
 }
