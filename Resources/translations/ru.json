@@ -353,5 +353,7 @@
     "Language": "Язык",
     "Show Log": "Показать журнал",
     "mic_passthrough_routing.Description": "Направьте звук с микрофона на устройство вывода. (passthrough)",
-    "mic_passthrough_routing.Name": "Микрофонный проход"
+    "mic_passthrough_routing.Name": "Микрофонный проход",
+    "tts_streamed_min_play_time.Name": "Потоковое воспроизведение Минимальное время воспроизведения",
+    "tts_streamed_min_play_time.Description": "Минимальное время до начала воспроизведения (в секундах).\nПозволяет сократить пробелы в начале воспроизведения."
 }
