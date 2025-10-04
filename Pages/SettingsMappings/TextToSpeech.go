@@ -101,10 +101,10 @@ var TextToSpeechSettingsMapping = SettingsMapping{
 			SettingsDescription:  "Minimum play time before playback starts (in seconds)\nCan reduce gaps at the start of playback.",
 			_widget: func() fyne.CanvasObject {
 				sliderWidget := widget.NewSlider(0, 10)
-				sliderState := widget.NewLabel(fmt.Sprintf("%.0f", sliderWidget.Min))
+				sliderState := widget.NewLabel(fmt.Sprintf("%.1f", sliderWidget.Min))
 				sliderWidget.Step = 0.1
 				sliderWidget.OnChanged = func(value float64) {
-					sliderState.SetText(fmt.Sprintf("%.0f", value))
+					sliderState.SetText(fmt.Sprintf("%.1f", value))
 				}
 				return container.NewBorder(nil, nil, nil, sliderState, sliderWidget)
 			},
