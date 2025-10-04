@@ -199,6 +199,7 @@ type Conf struct {
 	Tts_normalize                 bool     `yaml:"tts_normalize" json:"tts_normalize"`
 	Tts_streamed_playback         bool     `yaml:"tts_streamed_playback" json:"tts_streamed_playback"`
 	Tts_streamed_chunk_size       int      `yaml:"tts_streamed_chunk_size" json:"tts_streamed_chunk_size"`
+	Tts_streamed_min_play_time    float64  `yaml:"tts_streamed_min_play_time" json:"tts_streamed_min_play_time"`
 	Tts_queue_enabled             bool     `yaml:"tts_queue_enabled" json:"tts_queue_enabled"`
 
 	// others

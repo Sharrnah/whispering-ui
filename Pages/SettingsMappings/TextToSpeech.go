@@ -96,6 +96,20 @@ var TextToSpeechSettingsMapping = SettingsMapping{
 			},
 		},
 		{
+			SettingsName:         "Streamed playback minimum play time",
+			SettingsInternalName: "tts_streamed_min_play_time",
+			SettingsDescription:  "Minimum play time before playback starts (in seconds)\nCan reduce gaps at the start of playback.",
+			_widget: func() fyne.CanvasObject {
+				sliderWidget := widget.NewSlider(0, 10)
+				sliderState := widget.NewLabel(fmt.Sprintf("%.0f", sliderWidget.Min))
+				sliderWidget.Step = 0.1
+				sliderWidget.OnChanged = func(value float64) {
+					sliderState.SetText(fmt.Sprintf("%.0f", value))
+				}
+				return container.NewBorder(nil, nil, nil, sliderState, sliderWidget)
+			},
+		},
+		{
 			SettingsName:         "Route text-to-speech to secondary audio device",
 			SettingsInternalName: "tts_use_secondary_playback",
 			SettingsDescription:  "Play text-to-speech on a secondary audio device at the same time as the selected output device.\n(By default uses windows default audio device)",
