@@ -364,5 +364,7 @@
     "Language": "Jazyk",
     "Show Log": "Zobrazit protokol",
     "mic_passthrough_routing.Name": "Propustnost mikrofonu",
-    "mic_passthrough_routing.Description": "Směrování zvuku z mikrofonu do výstupního zařízení. (průchozí)"
+    "mic_passthrough_routing.Description": "Směrování zvuku z mikrofonu do výstupního zařízení. (průchozí)",
+    "tts_streamed_min_play_time.Name": "Minimální doba přehrávání streamovaného přehrávání",
+    "tts_streamed_min_play_time.Description": "Minimální doba přehrávání před zahájením přehrávání (v sekundách).\nMůže snížit mezery na začátku přehrávání."
 }
