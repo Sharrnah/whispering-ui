@@ -173,7 +173,7 @@ func main() {
 		//cudaVersion := "v12.8"
 		//cudaVersionEnv := strings.ToUpper(strings.ReplaceAll(cudaVersion, ".", "_"))
 
-		RuntimeBackend.BackendsList[0].AttachEnvironment("Path", filepath.Join(appPath, "toolchain", "llvm", "bin"))
+		//RuntimeBackend.BackendsList[0].AttachEnvironment("Path", filepath.Join(appPath, "toolchain", "llvm", "bin"))
 		//RuntimeBackend.BackendsList[0].AttachEnvironment("Path", filepath.Join(appPath, "toolchain", "clang", "bin"))
 		//RuntimeBackend.BackendsList[0].AttachEnvironment("Path", filepath.Join(appPath, "toolchain", "msvc", "x64"))
 		RuntimeBackend.BackendsList[0].AttachEnvironment("CC", filepath.Join(appPath, "toolchain", "tcc", "tcc.exe"))
