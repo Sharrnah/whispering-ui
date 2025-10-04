@@ -353,5 +353,7 @@
     "Language": "اللغة",
     "Show Log": "إظهار السجل",
     "mic_passthrough_routing.Name": "تمرير الميكروفون",
-    "mic_passthrough_routing.Description": "توجيه صوت الميكروفون إلى جهاز الإخراج. (تمرير)"
+    "mic_passthrough_routing.Description": "توجيه صوت الميكروفون إلى جهاز الإخراج. (تمرير)",
+    "tts_streamed_min_play_time.Name": "الحد الأدنى لوقت تشغيل البث الحد الأدنى لوقت التشغيل",
+    "tts_streamed_min_play_time.Description": "الحد الأدنى لوقت التشغيل قبل بدء التشغيل (بالثواني).\nيمكن تقليل الفجوات في بداية التشغيل."
 }
