@@ -363,7 +363,7 @@
     "Only ? GB free space remaining. The space might not be enough.": "Nur noch {{.SpaceRemaining}} GB freier Speicherplatz auf {{.Directory}}.\n\nDer Speicherplatz reicht möglicherweise nicht aus.",
     "Language": "Sprache",
     "Show Log": "Log anzeigen",
-    "mic_passthrough_routing.Description": "Mikrofonton an das Ausgabegerät weiterleiten. (Passthrough)",
+    "mic_passthrough_routing.Description": "Mikrofon an das Ausgabegerät weiterleiten. (Passthrough)",
     "mic_passthrough_routing.Name": "Mikrofon Passthrough",
     "tts_streamed_min_play_time.Name": "Gestreamte Wiedergabe Mindestwiedergabezeit",
     "tts_streamed_min_play_time.Description": "Minimale Abspielzeit vor Beginn der Wiedergabe (in Sekunden).\nKann Lücken beim Start der Wiedergabe reduzieren."
