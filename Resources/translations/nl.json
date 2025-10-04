@@ -364,5 +364,7 @@
     "Language": "Taal",
     "Show Log": "Logboek weergeven",
     "mic_passthrough_routing.Name": "Microfoondoorvoer",
-    "mic_passthrough_routing.Description": "Routeer microfoonaudio naar uitvoerapparaat. (passthrough)"
+    "mic_passthrough_routing.Description": "Routeer microfoonaudio naar uitvoerapparaat. (passthrough)",
+    "tts_streamed_min_play_time.Name": "Gestreamde weergave minimale afspeeltijd",
+    "tts_streamed_min_play_time.Description": "Minimale afspeeltijd voordat het afspelen begint (in seconden).\nKan hiaten bij het begin van het afspelen verminderen."
 }
