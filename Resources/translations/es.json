@@ -353,5 +353,7 @@
     "Language": "Idioma",
     "mic_passthrough_routing.Description": "Dirige el audio del micrófono al dispositivo de salida. (paso a través)",
     "Show Log": "Mostrar registro",
-    "mic_passthrough_routing.Name": "Paso de micrófono"
+    "mic_passthrough_routing.Name": "Paso de micrófono",
+    "tts_streamed_min_play_time.Name": "Tiempo mínimo de reproducción en streaming",
+    "tts_streamed_min_play_time.Description": "Tiempo mínimo de reproducción antes de que comience la reproducción (en segundos).\nPuede reducir los huecos al inicio de la reproducción."
 }
