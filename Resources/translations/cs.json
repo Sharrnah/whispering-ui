@@ -368,5 +368,6 @@
     "tts_streamed_min_play_time.Name": "Minimální doba přehrávání streamovaného přehrávání",
     "tts_streamed_min_play_time.Description": "Minimální doba přehrávání před zahájením přehrávání (v sekundách).\nMůže snížit mezery na začátku přehrávání.",
     "Save Profile": "Uložit profil",
-    "You are running the latest version of Whispering Tiger and all installed Plugins.": "Používáte nejnovější verzi Whispering Tiger a všechny nainstalované pluginy."
+    "You are running the latest version of Whispering Tiger and all installed Plugins.": "Používáte nejnovější verzi Whispering Tiger a všechny nainstalované pluginy.",
+    "You are already using the latest version of Whispering Tiger and all installed Plugins.": "Již používáte nejnovější verzi Whispering Tiger a všechny nainstalované pluginy."
 }
