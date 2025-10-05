@@ -368,5 +368,6 @@
     "tts_streamed_min_play_time.Name": "Gestreamde weergave minimale afspeeltijd",
     "tts_streamed_min_play_time.Description": "Minimale afspeeltijd voordat het afspelen begint (in seconden).\nKan hiaten bij het begin van het afspelen verminderen.",
     "Save Profile": "Profiel opslaan",
-    "You are running the latest version of Whispering Tiger and all installed Plugins.": "U gebruikt de laatste versie van Whispering Tiger en alle geïnstalleerde Plugins."
+    "You are running the latest version of Whispering Tiger and all installed Plugins.": "U gebruikt de laatste versie van Whispering Tiger en alle geïnstalleerde Plugins.",
+    "You are already using the latest version of Whispering Tiger and all installed Plugins.": "Je gebruikt al de laatste versie van Whispering Tiger en alle geïnstalleerde Plugins."
 }
