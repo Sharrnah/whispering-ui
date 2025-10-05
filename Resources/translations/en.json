@@ -236,7 +236,7 @@
     "Are you sure you want to disable Plugin update checks at startup?": "Are you sure you want to disable Plugin update checks at startup?",
     "Check for Plugin updates now": "Check for Plugin updates now",
     "You are running the latest Plugin versions for Whispering Tiger.": "You are running the latest Plugin versions for Whispering Tiger.",
-    "You are running the latest version of Whispering Tiger and all installed Plugins.": "You are running the latest version of Whispering Tiger and all installed Plugins.",
+    "You are already using the latest version of Whispering Tiger and all installed Plugins.": "You are already using the latest version of Whispering Tiger and all installed Plugins.",
     "Start downloads using the UI. (Recommended)": "Start downloads using the UI. (Recommended)",
     "Run Python backend with UTF-8 encoding. (Recommended)": "Run Python backend with UTF-8 encoding. (Recommended)",
     "Focus window on message receive. (Can improve speed in VR)": "Focus window on message receive. (Can improve speed in VR)",

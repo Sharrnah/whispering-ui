@@ -1037,7 +1037,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			}, fyne.CurrentApp().Driver().AllWindows()[1])
 		}
 		if !hasAppUpdate && !hasPluginUpdate {
-			dialog.ShowInformation(lang.L("No update available"), lang.L("You are running the latest version of Whispering Tiger and all installed Plugins."), fyne.CurrentApp().Driver().AllWindows()[1])
+			dialog.ShowInformation(lang.L("No update available"), lang.L("You are already using the latest version of Whispering Tiger and all installed Plugins."), fyne.CurrentApp().Driver().AllWindows()[1])
 		}
 	})
 	checkForUpdatesButton.Importance = widget.LowImportance
