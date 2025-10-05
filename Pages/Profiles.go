@@ -988,7 +988,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	submitButton := widget.NewButtonWithIcon(lang.L("Save and Load Profile"), theme.ConfirmIcon(), func() {})
 	profileFormBuild := BuildProfileForm()
 	submitButton.OnTapped = func() {
-		go formSubmitFunction()
+		formSubmitFunction()
 	}
 
 	submitButton.Importance = widget.HighImportance

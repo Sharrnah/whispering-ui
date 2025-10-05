@@ -269,9 +269,7 @@ func main() {
 
 		// close profile window
 		profileWindow.SetOnClosed(func() {}) // disable quit handler for programmatic close
-		fyne.Do(func() {
-			profileWindow.Close()
-		})
+		profileWindow.Close()
 	}
 
 	profilePage := Pages.CreateProfileWindow(onProfileClose)
