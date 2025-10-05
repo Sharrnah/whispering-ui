@@ -1017,6 +1017,22 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			}
 		}
 	})
+	checkForUpdatesButton := widget.NewButton(lang.L("Check for App updates now"), func() {
+		hasAppUpdate := UpdateUtility.VersionCheck(fyne.CurrentApp().Driver().AllWindows()[1], true)
+		hasPluginUpdate := false
+		if UpdateUtility.PluginsUpdateAvailable() {
+			hasPluginUpdate = true
+			dialog.ShowConfirm(lang.L("New Plugin updates available"), lang.L("Whispering Tiger has new Plugin updates available. Go to Plugin List now?"), func(b bool) {
+				if b {
+					Advanced.CreatePluginListWindow(nil, true)
+				}
+			}, fyne.CurrentApp().Driver().AllWindows()[1])
+		}
+		if !hasAppUpdate && !hasPluginUpdate {
+			dialog.ShowInformation(lang.L("No update available"), lang.L("You are running the latest version of Whispering Tiger and all installed Plugins."), fyne.CurrentApp().Driver().AllWindows()[1])
+		}
+	})
+	checkForUpdatesButton.Importance = widget.LowImportance
 
 	beginLine := canvas.NewHorizontalGradient(&color.NRGBA{R: 198, G: 123, B: 0, A: 255}, &color.NRGBA{R: 198, G: 123, B: 0, A: 0})
 
@@ -1026,6 +1042,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			beginLine,
 			container.NewHBox(widget.NewLabel("Website:"), widget.NewHyperlink(lang.L("WebsiteUrl"), parseURL(lang.L("WebsiteUrl")))),
 			heartButton,
+			beginLine,
+			container.New(layout.NewCustomPaddedLayout(theme.Padding()*4, 0, 0, 0), checkForUpdatesButton),
 		),
 	)
 	beginLine.Resize(fyne.NewSize(profileHelpTextContent.Size().Width, 2))
