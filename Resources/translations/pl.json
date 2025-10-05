@@ -355,5 +355,7 @@
     "mic_passthrough_routing.Description": "Przekierowanie dźwięku z mikrofonu do urządzenia wyjściowego. (passthrough)",
     "Show Log": "Pokaż dziennik",
     "tts_streamed_min_play_time.Name": "Minimalny czas odtwarzania strumieniowego",
-    "tts_streamed_min_play_time.Description": "Minimalny czas odtwarzania przed rozpoczęciem odtwarzania (w sekundach).\nMoże zmniejszyć przerwy na początku odtwarzania."
+    "tts_streamed_min_play_time.Description": "Minimalny czas odtwarzania przed rozpoczęciem odtwarzania (w sekundach).\nMoże zmniejszyć przerwy na początku odtwarzania.",
+    "Save Profile": "Zapisz profil",
+    "You are running the latest version of Whispering Tiger and all installed Plugins.": "Korzystasz z najnowszej wersji Whispering Tiger i wszystkich zainstalowanych wtyczek."
 }
