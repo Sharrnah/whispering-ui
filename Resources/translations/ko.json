@@ -357,5 +357,6 @@
     "tts_streamed_min_play_time.Name": "스트리밍 재생 최소 재생 시간",
     "tts_streamed_min_play_time.Description": "재생 시작 전 최소 재생 시간(초).\n재생 시작 시 간격을 줄일 수 있습니다.",
     "You are running the latest version of Whispering Tiger and all installed Plugins.": "위스퍼링 타이거의 최신 버전과 설치된 모든 플러그인을 실행하고 있습니다.",
-    "Save Profile": "프로필 저장"
+    "Save Profile": "프로필 저장",
+    "You are already using the latest version of Whispering Tiger and all installed Plugins.": "이미 위스퍼링 타이거의 최신 버전과 설치된 모든 플러그인을 사용하고 있습니다."
 }
