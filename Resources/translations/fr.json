@@ -368,5 +368,6 @@
     "tts_streamed_min_play_time.Name": "Temps de lecture minimum pour la lecture en continu",
     "tts_streamed_min_play_time.Description": "Temps de lecture minimum avant le début de la lecture (en secondes).\nPeut réduire les écarts au début de la lecture.",
     "Save Profile": "Sauvegarder le profil",
-    "You are running the latest version of Whispering Tiger and all installed Plugins.": "Vous utilisez la dernière version de Whispering Tiger et tous les plugins installés."
+    "You are running the latest version of Whispering Tiger and all installed Plugins.": "Vous utilisez la dernière version de Whispering Tiger et tous les plugins installés.",
+    "You are already using the latest version of Whispering Tiger and all installed Plugins.": "Vous utilisez déjà la dernière version de Whispering Tiger et tous les plugins installés."
 }
