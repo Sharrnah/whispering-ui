@@ -367,6 +367,7 @@
     "mic_passthrough_routing.Name": "Mikrofon Passthrough",
     "tts_streamed_min_play_time.Name": "Gestreamte Wiedergabe Mindestwiedergabezeit",
     "tts_streamed_min_play_time.Description": "Minimale Abspielzeit vor Beginn der Wiedergabe (in Sekunden).\nKann Lücken beim Start der Wiedergabe reduzieren.",
-    "You are running the latest version of Whispering Tiger and all installed Plugins.": "Sie verwenden die neueste Version von Whispering Tiger und alle installierten Plugins.",
-    "Save Profile": "Profil speichern"
+    "You are running the latest version of Whispering Tiger and all installed Plugins.": "Sie verwenden bereits die neueste Version von Whispering Tiger und alle installierten Plugins.",
+    "Save Profile": "Profil speichern",
+    "You are already using the latest version of Whispering Tiger and all installed Plugins.": "Sie verwenden bereits die neueste Version von Whispering Tiger und alle installierten Plugins."
 }
