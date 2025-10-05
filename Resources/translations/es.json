@@ -357,5 +357,6 @@
     "tts_streamed_min_play_time.Name": "Tiempo mínimo de reproducción en streaming",
     "tts_streamed_min_play_time.Description": "Tiempo mínimo de reproducción antes de que comience la reproducción (en segundos).\nPuede reducir los huecos al inicio de la reproducción.",
     "You are running the latest version of Whispering Tiger and all installed Plugins.": "Está ejecutando la última versión de Whispering Tiger y todos los plugins instalados.",
-    "Save Profile": "Guardar perfil"
+    "Save Profile": "Guardar perfil",
+    "You are already using the latest version of Whispering Tiger and all installed Plugins.": "Ya está utilizando la última versión de Whispering Tiger y todos los plugins instalados."
 }
