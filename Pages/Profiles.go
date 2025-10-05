@@ -17,11 +17,13 @@ import (
 	"time"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Logging"
+	"whispering-tiger-ui/Pages/Advanced"
 	"whispering-tiger-ui/Pages/ProfileSettings"
 	PF "whispering-tiger-ui/ProfileForm"
 	"whispering-tiger-ui/Profiles"
 	"whispering-tiger-ui/Resources"
 	"whispering-tiger-ui/Settings"
+	"whispering-tiger-ui/UpdateUtility"
 	"whispering-tiger-ui/Utilities"
 	"whispering-tiger-ui/Utilities/AudioAPI"
 	"whispering-tiger-ui/Utilities/Hardwareinfo"
@@ -984,16 +986,22 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		return profileForm
 	}
 
-	formSubmitFunction := func() {}
+	formSubmitFunction := func(load bool) {}
 	submitButton := widget.NewButtonWithIcon(lang.L("Save and Load Profile"), theme.ConfirmIcon(), func() {})
 	profileFormBuild := BuildProfileForm()
 	submitButton.OnTapped = func() {
-		formSubmitFunction()
+		formSubmitFunction(true)
+	}
+	submitButton.Importance = widget.HighImportance
+
+	saveOnlyButton := widget.NewButtonWithIcon(lang.L("Save Profile"), theme.DocumentSaveIcon(), func() {})
+	saveOnlyButton.Importance = widget.MediumImportance
+	saveOnlyButton.OnTapped = func() {
+		formSubmitFunction(false)
 	}
 
-	submitButton.Importance = widget.HighImportance
 	profileListContent := container.NewBorder(
-		nil, submitButton, nil, nil,
+		nil, container.NewGridWithColumns(2, saveOnlyButton, submitButton), nil, nil,
 		container.NewVScroll(profileFormBuild),
 	)
 
@@ -1139,14 +1147,16 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			}
 		}
 
-		formSubmitFunction = func() {
-			loadingDialog := dialog.NewCustomWithoutButtons(lang.L("Loading..."), widget.NewProgressBarInfinite(), fyne.CurrentApp().Driver().AllWindows()[1])
-			fyne.Do(func() {
-				loadingDialog.Show()
-			})
-			defer fyne.Do(func() {
-				loadingDialog.Hide()
-			})
+		formSubmitFunction = func(load bool) {
+			if load {
+				loadingDialog := dialog.NewCustomWithoutButtons(lang.L("Loading..."), widget.NewProgressBarInfinite(), fyne.CurrentApp().Driver().AllWindows()[1])
+				fyne.Do(func() {
+					loadingDialog.Show()
+				})
+				defer fyne.Do(func() {
+					loadingDialog.Hide()
+				})
+			}
 
 			// Generic save of all registered controls
 			engine.SaveToSettings(&profileSettings)
@@ -1200,6 +1210,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			}
 			Settings.Config = profileSettings
 
+			if !load {
+				return
+			}
 			statusBar := widget.NewProgressBarInfinite()
 			backendCheckStateContainer := container.NewVBox()
 			backendCheckStateDialog := dialog.NewCustom(
