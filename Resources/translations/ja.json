@@ -357,5 +357,6 @@
     "tts_streamed_min_play_time.Description": "再生開始までの最短再生時間（秒）。\n再生開始時のギャップを減らすことができます。",
     "tts_streamed_min_play_time.Name": "ストリーミング再生の最短再生時間",
     "You are running the latest version of Whispering Tiger and all installed Plugins.": "最新バージョンのWhispering Tigerとインストールされているすべてのプラグインを使用しています。",
-    "Save Profile": "プロフィールを保存"
+    "Save Profile": "プロフィールを保存",
+    "You are already using the latest version of Whispering Tiger and all installed Plugins.": "Whispering Tigerの最新バージョンとインストールされているすべてのプラグインを使用しています。"
 }
