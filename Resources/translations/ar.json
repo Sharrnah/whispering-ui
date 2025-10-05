@@ -357,5 +357,6 @@
     "tts_streamed_min_play_time.Name": "الحد الأدنى لوقت تشغيل البث الحد الأدنى لوقت التشغيل",
     "tts_streamed_min_play_time.Description": "الحد الأدنى لوقت التشغيل قبل بدء التشغيل (بالثواني).\nيمكن تقليل الفجوات في بداية التشغيل.",
     "Save Profile": "حفظ الملف الشخصي",
-    "You are running the latest version of Whispering Tiger and all installed Plugins.": "أنت تقوم بتشغيل أحدث إصدار من Whispering Tiger وجميع الإضافات المثبتة."
+    "You are running the latest version of Whispering Tiger and all installed Plugins.": "أنت تقوم بتشغيل أحدث إصدار من Whispering Tiger وجميع الإضافات المثبتة.",
+    "You are already using the latest version of Whispering Tiger and all installed Plugins.": "أنت تستخدم بالفعل أحدث إصدار من Whispering Tiger وجميع الإضافات المثبتة."
 }
