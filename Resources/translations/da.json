@@ -355,5 +355,7 @@
     "mic_passthrough_routing.Name": "Gennemgang af mikrofon",
     "mic_passthrough_routing.Description": "Før mikrofonens lyd til outputenheden. (gennemgang)",
     "tts_streamed_min_play_time.Name": "Streamet afspilning minimum spilletid",
-    "tts_streamed_min_play_time.Description": "Minimum afspilningstid før afspilning starter (i sekunder).\nKan reducere huller i starten af afspilningen."
+    "tts_streamed_min_play_time.Description": "Minimum afspilningstid før afspilning starter (i sekunder).\nKan reducere huller i starten af afspilningen.",
+    "You are running the latest version of Whispering Tiger and all installed Plugins.": "Du kører den nyeste version af Whispering Tiger og alle installerede plugins.",
+    "Save Profile": "Gem profil"
 }
