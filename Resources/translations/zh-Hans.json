@@ -357,5 +357,6 @@
     "tts_streamed_min_play_time.Name": "流媒体播放最短播放时间",
     "tts_streamed_min_play_time.Description": "开始播放前的最短播放时间（秒）。\n可减少播放开始时的间隙。",
     "Save Profile": "保存资料",
-    "You are running the latest version of Whispering Tiger and all installed Plugins.": "您正在运行最新版本的 Whispering Tiger 和所有已安装的插件。"
+    "You are running the latest version of Whispering Tiger and all installed Plugins.": "您正在运行最新版本的 Whispering Tiger 和所有已安装的插件。",
+    "You are already using the latest version of Whispering Tiger and all installed Plugins.": "您已经在使用最新版本的 Whispering Tiger 和所有已安装的插件。"
 }
