@@ -357,5 +357,6 @@
     "tts_streamed_min_play_time.Name": "Потоковое воспроизведение Минимальное время воспроизведения",
     "tts_streamed_min_play_time.Description": "Минимальное время до начала воспроизведения (в секундах).\nПозволяет сократить пробелы в начале воспроизведения.",
     "Save Profile": "Сохранить профиль",
-    "You are running the latest version of Whispering Tiger and all installed Plugins.": "Вы используете последнюю версию Whispering Tiger и все установленные плагины."
+    "You are running the latest version of Whispering Tiger and all installed Plugins.": "Вы используете последнюю версию Whispering Tiger и все установленные плагины.",
+    "You are already using the latest version of Whispering Tiger and all installed Plugins.": "Вы уже используете последнюю версию Whispering Tiger и все установленные плагины."
 }
