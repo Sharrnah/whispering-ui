@@ -162,7 +162,7 @@
     "Installed": "Installed",
     "Plugin Installed": "Plugin Installed",
     "Open Webpage": "Open Webpage",
-    "Plugin has been installed. The Plugin is disabled by default. Please restart Whispering Tiger to load the Plugin.": "{{.Plugin}} has been installed. The Plugin is disabled by default.\nPlease restart Whispering Tiger to load the Plugin.",
+    "Plugin has been installed. The Plugin is disabled by default.": "{{.Plugin}} has been installed. The Plugin is disabled by default.",
     "Open List in Window": "Open List in Window",
     "Plugin Settings": "Plugin Settings",
     "Reload": "Reload",
