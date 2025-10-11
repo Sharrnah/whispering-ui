@@ -229,6 +229,28 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 	}
 	resetSettingsButton.Importance = widget.LowImportance
 
+	reinitSettingsButton := widget.NewButtonWithIcon(lang.L("ReInitialize"), theme.ViewRefreshIcon(), nil)
+	reinitSettingsButton.OnTapped = func() {
+		toResetWindow := window
+		if toResetWindow == nil {
+			toResetWindow, _ = Utilities.GetCurrentMainWindow("Plugin Settings " + pluginClassName)
+		}
+		translationVarMap := map[string]interface{}{
+			"PluginClassName": pluginClassName,
+		}
+		dialog.ShowConfirm(lang.L("Reinitialize Plugin Settings", translationVarMap), lang.L("Are you sure you want to reinitialize this plugin?", translationVarMap), func(reset bool) {
+			go func() {
+				if reset {
+					reinitSettings(pluginClassName)
+					time.Sleep(2 * time.Second)
+
+					RebuildSinglePluginSettings(pluginClassName, pluginAccordionItem, pluginAccordion, reloadButtonRef, &toResetWindow)
+				}
+			}()
+		}, toResetWindow)
+	}
+	reinitSettingsButton.Importance = widget.LowImportance
+
 	// plugin enabled checkbox
 	pluginEnabledCheckbox := widget.NewCheck(lang.L("pluginClass enabled", map[string]interface{}{"PluginClass": pluginClassName}), func(enabled bool) {
 		Settings.Config.Plugins[pluginClassName] = enabled
@@ -338,7 +360,7 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 		}
 
 		pluginSettingsContainer := container.NewVBox(
-			container.NewBorder(nil, nil, nil, container.NewHBox(resetSettingsButton, pluginToWindowButton), pluginEnabledCheckbox),
+			container.NewBorder(nil, nil, nil, container.NewHBox(reinitSettingsButton, resetSettingsButton, pluginToWindowButton), pluginEnabledCheckbox),
 			container.NewGridWithColumns(2, beginLine),
 			settingsGroupTabs,
 			spacerText,
@@ -348,7 +370,7 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 	} else {
 		// no grouping
 		pluginSettingsContainer := container.NewVBox()
-		pluginSettingsContainer.Add(container.NewBorder(nil, nil, nil, container.NewHBox(resetSettingsButton, pluginToWindowButton), pluginEnabledCheckbox))
+		pluginSettingsContainer.Add(container.NewBorder(nil, nil, nil, container.NewHBox(reinitSettingsButton, resetSettingsButton, pluginToWindowButton), pluginEnabledCheckbox))
 		pluginSettingsContainer.Add(container.NewGridWithColumns(2, beginLine))
 
 		var sortedSettingNames []string
@@ -1079,6 +1101,15 @@ func updateSettings(SettingsFile Settings.Conf, pluginClassName string, pluginSe
 func resetSettings(pluginClassName string) {
 	sendMessage := SendMessageChannel.SendMessageStruct{
 		Type:  "setting_reset_all",
+		Name:  "plugin",
+		Value: pluginClassName,
+	}
+	sendMessage.SendMessage()
+}
+
+func reinitSettings(pluginClassName string) {
+	sendMessage := SendMessageChannel.SendMessageStruct{
+		Type:  "setting_reinit",
 		Name:  "plugin",
 		Value: pluginClassName,
 	}
