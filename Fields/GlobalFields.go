@@ -15,6 +15,7 @@ import (
 	"strings"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Logging"
+	"whispering-tiger-ui/OscClient"
 	"whispering-tiger-ui/SendMessageChannel"
 )
 
@@ -572,6 +573,8 @@ func InitializeGlobalFields() {
 		Field.TranscriptionInputHintOnTxtTranslate.Text = fmt.Sprintf("%d", len([]rune(value)))
 		Field.TranscriptionInputHintOnTxtTranslate.Refresh()
 
+		OscClient.SendChatboxTyping(true)
+
 		OscLimitHintUpdateFunc()
 	}
 	Field.TranscriptionTranslationInputHint.TextSize = theme.CaptionTextSize()
@@ -587,4 +590,10 @@ func InitializeGlobalFields() {
 		OscLimitHintUpdateFunc()
 	}
 
+	Field.TranscriptionTextTranslationInput.OnChanged = func(value string) {
+		OscClient.SendChatboxTyping(true)
+	}
+	Field.TranscriptionTranslationTextToSpeechInput.OnChanged = func(value string) {
+		OscClient.SendChatboxTyping(true)
+	}
 }

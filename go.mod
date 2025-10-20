@@ -5,10 +5,10 @@ go 1.25
 toolchain go1.25.0
 
 //https://github.com/Sharrnah/fyne/commits/feature/setting-preferred-language/
-replace fyne.io/fyne/v2 => github.com/Sharrnah/fyne/v2 v2.0.0-20251001234238-9171a62054a7
+replace fyne.io/fyne/v2 => github.com/Sharrnah/fyne/v2 v2.0.0-20251018002758-ffe87bb202f5
 
 require (
-	fyne.io/fyne/v2 v2.6.3
+	fyne.io/fyne/v2 v2.7.0
 	github.com/dustin/go-humanize v1.0.1
 	github.com/ebitengine/oto/v3 v3.3.3
 	github.com/gen2brain/malgo v0.11.24
@@ -23,6 +23,7 @@ require (
 
 require (
 	github.com/getsentry/sentry-go v0.35.1
+	github.com/hypebeast/go-osc v0.0.0-20220308234300-cec5a8a1e5f5
 	golang.design/x/clipboard v0.7.1
 	golang.org/x/sys v0.35.0
 )

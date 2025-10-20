@@ -54,6 +54,20 @@ var OSCSettingsMapping = SettingsMapping{
 			},
 		},
 		{
+			SettingsName:         "Send UI typing indication to VRChat",
+			SettingsInternalName: "",
+			SettingsDescription:  "Send typing indicator to VRChat when typing in UI text fields.",
+			DoNotSendToBackend:   true,
+			_widget: func() fyne.CanvasObject {
+				widgetCheckbox := widget.NewCheck("", func(b bool) {
+					fyne.CurrentApp().Preferences().SetBool("SendTypingIndicatorOsc", b)
+				})
+				widgetCheckbox.Checked = fyne.CurrentApp().Preferences().BoolWithFallback("SendTypingIndicatorOsc", false)
+
+				return widgetCheckbox
+			},
+		},
+		{
 			SettingsName:         "OSC chat prefix",
 			SettingsInternalName: "osc_chat_prefix",
 			SettingsDescription:  "Adds a prefix to the chat messages.\n\"{src}\" is replaced with the source language,\n\"{trg}\" replaced with the target language.",
