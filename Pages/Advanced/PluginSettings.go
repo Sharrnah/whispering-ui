@@ -394,6 +394,22 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 	}
 }
 
+func getPluginFileAndClassName(pluginClassName string) (string, string) {
+	files, err := os.ReadDir(filepath.Join(".", "Plugins"))
+	if err != nil {
+		println(err)
+	}
+	for _, file := range files {
+		if !file.IsDir() && !strings.HasPrefix(file.Name(), ".") && !strings.HasPrefix(file.Name(), "__init__") && (strings.HasSuffix(file.Name(), ".py")) {
+			pluginClass := GetClassNameOfPlugin(filepath.Join(".", "Plugins", file.Name()))
+			if pluginClass == pluginClassName {
+				return file.Name(), pluginClass
+			}
+		}
+	}
+	return "", ""
+}
+
 func BuildPluginSettingsAccordion(window fyne.Window) (fyne.CanvasObject, int) {
 	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
 		scope.SetTag("GoRoutine", "Pages\\Advanced\\PluginSettings->BuildPluginSettingsAccordion")
