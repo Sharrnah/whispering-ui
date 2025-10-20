@@ -19,7 +19,7 @@ import (
 	"time"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Logging"
-	"whispering-tiger-ui/RuntimeBackend"
+	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/UpdateUtility"
 	"whispering-tiger-ui/Utilities"
 )
@@ -138,15 +138,16 @@ func CreatePluginListWindow(closeFunction func(), backendRunning bool) {
 		titleButton.OnTapped = func() {
 			version, class, _, fileContent := UpdateUtility.FetchAndAnalyzePluginUrl(titleLink)
 
-			pluginFileName := UpdateUtility.PluginDir + Utilities.CamelToSnake(class) + ".py"
+			pluginFileName := Utilities.CamelToSnake(class) + ".py"
+			pluginFileDir := UpdateUtility.PluginDir + pluginFileName
 
 			localPluginFile := UpdateUtility.FindLocalPluginFileByClass(localPluginFilesData, class)
 			if localPluginFile.Class != "" {
-				pluginFileName = localPluginFile.FilePath
+				pluginFileDir = localPluginFile.FilePath
 			}
 
 			// write the file to disk
-			err := os.WriteFile(pluginFileName, fileContent, 0644)
+			err := os.WriteFile(pluginFileDir, fileContent, 0644)
 			if err != nil {
 				window, _ := Utilities.GetCurrentMainWindow("Error writing file")
 				dialog.ShowError(err, window)
@@ -163,8 +164,15 @@ func CreatePluginListWindow(closeFunction func(), backendRunning bool) {
 
 			// show success installed dialog
 
-			dialog.ShowInformation(lang.L("Plugin Installed"), lang.L("Plugin has been installed. The Plugin is disabled by default. Please restart Whispering Tiger to load the Plugin.", map[string]interface{}{"Plugin": class})+"\n",
+			dialog.ShowInformation(lang.L("Plugin Installed"), lang.L("Plugin has been installed. The Plugin is disabled by default.", map[string]interface{}{"Plugin": class})+"\n",
 				pluginListWindow)
+
+			sendMessage := SendMessageChannel.SendMessageStruct{
+				Type:  "plugin_install",
+				Name:  "plugin",
+				Value: map[string]string{"name": class, "file": pluginFileName},
+			}
+			sendMessage.SendMessage()
 
 			// add to FreshInstalledPlugins list
 			FreshInstalledPlugins = append(FreshInstalledPlugins, class)
