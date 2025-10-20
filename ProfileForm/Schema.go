@@ -65,7 +65,8 @@ func TXTTypeOptions() []TVO {
 }
 
 func TTSTypeOptions() []TVO {
-	return []TVO{{Text: "Silero", Value: "silero"}, {Text: "F5/E2", Value: "f5_e2"}, {Text: "Zonos", Value: "zonos"}, {Text: "Kokoro", Value: "kokoro"}, {Text: "Orpheus", Value: "orpheus"}, {Text: lang.L("Disabled"), Value: ""}}
+	//return []TVO{{Text: "Silero", Value: "silero"}, {Text: "F5/E2", Value: "f5_e2"}, {Text: "Zonos", Value: "zonos"}, {Text: "Kokoro", Value: "kokoro"}, {Text: "Orpheus", Value: "orpheus"}, {Text: "Parler", Value: "parler"}, {Text: lang.L("Disabled"), Value: ""}}
+	return []TVO{{Text: "Silero", Value: "silero"}, {Text: "F5/E2", Value: "f5_e2"}, {Text: "Zonos", Value: "zonos"}, {Text: "Kokoro", Value: "kokoro"}, {Text: "Orpheus", Value: "orpheus"}, {Text: "Chatterbox", Value: "chatterbox"}, {Text: lang.L("Disabled"), Value: ""}}
 }
 
 func OcrTypeOptions() []TVO {
