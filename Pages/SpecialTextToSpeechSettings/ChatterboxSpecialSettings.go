@@ -75,6 +75,11 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 	}
 
 	temperatureSlider := widget.NewSlider(0.05, 5.0)
+	if precisionInputSetting == "float16" {
+		temperatureSlider.Min = 0.55
+	} else {
+		temperatureSlider.Min = 0.05
+	}
 	temperatureSlider.Step = 0.05
 	temperatureSlider.SetValue(clamp01(GetSpecialSettingFallback("tts_chatterbox", "temperature", 0.8).(float64)))
 	temperatureSliderState := widget.NewLabel(fmt.Sprintf("%.2f", temperatureSlider.Value))
@@ -109,6 +114,11 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 
 	precisionInput.OnChanged = func(value CustomWidget.TextValueOption) {
 		updateSpecialTTSSettings()
+		if value.Value == "float16" {
+			temperatureSlider.Min = 0.55
+		} else {
+			temperatureSlider.Min = 0.05
+		}
 	}
 	seedInput.OnChanged = func(s string) {
 		updateSpecialTTSSettings()
