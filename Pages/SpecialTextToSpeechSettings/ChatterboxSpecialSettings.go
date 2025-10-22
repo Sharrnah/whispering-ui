@@ -60,6 +60,13 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 		return v
 	}
 
+	precisionInput := CustomWidget.NewTextValueSelect("precision", []CustomWidget.TextValueOption{
+		{Text: "Float32", Value: "float32"},
+		{Text: "Float16", Value: "float16"},
+	}, nil, 0)
+	precisionInputSetting := GetSpecialSettingFallback("tts_chatterbox", "precision", "float32").(string)
+	precisionInput.SetSelected(precisionInputSetting)
+
 	seedInput := widget.NewEntry()
 	seedInput.PlaceHolder = lang.L("Enter manual seed")
 	// Load seed (optional)
@@ -86,6 +93,7 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 		UpdateSpecialTTSSettings("tts_chatterbox", "language", languageSelect.GetCurrentValueOptionEntry().Value)
 		UpdateSpecialTTSSettings("tts_chatterbox", "streaming_mode", streamingModeSelect.GetSelected().Value)
 
+		UpdateSpecialTTSSettings("tts_chatterbox", "precision", precisionInput.GetSelected().Value)
 		UpdateSpecialTTSSettings("tts_chatterbox", "seed", seedInput.Text)
 		UpdateSpecialTTSSettings("tts_chatterbox", "temperature", temperatureSlider.Value)
 		UpdateSpecialTTSSettings("tts_chatterbox", "exaggeration", exaggerationSlider.Value)
@@ -99,6 +107,9 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 		updateSpecialTTSSettings()
 	}
 
+	precisionInput.OnChanged = func(value CustomWidget.TextValueOption) {
+		updateSpecialTTSSettings()
+	}
 	seedInput.OnChanged = func(s string) {
 		updateSpecialTTSSettings()
 	}
@@ -125,10 +136,16 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 		),
 		widget.NewAccordion(
 			widget.NewAccordionItem(lang.L("More Options"),
-				container.NewGridWithColumns(2,
+				container.NewVBox(
+					container.NewGridWithColumns(2,
+						container.New(layout.NewFormLayout(),
+							widget.NewLabel(lang.L("Precision")+":"),
+							precisionInput,
+							widget.NewLabel(lang.L("Seed")+":"),
+							seedInput,
+						),
+					),
 					container.New(layout.NewFormLayout(),
-						widget.NewLabel(lang.L("Seed")+":"),
-						seedInput,
 						widget.NewLabel(lang.L("Temperature")+":"),
 						container.NewBorder(nil, nil, nil, temperatureSliderState, temperatureSlider),
 						widget.NewLabel(lang.L("Emotion exaggeration")+":"),
