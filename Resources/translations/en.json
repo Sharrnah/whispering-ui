@@ -362,5 +362,16 @@
     "Attach hardware information (GPU Memory, GPU Vendor, GPU Adapter)": "Attach hardware information (GPU Memory, GPU Vendor, GPU Adapter)",
     "E-Mail Address (Optional)": "E-Mail Address (Optional)",
     "Error Report Sent": "Error Report Sent",
-    "Your error report has been sent.": "Your error report has been sent."
+    "Your error report has been sent.": "Your error report has been sent.",
+    "Streaming Mode": "Streaming Mode",
+    "More Options": "More Options",
+    "Precision": "Precision",
+    "Seed": "Seed",
+    "Enter manual seed": "Enter manual seed",
+    "Reset to defaults": "Reset to defaults",
+    "Temperature": "Temperature",
+    "Emotion exaggeration": "Emotion exaggeration",
+    "CFG/Pace": "CFG/Pace",
+    "Max new tokens": "Max new tokens",
+    "Repetition penalty": "Repetition penalty"
 }

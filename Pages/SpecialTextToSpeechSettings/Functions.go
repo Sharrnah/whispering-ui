@@ -114,6 +114,38 @@ func GetSpecialSettingFallback(specialSettingType string, key string, fallback i
 		default:
 			return fb
 		}
+	case int:
+		switch r := raw.(type) {
+		case int:
+			return r
+		case int64:
+			return int(r)
+		case int32:
+			return int(r)
+		case float64:
+			return int(r)
+		case float32:
+			return int(r)
+		case string:
+			if i, err := strconv.Atoi(r); err == nil {
+				return i
+			}
+			return fb
+		default:
+			return fb
+		}
+	case bool:
+		if b, ok := raw.(bool); ok {
+			return b
+		}
+		if s, ok := raw.(string); ok {
+			if s == "true" {
+				return true
+			} else if s == "false" {
+				return false
+			}
+		}
+		return fb
 	default:
 		// Unknown target type, return fallback to be safe.
 		return fallback
