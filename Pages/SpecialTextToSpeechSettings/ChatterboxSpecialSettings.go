@@ -21,8 +21,8 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 		"temperature":        0.8,
 		"exaggeration":       0.5,
 		"cfg_weight":         0.5,
-		"max_new_tokens":     256,
-		"repetition_penalty": 1.7,
+		"max_new_tokens":     512,
+		"repetition_penalty": 1.9,
 	}
 
 	// Helper: convert various numeric types (int/float/string) to float64

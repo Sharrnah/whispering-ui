@@ -7,34 +7,32 @@ import (
 	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
 	"whispering-tiger-ui/CustomWidget"
-	"whispering-tiger-ui/RuntimeBackend"
-	"whispering-tiger-ui/Settings"
 )
 
 var TextToSpeechSettingsMapping = SettingsMapping{
 	Mappings: []SettingMapping{
-		{
-			SettingsName:         "Integrated Text-to-Speech",
-			SettingsInternalName: "tts_type",
-			SettingsDescription:  "",
-			_widget: func() fyne.CanvasObject {
-				settingWidget := CustomWidget.NewTextValueSelect("tts_type", []CustomWidget.TextValueOption{
-					{Text: "Silero", Value: "silero"},
-					{Text: "F5/E2", Value: "f5_e2"},
-					{Text: "Zonos", Value: "zonos"},
-					{Text: "Kokoro", Value: "kokoro"},
-					{Text: lang.L("Disabled"), Value: ""},
-				}, func(s CustomWidget.TextValueOption) {
-				}, 0)
-				confirmationFunction := func(s CustomWidget.TextValueOption) {
-					if Settings.Config.Tts_type != s.Value {
-						RuntimeBackend.RestartBackend(true, lang.L("Restarting backend required to apply changes. Are you sure you want to restart the backend?"))
-					}
-				}
-				settingWidget.OnChanged = confirmationFunction
-				return settingWidget
-			},
-		},
+		//{
+		//	SettingsName:         "Integrated Text-to-Speech",
+		//	SettingsInternalName: "tts_type",
+		//	SettingsDescription:  "",
+		//	_widget: func() fyne.CanvasObject {
+		//		settingWidget := CustomWidget.NewTextValueSelect("tts_type", []CustomWidget.TextValueOption{
+		//			{Text: "Silero", Value: "silero"},
+		//			{Text: "F5/E2", Value: "f5_e2"},
+		//			{Text: "Zonos", Value: "zonos"},
+		//			{Text: "Kokoro", Value: "kokoro"},
+		//			{Text: lang.L("Disabled"), Value: ""},
+		//		}, func(s CustomWidget.TextValueOption) {
+		//		}, 0)
+		//		confirmationFunction := func(s CustomWidget.TextValueOption) {
+		//			if Settings.Config.Tts_type != s.Value {
+		//				RuntimeBackend.RestartBackend(true, lang.L("Restarting backend required to apply changes. Are you sure you want to restart the backend?"))
+		//			}
+		//		}
+		//		settingWidget.OnChanged = confirmationFunction
+		//		return settingWidget
+		//	},
+		//},
 		{
 			SettingsName:         "Speed/Rate",
 			SettingsInternalName: "tts_prosody_rate",
