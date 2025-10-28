@@ -30,7 +30,7 @@ Supported Tags are:
 Chatterbox-TTS is a TTS Model that supports voice cloning based on an audio sample with fast inference and Multi-Style / Multi-Speaker Generation and 23 languages.
 
 Demo:
-<video src='https://github.com/user-attachments/assets/eac658cc-13aa-482d-93a8-fb38ca410dbc' width=300></video>
+<video src='https://github.com/user-attachments/assets/005cd29d-a53e-4e5c-b9be-632a95310f0e' width=300></video>
 
 The speed is configured by the CFG / Pace setting.
 
@@ -108,6 +108,7 @@ Demo:
 Tags to control speech and emotion characteristics:
 
 `<laugh>`, `<chuckle>`, `<sigh>`, `<cough>`, `<sniffle>`, `<groan>`, `<yawn>`, `<gasp>`
+
 
 
 
