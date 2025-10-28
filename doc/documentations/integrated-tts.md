@@ -14,7 +14,7 @@
 - [Orpheus TTS](#orpheus-tts)
 
 ## Silero-TTS
-Silero-TTS is the simplest solution and supports different models for different languages like _English, Spanish, French, German and others_.
+Silero-TTS is the simplest solution and supports different models for different languages.
 Silero-TTS supports SSML by which you can change the behaviour in the text.
 
 <details>
@@ -300,9 +300,3 @@ Demo:
 Tags to control speech and emotion characteristics:
 
 `<laugh>`, `<chuckle>`, `<sigh>`, `<cough>`, `<sniffle>`, `<groan>`, `<yawn>`, `<gasp>`
-
-
-
-
-
-
