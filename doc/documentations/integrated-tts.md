@@ -43,7 +43,7 @@ Supported Tags are:
 ## Chatterbox-TTS
 Chatterbox-TTS is a TTS Model that supports voice cloning based on an audio sample with fast inference and Multi-Style / Multi-Speaker Generation.
 
-Custom implementation can auto-detect of the language from the text. _(its recommended to set the language for better results)_
+The custom implementation can auto-detect the language from the text. _(its recommended to set the language for better results)_
 <details>
   <summary>23 Supported Languages (Single model)</summary>
   <ul>
