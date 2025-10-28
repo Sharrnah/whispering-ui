@@ -2,12 +2,15 @@
 
 ## Content
 - [Silero-TTS](#silero-tts)
-- [F5-TTS / E2-TTS](#f5-tts--e2-tts)
+- [Chatterbox-TTS](#chatterbox-tts)
   - [Add own voice](#add-own-voice)
   - [Generate Audio with multiple speakers](#generate-audio-with-multiple-speakers)
+- [F5-TTS / E2-TTS](#f5-tts--e2-tts)
+  - [Add own voice](#add-own-voice-1)
+  - [Generate Audio with multiple speakers](#generate-audio-with-multiple-speakers-1)
 - [Kokoro-TTS](#kokoro-tts)
 - [Zonos-TTS](#zonos-tts)
-  - [Add own voice](#add-own-voice-1)
+  - [Add own voice](#add-own-voice-2)
 - [Orpheus TTS](#orpheus-tts)
 
 ## Silero-TTS
@@ -22,6 +25,36 @@ Supported Tags are:
 - prosody `<prosody rate="x-slow" pitch="x-high">` where _rate_ can be **x-slow, slow, medium, fast, x-fast**, and _pitch_ can be **x-low, low, medium, high, x-high**
 - p `<p>text</p>` Represents a paragraph, equivalent to x-strong pause.
 - s `<s>text</s>` Represents a sentence, equivalent to strong pause.
+
+## Chatterbox-TTS
+Chatterbox-TTS is a TTS Model that supports voice cloning based on an audio sample with fast inference and Multi-Style / Multi-Speaker Generation and 23 languages.
+
+Demo:
+<video src='https://github.com/user-attachments/assets/eac658cc-13aa-482d-93a8-fb38ca410dbc' width=300></video>
+
+The speed is configured by the CFG / Pace setting.
+
+### Add own voice
+To add your own voice, go to the `.cache\chatterbox-tts-cache\voices` directory
+- Copy a _.wav_ sample audio of the voice into it.
+
+  Best results should be audio files as PCM S16 LE, Mono with a sample rate of 24000 Hz and 16 Bits per sample
+  and a length of ~ 12 seconds.
+
+- If an audio file does not give good results. Sometimes it also helps to cut the audio shorter.
+- The TTS result will take over the accent of the sample audio provided. You can reduce accent strength by lowering temperature.
+
+### Generate Audio with multiple speakers
+To generate audio with different speakers, you can add the Speaker name at the beginning of a line like this:
+```
+[Justin] This is the text, spoken by the Justin speaker.
+[Announcer_Ahri] And this text will be spoken by the Announcer_Ahri voice.
+or
+[Justin]
+This is the text, spoken by the Justin speaker.
+[Announcer_Ahri]
+And this text will be spoken by the Announcer_Ahri voice.
+```
 
 ## F5-TTS / E2-TTS
 F5-TTS is a TTS Model that supports voice cloning based on an audio sample with fast inference and Multi-Style / Multi-Speaker Generation.
