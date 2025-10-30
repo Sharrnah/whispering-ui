@@ -148,6 +148,7 @@ func main() {
 			RuntimeBackend.BackendsList[0].AttachEnvironment("PYTHONUTF8", "1")
 		}
 		RuntimeBackend.BackendsList[0].AttachEnvironment("CT2_CUDA_ALLOW_FP16", "1")
+		RuntimeBackend.BackendsList[0].AttachEnvironment("HF_HUB_DISABLE_IMPLICIT_TOKEN", "1")
 
 		// AMD ROCm support (Todo: does this work with NVIDIA?)
 		RuntimeBackend.BackendsList[0].AttachEnvironment("HSA_OVERRIDE_GFX_VERSION", "10.3.0")
