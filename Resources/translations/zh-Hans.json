@@ -358,5 +358,22 @@
     "tts_streamed_min_play_time.Description": "开始播放前的最短播放时间（秒）。\n可减少播放开始时的间隙。",
     "Save Profile": "保存资料",
     "You are running the latest version of Whispering Tiger and all installed Plugins.": "您正在运行最新版本的 Whispering Tiger 和所有已安装的插件。",
-    "You are already using the latest version of Whispering Tiger and all installed Plugins.": "您已经在使用最新版本的 Whispering Tiger 和所有已安装的插件。"
+    "You are already using the latest version of Whispering Tiger and all installed Plugins.": "您已经在使用最新版本的 Whispering Tiger 和所有已安装的插件。",
+    "Plugin has been installed. The Plugin is disabled by default.": "{{.Plugin}} 已安装。该插件默认为禁用。",
+    "ReInitialize": "重新初始化",
+    "Reinitialize Plugin Settings": "重新初始化插件设置 - 重新初始化插件设置{{.PluginClassName}}",
+    "Are you sure you want to reinitialize this plugin?": "您确定要重新初始化{{.PluginClassName}} 吗？",
+    "Send UI typing indication to VRChat": "向 VRChat 发送用户界面键入指示",
+    "Send typing indicator to VRChat when typing in UI text fields.": "在用户界面文本字段中键入时，向 VRChat 发送键入指示器。",
+    "Streaming Mode": "流媒体模式",
+    "More Options": "更多选择",
+    "Precision": "精度",
+    "Seed": "种子",
+    "Enter manual seed": "输入手动种子",
+    "Reset to defaults": "重置为默认值",
+    "Temperature": "温度",
+    "Emotion exaggeration": "情绪夸张",
+    "CFG/Pace": "CFG/Pace",
+    "Max new tokens": "最大新代币数",
+    "Repetition penalty": "重复处罚"
 }

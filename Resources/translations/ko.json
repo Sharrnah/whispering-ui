@@ -358,5 +358,22 @@
     "tts_streamed_min_play_time.Description": "재생 시작 전 최소 재생 시간(초).\n재생 시작 시 간격을 줄일 수 있습니다.",
     "You are running the latest version of Whispering Tiger and all installed Plugins.": "위스퍼링 타이거의 최신 버전과 설치된 모든 플러그인을 실행하고 있습니다.",
     "Save Profile": "프로필 저장",
-    "You are already using the latest version of Whispering Tiger and all installed Plugins.": "이미 위스퍼링 타이거의 최신 버전과 설치된 모든 플러그인을 사용하고 있습니다."
+    "You are already using the latest version of Whispering Tiger and all installed Plugins.": "이미 위스퍼링 타이거의 최신 버전과 설치된 모든 플러그인을 사용하고 있습니다.",
+    "Plugin has been installed. The Plugin is disabled by default.": "{{.Plugin}} 가 설치되었습니다. 플러그인은 기본적으로 비활성화되어 있습니다.",
+    "ReInitialize": "다시 초기화",
+    "Reinitialize Plugin Settings": "플러그인 설정 재초기화 - {{.PluginClassName}}",
+    "Are you sure you want to reinitialize this plugin?": "{{.PluginClassName}} 을 다시 초기화하시겠습니까?",
+    "Send UI typing indication to VRChat": "VRChat에 UI 입력 표시 보내기",
+    "Send typing indicator to VRChat when typing in UI text fields.": "UI 텍스트 필드에 입력할 때 입력 표시기를 VRChat으로 전송합니다.",
+    "Precision": "정밀도",
+    "Seed": "Seed",
+    "Enter manual seed": "수동 시드 입력",
+    "Reset to defaults": "기본값으로 재설정",
+    "Temperature": "온도",
+    "Emotion exaggeration": "감정 과장",
+    "Max new tokens": "최대 신규 토큰",
+    "Repetition penalty": "반복 페널티",
+    "CFG/Pace": "CFG/속도",
+    "Streaming Mode": "스트리밍 모드",
+    "More Options": "추가 옵션"
 }

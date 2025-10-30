@@ -358,5 +358,22 @@
     "tts_streamed_min_play_time.Name": "ストリーミング再生の最短再生時間",
     "You are running the latest version of Whispering Tiger and all installed Plugins.": "最新バージョンのWhispering Tigerとインストールされているすべてのプラグインを使用しています。",
     "Save Profile": "プロフィールを保存",
-    "You are already using the latest version of Whispering Tiger and all installed Plugins.": "Whispering Tigerの最新バージョンとインストールされているすべてのプラグインを使用しています。"
+    "You are already using the latest version of Whispering Tiger and all installed Plugins.": "Whispering Tigerの最新バージョンとインストールされているすべてのプラグインを使用しています。",
+    "Plugin has been installed. The Plugin is disabled by default.": "{{.Plugin}} がインストールされています。このプラグインはデフォルトでは無効になっています。",
+    "ReInitialize": "再初期化",
+    "Reinitialize Plugin Settings": "プラグイン設定の再初期化{{.PluginClassName}}",
+    "Are you sure you want to reinitialize this plugin?": "本当に{{.PluginClassName}} 。",
+    "Send UI typing indication to VRChat": "VRChatにUIのタイピング表示を送る",
+    "Send typing indicator to VRChat when typing in UI text fields.": "UIのテキストフィールドに入力すると、VRChatにタイピングインジケータが送信されます。",
+    "Streaming Mode": "ストリーミング・モード",
+    "More Options": "その他のオプション",
+    "Precision": "精密",
+    "Seed": "シード",
+    "Enter manual seed": "手動シードを入力",
+    "Reset to defaults": "デフォルトにリセット",
+    "Temperature": "温度",
+    "Emotion exaggeration": "感情の誇張",
+    "CFG/Pace": "CFG/ペース",
+    "Max new tokens": "最大新規トークン数",
+    "Repetition penalty": "反復ペナルティ"
 }

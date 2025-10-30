@@ -358,5 +358,22 @@
     "tts_streamed_min_play_time.Description": "الحد الأدنى لوقت التشغيل قبل بدء التشغيل (بالثواني).\nيمكن تقليل الفجوات في بداية التشغيل.",
     "Save Profile": "حفظ الملف الشخصي",
     "You are running the latest version of Whispering Tiger and all installed Plugins.": "أنت تقوم بتشغيل أحدث إصدار من Whispering Tiger وجميع الإضافات المثبتة.",
-    "You are already using the latest version of Whispering Tiger and all installed Plugins.": "أنت تستخدم بالفعل أحدث إصدار من Whispering Tiger وجميع الإضافات المثبتة."
+    "You are already using the latest version of Whispering Tiger and all installed Plugins.": "أنت تستخدم بالفعل أحدث إصدار من Whispering Tiger وجميع الإضافات المثبتة.",
+    "Temperature": "درجة الحرارة",
+    "Emotion exaggeration": "المبالغة في العاطفة",
+    "CFG/Pace": "CFG/Pace",
+    "Max new tokens": "الحد الأقصى للرموز الجديدة",
+    "Repetition penalty": "عقوبة التكرار",
+    "Plugin has been installed. The Plugin is disabled by default.": "{{.Plugin}} قد تم تثبيته. يتم تعطيل المكون الإضافي بشكل افتراضي.",
+    "ReInitialize": "إعادة التهيئة",
+    "Reinitialize Plugin Settings": "إعادة تهيئة إعدادات البرنامج المساعد - {{.PluginClassName}}",
+    "Are you sure you want to reinitialize this plugin?": "هل أنت متأكد من أنك تريد إعادة التهيئة {{.PluginClassName}} ؟",
+    "Send UI typing indication to VRChat": "إرسال إشارة كتابة واجهة المستخدم إلى VRChat",
+    "Send typing indicator to VRChat when typing in UI text fields.": "إرسال مؤشر الكتابة إلى VRChat عند الكتابة في حقول نص واجهة المستخدم.",
+    "Streaming Mode": "وضع البث",
+    "More Options": "المزيد من الخيارات",
+    "Precision": "الدقة",
+    "Seed": "البذور",
+    "Enter manual seed": "أدخل البذور اليدوية",
+    "Reset to defaults": "إعادة التعيين إلى الإعدادات الافتراضية"
 }
