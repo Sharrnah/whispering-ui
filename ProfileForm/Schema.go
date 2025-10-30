@@ -23,35 +23,35 @@ func DefaultDeviceOptions() []TVO {
 // Generic precision lists used for initial population; Coordinator will narrow them by type later
 func GenericWhisperPrecisionOptions() []TVO {
 	return []TVO{
-		{Text: "float32 " + lang.L("precision"), Value: "float32"},
-		{Text: "float16 " + lang.L("precision"), Value: "float16"},
-		{Text: "int16 " + lang.L("precision"), Value: "int16"},
-		{Text: "int8_float16 " + lang.L("precision"), Value: "int8_float16"},
-		{Text: "int8 " + lang.L("precision"), Value: "int8"},
-		{Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"},
-		{Text: "int8_bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "int8_bfloat16"},
-		{Text: "8bit " + lang.L("precision"), Value: "8bit"},
-		{Text: "4bit " + lang.L("precision"), Value: "4bit"},
+		{Text: "float32 " + lang.L("Precision"), Value: "float32"},
+		{Text: "float16 " + lang.L("Precision"), Value: "float16"},
+		{Text: "int16 " + lang.L("Precision"), Value: "int16"},
+		{Text: "int8_float16 " + lang.L("Precision"), Value: "int8_float16"},
+		{Text: "int8 " + lang.L("Precision"), Value: "int8"},
+		{Text: "bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "bfloat16"},
+		{Text: "int8_bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "int8_bfloat16"},
+		{Text: "8bit " + lang.L("Precision"), Value: "8bit"},
+		{Text: "4bit " + lang.L("Precision"), Value: "4bit"},
 	}
 }
 
 func GenericTextPrecisionOptions() []TVO {
 	return []TVO{
-		{Text: "float32 " + lang.L("precision"), Value: "float32"},
-		{Text: "float16 " + lang.L("precision"), Value: "float16"},
-		{Text: "int16 " + lang.L("precision"), Value: "int16"},
-		{Text: "int8_float16 " + lang.L("precision"), Value: "int8_float16"},
-		{Text: "int8 " + lang.L("precision"), Value: "int8"},
-		{Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"},
-		{Text: "int8_bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "int8_bfloat16"},
+		{Text: "float32 " + lang.L("Precision"), Value: "float32"},
+		{Text: "float16 " + lang.L("Precision"), Value: "float16"},
+		{Text: "int16 " + lang.L("Precision"), Value: "int16"},
+		{Text: "int8_float16 " + lang.L("Precision"), Value: "int8_float16"},
+		{Text: "int8 " + lang.L("Precision"), Value: "int8"},
+		{Text: "bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "bfloat16"},
+		{Text: "int8_bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "int8_bfloat16"},
 	}
 }
 
 func GenericOcrPrecisionOptions() []TVO {
 	return []TVO{
-		{Text: "float32 " + lang.L("precision"), Value: "float32"},
-		{Text: "float16 " + lang.L("precision"), Value: "float16"},
-		{Text: "bfloat16 " + lang.L("precision"), Value: "bfloat16"},
+		{Text: "float32 " + lang.L("Precision"), Value: "float32"},
+		{Text: "float16 " + lang.L("Precision"), Value: "float16"},
+		{Text: "bfloat16 " + lang.L("Precision"), Value: "bfloat16"},
 	}
 }
 
@@ -105,17 +105,17 @@ func STTModelOptions(modelType string) (options []TVO, defaultIndex int, enableS
 func STTPrecisionOptions(modelType string) (options []TVO, enablePrecision bool) {
 	switch modelType {
 	case "faster_whisper":
-		return []TVO{{Text: "float32 " + lang.L("precision"), Value: "float32"}, {Text: "float16 " + lang.L("precision"), Value: "float16"}, {Text: "int16 " + lang.L("precision"), Value: "int16"}, {Text: "int8_float16 " + lang.L("precision"), Value: "int8_float16"}, {Text: "int8 " + lang.L("precision"), Value: "int8"}, {Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"}, {Text: "int8_bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "int8_bfloat16"}}, true
+		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}, {Text: "float16 " + lang.L("Precision"), Value: "float16"}, {Text: "int16 " + lang.L("Precision"), Value: "int16"}, {Text: "int8_float16 " + lang.L("Precision"), Value: "int8_float16"}, {Text: "int8 " + lang.L("Precision"), Value: "int8"}, {Text: "bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "bfloat16"}, {Text: "int8_bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "int8_bfloat16"}}, true
 	case "original_whisper", "medusa_whisper":
-		return []TVO{{Text: "float32 " + lang.L("precision"), Value: "float32"}, {Text: "float16 " + lang.L("precision"), Value: "float16"}}, true
+		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}, {Text: "float16 " + lang.L("Precision"), Value: "float16"}}, true
 	case "transformer_whisper", "wav2vec_bert", "mms", "voxtral":
-		return []TVO{{Text: "float32 " + lang.L("precision"), Value: "float32"}, {Text: "float16 " + lang.L("precision"), Value: "float16"}, {Text: "8bit " + lang.L("precision"), Value: "8bit"}, {Text: "4bit " + lang.L("precision"), Value: "4bit"}}, true
+		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}, {Text: "float16 " + lang.L("Precision"), Value: "float16"}, {Text: "8bit " + lang.L("Precision"), Value: "8bit"}, {Text: "4bit " + lang.L("Precision"), Value: "4bit"}}, true
 	case "seamless_m4t":
-		return []TVO{{Text: "float32 " + lang.L("precision"), Value: "float32"}, {Text: "float16 " + lang.L("precision"), Value: "float16"}, {Text: "int8_float16 " + lang.L("precision"), Value: "int8_float16"}, {Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"}, {Text: "int8_bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "int8_bfloat16"}}, true
+		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}, {Text: "float16 " + lang.L("Precision"), Value: "float16"}, {Text: "int8_float16 " + lang.L("Precision"), Value: "int8_float16"}, {Text: "bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "bfloat16"}, {Text: "int8_bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "int8_bfloat16"}}, true
 	case "nemo_canary":
-		return []TVO{{Text: "float32 " + lang.L("precision"), Value: "float32"}}, false
+		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}}, false
 	case "phi4":
-		return []TVO{{Text: "float32 " + lang.L("precision"), Value: "float32"}, {Text: "float16 " + lang.L("precision"), Value: "float16"}, {Text: "bfloat16 " + lang.L("precision"), Value: "bfloat16"}}, true
+		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}, {Text: "float16 " + lang.L("Precision"), Value: "float16"}, {Text: "bfloat16 " + lang.L("Precision"), Value: "bfloat16"}}, true
 	case "speech_t5":
 		return nil, false
 	default:
@@ -144,15 +144,15 @@ func TXTSizeOptions(modelType string) (options []TVO, defaultIndex int, enableSi
 func TXTPrecisionOptions(modelType string) (options []TVO, enablePrecision bool) {
 	switch modelType {
 	case "NLLB200":
-		return []TVO{{Text: "float32 " + lang.L("precision"), Value: "float32"}, {Text: "float16 " + lang.L("precision"), Value: "float16"}}, true
+		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}, {Text: "float16 " + lang.L("Precision"), Value: "float16"}}, true
 	case "NLLB200_CT2", "M2M100":
-		return []TVO{{Text: "float32 " + lang.L("precision"), Value: "float32"}, {Text: "float16 " + lang.L("precision"), Value: "float16"}, {Text: "int16 " + lang.L("precision"), Value: "int16"}, {Text: "int8_float16 " + lang.L("precision"), Value: "int8_float16"}, {Text: "int8 " + lang.L("precision"), Value: "int8"}, {Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"}, {Text: "int8_bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "int8_bfloat16"}}, true
+		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}, {Text: "float16 " + lang.L("Precision"), Value: "float16"}, {Text: "int16 " + lang.L("Precision"), Value: "int16"}, {Text: "int8_float16 " + lang.L("Precision"), Value: "int8_float16"}, {Text: "int8 " + lang.L("Precision"), Value: "int8"}, {Text: "bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "bfloat16"}, {Text: "int8_bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "int8_bfloat16"}}, true
 	case "seamless_m4t":
-		return []TVO{{Text: "float32 " + lang.L("precision"), Value: "float32"}, {Text: "float16 " + lang.L("precision"), Value: "float16"}, {Text: "int8_float16 " + lang.L("precision"), Value: "int8_float16"}, {Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"}, {Text: "int8_bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "int8_bfloat16"}}, true
+		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}, {Text: "float16 " + lang.L("Precision"), Value: "float16"}, {Text: "int8_float16 " + lang.L("Precision"), Value: "int8_float16"}, {Text: "bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "bfloat16"}, {Text: "int8_bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "int8_bfloat16"}}, true
 	case "phi4":
-		return []TVO{{Text: "float32 " + lang.L("precision"), Value: "float32"}, {Text: "float16 " + lang.L("precision"), Value: "float16"}, {Text: "bfloat16 " + lang.L("precision") + " (Compute >=8.0)", Value: "bfloat16"}}, true
+		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}, {Text: "float16 " + lang.L("Precision"), Value: "float16"}, {Text: "bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "bfloat16"}}, true
 	case "voxtral":
-		return []TVO{{Text: "float32 " + lang.L("precision"), Value: "float32"}, {Text: "float16 " + lang.L("precision"), Value: "float16"}, {Text: "8bit " + lang.L("precision"), Value: "8bit"}, {Text: "4bit " + lang.L("precision"), Value: "4bit"}}, true
+		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}, {Text: "float16 " + lang.L("Precision"), Value: "float16"}, {Text: "8bit " + lang.L("Precision"), Value: "8bit"}, {Text: "4bit " + lang.L("Precision"), Value: "4bit"}}, true
 	default:
 		return nil, false
 	}
@@ -164,11 +164,11 @@ func OCRPrecisionOptions(modelType string) (options []TVO, enablePrecision bool)
 	switch modelType {
 	case "easyocr":
 		// EasyOCR is CPU-only in our app and does not expose precision tuning
-		return []TVO{{Text: "float32 " + lang.L("precision"), Value: "float32"}}, false
+		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}}, false
 	case "got_ocr_20":
-		return []TVO{{Text: "float32 " + lang.L("precision"), Value: "float32"}, {Text: "float16 " + lang.L("precision"), Value: "float16"}, {Text: "bfloat16 " + lang.L("precision"), Value: "bfloat16"}}, true
+		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}, {Text: "float16 " + lang.L("Precision"), Value: "float16"}, {Text: "bfloat16 " + lang.L("Precision"), Value: "bfloat16"}}, true
 	case "phi4":
-		return []TVO{{Text: "float32 " + lang.L("precision"), Value: "float32"}, {Text: "float16 " + lang.L("precision"), Value: "float16"}, {Text: "bfloat16 " + lang.L("precision"), Value: "bfloat16"}}, true
+		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}, {Text: "float16 " + lang.L("Precision"), Value: "float16"}, {Text: "bfloat16 " + lang.L("Precision"), Value: "bfloat16"}}, true
 	default:
 		return nil, false
 	}

@@ -99,7 +99,7 @@ func (b *ProfileBuilder) BuildAll(engine *FormEngine, inputOptions, outputOption
 
 	// STT
 	sttDevice := b.newSelect(engine, "ai_device", DefaultDeviceOptions())
-	sttPrecision := b.newSelect(engine, "Precision", GenericWhisperPrecisionOptions())
+	sttPrecision := b.newSelect(engine, "precision", GenericWhisperPrecisionOptions())
 	sttType := b.newSelect(engine, "stt_type", STTTypeOptions())
 	sttOpts, _, _ := STTModelOptions("faster_whisper")
 	sttModel := b.newSelect(engine, "model", sttOpts)
