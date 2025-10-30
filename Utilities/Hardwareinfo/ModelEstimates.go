@@ -93,6 +93,7 @@ var Models = []AIModel{
 	{"ttsType", "f5_e2", "", 1200.0},
 	{"ttsType", "zonos", "", 3030.0},
 	{"ttsType", "kokoro", "", 312.0},
+	{"ttsType", "chatterbox", "", 3470.0},
 	// OCR types
 	{"ocrType", "easyocr", "", 520.0},
 	{"ocrType", "got_ocr_20", "", 1559.0},
