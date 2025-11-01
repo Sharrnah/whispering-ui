@@ -20,9 +20,17 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 		"seed":               "",
 		"temperature":        0.8,
 		"exaggeration":       0.5,
-		"cfg_weight":         0.5,
+		"cfg_weight":         0.2,
 		"max_new_tokens":     512,
-		"repetition_penalty": 1.9,
+		"repetition_penalty": 2.0,
+
+		"use_vad":        false,
+		"vad_confidence": 0.20,
+
+		"replace_abbreviations":         true,
+		"pause_between_segments_ms":     80,
+		"pause_between_voice_change_ms": 400,
+		"noise_reduction_per_segment":   false,
 	}
 
 	// Helper: convert various numeric types (int/float/string) to float64
@@ -159,17 +167,58 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 	}
 	repetitionPenaltySliderState := widget.NewLabel(fmt.Sprintf("%.1f", repetitionPenaltySlider.Value))
 
+	// Audio settings
+	replaceAbbreviationsCheckbox := widget.NewCheck(lang.L("Enable"), nil)
+	replaceAbbreviationsCheckbox.Checked = GetSpecialSettingFallback("tts_chatterbox", "replace_abbreviations", true).(bool)
+
+	segmentPauseSlider := widget.NewSlider(0, 1000)
+	segmentPauseSlider.Step = 1
+	{
+		val := asFloat64(GetSpecialSettingFallback("tts_chatterbox", "pause_between_segments_ms", defaultValues["pause_between_segments_ms"]))
+		segmentPauseSlider.SetValue(clamp(val, segmentPauseSlider.Min, segmentPauseSlider.Max))
+	}
+	segmentPauseSliderState := widget.NewLabel(fmt.Sprintf("%.0f", segmentPauseSlider.Value))
+
+	pauseBetweenVoiceChangeSlider := widget.NewSlider(0, 1000)
+	pauseBetweenVoiceChangeSlider.Step = 1
+	{
+		val := asFloat64(GetSpecialSettingFallback("tts_chatterbox", "pause_between_voice_change_ms", defaultValues["pause_between_voice_change_ms"]))
+		pauseBetweenVoiceChangeSlider.SetValue(clamp(val, pauseBetweenVoiceChangeSlider.Min, pauseBetweenVoiceChangeSlider.Max))
+	}
+	pauseBetweenVoiceChangeSliderState := widget.NewLabel(fmt.Sprintf("%.0f", pauseBetweenVoiceChangeSlider.Value))
+
+	noiseReductionPerSegmentCheckbox := widget.NewCheck(lang.L("Enable"), nil)
+	noiseReductionPerSegmentCheckbox.Checked = GetSpecialSettingFallback("tts_chatterbox", "noise_reduction_per_segment", false).(bool)
+
+	useVADCheckbox := widget.NewCheck(lang.L("Enable"), nil)
+	useVADCheckbox.Checked = GetSpecialSettingFallback("tts_chatterbox", "use_vad", false).(bool)
+
+	vadConfidenceSlider := widget.NewSlider(0, 1)
+	vadConfidenceSlider.Step = 0.01
+	{
+		val := asFloat64(GetSpecialSettingFallback("tts_chatterbox", "vad_confidence", defaultValues["vad_confidence"]))
+		vadConfidenceSlider.SetValue(clamp(val, vadConfidenceSlider.Min, vadConfidenceSlider.Max))
+	}
+	vadConfidenceSliderState := widget.NewLabel(fmt.Sprintf("%.2f", vadConfidenceSlider.Value))
+
 	updateSpecialTTSSettings := func() {
 		UpdateSpecialTTSSettings("tts_chatterbox", "language", languageSelect.GetCurrentValueOptionEntry().Value)
 		UpdateSpecialTTSSettings("tts_chatterbox", "streaming_mode", streamingModeSelect.GetSelected().Value)
-
 		UpdateSpecialTTSSettings("tts_chatterbox", "precision", precisionInput.GetSelected().Value)
+
 		UpdateSpecialTTSSettings("tts_chatterbox", "seed", seedInput.Text)
 		UpdateSpecialTTSSettings("tts_chatterbox", "temperature", temperatureSlider.Value)
 		UpdateSpecialTTSSettings("tts_chatterbox", "exaggeration", exaggerationSlider.Value)
 		UpdateSpecialTTSSettings("tts_chatterbox", "cfg_weight", cfgSlider.Value)
 		UpdateSpecialTTSSettings("tts_chatterbox", "max_new_tokens", maxNewTokensSlider.Value)
 		UpdateSpecialTTSSettings("tts_chatterbox", "repetition_penalty", repetitionPenaltySlider.Value)
+
+		UpdateSpecialTTSSettings("tts_chatterbox", "replace_abbreviations", replaceAbbreviationsCheckbox.Checked)
+		UpdateSpecialTTSSettings("tts_chatterbox", "pause_between_segments_ms", segmentPauseSlider.Value)
+		UpdateSpecialTTSSettings("tts_chatterbox", "pause_between_voice_change_ms", pauseBetweenVoiceChangeSlider.Value)
+		UpdateSpecialTTSSettings("tts_chatterbox", "noise_reduction_per_segment", noiseReductionPerSegmentCheckbox.Checked)
+		UpdateSpecialTTSSettings("tts_chatterbox", "use_vad", useVADCheckbox.Checked)
+		UpdateSpecialTTSSettings("tts_chatterbox", "vad_confidence", vadConfidenceSlider.Value)
 	}
 
 	languageSelect.OnSubmitted = func(value string) {
@@ -178,7 +227,6 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 	streamingModeSelect.OnChanged = func(value CustomWidget.TextValueOption) {
 		updateSpecialTTSSettings()
 	}
-
 	precisionInput.OnChanged = func(value CustomWidget.TextValueOption) {
 		updateSpecialTTSSettings()
 		if value.Value == "float16" {
@@ -192,6 +240,7 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 	seedInput.OnChanged = func(s string) {
 		updateSpecialTTSSettings()
 	}
+
 	temperatureSlider.OnChanged = func(f float64) {
 		temperatureSliderState.SetText(fmt.Sprintf("%.2f", f))
 		updateSpecialTTSSettings()
@@ -213,6 +262,29 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 		updateSpecialTTSSettings()
 	}
 
+	// Audio settings
+	replaceAbbreviationsCheckbox.OnChanged = func(b bool) {
+		updateSpecialTTSSettings()
+	}
+	segmentPauseSlider.OnChanged = func(f float64) {
+		segmentPauseSliderState.SetText(fmt.Sprintf("%.0f", f))
+		updateSpecialTTSSettings()
+	}
+	pauseBetweenVoiceChangeSlider.OnChanged = func(f float64) {
+		pauseBetweenVoiceChangeSliderState.SetText(fmt.Sprintf("%.0f", f))
+		updateSpecialTTSSettings()
+	}
+	noiseReductionPerSegmentCheckbox.OnChanged = func(b bool) {
+		updateSpecialTTSSettings()
+	}
+	useVADCheckbox.OnChanged = func(b bool) {
+		updateSpecialTTSSettings()
+	}
+	vadConfidenceSlider.OnChanged = func(f float64) {
+		vadConfidenceSliderState.SetText(fmt.Sprintf("%.2f", f))
+		updateSpecialTTSSettings()
+	}
+
 	resetBtn := widget.NewButton(lang.L("Reset"), func() {
 		languageSelect.SetSelected(defaultValues["language"].(string))
 		streamingModeSelect.SetSelected(defaultValues["streaming_mode"].(string))
@@ -223,8 +295,64 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 		cfgSlider.SetValue(clamp(asFloat64(defaultValues["cfg_weight"]), cfgSlider.Min, cfgSlider.Max))
 		maxNewTokensSlider.SetValue(clamp(asFloat64(defaultValues["max_new_tokens"]), maxNewTokensSlider.Min, maxNewTokensSlider.Max))
 		repetitionPenaltySlider.SetValue(clamp(asFloat64(defaultValues["repetition_penalty"]), repetitionPenaltySlider.Min, repetitionPenaltySlider.Max))
+
+		replaceAbbreviationsCheckbox.SetChecked(defaultValues["replace_abbreviations"].(bool))
+		segmentPauseSlider.SetValue(clamp(asFloat64(defaultValues["pause_between_segments_ms"]), segmentPauseSlider.Min, segmentPauseSlider.Max))
+		pauseBetweenVoiceChangeSlider.SetValue(clamp(asFloat64(defaultValues["pause_between_voice_change_ms"]), pauseBetweenVoiceChangeSlider.Min, pauseBetweenVoiceChangeSlider.Max))
+		noiseReductionPerSegmentCheckbox.SetChecked(defaultValues["noise_reduction_per_segment"].(bool))
+		useVADCheckbox.SetChecked(defaultValues["use_vad"].(bool))
+		vadConfidenceSlider.SetValue(clamp(asFloat64(defaultValues["vad_confidence"]), vadConfidenceSlider.Min, vadConfidenceSlider.Max))
 		//updateSpecialTTSSettings()
 	})
+
+	settingsTabs := container.NewAppTabs(
+		container.NewTabItem(lang.L("Advanced"),
+			container.NewVBox(
+				container.NewGridWithColumns(2,
+					container.New(layout.NewFormLayout(),
+						widget.NewLabel(lang.L("Precision")+":"),
+						precisionInput,
+						widget.NewLabel(lang.L("Seed")+":"),
+						seedInput,
+					),
+					container.New(layout.NewFormLayout(),
+						widget.NewLabel(lang.L("Reset to defaults")+":"),
+						resetBtn,
+					),
+				),
+				container.New(layout.NewFormLayout(),
+					widget.NewLabel(lang.L("Temperature")+":"),
+					container.NewBorder(nil, nil, nil, temperatureSliderState, temperatureSlider),
+					widget.NewLabel(lang.L("Emotion exaggeration")+":"),
+					container.NewBorder(nil, nil, nil, exaggerationSliderState, exaggerationSlider),
+					widget.NewLabel(lang.L("CFG/Pace")+":"),
+					container.NewBorder(nil, nil, nil, cfgSliderState, cfgSlider),
+					widget.NewLabel(lang.L("Max new tokens")+":"),
+					container.NewBorder(nil, nil, nil, maxNewTokensSliderState, maxNewTokensSlider),
+					widget.NewLabel(lang.L("Repetition penalty")+":"),
+					container.NewBorder(nil, nil, nil, repetitionPenaltySliderState, repetitionPenaltySlider),
+				),
+			),
+		),
+		container.NewTabItem(lang.L("Audio Settings"),
+			container.NewVBox(
+				container.New(layout.NewFormLayout(),
+					widget.NewLabel(lang.L("Replace abbreviations")+":"),
+					replaceAbbreviationsCheckbox,
+					widget.NewLabel(lang.L("Pause between segments (ms)")+":"),
+					container.NewBorder(nil, nil, nil, segmentPauseSliderState, segmentPauseSlider),
+					widget.NewLabel(lang.L("Pause between voice changes (ms)")+":"),
+					container.NewBorder(nil, nil, nil, pauseBetweenVoiceChangeSliderState, pauseBetweenVoiceChangeSlider),
+					widget.NewLabel(lang.L("Noise reduction per segment")+":"),
+					noiseReductionPerSegmentCheckbox,
+					widget.NewLabel(lang.L("VAD (Voice activity detection)")+":"),
+					useVADCheckbox,
+					widget.NewLabel(lang.L("vad_confidence_threshold.Name")+":"),
+					container.NewBorder(nil, nil, nil, vadConfidenceSliderState, vadConfidenceSlider),
+				),
+			),
+		),
+	)
 
 	advancedSettings := container.New(layout.NewVBoxLayout(),
 		widget.NewLabel(" "),
@@ -236,32 +364,7 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 		),
 		widget.NewAccordion(
 			widget.NewAccordionItem(lang.L("More Options"),
-				container.NewVBox(
-					container.NewGridWithColumns(2,
-						container.New(layout.NewFormLayout(),
-							widget.NewLabel(lang.L("Precision")+":"),
-							precisionInput,
-							widget.NewLabel(lang.L("Seed")+":"),
-							seedInput,
-						),
-						container.New(layout.NewFormLayout(),
-							widget.NewLabel(lang.L("Reset to defaults")+":"),
-							resetBtn,
-						),
-					),
-					container.New(layout.NewFormLayout(),
-						widget.NewLabel(lang.L("Temperature")+":"),
-						container.NewBorder(nil, nil, nil, temperatureSliderState, temperatureSlider),
-						widget.NewLabel(lang.L("Emotion exaggeration")+":"),
-						container.NewBorder(nil, nil, nil, exaggerationSliderState, exaggerationSlider),
-						widget.NewLabel(lang.L("CFG/Pace")+":"),
-						container.NewBorder(nil, nil, nil, cfgSliderState, cfgSlider),
-						widget.NewLabel(lang.L("Max new tokens")+":"),
-						container.NewBorder(nil, nil, nil, maxNewTokensSliderState, maxNewTokensSlider),
-						widget.NewLabel(lang.L("Repetition penalty")+":"),
-						container.NewBorder(nil, nil, nil, repetitionPenaltySliderState, repetitionPenaltySlider),
-					),
-				),
+				settingsTabs,
 			),
 		),
 	)
