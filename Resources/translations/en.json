@@ -371,10 +371,12 @@
     "Temperature": "Temperature",
     "Emotion exaggeration": "Emotion exaggeration",
     "CFG/Pace": "CFG/Pace",
+    "Segment goal length": "Segment goal length",
     "Max new tokens": "Max new tokens",
     "Repetition penalty": "Repetition penalty",
     "Replace abbreviations": "Replace abbreviations",
     "Pause between segments (ms)": "Pause between segments (ms)",
     "Pause between voice changes (ms)": "Pause between voice changes (ms)",
-    "Noise reduction per segment": "Noise reduction per segment"
+    "Noise reduction per segment": "Noise reduction per segment",
+    "open_voice_dir": "(Open Voice Directory)"
 }

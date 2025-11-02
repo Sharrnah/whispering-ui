@@ -137,7 +137,7 @@ func (res TranslateSetting) Update() *TranslateSetting {
 	// only set new tts voice if select is not received tts_voice and
 	// if select is not empty and does not contain only one empty element
 	if Fields.Field.TtsVoiceCombo.Selected != res.Tts_voice && (len(Fields.Field.TtsVoiceCombo.Options) > 0 &&
-		(len(Fields.Field.TtsVoiceCombo.Options) == 1 && Fields.Field.TtsVoiceCombo.Options[0] != "")) {
+		(len(Fields.Field.TtsVoiceCombo.Options) == 1 && Fields.Field.TtsVoiceCombo.Options[0].Value != "")) {
 		Fields.Field.TtsVoiceCombo.SetSelected(res.Tts_voice)
 	}
 	// Set OcrWindowCombo

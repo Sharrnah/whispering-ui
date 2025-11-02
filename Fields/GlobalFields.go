@@ -12,6 +12,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"image/color"
 	"log"
+	"net/url"
 	"strings"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Logging"
@@ -215,7 +216,7 @@ var Field = struct {
 	SourceLanguageTxtTranslateCombo                 *CustomWidget.CompletionEntry // used in OCR tab
 	TargetLanguageTxtTranslateCombo                 *CustomWidget.CompletionEntry // used in OCR tab
 	TtsModelCombo                                   *widget.Select
-	TtsVoiceCombo                                   *widget.Select
+	TtsVoiceCombo                                   *CustomWidget.TextValueSelect
 	TextTranslateEnabled                            *widget.Check
 	SttEnabled                                      *widget.Check
 	TtsEnabledOnStt                                 *widget.Check
@@ -278,7 +279,22 @@ func InitializeGlobalFields() {
 		log.Println("Select set to", value)
 	})
 
-	Field.TtsVoiceCombo = widget.NewSelect([]string{}, func(value string) {
+	Field.TtsVoiceCombo = CustomWidget.NewTextValueSelect("voices", []CustomWidget.TextValueOption{}, func(valueOption CustomWidget.TextValueOption) {
+		value := valueOption.Value
+		// if value starts with "open_dir:", open the directory after the colon
+		if strings.HasPrefix(value, "open_dir:") {
+			dir := strings.TrimPrefix(value, "open_dir:")
+			u, err := url.Parse(dir)
+			if err != nil {
+				log.Println("Failed to parse URL:", err)
+			} else {
+				err := fyne.CurrentApp().OpenURL(u)
+				if err != nil {
+					log.Println("Failed to open URL:", err)
+				}
+			}
+			return
+		}
 
 		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "setting_change",
@@ -288,7 +304,7 @@ func InitializeGlobalFields() {
 		sendMessage.SendMessage()
 
 		log.Println("Select set to", value)
-	})
+	}, 0)
 
 	Field.OscLimitHint = canvas.NewText(fmt.Sprintf(OscLimitLabelConst, 0, 0), color.NRGBA{R: 0xb2, G: 0xb2, B: 0xb2, A: 0xff})
 
