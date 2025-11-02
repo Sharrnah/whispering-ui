@@ -14,21 +14,22 @@ import (
 func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 
 	defaultValues := map[string]interface{}{
-		"language":           "en",
-		"streaming_mode":     "segment",
-		"precision":          "float32",
-		"seed":               "",
-		"temperature":        0.8,
-		"exaggeration":       0.5,
-		"cfg_weight":         0.2,
-		"max_new_tokens":     512,
-		"repetition_penalty": 2.0,
+		"language":            "en",
+		"streaming_mode":      "segment",
+		"precision":           "float32",
+		"seed":                "",
+		"temperature":         0.8,
+		"exaggeration":        0.5,
+		"cfg_weight":          0.2,
+		"max_new_tokens":      512,
+		"repetition_penalty":  2.0,
+		"segment_goal_length": 130,
 
 		"use_vad":        false,
 		"vad_confidence": 0.20,
 
 		"replace_abbreviations":         true,
-		"pause_between_segments_ms":     80,
+		"pause_between_segments_ms":     100,
 		"pause_between_voice_change_ms": 400,
 		"noise_reduction_per_segment":   false,
 	}
@@ -168,6 +169,14 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 	repetitionPenaltySliderState := widget.NewLabel(fmt.Sprintf("%.1f", repetitionPenaltySlider.Value))
 
 	// Audio settings
+	segmentGoalLength := widget.NewSlider(50, 1000)
+	segmentGoalLength.Step = 1
+	{
+		val := asFloat64(GetSpecialSettingFallback("tts_chatterbox", "segment_goal_length", defaultValues["segment_goal_length"]))
+		segmentGoalLength.SetValue(clamp(val, segmentGoalLength.Min, segmentGoalLength.Max))
+	}
+	segmentGoalLengthState := widget.NewLabel(fmt.Sprintf("%.0f", segmentGoalLength.Value))
+
 	replaceAbbreviationsCheckbox := widget.NewCheck(lang.L("Enable"), nil)
 	replaceAbbreviationsCheckbox.Checked = GetSpecialSettingFallback("tts_chatterbox", "replace_abbreviations", true).(bool)
 
@@ -213,6 +222,7 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 		UpdateSpecialTTSSettings("tts_chatterbox", "max_new_tokens", maxNewTokensSlider.Value)
 		UpdateSpecialTTSSettings("tts_chatterbox", "repetition_penalty", repetitionPenaltySlider.Value)
 
+		UpdateSpecialTTSSettings("tts_chatterbox", "segment_goal_length", segmentGoalLength.Value)
 		UpdateSpecialTTSSettings("tts_chatterbox", "replace_abbreviations", replaceAbbreviationsCheckbox.Checked)
 		UpdateSpecialTTSSettings("tts_chatterbox", "pause_between_segments_ms", segmentPauseSlider.Value)
 		UpdateSpecialTTSSettings("tts_chatterbox", "pause_between_voice_change_ms", pauseBetweenVoiceChangeSlider.Value)
@@ -263,6 +273,10 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 	}
 
 	// Audio settings
+	segmentGoalLength.OnChanged = func(f float64) {
+		segmentGoalLengthState.SetText(fmt.Sprintf("%.0f", f))
+		updateSpecialTTSSettings()
+	}
 	replaceAbbreviationsCheckbox.OnChanged = func(b bool) {
 		updateSpecialTTSSettings()
 	}
@@ -296,6 +310,7 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 		maxNewTokensSlider.SetValue(clamp(asFloat64(defaultValues["max_new_tokens"]), maxNewTokensSlider.Min, maxNewTokensSlider.Max))
 		repetitionPenaltySlider.SetValue(clamp(asFloat64(defaultValues["repetition_penalty"]), repetitionPenaltySlider.Min, repetitionPenaltySlider.Max))
 
+		segmentGoalLength.SetValue(clamp(asFloat64(defaultValues["segment_goal_length"]), segmentGoalLength.Min, segmentGoalLength.Max))
 		replaceAbbreviationsCheckbox.SetChecked(defaultValues["replace_abbreviations"].(bool))
 		segmentPauseSlider.SetValue(clamp(asFloat64(defaultValues["pause_between_segments_ms"]), segmentPauseSlider.Min, segmentPauseSlider.Max))
 		pauseBetweenVoiceChangeSlider.SetValue(clamp(asFloat64(defaultValues["pause_between_voice_change_ms"]), pauseBetweenVoiceChangeSlider.Min, pauseBetweenVoiceChangeSlider.Max))
@@ -337,6 +352,8 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 		container.NewTabItem(lang.L("Audio Settings"),
 			container.NewVBox(
 				container.New(layout.NewFormLayout(),
+					widget.NewLabel(lang.L("Segment goal length")+":"),
+					container.NewBorder(nil, nil, nil, segmentGoalLengthState, segmentGoalLength),
 					widget.NewLabel(lang.L("Replace abbreviations")+":"),
 					replaceAbbreviationsCheckbox,
 					widget.NewLabel(lang.L("Pause between segments (ms)")+":"),
