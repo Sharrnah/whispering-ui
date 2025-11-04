@@ -259,6 +259,8 @@
     "thread_per_transcription.Description": "If enabled, each transcription will run in a separate thread.",
     "denoise_audio.Name": "Noise Filter",
     "denoise_audio.Description": "Requires a restart when switching the Noise Filter type.\nDisabling will stop applying it even without restart.",
+    "denoise_strength.Name": "Denoise Strength",
+    "denoise_strength.Description": "Strength of the noise reduction filter. (only for Noise Reduce filter)",
     "silence_cutting_enabled.Name": "Cut silent audio parts",
     "normalize_enabled.Name": "Normalize audio",
     "beam_size.Name": "Search beams",
@@ -378,5 +380,6 @@
     "Pause between segments (ms)": "Pause between segments (ms)",
     "Pause between voice changes (ms)": "Pause between voice changes (ms)",
     "Noise reduction per segment": "Noise reduction per segment",
+    "Noise reduction strength": "Noise reduction strength",
     "open_voice_dir": "(Open Voice Directory)"
 }

@@ -32,6 +32,7 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 		"pause_between_segments_ms":     100,
 		"pause_between_voice_change_ms": 400,
 		"noise_reduction_per_segment":   false,
+		"noise_reduction_strength":      0.8,
 	}
 
 	// Helper: convert various numeric types (int/float/string) to float64
@@ -199,6 +200,14 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 	noiseReductionPerSegmentCheckbox := widget.NewCheck(lang.L("Enable"), nil)
 	noiseReductionPerSegmentCheckbox.Checked = GetSpecialSettingFallback("tts_chatterbox", "noise_reduction_per_segment", false).(bool)
 
+	noiseReductionStrengthSlider := widget.NewSlider(0, 1)
+	noiseReductionStrengthSlider.Step = 0.01
+	{
+		val := asFloat64(GetSpecialSettingFallback("tts_chatterbox", "noise_reduction_strength", defaultValues["noise_reduction_strength"]))
+		noiseReductionStrengthSlider.SetValue(clamp(val, noiseReductionStrengthSlider.Min, noiseReductionStrengthSlider.Max))
+	}
+	noiseReductionStrengthSliderState := widget.NewLabel(fmt.Sprintf("%.2f", noiseReductionStrengthSlider.Value))
+
 	useVADCheckbox := widget.NewCheck(lang.L("Enable"), nil)
 	useVADCheckbox.Checked = GetSpecialSettingFallback("tts_chatterbox", "use_vad", false).(bool)
 
@@ -227,6 +236,7 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 		UpdateSpecialTTSSettings("tts_chatterbox", "pause_between_segments_ms", segmentPauseSlider.Value)
 		UpdateSpecialTTSSettings("tts_chatterbox", "pause_between_voice_change_ms", pauseBetweenVoiceChangeSlider.Value)
 		UpdateSpecialTTSSettings("tts_chatterbox", "noise_reduction_per_segment", noiseReductionPerSegmentCheckbox.Checked)
+		UpdateSpecialTTSSettings("tts_chatterbox", "noise_reduction_strength", noiseReductionStrengthSlider.Value)
 		UpdateSpecialTTSSettings("tts_chatterbox", "use_vad", useVADCheckbox.Checked)
 		UpdateSpecialTTSSettings("tts_chatterbox", "vad_confidence", vadConfidenceSlider.Value)
 	}
@@ -291,6 +301,10 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 	noiseReductionPerSegmentCheckbox.OnChanged = func(b bool) {
 		updateSpecialTTSSettings()
 	}
+	noiseReductionStrengthSlider.OnChanged = func(f float64) {
+		noiseReductionStrengthSliderState.SetText(fmt.Sprintf("%.2f", f))
+		updateSpecialTTSSettings()
+	}
 	useVADCheckbox.OnChanged = func(b bool) {
 		updateSpecialTTSSettings()
 	}
@@ -315,6 +329,7 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 		segmentPauseSlider.SetValue(clamp(asFloat64(defaultValues["pause_between_segments_ms"]), segmentPauseSlider.Min, segmentPauseSlider.Max))
 		pauseBetweenVoiceChangeSlider.SetValue(clamp(asFloat64(defaultValues["pause_between_voice_change_ms"]), pauseBetweenVoiceChangeSlider.Min, pauseBetweenVoiceChangeSlider.Max))
 		noiseReductionPerSegmentCheckbox.SetChecked(defaultValues["noise_reduction_per_segment"].(bool))
+		noiseReductionStrengthSlider.SetValue(clamp(asFloat64(defaultValues["noise_reduction_strength"]), noiseReductionStrengthSlider.Min, noiseReductionStrengthSlider.Max))
 		useVADCheckbox.SetChecked(defaultValues["use_vad"].(bool))
 		vadConfidenceSlider.SetValue(clamp(asFloat64(defaultValues["vad_confidence"]), vadConfidenceSlider.Min, vadConfidenceSlider.Max))
 		//updateSpecialTTSSettings()
@@ -362,6 +377,8 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 					container.NewBorder(nil, nil, nil, pauseBetweenVoiceChangeSliderState, pauseBetweenVoiceChangeSlider),
 					widget.NewLabel(lang.L("Noise reduction per segment")+":"),
 					noiseReductionPerSegmentCheckbox,
+					widget.NewLabel(lang.L("Noise reduction strength")+":"),
+					container.NewBorder(nil, nil, nil, noiseReductionStrengthSliderState, noiseReductionStrengthSlider),
 					widget.NewLabel(lang.L("VAD (Voice activity detection)")+":"),
 					useVADCheckbox,
 					widget.NewLabel(lang.L("vad_confidence_threshold.Name")+":"),

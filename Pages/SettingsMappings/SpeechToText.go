@@ -92,6 +92,20 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 			},
 		},
 		{
+			SettingsName:         "Denoise Strength",
+			SettingsInternalName: "denoise_strength",
+			SettingsDescription:  "Strength of the noise reduction filter. (only for Noise Reduce filter)",
+			_widget: func() fyne.CanvasObject {
+				sliderWidget := widget.NewSlider(0, 1)
+				sliderState := widget.NewLabel(fmt.Sprintf("%.2f", sliderWidget.Min))
+				sliderWidget.Step = 0.01
+				sliderWidget.OnChanged = func(value float64) {
+					sliderState.SetText(fmt.Sprintf("%.2f", value))
+				}
+				return container.NewBorder(nil, nil, nil, sliderState, sliderWidget)
+			},
+		},
+		{
 			SettingsName:         "Cut silent audio parts",
 			SettingsInternalName: "silence_cutting_enabled",
 			SettingsDescription:  "",
