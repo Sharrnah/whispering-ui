@@ -18,7 +18,7 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 		"streaming_mode":      "segment",
 		"precision":           "float32",
 		"seed":                "",
-		"temperature":         0.8,
+		"temperature":         0.5,
 		"exaggeration":        0.5,
 		"cfg_weight":          0.2,
 		"max_new_tokens":      512,
