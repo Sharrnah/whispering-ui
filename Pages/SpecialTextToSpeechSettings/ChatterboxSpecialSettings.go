@@ -18,7 +18,7 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 		"streaming_mode":      "segment",
 		"precision":           "float32",
 		"seed":                "",
-		"temperature":         0.5,
+		"temperature":         0.2,
 		"exaggeration":        0.5,
 		"cfg_weight":          0.2,
 		"max_new_tokens":      512,
@@ -99,6 +99,7 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 		{Text: "Swahili", Value: "sw"},
 		{Text: "Turkish", Value: "tr"},
 		{Text: "Chinese", Value: "zh"},
+		{Text: "Czech", Value: "cz"},
 	})
 	languageSetting := GetSpecialSettingFallback("tts_chatterbox", "language", defaultValues["language"]).(string)
 	languageSelect.SetSelected(languageSetting)
@@ -124,13 +125,13 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 		seedInput.SetText(seed)
 	}
 
-	temperatureSlider := widget.NewSlider(0.05, 5.0)
+	temperatureSlider := widget.NewSlider(0.01, 2.0)
 	if precisionInputSetting == "float16" {
 		temperatureSlider.Min = 0.55
 	} else {
-		temperatureSlider.Min = 0.05
+		temperatureSlider.Min = 0.01
 	}
-	temperatureSlider.Step = 0.05
+	temperatureSlider.Step = 0.01
 	{
 		val := asFloat64(GetSpecialSettingFallback("tts_chatterbox", "temperature", defaultValues["temperature"]))
 		temperatureSlider.SetValue(clamp(val, temperatureSlider.Min, temperatureSlider.Max))
@@ -252,7 +253,7 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 		if value.Value == "float16" {
 			temperatureSlider.Min = 0.55
 		} else {
-			temperatureSlider.Min = 0.05
+			temperatureSlider.Min = 0.01
 		}
 		// Ensure value respects new min
 		temperatureSlider.SetValue(clamp(temperatureSlider.Value, temperatureSlider.Min, temperatureSlider.Max))
