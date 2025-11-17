@@ -61,6 +61,8 @@ var Models = []AIModel{
 	{"Whisper", "nemo_canary", "canary-1b", 4509.0},
 	{"Whisper", "nemo_canary", "canary-180m-flash", 702.0},
 	{"Whisper", "nemo_canary", "canary-1b-flash", 4000.0},
+	{"Whisper", "nemo_canary", "parakeet-tdt-0_6b-v2", 2828.0},
+	{"Whisper", "nemo_canary", "parakeet-tdt-0_6b-v3", 2928.0},
 	// MMS models
 	{"Whisper", "mms", "1b-all", 4646.0},
 	{"Whisper", "mms", "mms-1b-fl102", 4544.0},
