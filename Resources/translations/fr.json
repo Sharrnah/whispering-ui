@@ -386,5 +386,14 @@
     "Emotion exaggeration": "Exagération des émotions",
     "CFG/Pace": "CFG/Pace",
     "Max new tokens": "Nombre maximal de nouveaux jetons",
-    "Repetition penalty": "Pénalité de répétition"
+    "Repetition penalty": "Pénalité de répétition",
+    "denoise_strength.Name": "Force du débruitage",
+    "denoise_strength.Description": "Intensité du filtre de réduction du bruit. (uniquement pour le filtre de réduction du bruit)",
+    "Segment goal length": "Longueur de l'objectif du segment",
+    "Replace abbreviations": "Remplacer les abréviations",
+    "Pause between segments (ms)": "Pause entre les segments (ms)",
+    "Pause between voice changes (ms)": "Pause entre les changements de voix (ms)",
+    "Noise reduction per segment": "Réduction du bruit par segment",
+    "Noise reduction strength": "Puissance de réduction du bruit",
+    "open_voice_dir": "(Open Voice Directory)"
 }
