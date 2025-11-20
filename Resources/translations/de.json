@@ -386,5 +386,14 @@
     "Max new tokens": "Maximal neue Tokens",
     "Repetition penalty": "Wiederholungsstrafe",
     "Seed": "Seed",
-    "Temperature": "Temperatur"
+    "Temperature": "Temperatur",
+    "denoise_strength.Name": "Rauschunterdrückungsstärke",
+    "denoise_strength.Description": "Stärke des Rauschunterdrückungsfilters. (nur für Rauschreduzierungsfilter)",
+    "Segment goal length": "Segmentziel-Länge",
+    "Replace abbreviations": "Abkürzungen ersetzen",
+    "Pause between segments (ms)": "Pause zwischen Segmenten (ms)",
+    "Pause between voice changes (ms)": "Pause zwischen Stimmwechseln (ms)",
+    "Noise reduction per segment": "Rauschunterdrückung pro Segment",
+    "Noise reduction strength": "Rauschunterdrückungsstärke",
+    "open_voice_dir": "(Öffne Stimmen-Verzeichnis)"
 }
