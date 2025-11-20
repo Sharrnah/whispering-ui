@@ -375,5 +375,14 @@
     "Send typing indicator to VRChat when typing in UI text fields.": "Send skriveindikator til VRChat, når du skriver i UI's tekstfelter.",
     "Streaming Mode": "Streaming-tilstand",
     "More Options": "Flere muligheder",
-    "Precision": "Præcision"
+    "Precision": "Præcision",
+    "denoise_strength.Name": "Støjfjernelsesstyrke",
+    "denoise_strength.Description": "Styrken af støjreduceringsfilteret. (kun til Noise Reduce‑filteret)",
+    "Segment goal length": "Segmentets mållængde",
+    "Replace abbreviations": "Erstat forkortelser",
+    "Pause between segments (ms)": "Pause mellem segmenter (ms)",
+    "Pause between voice changes (ms)": "Pause mellem stemmeskift (ms)",
+    "Noise reduction per segment": "Støjreduktion per segment",
+    "Noise reduction strength": "Støjreduktionsstyrke",
+    "open_voice_dir": "(Åbn stemme filmappe)"
 }
