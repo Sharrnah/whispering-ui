@@ -375,5 +375,14 @@
     "Emotion exaggeration": "Перебільшення емоцій",
     "CFG/Pace": "CFG/Pace",
     "Max new tokens": "Максимум нових токенів",
-    "Repetition penalty": "Штраф за повторне порушення"
+    "Repetition penalty": "Штраф за повторне порушення",
+    "denoise_strength.Name": "Денуаз Сила",
+    "denoise_strength.Description": "Сила фільтра шумозаглушення. (тільки для фільтра шумозаглушення)",
+    "Segment goal length": "Довжина цілі сегмента",
+    "Replace abbreviations": "Замінити абревіатури",
+    "Pause between segments (ms)": "Пауза між сегментами (мс)",
+    "Pause between voice changes (ms)": "Пауза між змінами голосу (мс)",
+    "Noise reduction per segment": "Зниження шуму на сегмент",
+    "Noise reduction strength": "Сила шумозаглушення",
+    "open_voice_dir": "(Відкрита голосова директорія)"
 }
