@@ -386,5 +386,14 @@
     "More Options": "Další možnosti",
     "Precision": "Přesnost",
     "Seed": "Osivo",
-    "Enter manual seed": "Zadejte ruční výsev"
+    "Enter manual seed": "Zadejte ruční výsev",
+    "Replace abbreviations": "Nahradit zkratky",
+    "Pause between segments (ms)": "Pauza mezi segmenty (ms)",
+    "Pause between voice changes (ms)": "Pauza mezi změnami hlasu (ms)",
+    "Noise reduction per segment": "Redukce šumu na segment",
+    "Noise reduction strength": "Síla redukce šumu",
+    "open_voice_dir": "(Otevřít adresář hlasů)",
+    "denoise_strength.Name": "Síla odšumění",
+    "denoise_strength.Description": "Síla filtru redukce šumu. (pouze pro filtr redukce šumu)",
+    "Segment goal length": "Délka cíle segmentu"
 }
