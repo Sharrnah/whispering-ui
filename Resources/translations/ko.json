@@ -384,5 +384,6 @@
     "Pause between voice changes (ms)": "음성 전환 사이 일시정지 (ms)",
     "Noise reduction per segment": "세그먼트당 노이즈 감소",
     "Noise reduction strength": "노이즈 감소 강도",
-    "open_voice_dir": "(음성 디렉터리 열기)"
+    "open_voice_dir": "(음성 디렉터리 열기)",
+    "Reload model every N segments": "N 세그먼트마다 모델 로드"
 }
