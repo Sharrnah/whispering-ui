@@ -396,5 +396,5 @@
     "Noise reduction per segment": "Rauschunterdrückung pro Segment",
     "Noise reduction strength": "Rauschunterdrückungsstärke",
     "open_voice_dir": "(Öffne Stimmen-Verzeichnis)",
-    "Reload model every N segments": "Modell alle N Segmente neu laden"
+    "Reload model every N segments": "Alle N Segmente Modell neu laden"
 }
