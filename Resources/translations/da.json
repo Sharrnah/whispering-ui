@@ -384,5 +384,6 @@
     "Pause between voice changes (ms)": "Pause mellem stemmeskift (ms)",
     "Noise reduction per segment": "Støjreduktion per segment",
     "Noise reduction strength": "Støjreduktionsstyrke",
-    "open_voice_dir": "(Åbn stemme filmappe)"
+    "open_voice_dir": "(Åbn stemme filmappe)",
+    "Reload model every N segments": "Genindlæs modellen for hvert N segment"
 }
