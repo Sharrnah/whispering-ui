@@ -848,7 +848,13 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 				// update dialog initpath on change
 				fileLister, currentFilename = _getFilePathDialogInitPath(v, entry)
 			}
-			filter := v["accept"].(string)
+			filter := ""
+			if accept, ok := v["accept"].(string); ok && accept != "" {
+				filter = accept
+			} else {
+				// fallback if "accept" is missing or not a string
+				filter = ""
+			}
 			filterArray := strings.Split(filter, ",")
 
 			fileSelectFunc := func() {}
