@@ -395,5 +395,6 @@
     "open_voice_dir": "(Otevřít adresář hlasů)",
     "denoise_strength.Name": "Síla odšumění",
     "denoise_strength.Description": "Síla filtru redukce šumu. (pouze pro filtr redukce šumu)",
-    "Segment goal length": "Délka cíle segmentu"
+    "Segment goal length": "Délka cíle segmentu",
+    "Reload model every N segments": "Načtení modelu každých N segmentů"
 }
