@@ -384,5 +384,6 @@
     "Pause between voice changes (ms)": "Pauza między zmianami głosu (ms)",
     "Noise reduction per segment": "Redukcja szumu na segment",
     "Noise reduction strength": "Siła redukcji szumu",
-    "open_voice_dir": "(Otwórz katalog głosów)"
+    "open_voice_dir": "(Otwórz katalog głosów)",
+    "Reload model every N segments": "Przeładuj model co N segmentów"
 }
