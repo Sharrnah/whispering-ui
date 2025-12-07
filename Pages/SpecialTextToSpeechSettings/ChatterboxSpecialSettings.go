@@ -33,6 +33,7 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 		"pause_between_voice_change_ms": 400,
 		"noise_reduction_per_segment":   false,
 		"noise_reduction_strength":      0.8,
+		"reload_every":                  10,
 	}
 
 	// Helper: convert various numeric types (int/float/string) to float64
@@ -124,6 +125,14 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 	if seed := GetSpecialSettingFallback("tts_chatterbox", "seed", defaultValues["seed"]).(string); seed != "" {
 		seedInput.SetText(seed)
 	}
+
+	reloadEverySlider := widget.NewSlider(0, 20)
+	reloadEverySlider.Step = 1
+	{
+		val := asFloat64(GetSpecialSettingFallback("tts_chatterbox", "reload_every", defaultValues["reload_every"]))
+		reloadEverySlider.SetValue(clamp(val, reloadEverySlider.Min, reloadEverySlider.Max))
+	}
+	reloadEverySliderState := widget.NewLabel(fmt.Sprintf("%.0f", reloadEverySlider.Value))
 
 	temperatureSlider := widget.NewSlider(0.01, 2.0)
 	if precisionInputSetting == "float16" {
@@ -226,6 +235,7 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 		UpdateSpecialTTSSettings("tts_chatterbox", "precision", precisionInput.GetSelected().Value)
 
 		UpdateSpecialTTSSettings("tts_chatterbox", "seed", seedInput.Text)
+		UpdateSpecialTTSSettings("tts_chatterbox", "reload_every", reloadEverySlider.Value)
 		UpdateSpecialTTSSettings("tts_chatterbox", "temperature", temperatureSlider.Value)
 		UpdateSpecialTTSSettings("tts_chatterbox", "exaggeration", exaggerationSlider.Value)
 		UpdateSpecialTTSSettings("tts_chatterbox", "cfg_weight", cfgSlider.Value)
@@ -259,6 +269,10 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 		temperatureSlider.SetValue(clamp(temperatureSlider.Value, temperatureSlider.Min, temperatureSlider.Max))
 	}
 	seedInput.OnChanged = func(s string) {
+		updateSpecialTTSSettings()
+	}
+	reloadEverySlider.OnChanged = func(f float64) {
+		reloadEverySliderState.SetText(fmt.Sprintf("%.0f", f))
 		updateSpecialTTSSettings()
 	}
 
@@ -319,6 +333,7 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 		streamingModeSelect.SetSelected(defaultValues["streaming_mode"].(string))
 		precisionInput.SetSelected(defaultValues["precision"].(string))
 		seedInput.SetText(defaultValues["seed"].(string))
+		reloadEverySlider.SetValue(clamp(asFloat64(defaultValues["reload_every"]), reloadEverySlider.Min, reloadEverySlider.Max))
 		temperatureSlider.SetValue(clamp(asFloat64(defaultValues["temperature"]), temperatureSlider.Min, temperatureSlider.Max))
 		exaggerationSlider.SetValue(clamp(asFloat64(defaultValues["exaggeration"]), exaggerationSlider.Min, exaggerationSlider.Max))
 		cfgSlider.SetValue(clamp(asFloat64(defaultValues["cfg_weight"]), cfgSlider.Min, cfgSlider.Max))
@@ -349,6 +364,8 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 					container.New(layout.NewFormLayout(),
 						widget.NewLabel(lang.L("Reset to defaults")+":"),
 						resetBtn,
+						widget.NewLabel(lang.L("Reload model every N segments")+":"),
+						container.NewBorder(nil, nil, nil, reloadEverySliderState, reloadEverySlider),
 					),
 				),
 				container.New(layout.NewFormLayout(),
