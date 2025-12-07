@@ -384,5 +384,6 @@
     "Pause between voice changes (ms)": "فترة توقف بين التغييرات الصوتية (مللي ثانية)",
     "Noise reduction per segment": "تقليل الضوضاء لكل مقطع",
     "Noise reduction strength": "قوة تقليل الضوضاء",
-    "open_voice_dir": "(فتح مجلد الصوت)"
+    "open_voice_dir": "(فتح مجلد الصوت)",
+    "Reload model every N segments": "إعادة تحميل النموذج كل N من المقاطع"
 }
