@@ -384,5 +384,6 @@
     "Pause between voice changes (ms)": "Пауза между изменениями голоса (мс)",
     "Noise reduction per segment": "Шумоподавление на сегмент",
     "Noise reduction strength": "Сила шумоподавления",
-    "open_voice_dir": "(Открытый голосовой справочник)"
+    "open_voice_dir": "(Открытый голосовой справочник)",
+    "Reload model every N segments": "Перезагружайте модель каждые N сегментов"
 }
