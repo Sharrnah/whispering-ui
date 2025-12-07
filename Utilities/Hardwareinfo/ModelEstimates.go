@@ -59,6 +59,7 @@ var Models = []AIModel{
 	{"Whisper", "wav2vec_bert", "large", 2989.0},
 	// NeMo Canary models
 	{"Whisper", "nemo_canary", "canary-1b", 4509.0},
+	{"Whisper", "nemo_canary", "canary-1b-v2", 6650.0},
 	{"Whisper", "nemo_canary", "canary-180m-flash", 702.0},
 	{"Whisper", "nemo_canary", "canary-1b-flash", 4000.0},
 	{"Whisper", "nemo_canary", "parakeet-tdt-0_6b-v2", 2828.0},

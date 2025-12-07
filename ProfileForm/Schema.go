@@ -89,7 +89,7 @@ func STTModelOptions(modelType string) (options []TVO, defaultIndex int, enableS
 	case "mms":
 		return []TVO{{Text: "1b-fl102 (102 languages)", Value: "mms-1b-fl102"}, {Text: "1b-l1107 (1107 languages)", Value: "mms-1b-l1107"}, {Text: "1b-all (1162 languages)", Value: "1b-all"}}, 1, true
 	case "nemo_canary":
-		return []TVO{{Text: "Nemo Canary 1b", Value: "canary-1b"}, {Text: "Nemo Canary 180m flash", Value: "canary-180m-flash"}, {Text: "Nemo Canary 1b flash", Value: "canary-1b-flash"}, {Text: "Parakeet TDT 0.6B V2 (English)", Value: "parakeet-tdt-0_6b-v2"}, {Text: "Parakeet TDT 0.6B V3 (Multilingual)", Value: "parakeet-tdt-0_6b-v3"}}, 0, true
+		return []TVO{{Text: "Nemo Canary 1b v2", Value: "canary-1b-v2"}, {Text: "Nemo Canary 1b", Value: "canary-1b"}, {Text: "Nemo Canary 180m flash", Value: "canary-180m-flash"}, {Text: "Nemo Canary 1b flash", Value: "canary-1b-flash"}, {Text: "Parakeet TDT 0.6B V2 (English)", Value: "parakeet-tdt-0_6b-v2"}, {Text: "Parakeet TDT 0.6B V3 (Multilingual)", Value: "parakeet-tdt-0_6b-v3"}}, 0, true
 	case "phi4":
 		// Phi-4 has a fixed model size; provide option for display but disable the selector in Coordinator
 		return []TVO{{Text: "Large", Value: "large"}}, 0, false
