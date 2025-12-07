@@ -384,5 +384,6 @@
     "Pause between voice changes (ms)": "声音切换间暂停（毫秒）",
     "Noise reduction per segment": "每段噪声抑制",
     "Noise reduction strength": "噪声抑制强度",
-    "open_voice_dir": "（打开语音目录）"
+    "open_voice_dir": "（打开语音目录）",
+    "Reload model every N segments": "每 N 个区段重新加载模型"
 }
