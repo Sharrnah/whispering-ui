@@ -384,5 +384,6 @@
     "Pause between voice changes (ms)": "声が変わる間のポーズ (ms)",
     "Noise reduction per segment": "セグメントごとのノイズ削減",
     "Noise reduction strength": "ノイズ低減の強さ",
-    "open_voice_dir": "(オープン・ボイス・ディレクトリ)"
+    "open_voice_dir": "(オープン・ボイス・ディレクトリ)",
+    "Reload model every N segments": "Nセグメントごとにモデルをリロード"
 }
