@@ -395,5 +395,6 @@
     "Pause between voice changes (ms)": "Pauze tussen stemwisselingen (ms)",
     "Noise reduction per segment": "Ruisreductie per segment",
     "Noise reduction strength": "Ruisonderdrukkingssterkte",
-    "open_voice_dir": "(Open Voice Directory)"
+    "open_voice_dir": "(Open Voice Directory)",
+    "Reload model every N segments": "Model elke N segmenten opnieuw laden"
 }
