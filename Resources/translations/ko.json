@@ -325,7 +325,7 @@
     "E-Mail Address (Optional)": "이메일 주소(선택 사항)",
     "Error Report Sent": "오류 보고서 전송",
     "Your error report has been sent.": "오류 보고서가 전송되었습니다.",
-    "Send": "보내기",
+    "Send": "보내다",
     "osc_sync_mute.Name": "OSC 음소거와 STT 동기화",
     "osc_sync_mute.Description": "음성-텍스트 변환 상태를 VRChat의 음소거 상태와 동기화합니다.",
     "osc_sync_afk.Name": "OSC 동기화 STT와 AFK",
