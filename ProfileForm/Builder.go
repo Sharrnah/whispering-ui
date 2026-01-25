@@ -86,14 +86,15 @@ func (b *ProfileBuilder) BuildAll(engine *FormEngine, inputOptions, outputOption
 	vadEnable := b.newCheck(engine, "vad_enabled", lang.L("Enable"))
 	vadOnFullClip := b.newCheck(engine, "vad_on_full_clip", "+ Check on Full Clip")
 	vadOnFullClip.Hide()
+	vadSmartTurn := b.newCheck(engine, "Vad_smart_turn_enabled", lang.L("Smart Turn Detection"))
 	vadRealtime := b.newCheck(engine, "realtime", lang.L("Realtime"))
 	pushToTalk := CustomWidget.NewHotKeyEntry()
 	pushToTalk.PlaceHolder = lang.L("Keypress")
 	pushToTalkBlock := container.NewBorder(nil, nil, container.NewHBox(widget.NewLabel(lang.L("Push to Talk")), widget.NewIcon(theme.ComputerIcon())), nil, pushToTalk)
-	vadGroup := container.NewGridWithColumns(3, vadEnable, vadOnFullClip, vadRealtime, pushToTalkBlock)
+	vadGroup := container.NewGridWithColumns(4, vadEnable, vadOnFullClip, vadRealtime, vadSmartTurn, pushToTalkBlock)
 	confSlider, confLabel, confRow := b.sliderWithLabel(engine, "vad_confidence_threshold", 0, 1, 0.01)
 	_ = confLabel // label managed by sliderWithLabel
-	engine.Controls.VadEnable, engine.Controls.VadOnFullClip, engine.Controls.VadRealtime = vadEnable, vadOnFullClip, vadRealtime
+	engine.Controls.VadEnable, engine.Controls.VadOnFullClip, engine.Controls.VadRealtime, engine.Controls.vadSmartTurn = vadEnable, vadOnFullClip, vadRealtime, vadSmartTurn
 	engine.Controls.PushToTalk, engine.Controls.VadConfidence = pushToTalk, confSlider
 	engine.Register("push_to_talk_key", pushToTalk)
 

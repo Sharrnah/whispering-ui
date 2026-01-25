@@ -43,6 +43,48 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 			},
 		},
 		{
+			SettingsName:         "Turn Detection Minimum Length",
+			SettingsInternalName: "vad_smart_turn_min_length",
+			SettingsDescription:  "Minimum length in seconds of a detected speech turn to be considered valid.",
+			_widget: func() fyne.CanvasObject {
+				sliderWidget := widget.NewSlider(0, 8)
+				sliderState := widget.NewLabel(fmt.Sprintf("%.1f", sliderWidget.Min))
+				sliderWidget.Step = 0.1
+				sliderWidget.OnChanged = func(value float64) {
+					sliderState.SetText(fmt.Sprintf("%.1f", value))
+				}
+				return container.NewBorder(nil, nil, nil, sliderState, sliderWidget)
+			},
+		},
+		{
+			SettingsName:         "Turn probability threshold",
+			SettingsInternalName: "vad_smart_turn_probability_threshold",
+			SettingsDescription:  "Probability threshold for detecting speech turns. Can be between 0-1",
+			_widget: func() fyne.CanvasObject {
+				sliderWidget := widget.NewSlider(0, 1)
+				sliderState := widget.NewLabel(fmt.Sprintf("%.2f", sliderWidget.Min))
+				sliderWidget.Step = 0.01
+				sliderWidget.OnChanged = func(value float64) {
+					sliderState.SetText(fmt.Sprintf("%.2f", value))
+				}
+				return container.NewBorder(nil, nil, nil, sliderState, sliderWidget)
+			},
+		},
+		{
+			SettingsName:         "Turn pause length",
+			SettingsInternalName: "vad_smart_turn_pause_length",
+			SettingsDescription:  "Pause time in seconds to consider the end of a speech turn.",
+			_widget: func() fyne.CanvasObject {
+				sliderWidget := widget.NewSlider(0, 5)
+				sliderState := widget.NewLabel(fmt.Sprintf("%.2f", sliderWidget.Min))
+				sliderWidget.Step = 0.01
+				sliderWidget.OnChanged = func(value float64) {
+					sliderState.SetText(fmt.Sprintf("%.2f", value))
+				}
+				return container.NewBorder(nil, nil, nil, sliderState, sliderWidget)
+			},
+		},
+		{
 			SettingsName:         "Speech pause detection",
 			SettingsInternalName: "pause",
 			SettingsDescription:  "Pause time in seconds after which the speech detection will stop and A.I. processing starts.",

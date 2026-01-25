@@ -3,14 +3,6 @@ package Settings
 import (
 	"errors"
 	"fmt"
-	"fyne.io/fyne/v2"
-	"fyne.io/fyne/v2/dialog"
-	"fyne.io/fyne/v2/lang"
-	"fyne.io/fyne/v2/widget"
-	"github.com/getsentry/sentry-go"
-	"golang.org/x/text/cases"
-	"golang.org/x/text/language"
-	"gopkg.in/yaml.v3"
 	"log"
 	"os"
 	"path/filepath"
@@ -20,6 +12,15 @@ import (
 	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Utilities"
+
+	"fyne.io/fyne/v2"
+	"fyne.io/fyne/v2/dialog"
+	"fyne.io/fyne/v2/lang"
+	"fyne.io/fyne/v2/widget"
+	"github.com/getsentry/sentry-go"
+	"golang.org/x/text/cases"
+	"golang.org/x/text/language"
+	"gopkg.in/yaml.v3"
 )
 
 func GetConfProfileDir() string {
@@ -58,11 +59,15 @@ type Conf struct {
 	Energy            int     `yaml:"energy" json:"energy"`
 
 	// VAD Settings
-	Vad_enabled              bool    `yaml:"vad_enabled" json:"vad_enabled"`
-	Vad_on_full_clip         bool    `yaml:"vad_on_full_clip" json:"vad_on_full_clip"`
-	Vad_confidence_threshold float64 `yaml:"vad_confidence_threshold" json:"vad_confidence_threshold"`
-	Vad_frames_per_buffer    int     `yaml:"vad_frames_per_buffer" json:"vad_frames_per_buffer"`
-	Vad_thread_num           int     `yaml:"vad_thread_num,omitempty" json:"vad_thread_num,omitempty"`
+	Vad_enabled                          bool    `yaml:"vad_enabled" json:"vad_enabled"`
+	Vad_on_full_clip                     bool    `yaml:"vad_on_full_clip" json:"vad_on_full_clip"`
+	Vad_confidence_threshold             float64 `yaml:"vad_confidence_threshold" json:"vad_confidence_threshold"`
+	Vad_frames_per_buffer                int     `yaml:"vad_frames_per_buffer" json:"vad_frames_per_buffer"`
+	Vad_thread_num                       int     `yaml:"vad_thread_num,omitempty" json:"vad_thread_num,omitempty"`
+	Vad_smart_turn_enabled               bool    `yaml:"vad_smart_turn_enabled" json:"vad_smart_turn_enabled"`
+	Vad_smart_turn_min_length            float64 `yaml:"vad_smart_turn_min_length" json:"vad_smart_turn_min_length"`
+	Vad_smart_turn_probability_threshold float64 `yaml:"vad_smart_turn_probability_threshold" json:"vad_smart_turn_probability_threshold"`
+	Vad_smart_turn_pause_length          float64 `yaml:"vad_smart_turn_pause_length" json:"vad_smart_turn_pause_length"`
 
 	// speaker diarization
 	Speaker_diarization  bool    `yaml:"speaker_diarization" json:"speaker_diarization"`

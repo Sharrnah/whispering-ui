@@ -21,9 +21,11 @@ type Profile struct {
 	Pause             float64 `yaml:"pause"`
 	Energy            int     `yaml:"energy"`
 
-	Vad_enabled              bool    `yaml:"vad_enabled"`
-	Vad_on_full_clip         bool    `yaml:"vad_on_full_clip"`
-	Vad_confidence_threshold float64 `yaml:"vad_confidence_threshold"`
+	Vad_enabled                 bool    `yaml:"vad_enabled"`
+	Vad_on_full_clip            bool    `yaml:"vad_on_full_clip"`
+	Vad_confidence_threshold    float64 `yaml:"vad_confidence_threshold"`
+	Vad_smart_turn_pause_length float64 `yaml:"vad_smart_turn_pause_length"`
+	Vad_smart_turn_enabled      bool    `yaml:"vad_smart_turn_enabled"`
 
 	Denoise_audio                string `yaml:"denoise_audio"`
 	Denoise_audio_before_trigger bool   `yaml:"denoise_audio_before_trigger"`

@@ -29,6 +29,7 @@ type AllProfileControls struct {
 	VadEnable       *widget.Check
 	VadOnFullClip   *widget.Check
 	VadRealtime     *widget.Check
+	vadSmartTurn    *widget.Check
 	PushToTalk      *CustomWidget.HotKeyEntry
 	VadConfidence   *widget.Slider
 	Energy          *widget.Slider
