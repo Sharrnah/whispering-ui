@@ -244,6 +244,7 @@ var ExcludeConfigFields = []string{
 	"ocr_txt_src_lang",
 	"ocr_txt_trg_lang",
 	"osc_force_activity_indication",
+	"special_settings",
 }
 
 var Config Conf
