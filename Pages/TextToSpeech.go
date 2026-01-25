@@ -180,7 +180,7 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 			sendMessage.SendMessage()
 			Fields.Field.TtsVoiceCombo.SetSelected("last")
 		})
-	case "f5_e2", "zonos", "kokoro", "chatterbox":
+	case "f5_e2", "zonos", "kokoro", "chatterbox", "maya1":
 		saveRandomVoiceButton = widget.NewButtonWithIcon("", theme.ViewRefreshIcon(), func() {
 			sendMessage := SendMessageChannel.SendMessageStruct{
 				Type: "tts_voice_reload_req",
@@ -196,6 +196,9 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 		}
 		if Settings.Config.Tts_type == "chatterbox" {
 			advancedSettings = SpecialTextToSpeechSettings.BuildChatterboxSpecialSettings()
+		}
+		if Settings.Config.Tts_type == "maya1" {
+			advancedSettings = SpecialTextToSpeechSettings.BuildMaya1SpecialSettings()
 		}
 	}
 	ttsVoices := container.New(layout.NewFormLayout(), widget.NewLabel(lang.L("Voice")+":"), Fields.Field.TtsVoiceCombo)
