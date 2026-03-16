@@ -57,11 +57,15 @@ func GenericOcrPrecisionOptions() []TVO {
 
 // Base type-option providers for initial selects
 func STTTypeOptions() []TVO {
-	return []TVO{{Text: "Faster Whisper", Value: "faster_whisper"}, {Text: "Original Whisper", Value: "original_whisper"}, {Text: "Transformer Whisper", Value: "transformer_whisper"}, {Text: "Seamless M4T", Value: "seamless_m4t"}, {Text: "MMS", Value: "mms"}, {Text: "Speech T5 (English only)", Value: "speech_t5"}, {Text: "Wav2Vec Bert 2.0", Value: "wav2vec_bert"}, {Text: "NeMo Canary", Value: "nemo_canary"}, {Text: "Phi-4", Value: "phi4"}, {Text: "Voxtral", Value: "voxtral"}, {Text: lang.L("Disabled"), Value: ""}}
+	return []TVO{{Text: "Faster Whisper", Value: "faster_whisper"}, {Text: "Original Whisper", Value: "original_whisper"}, {Text: "Transformer Whisper", Value: "transformer_whisper"}, {Text: "Seamless M4T", Value: "seamless_m4t"}, {Text: "MMS", Value: "mms"}, {Text: "Speech T5 (English only)", Value: "speech_t5"}, {Text: "Wav2Vec Bert 2.0", Value: "wav2vec_bert"}, {Text: "NeMo Canary", Value: "nemo_canary"},
+		//{Text: "Phi-4", Value: "phi4"},
+		{Text: "Voxtral", Value: "voxtral"}, {Text: lang.L("Disabled"), Value: ""}}
 }
 
 func TXTTypeOptions() []TVO {
-	return []TVO{{Text: "Faster NLLB200 (200 languages)", Value: "NLLB200_CT2"}, {Text: "Original NLLB200 (200 languages)", Value: "NLLB200"}, {Text: "M2M100 (100 languages)", Value: "M2M100"}, {Text: "Seamless M4T (101 languages)", Value: "seamless_m4t"}, {Text: "Phi-4 (23 languages)", Value: "phi4"}, {Text: "Voxtral (13 languages)", Value: "voxtral"}, {Text: lang.L("Disabled"), Value: ""}}
+	return []TVO{{Text: "Faster NLLB200 (200 languages)", Value: "NLLB200_CT2"}, {Text: "Original NLLB200 (200 languages)", Value: "NLLB200"}, {Text: "M2M100 (100 languages)", Value: "M2M100"}, {Text: "Seamless M4T (101 languages)", Value: "seamless_m4t"}, {Text: "Hunyuan MT (33 languages)", Value: "hunyuan_mt"},
+		//{Text: "Phi-4 (23 languages)", Value: "phi4"},
+		{Text: "Voxtral (13 languages)", Value: "voxtral"}, {Text: lang.L("Disabled"), Value: ""}}
 }
 
 func TTSTypeOptions() []TVO {
@@ -70,7 +74,9 @@ func TTSTypeOptions() []TVO {
 }
 
 func OcrTypeOptions() []TVO {
-	return []TVO{{Text: "Easy OCR", Value: "easyocr"}, {Text: "GOT OCR 2.0", Value: "got_ocr_20"}, {Text: "Phi-4", Value: "phi4"}, {Text: lang.L("Disabled"), Value: ""}}
+	return []TVO{{Text: "Easy OCR", Value: "easyocr"}, {Text: "GOT OCR 2.0", Value: "got_ocr_20"},
+		//{Text: "Phi-4", Value: "phi4"},
+		{Text: lang.L("Disabled"), Value: ""}}
 }
 
 func STTModelOptions(modelType string) (options []TVO, defaultIndex int, enableSize bool) {
@@ -94,7 +100,7 @@ func STTModelOptions(modelType string) (options []TVO, defaultIndex int, enableS
 		// Phi-4 has a fixed model size; provide option for display but disable the selector in Coordinator
 		return []TVO{{Text: "Large", Value: "large"}}, 0, false
 	case "voxtral":
-		return []TVO{{Text: "Voxtral-Mini-3B-2507", Value: "Voxtral-Mini-3B-2507"}}, 0, true
+		return []TVO{{Text: "Voxtral-Mini-3B-2507", Value: "Voxtral-Mini-3B-2507"}, {Text: "Voxtral-Mini-4B-Realtime-2602", Value: "Voxtral-Mini-4B-Realtime-2602"}}, 0, true
 	case "speech_t5":
 		return nil, 0, false
 	default:
@@ -132,6 +138,8 @@ func TXTSizeOptions(modelType string) (options []TVO, defaultIndex int, enableSi
 		return []TVO{{Text: "Small", Value: "small"}, {Text: "Medium", Value: "medium"}, {Text: "Large", Value: "large"}}, 0, true
 	case "seamless_m4t":
 		return []TVO{{Text: "Medium", Value: "medium"}, {Text: "Large", Value: "large"}, {Text: "Large V2", Value: "large-v2"}}, 0, true
+	case "hunyuan_mt":
+		return []TVO{{Text: "Small", Value: "small"}, {Text: "Medium", Value: "medium"}, {Text: "Large", Value: "large"}}, 0, true
 	case "phi4":
 		return []TVO{{Text: "Large", Value: "large"}}, 0, true
 	case "voxtral":
@@ -149,6 +157,8 @@ func TXTPrecisionOptions(modelType string) (options []TVO, enablePrecision bool)
 		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}, {Text: "float16 " + lang.L("Precision"), Value: "float16"}, {Text: "int16 " + lang.L("Precision"), Value: "int16"}, {Text: "int8_float16 " + lang.L("Precision"), Value: "int8_float16"}, {Text: "int8 " + lang.L("Precision"), Value: "int8"}, {Text: "bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "bfloat16"}, {Text: "int8_bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "int8_bfloat16"}}, true
 	case "seamless_m4t":
 		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}, {Text: "float16 " + lang.L("Precision"), Value: "float16"}, {Text: "int8_float16 " + lang.L("Precision"), Value: "int8_float16"}, {Text: "bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "bfloat16"}, {Text: "int8_bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "int8_bfloat16"}}, true
+	case "hunyuan_mt":
+		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}, {Text: "float16 " + lang.L("Precision"), Value: "float16"}}, true
 	case "phi4":
 		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}, {Text: "float16 " + lang.L("Precision"), Value: "float16"}, {Text: "bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "bfloat16"}}, true
 	case "voxtral":
