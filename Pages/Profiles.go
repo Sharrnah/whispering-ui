@@ -778,6 +778,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		// Form engine to centralize option updates and fallbacks
 		engine = PF.NewFormEngine(controls, nil)
 		// Rendering and control creation is done centrally in BuildAndRenderFullProfile
+		updatingAudioDeviceOptions := false
 
 		audioInputProgress := playBackDevice.InputWaveWidget
 		audioOutputProgress := container.NewBorder(nil, nil, nil, widget.NewButtonWithIcon(lang.L("Test"), theme.MediaPlayIcon(), func() { playBackDevice.PlayStopTestAudio() }), playBackDevice.OutputWaveWidget)
@@ -786,6 +787,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		onAudioAPIChanged := func(opt CustomWidget.TextValueOption) {
 			// Resolve backend by display name
 			backend := AudioAPI.GetAudioBackendByName(opt.Text)
+			updatingAudioDeviceOptions = true
+			defer func() {
+				updatingAudioDeviceOptions = false
+			}()
 
 			// Try to refresh device option lists for this backend (plain values)
 			// Remember previously selected labels (text) to attempt preservation
@@ -821,8 +826,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				return false
 			}
 
-			inOpts, _, _ := GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0, "", "")
-			outOpts, _, _ := GetAudioDevices(playBackDevice.AudioAPI, []malgo.DeviceType{malgo.Playback}, len(inOpts), "", "")
+			inOpts, _, _ := GetAudioDevices(backend.Backend, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0, "", "")
+			outOpts, _, _ := GetAudioDevices(backend.Backend, []malgo.DeviceType{malgo.Playback}, len(inOpts), "", "")
 			if engine.Controls.AudioInput != nil {
 				engine.Controls.AudioInput.Options = inOpts
 				preserved := false
@@ -902,8 +907,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 		onAudioInputChanged := func(opt CustomWidget.TextValueOption) {
 			playBackDevice.InputDeviceName = opt.Text
-			// During profile loading no re-init
-			if isLoadingSettingsFile {
+			// During profile loading or API-driven option replacement no re-init
+			if isLoadingSettingsFile || updatingAudioDeviceOptions {
 				return
 			}
 			// Re-init to apply new input immediately
@@ -911,8 +916,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 		onAudioOutputChanged := func(opt CustomWidget.TextValueOption) {
 			playBackDevice.OutputDeviceName = opt.Text
-			// During profile loading no re-init
-			if isLoadingSettingsFile {
+			// During profile loading or API-driven option replacement no re-init
+			if isLoadingSettingsFile || updatingAudioDeviceOptions {
 				return
 			}
 			// Re-init to apply new output immediately (playback)
