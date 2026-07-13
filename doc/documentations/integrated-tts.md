@@ -43,6 +43,8 @@ Supported Tags are:
 ## Chatterbox-TTS
 Chatterbox-TTS is a TTS Model that supports voice cloning based on an audio sample with fast inference and Multi-Style / Multi-Speaker Generation.
 
+The model selector supports the local **Chatterbox Multilingual v3** checkpoint as `chatterbox-multilingual-v3`. Place it in `.cache\chatterbox-tts-cache\chatterbox-multilingual-v3`; Whispering Tiger validates and loads the local files without downloading or replacing them. Legacy multilingual and language-specific Chatterbox checkpoints remain available.
+
 The custom implementation can auto-detect the language from the text. _(its recommended to set the language for better results)_
 <details>
   <summary>23 Supported Languages (Single model)</summary>

@@ -73,6 +73,8 @@ var Models = []AIModel{
 	// Voxtral model
 	{"Whisper", "voxtral", "Voxtral-Mini-3B-2507", 18852.0},
 	{"Whisper", "voxtral", "Voxtral-Mini-4B-Realtime-2602", 8852.0},
+	// VibeVoice-ASR-HF model
+	{"Whisper", "vibevoice_asr", "", 29000.0},
 	// NLLB200CT2 models
 	{"TxtTranslator", "NLLB200_CT2", "small", 3087.0},
 	{"TxtTranslator", "NLLB200_CT2", "medium", 6069.0},

@@ -100,7 +100,9 @@ func processingStopTimer() {
 				processingTimer.Stop()
 			}
 			processingTimer = time.AfterFunc(10*time.Second, func() {
-				Fields.Field.ProcessingStatus.Stop()
+				fyne.Do(func() {
+					Fields.Field.ProcessingStatus.Stop()
+				})
 			})
 			processingStopTimerMutex.Unlock()
 		}
@@ -154,9 +156,11 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			log.Println(err)
 			return
 		}
-		if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
-			errorMessage.ShowError(fyne.CurrentApp().Driver().AllWindows()[0])
-		}
+		fyne.Do(func() {
+			if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
+				errorMessage.ShowError(fyne.CurrentApp().Driver().AllWindows()[0])
+			}
+		})
 	case "info":
 		errorMessage := Messages.ExceptionMessage{}
 		err = json.Unmarshal(c.Raw, &errorMessage)
@@ -164,9 +168,11 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			log.Println(err)
 			return
 		}
-		if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
-			errorMessage.ShowInfo(fyne.CurrentApp().Driver().AllWindows()[0])
-		}
+		fyne.Do(func() {
+			if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
+				errorMessage.ShowInfo(fyne.CurrentApp().Driver().AllWindows()[0])
+			}
+		})
 	case "installed_languages":
 		srcLang := Settings.Config.Src_lang
 		trgLang := Settings.Config.Trg_lang
@@ -177,8 +183,6 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			log.Println(err)
 			return
 		}
-		Messages.InstalledLanguages.Update()
-
 		if srcLang == "" {
 			srcLang = "auto"
 		}
@@ -187,6 +191,8 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		}
 
 		fyne.Do(func() {
+			Messages.InstalledLanguages.Update()
+
 			// set txt source + target lang combo boxes
 			Fields.Field.SourceLanguageCombo.Text = Messages.InstalledLanguages.GetNameByCode(srcLang)
 			Fields.Field.SourceLanguageCombo.ResetOptionsFilter()

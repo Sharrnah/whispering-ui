@@ -59,7 +59,8 @@ func GenericOcrPrecisionOptions() []TVO {
 func STTTypeOptions() []TVO {
 	return []TVO{{Text: "Faster Whisper", Value: "faster_whisper"}, {Text: "Original Whisper", Value: "original_whisper"}, {Text: "Transformer Whisper", Value: "transformer_whisper"}, {Text: "Seamless M4T", Value: "seamless_m4t"}, {Text: "MMS", Value: "mms"}, {Text: "Speech T5 (English only)", Value: "speech_t5"}, {Text: "Wav2Vec Bert 2.0", Value: "wav2vec_bert"}, {Text: "NeMo Canary", Value: "nemo_canary"},
 		//{Text: "Phi-4", Value: "phi4"},
-		{Text: "Voxtral", Value: "voxtral"}, {Text: lang.L("Disabled"), Value: ""}}
+		{Text: "VibeVoice-ASR", Value: "vibevoice_asr"},
+		{Text: "Voxtral", Value: "voxtral"}, {Text: "Higgs Audio", Value: "higgs_audio"}, {Text: lang.L("Disabled"), Value: ""}}
 }
 
 func TXTTypeOptions() []TVO {
@@ -103,6 +104,10 @@ func STTModelOptions(modelType string) (options []TVO, defaultIndex int, enableS
 		return []TVO{{Text: "Voxtral-Mini-3B-2507", Value: "Voxtral-Mini-3B-2507"}, {Text: "Voxtral-Mini-4B-Realtime-2602", Value: "Voxtral-Mini-4B-Realtime-2602"}}, 0, true
 	case "speech_t5":
 		return nil, 0, false
+	case "vibevoice_asr":
+		return nil, 0, false
+	case "higgs_audio":
+		return []TVO{{Text: "Higgs Audio v3", Value: "higgs-audio-v3-stt"}}, 0, true
 	default:
 		return nil, 0, false
 	}
@@ -124,6 +129,9 @@ func STTPrecisionOptions(modelType string) (options []TVO, enablePrecision bool)
 		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}, {Text: "float16 " + lang.L("Precision"), Value: "float16"}, {Text: "bfloat16 " + lang.L("Precision"), Value: "bfloat16"}}, true
 	case "speech_t5":
 		return nil, false
+	case "vibevoice_asr":
+		// 8bit only resulted in (unintelligible speech) output
+		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}, {Text: "float16 " + lang.L("Precision"), Value: "float16"}, {Text: "4bit " + lang.L("Precision"), Value: "4bit"}}, true
 	default:
 		return nil, false
 	}

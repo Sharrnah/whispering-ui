@@ -407,7 +407,7 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 	)
 
 	advancedSettings := container.New(layout.NewVBoxLayout(),
-		widget.NewLabel(" "),
+		widget.NewLabel(lang.L("Chatterbox multilingual v3 and legacy models share these settings.")),
 		container.New(layout.NewFormLayout(),
 			widget.NewLabel(lang.L("Language")+":"),
 			languageSelect,
