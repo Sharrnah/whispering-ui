@@ -43,9 +43,10 @@ Supported Tags are:
 ## Chatterbox-TTS
 Chatterbox-TTS is a TTS Model that supports voice cloning based on an audio sample with fast inference and Multi-Style / Multi-Speaker Generation.
 
-The model selector supports the local **Chatterbox Multilingual v3** checkpoint as `chatterbox-multilingual-v3`. Place it in `.cache\chatterbox-tts-cache\chatterbox-multilingual-v3`; Whispering Tiger validates and loads the local files without downloading or replacing them. Legacy multilingual and language-specific Chatterbox checkpoints remain available.
+The model selector supports **Chatterbox Multilingual v3** as `chatterbox-multilingual-v3`. It is stored in `.cache\chatterbox-tts-cache\chatterbox-multilingual-v3` and uses the standard Whispering Tiger model downloader and checksum validation. Legacy multilingual and language-specific Chatterbox checkpoints remain available.
 
 The custom implementation can auto-detect the language from the text. _(its recommended to set the language for better results)_
+
 <details>
   <summary>23 Supported Languages (Single model)</summary>
   <ul>
@@ -101,6 +102,12 @@ This is the text, spoken by the Justin speaker.
 [Announcer_Ahri]
 And this text will be spoken by the Announcer_Ahri voice.
 ```
+
+## ZONOS2
+
+ZONOS2 BF16 and mixed FP8 are available as models under the separate `zonos2` TTS type. Their local files are loaded from `.cache\zonos-tts-cache\zonos2`; Whispering Tiger does not download or replace model weights. ZONOS2 accepts multilingual UTF-8 text directly and supports optional voice cloning from the existing Zonos voices folder.
+
+Advanced settings expose the attention backend (`auto`, `flash_attention`, or `sdpa`), official sampling controls, speaking-rate and quality conditioning, fade-out, and the released happy/sad/angry/surprised plus valence/arousal emotion directions. Auto uses FlashAttention when it is already installed and compatible, otherwise Torch SDPA. Emotion requires a selected reference voice. Accurate mode favors voice identity; disabling it allows a more expressive result. Emotion CFG values above 1 amplify the effect but use approximately twice the inference compute.
 
 ## F5-TTS / E2-TTS
 F5-TTS is a TTS Model that supports voice cloning based on an audio sample with fast inference and Multi-Style / Multi-Speaker Generation.

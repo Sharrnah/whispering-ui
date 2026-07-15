@@ -106,8 +106,8 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 	languageSelect.SetSelected(languageSetting)
 
 	streamingModeSelect := CustomWidget.NewTextValueSelect("streaming_mode", []CustomWidget.TextValueOption{
-		{Text: "Segments", Value: "segment"},
-		{Text: "Tokens (Extreme)", Value: "token"},
+		{Text: "Segments (Default)", Value: "segment"},
+		{Text: "Tokens (Low latency)", Value: "token"},
 	}, nil, 0)
 	streamingModeSetting := GetSpecialSettingFallback("tts_chatterbox", "streaming_mode", defaultValues["streaming_mode"]).(string)
 	streamingModeSelect.SetSelected(streamingModeSetting)
@@ -408,6 +408,7 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 
 	advancedSettings := container.New(layout.NewVBoxLayout(),
 		widget.NewLabel(lang.L("Chatterbox multilingual v3 and legacy models share these settings.")),
+		widget.NewLabel(lang.L("Segment streaming is the default; token streaming starts playback sooner.")),
 		container.New(layout.NewFormLayout(),
 			widget.NewLabel(lang.L("Language")+":"),
 			languageSelect,
