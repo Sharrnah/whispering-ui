@@ -2,12 +2,10 @@ package Pages
 
 import (
 	"bytes"
-	"encoding/binary"
 	"errors"
 	"fmt"
 	"image/color"
 	"io"
-	"math"
 	"net/url"
 	"os"
 	"path/filepath"
@@ -177,17 +175,6 @@ func (c *CurrentPlaybackDevice) IsPlayingTestAudio() bool {
 	return c.playTestAudio
 }
 
-// From arduino map() lol
-func int32Map(x int32, in_min int32, in_max int32, out_min int32, out_max int32) int32 {
-	var _x = int64(x)
-	var _in_min = int64(in_min)
-	var _in_max = int64(in_max)
-	var _out_min = int64(out_min)
-	var _out_max = int64(out_max)
-	var r = int64((_x-_in_min)*(_out_max-_out_min)/(_in_max-_in_min) + _out_min)
-	return int32(r)
-}
-
 func (c *CurrentPlaybackDevice) InitTestAudio() (*bytes.Reader, *wav.Reader) {
 	byteReader := bytes.NewReader(Resources.ResourceTestWav.Content())
 	testAudioReader := wav.NewReader(byteReader)
@@ -315,21 +302,19 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 	deviceConfig.SampleRate = c.testAudioSampleRate
 	deviceConfig.Alsa.NoMMap = 1
 
-	sizeInBytesCapture := uint32(malgo.SampleSizeInBytes(deviceConfig.Capture.Format))
-	sizeInBytesPlayback := uint32(malgo.SampleSizeInBytes(deviceConfig.Playback.Format))
-
-	c.InputWaveWidget.Max = 0.1
 	fyne.Do(func() {
+		c.InputWaveWidget.Max = audioMeterMax
+		c.InputWaveWidget.SetValue(0)
+		c.OutputWaveWidget.Max = audioMeterMax
+		c.OutputWaveWidget.SetValue(0)
 		c.InputWaveWidget.Refresh()
+		c.OutputWaveWidget.Refresh()
 	})
 
 	// Add mutex for test audio synchronization
 	var testAudioMutex sync.Mutex
 
 	onRecvFrames := func(pOutputSample, pInputSamples []byte, framecount uint32) {
-		sampleCountCapture := framecount * deviceConfig.Capture.Channels * sizeInBytesCapture
-		sampleCountPlayback := framecount * deviceConfig.Playback.Channels * sizeInBytesPlayback
-
 		// Synchronize test audio playback to prevent overlapping
 		testAudioMutex.Lock()
 		if testAudioReader == nil {
@@ -361,45 +346,18 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 		}
 		testAudioMutex.Unlock()
 
-		// single samples inside a frame
-		if pInputSamples != nil {
-			sampleVolume := 0.0
-			singleSampleSize := deviceConfig.Capture.Channels * sizeInBytesCapture
-			for i := uint32(0); i < sampleCountCapture; i += singleSampleSize {
-				sample := binary.LittleEndian.Uint32(pInputSamples[i : i+singleSampleSize])
-				sampleHeight := int32Map(int32(sample), 0, math.MaxInt32, 0, 100)
-
-				sampleVolume += math.Max(0, float64(sampleHeight))
-			}
-
-			currentVolume := sampleVolume / float64(framecount)
-			if currentVolume >= 0 {
-				fyne.Do(func() {
-					if c.InputWaveWidget.Max < currentVolume {
-						c.InputWaveWidget.Max = currentVolume * 2
-						c.InputWaveWidget.Refresh()
-					}
-					c.InputWaveWidget.SetValue(currentVolume)
-				})
-			}
+		if len(pInputSamples) > 0 {
+			currentVolume := s32AudioMeterLevel(pInputSamples)
+			fyne.Do(func() {
+				c.InputWaveWidget.SetValue(currentVolume)
+			})
 		}
 
-		if pOutputSample != nil {
-			sampleVolume := 0.0
-			singleSampleSize := deviceConfig.Playback.Channels * sizeInBytesPlayback
-			for i := uint32(0); i < sampleCountPlayback; i += singleSampleSize {
-				sample := binary.LittleEndian.Uint32(pOutputSample[i : i+singleSampleSize])
-				sampleHeight := int32Map(int32(sample), 0, math.MaxInt32, 0, 100)
-
-				sampleVolume += math.Max(0, float64(sampleHeight))
-			}
-
-			currentVolume := sampleVolume / float64(framecount)
-			if currentVolume >= 0 {
-				fyne.Do(func() {
-					c.OutputWaveWidget.SetValue(currentVolume)
-				})
-			}
+		if len(pOutputSample) > 0 {
+			currentVolume := f32AudioMeterLevel(pOutputSample)
+			fyne.Do(func() {
+				c.OutputWaveWidget.SetValue(currentVolume)
+			})
 		}
 	}
 
