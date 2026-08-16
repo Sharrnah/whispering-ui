@@ -172,6 +172,7 @@ type Conf struct {
 	Osc_scroll_size                    int     `yaml:"osc_scroll_size" json:"osc_scroll_size"`
 	Osc_max_scroll_size                int     `yaml:"osc_max_scroll_size" json:"osc_max_scroll_size"`
 	Osc_send_type                      string  `yaml:"osc_send_type" json:"osc_send_type"`
+	Osc_chat_prioritize_latest         bool    `yaml:"osc_chat_prioritize_latest" json:"osc_chat_prioritize_latest"`
 	Osc_delay_until_audio_playback     bool    `yaml:"osc_delay_until_audio_playback" json:"osc_delay_until_audio_playback"`
 	Osc_delay_until_audio_playback_tag string  `yaml:"osc_delay_until_audio_playback_tag" json:"osc_delay_until_audio_playback_tag"`
 	Osc_delay_timeout                  float64 `yaml:"osc_delay_timeout" json:"osc_delay_timeout"`

@@ -271,6 +271,8 @@
     "osc_scroll_time_limit.Description": "Zeit zwischen Lauftext OSC-Nachrichten in Sekunden.\n(Wird nur verwendet, wenn der OSC-Sendetyp auf \"Scroll\" eingestellt ist)",
     "osc_send_type.Name": "OSC Textaufteilung Sendeart",
     "osc_send_type.Description": "Wie die OSC-Nachrichten gesendet werden.\nAufteilen = Sendet den Text in Stücken, wenn er zu lang ist. Die Nachrichten werden durch '...' getrennt.\nKomplett = Den gesamten Text auf einmal senden.\nKomplett oder Scrollen = Den gesamten Text senden oder scrollen, wenn er zu lang ist.\nScrollen = Den Text scrollen.",
+    "osc_chat_prioritize_latest.Name": "Neueste OSC-Chatnachricht priorisieren",
+    "osc_chat_prioritize_latest.Description": "Zeigt neue finale Chatnachrichten so schnell wie möglich an, indem wartende Nachrichten und noch nicht gesendete Teile älterer finaler Nachrichten übersprungen werden. Deaktivieren für striktes FIFO.",
     "osc_type_transfer.Name": "OSC-Übertragungsart",
     "osc_type_transfer.Description": "Typ der zu sendenden OSC-Nachricht.\nNur Übersetzung (Translation), Beide (Both) oder Quelle (Source).",
     "osc_type_transfer_split.Name": "OSC-Textaufteilung",

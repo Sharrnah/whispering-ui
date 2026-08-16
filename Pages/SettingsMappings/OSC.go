@@ -122,6 +122,14 @@ var OSCSettingsMapping = SettingsMapping{
 			},
 		},
 		{
+			SettingsName:         "Prioritize newest OSC chat message",
+			SettingsInternalName: "osc_chat_prioritize_latest",
+			SettingsDescription:  "Show new final chat messages as quickly as possible by skipping queued messages and unsent chunks from older final messages. Disable for strict FIFO delivery.",
+			_widget: func() fyne.CanvasObject {
+				return widget.NewCheck("", func(b bool) {})
+			},
+		},
+		{
 			SettingsName:         "OSC transfer type",
 			SettingsInternalName: "osc_type_transfer",
 			SettingsDescription:  "Type of OSC message to send.\nOnly Translation, Both or Source.",
