@@ -8,6 +8,7 @@ import (
 	"golang.org/x/text/language"
 	"path/filepath"
 	"strings"
+	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities"
@@ -25,6 +26,15 @@ type TranslateSetting struct {
 }
 
 var TranslateSettings TranslateSetting
+
+func resolveWhisperTaskSelection(task string, options []CustomWidget.TextValueOption) string {
+	for _, option := range options {
+		if option.Value == task {
+			return option.Value
+		}
+	}
+	return ""
+}
 
 func (res TranslateSetting) Update() *TranslateSetting {
 
@@ -48,12 +58,14 @@ func (res TranslateSetting) Update() *TranslateSetting {
 		}
 	}
 
-	// Set options to current settings
-	if strings.Contains(res.Whisper_task, "translate") && Fields.Field.TranscriptionTaskCombo.Selected != "translate" {
-		Fields.Field.TranscriptionTaskCombo.SetSelected("translate")
-	}
-	if strings.Contains(res.Whisper_task, "transcribe") && !strings.Contains(Fields.Field.TranscriptionTaskCombo.Selected, "transcribe") {
-		Fields.Field.TranscriptionTaskCombo.SetSelected("transcribe")
+	// Set an exact task value when the current model's page exposes it. In
+	// particular, transcribe_translate is one task and must not be reduced by
+	// separate substring matches for "translate" and "transcribe".
+	if task := resolveWhisperTaskSelection(res.Whisper_task, Fields.Field.TranscriptionTaskCombo.Options); task != "" {
+		selected := Fields.Field.TranscriptionTaskCombo.GetSelected()
+		if selected == nil || selected.Value != task {
+			Fields.Field.TranscriptionTaskCombo.SetSelected(task)
+		}
 	}
 	if Fields.Field.TranscriptionSpeakerLanguageCombo.Text != TranslateSettings.GetWhisperLanguageNameByCode(res.Current_language) {
 		Fields.Field.TranscriptionSpeakerLanguageCombo.Text = cases.Title(language.English, cases.Compact).String(TranslateSettings.GetWhisperLanguageNameByCode(res.Current_language))

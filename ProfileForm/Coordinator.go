@@ -143,6 +143,9 @@ func (c *Coordinator) EnsurePrecisionDeviceCompatibility(device, precision strin
 	}
 	switch device {
 	case "cpu":
+		if precision == "4bit" || precision == "8bit" {
+			dialog.ShowInformation(lang.L("Information"), lang.L("Most Devices of this type do not support this precision computation. Please consider switching to some other precision.", map[string]interface{}{"Device": "CPU's", "Precision": precision}), c.getParentWindow())
+		}
 		if precision == "float16" || precision == "int8_float16" {
 			dialog.ShowInformation(lang.L("Information"), lang.L("Most Devices of this type do not support this precision computation. Please consider switching to some other precision.", map[string]interface{}{"Device": "CPU's", "Precision": "float16"}), c.getParentWindow())
 		}
@@ -440,6 +443,30 @@ func firstNonEmpty(a, b string) string {
 	return b
 }
 
+func selectedValue(selectWidget *CustomWidget.TextValueSelect) string {
+	if selectWidget == nil || selectWidget.GetSelected() == nil {
+		return ""
+	}
+	return selectWidget.GetSelected().Value
+}
+
+// BuildProfileMemoryOption captures a complete estimator snapshot. Supplying
+// all selected fields avoids callback order deciding whether a model has a
+// usable estimate, especially during programmatic profile loading.
+func BuildProfileMemoryOption(
+	aiModel string,
+	modelType string,
+	sizeSelect, precisionSelect, deviceSelect *CustomWidget.TextValueSelect,
+) Hardwareinfo.ProfileAIModelOption {
+	return Hardwareinfo.ProfileAIModelOption{
+		AIModel:     aiModel,
+		AIModelType: firstNonEmpty(modelType, "-"),
+		AIModelSize: selectedValue(sizeSelect),
+		Precision:   Hardwareinfo.PrecisionMemoryFactor(selectedValue(precisionSelect)),
+		Device:      selectedValue(deviceSelect),
+	}
+}
+
 // applyTypeChangeGeneric centralizes option population, enable/disable logic, and memory estimation.
 func (c *Coordinator) applyTypeChangeGeneric(
 	modelType string,
@@ -461,7 +488,7 @@ func (c *Coordinator) applyTypeChangeGeneric(
 		if devSel != nil {
 			devSel.Disable()
 		}
-		AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: aiModel, AIModelType: "-"}
+		AIModel := BuildProfileMemoryOption(aiModel, "-", sizeSel, precSel, devSel)
 		if setFixedFloat32Precision {
 			AIModel.Precision = Hardwareinfo.Float32
 		}
@@ -522,14 +549,22 @@ func (c *Coordinator) applyTypeChangeGeneric(
 				precSel.Enable()
 			}
 		} else {
+			float32Option := &CustomWidget.TextValueOption{Value: "float32"}
+			if precSel.ContainsEntry(float32Option, CustomWidget.CompareValue) {
+				precSel.SetSelected("float32")
+			}
 			precSel.Disable()
 		}
 	} else if precSel != nil {
+		float32Option := &CustomWidget.TextValueOption{Value: "float32"}
+		if precSel.ContainsEntry(float32Option, CustomWidget.CompareValue) {
+			precSel.SetSelected("float32")
+		}
 		precSel.Disable()
 	}
 
 	// Memory estimation
-	AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: aiModel, AIModelType: firstNonEmpty(modelType, "-")}
+	AIModel := BuildProfileMemoryOption(aiModel, modelType, sizeSel, precSel, devSel)
 	if setFixedFloat32Precision {
 		AIModel.Precision = Hardwareinfo.Float32
 	}

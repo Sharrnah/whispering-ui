@@ -46,20 +46,13 @@ var Models = []AIModel{
 	{"Whisper", "qwen3_asr", "qwen3-asr-0.6b-hf", 4200.0},
 	{"Whisper", "qwen3_asr", "qwen3-asr-1.7b-hf", 10000.0},
 	// Speech T5
-	{"Whisper", "speech_t5", "tiny", 927.0},
-	{"Whisper", "speech_t5", "base", 927.0},
-	{"Whisper", "speech_t5", "small", 927.0},
-	{"Whisper", "speech_t5", "medium", 927.0},
-	{"Whisper", "speech_t5", "large", 927.0},
+	{"Whisper", "speech_t5", "", 927.0},
 	// Seamless M4T
 	{"Whisper", "seamless_m4t", "medium", 6250.0},
 	{"Whisper", "seamless_m4t", "large", 10518.0},
+	{"Whisper", "seamless_m4t", "large-v2", 10518.0},
 	// wav2vec bert2.0 models
-	{"Whisper", "wav2vec_bert", "tiny", 2989.0},
-	{"Whisper", "wav2vec_bert", "base", 2989.0},
-	{"Whisper", "wav2vec_bert", "small", 2989.0},
-	{"Whisper", "wav2vec_bert", "medium", 2989.0},
-	{"Whisper", "wav2vec_bert", "large", 2989.0},
+	{"Whisper", "wav2vec_bert", "", 2989.0},
 	// NeMo Canary models
 	{"Whisper", "nemo_canary", "canary-1b", 4509.0},
 	{"Whisper", "nemo_canary", "canary-1b-v2", 6650.0},
@@ -133,6 +126,19 @@ func EstimateMemoryUsage(float32MemoryUsage float64, targetType float64) float64
 	return (float32MemoryUsage / float64(Float32)) * float64(targetType)
 }
 
+func PrecisionMemoryFactor(precision string) float64 {
+	switch strings.ToLower(strings.TrimSpace(precision)) {
+	case "float16", "bfloat16", "int16":
+		return Float16
+	case "int8_float16", "int8", "int8_bfloat16", "8bit":
+		return Bit8
+	case "4bit":
+		return Bit4
+	default:
+		return Float32
+	}
+}
+
 type ProfileAIModelOption struct {
 	AIModel           string
 	AIModelType       string
@@ -154,55 +160,49 @@ func (p ProfileAIModelOption) CalculateMemoryConsumption(CPUBar *widget.Progress
 	}
 	calculating = true
 	defer func() { calculating = false }()
-	// Normalize incoming size to canonical form before using it
-	if p.AIModelSize != "" {
-		p.AIModelSize = normalizeModelSize(p.AIModelType, p.AIModelSize)
-	}
-	// Debug reduziert, um Log-Spam zu vermeiden
-	addToList := true
-	lastIndex := -1
-	for index, profileAIModelOption := range AllProfileAIModelOptions {
-		if profileAIModelOption.AIModel == p.AIModel {
-			// update existing entry
-			if p.Device != "" {
-				AllProfileAIModelOptions[index].Device = p.Device
-			}
-			if p.AIModelType != "" {
-				AllProfileAIModelOptions[index].AIModelType = p.AIModelType
-			}
-			if p.AIModelSize != "" {
-				AllProfileAIModelOptions[index].AIModelSize = p.AIModelSize
-			}
-			if p.Precision != 0 {
-				AllProfileAIModelOptions[index].Precision = p.Precision
-			}
-			AllProfileAIModelOptions[index].MemoryConsumption = p.MemoryConsumption
-			addToList = false
-			lastIndex = index
-			break
+	// An empty option is used to redraw the bars after asynchronous GPU
+	// discovery. It must not create a synthetic model entry.
+	if p.AIModel != "" {
+		if p.AIModelSize != "" {
+			p.AIModelSize = normalizeModelSize(p.AIModelType, p.AIModelSize)
 		}
-	}
-	if lastIndex > -1 && len(AllProfileAIModelOptions) >= lastIndex+1 {
-		// normalize size for matching known models
-		currentType := AllProfileAIModelOptions[lastIndex].AIModelType
-		currentSize := AllProfileAIModelOptions[lastIndex].AIModelSize
-		normSize := normalizeModelSize(currentType, currentSize)
-		for _, model := range Models {
-			if model.BaseName == AllProfileAIModelOptions[lastIndex].AIModel &&
-				model.ModelType == AllProfileAIModelOptions[lastIndex].AIModelType &&
-				(model.ModelSize == "" || model.ModelSize == normSize) {
-				AllProfileAIModelOptions[lastIndex].AIModelSize = model.ModelSize
 
-				finalMemoryUsage := EstimateMemoryUsage(model.Float32PrecisionMemoryUsage, AllProfileAIModelOptions[lastIndex].Precision)
-				// full model match -> aktualisiere Memory
-				AllProfileAIModelOptions[lastIndex].MemoryConsumption = finalMemoryUsage
+		optionIndex := -1
+		for index, profileAIModelOption := range AllProfileAIModelOptions {
+			if profileAIModelOption.AIModel == p.AIModel {
+				optionIndex = index
+				if p.Device != "" {
+					AllProfileAIModelOptions[index].Device = p.Device
+				}
+				if p.AIModelType != "" {
+					AllProfileAIModelOptions[index].AIModelType = p.AIModelType
+				}
+				if p.AIModelSize != "" {
+					AllProfileAIModelOptions[index].AIModelSize = p.AIModelSize
+				}
+				if p.Precision != 0 {
+					AllProfileAIModelOptions[index].Precision = p.Precision
+				}
+				break
 			}
 		}
-	}
 
-	if addToList {
-		// add new entry (normalized)
-		AllProfileAIModelOptions = append(AllProfileAIModelOptions, p)
+		if optionIndex == -1 {
+			if p.Precision == 0 {
+				p.Precision = Float32
+			}
+			AllProfileAIModelOptions = append(AllProfileAIModelOptions, p)
+			optionIndex = len(AllProfileAIModelOptions) - 1
+		}
+
+		option := &AllProfileAIModelOptions[optionIndex]
+		if option.Precision == 0 {
+			option.Precision = Float32
+		}
+		option.MemoryConsumption = 0
+		if memory, found := knownModelMemory(*option); found {
+			option.MemoryConsumption = memory
+		}
 	}
 
 	// Deduplicate the list.
@@ -261,19 +261,42 @@ func (p ProfileAIModelOption) CalculateMemoryConsumption(CPUBar *widget.Progress
 	})
 }
 
-// normalizeModelSize reduziert Variantenbezeichner auf kanonische Größen
-// z.B. tiny.en -> tiny, large-v2 -> large, medium-distilled -> medium
+// knownModelMemory matches a complete profile selection against the estimate table.
+func knownModelMemory(option ProfileAIModelOption) (float64, bool) {
+	normalizedSize := normalizeModelSize(option.AIModelType, option.AIModelSize)
+	precision := option.Precision
+	if precision == 0 {
+		precision = Float32
+	}
+	for _, model := range Models {
+		if model.BaseName != option.AIModel || !strings.EqualFold(model.ModelType, option.AIModelType) {
+			continue
+		}
+		if model.ModelSize != "" && !strings.EqualFold(normalizeModelSize(model.ModelType, model.ModelSize), normalizedSize) {
+			continue
+		}
+		return EstimateMemoryUsage(model.Float32PrecisionMemoryUsage, precision), true
+	}
+	return 0, false
+}
+
+// normalizeModelSize collapses aliases only for Whisper-family checkpoints.
+// Dots in other model identifiers are meaningful and must be preserved.
 func normalizeModelSize(modelType, size string) string {
 	if size == "" {
 		return ""
 	}
-	s := strings.ToLower(size)
+	s := strings.ToLower(strings.TrimSpace(size))
+	normalizedType := strings.ToLower(strings.TrimSpace(modelType))
+	if normalizedType != "o" && normalizedType != "original_whisper" && normalizedType != "faster_whisper" && normalizedType != "transformer_whisper" {
+		return s
+	}
 	// entferne Sprach-/Region-Suffixe wie .en, .de, .jp, .eu etc.
 	if idx := strings.Index(s, "."); idx > 0 {
 		s = s[:idx]
 	}
 	// distilled-Varianten erkennen
-	if strings.Contains(size, "distilled") {
+	if strings.Contains(s, "distilled") {
 		if strings.Contains(s, "large") {
 			return "large-distilled"
 		}

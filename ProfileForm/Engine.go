@@ -147,7 +147,58 @@ func (e *FormEngine) LoadFromSettings(conf *Settings.Conf) {
 	if e == nil || conf == nil {
 		return
 	}
+
+	// Model type controls determine the valid model-size and precision option
+	// sets. Load them first in a deterministic order, then populate their
+	// dependent controls below. Iterating the bindings map directly could load
+	// a saved Qwen custom model or 4-bit value before that option existed and
+	// silently replace it with the previous backend's default.
+	typeKeys := []string{"stt_type", "txt_translator", "tts_type", "ocr_type"}
+	loadedTypeKeys := make(map[string]bool, len(typeKeys))
+	for _, key := range typeKeys {
+		ctrl, exists := e.Bindings[key]
+		if !exists {
+			continue
+		}
+		selectControl, ok := ctrl.(*CustomWidget.TextValueSelect)
+		if !ok {
+			continue
+		}
+		value := e.getOptionByLowercase(conf, key)
+		if value == nil {
+			continue
+		}
+
+		previousProgrammatic := false
+		if e.Coord != nil {
+			previousProgrammatic = e.Coord.InProgrammaticUpdate
+			e.Coord.InProgrammaticUpdate = true
+		}
+		e.selectSetByValueOrText(selectControl, fmt.Sprint(value), "")
+		if e.Coord != nil {
+			e.Coord.InProgrammaticUpdate = previousProgrammatic
+			selectedValue := fmt.Sprint(value)
+			if selected := selectControl.GetSelected(); selected != nil {
+				selectedValue = selected.Value
+			}
+			switch key {
+			case "stt_type":
+				e.Coord.ApplySTTTypeChange(selectedValue)
+			case "txt_translator":
+				e.Coord.ApplyTXTTypeChange(selectedValue)
+			case "tts_type":
+				e.Coord.ApplyTTSTypeChange(selectedValue)
+			case "ocr_type":
+				e.Coord.ApplyOCRTypeChange(selectedValue)
+			}
+		}
+		loadedTypeKeys[key] = true
+	}
+
 	for key, ctrl := range e.Bindings {
+		if loadedTypeKeys[key] {
+			continue
+		}
 		switch c := ctrl.(type) {
 		case *widget.Entry:
 			// read as string via fmt.Sprint to handle ints as well

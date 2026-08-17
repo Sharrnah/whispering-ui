@@ -217,7 +217,8 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 			if deps.TotalGPUMemory != nil {
 				total = deps.TotalGPUMemory()
 			}
-			AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: "Whisper", Device: s.Value}
+			AIModel := BuildProfileMemoryOption("Whisper", selectedValue(stt.TypeSelect), stt.SizeSelect, stt.PrecisionSelect, stt.DeviceSelect)
+			AIModel.Device = s.Value
 			AIModel.CalculateMemoryConsumption(deps.CPUMemoryBar, deps.GPUMemoryBar, total)
 			if engine.Coord != nil {
 				prec := ""
@@ -254,7 +255,8 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 			if deps.TotalGPUMemory != nil {
 				total = deps.TotalGPUMemory()
 			}
-			AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: "Whisper", Precision: precisionType}
+			AIModel := BuildProfileMemoryOption("Whisper", selectedValue(stt.TypeSelect), stt.SizeSelect, stt.PrecisionSelect, stt.DeviceSelect)
+			AIModel.Precision = precisionType
 			AIModel.CalculateMemoryConsumption(deps.CPUMemoryBar, deps.GPUMemoryBar, total)
 			if engine.Coord != nil && stt.DeviceSelect.GetSelected() != nil {
 				engine.Coord.EnsurePrecisionDeviceCompatibility(stt.DeviceSelect.GetSelected().Value, s.Value)
@@ -268,7 +270,8 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 			if deps.TotalGPUMemory != nil {
 				total = deps.TotalGPUMemory()
 			}
-			AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: "Whisper", AIModelSize: s.Value}
+			AIModel := BuildProfileMemoryOption("Whisper", selectedValue(stt.TypeSelect), stt.SizeSelect, stt.PrecisionSelect, stt.DeviceSelect)
+			AIModel.AIModelSize = s.Value
 			AIModel.CalculateMemoryConsumption(deps.CPUMemoryBar, deps.GPUMemoryBar, total)
 			if engine.Coord != nil && !engine.Coord.InProgrammaticUpdate {
 				engine.Coord.HandleMultiModalAllSync()
@@ -299,7 +302,8 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 			if deps.TotalGPUMemory != nil {
 				total = deps.TotalGPUMemory()
 			}
-			AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: "TxtTranslator", Device: s.Value}
+			AIModel := BuildProfileMemoryOption("TxtTranslator", selectedValue(txt.TypeSelect), txt.SizeSelect, txt.PrecisionSelect, txt.DeviceSelect)
+			AIModel.Device = s.Value
 			AIModel.CalculateMemoryConsumption(deps.CPUMemoryBar, deps.GPUMemoryBar, total)
 			if engine.Coord != nil {
 				prec := ""
@@ -336,7 +340,8 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 			if deps.TotalGPUMemory != nil {
 				total = deps.TotalGPUMemory()
 			}
-			AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: "TxtTranslator", Precision: precisionType}
+			AIModel := BuildProfileMemoryOption("TxtTranslator", selectedValue(txt.TypeSelect), txt.SizeSelect, txt.PrecisionSelect, txt.DeviceSelect)
+			AIModel.Precision = precisionType
 			AIModel.CalculateMemoryConsumption(deps.CPUMemoryBar, deps.GPUMemoryBar, total)
 			if engine.Coord != nil {
 				if txt.DeviceSelect.GetSelected() != nil {
@@ -352,7 +357,8 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 			if deps.TotalGPUMemory != nil {
 				total = deps.TotalGPUMemory()
 			}
-			AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: "TxtTranslator", AIModelSize: s.Value}
+			AIModel := BuildProfileMemoryOption("TxtTranslator", selectedValue(txt.TypeSelect), txt.SizeSelect, txt.PrecisionSelect, txt.DeviceSelect)
+			AIModel.AIModelSize = s.Value
 			AIModel.CalculateMemoryConsumption(deps.CPUMemoryBar, deps.GPUMemoryBar, total)
 			if engine.Coord != nil && !engine.Coord.InProgrammaticUpdate {
 				engine.Coord.HandleMultiModalAllSync()
@@ -375,7 +381,8 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 			if deps.TotalGPUMemory != nil {
 				total = deps.TotalGPUMemory()
 			}
-			AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: "ttsType", Device: s.Value, Precision: Hardwareinfo.Float32}
+			AIModel := BuildProfileMemoryOption("ttsType", selectedValue(tts.TypeSelect), nil, nil, tts.DeviceSelect)
+			AIModel.Device = s.Value
 			AIModel.CalculateMemoryConsumption(deps.CPUMemoryBar, deps.GPUMemoryBar, total)
 		}
 	}
@@ -401,7 +408,8 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 			if deps.TotalGPUMemory != nil {
 				total = deps.TotalGPUMemory()
 			}
-			AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: "ocrType", Device: s.Value}
+			AIModel := BuildProfileMemoryOption("ocrType", selectedValue(ocr.TypeSelect), nil, ocr.PrecisionSelect, ocr.DeviceSelect)
+			AIModel.Device = s.Value
 			AIModel.CalculateMemoryConsumption(deps.CPUMemoryBar, deps.GPUMemoryBar, total)
 		}
 	}
@@ -413,12 +421,17 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 				precisionType = Hardwareinfo.Float32
 			case "float16", "bfloat16":
 				precisionType = Hardwareinfo.Float16
+			case "8bit":
+				precisionType = Hardwareinfo.Bit8
+			case "4bit":
+				precisionType = Hardwareinfo.Bit4
 			}
 			total := int64(0)
 			if deps.TotalGPUMemory != nil {
 				total = deps.TotalGPUMemory()
 			}
-			AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: "ocrType", Precision: precisionType}
+			AIModel := BuildProfileMemoryOption("ocrType", selectedValue(ocr.TypeSelect), nil, ocr.PrecisionSelect, ocr.DeviceSelect)
+			AIModel.Precision = precisionType
 			AIModel.CalculateMemoryConsumption(deps.CPUMemoryBar, deps.GPUMemoryBar, total)
 			if engine.Coord != nil && !engine.Coord.InProgrammaticUpdate {
 				engine.Coord.HandleMultiModalAllSync()

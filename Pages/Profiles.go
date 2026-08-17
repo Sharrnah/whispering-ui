@@ -1094,19 +1094,19 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			// Initial memory calculations for bars so VRAM appears correct immediately
 			AIModel := Hardwareinfo.ProfileAIModelOption{}
 			if controls.STTType != nil && controls.STTType.GetSelected() != nil {
-				AIModel = Hardwareinfo.ProfileAIModelOption{AIModel: "Whisper", AIModelType: controls.STTType.GetSelected().Value}
+				AIModel = PF.BuildProfileMemoryOption("Whisper", controls.STTType.GetSelected().Value, controls.STTModelSize, controls.STTPrecision, controls.STTDevice)
 				AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 			}
 			if controls.TxtType != nil && controls.TxtType.GetSelected() != nil {
-				AIModel = Hardwareinfo.ProfileAIModelOption{AIModel: "TxtTranslator", AIModelType: controls.TxtType.GetSelected().Value}
+				AIModel = PF.BuildProfileMemoryOption("TxtTranslator", controls.TxtType.GetSelected().Value, controls.TxtSize, controls.TxtPrecision, controls.TxtDevice)
 				AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 			}
 			if controls.TTSType != nil && controls.TTSType.GetSelected() != nil {
-				AIModel = Hardwareinfo.ProfileAIModelOption{AIModel: "ttsType", AIModelType: controls.TTSType.GetSelected().Value, Precision: Hardwareinfo.Float32}
+				AIModel = PF.BuildProfileMemoryOption("ttsType", controls.TTSType.GetSelected().Value, nil, nil, controls.TTSDevice)
 				AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 			}
 			if controls.OCRType != nil && controls.OCRType.GetSelected() != nil {
-				AIModel = Hardwareinfo.ProfileAIModelOption{AIModel: "ocrType", AIModelType: controls.OCRType.GetSelected().Value}
+				AIModel = PF.BuildProfileMemoryOption("ocrType", controls.OCRType.GetSelected().Value, nil, controls.OCRPrecision, controls.OCRDevice)
 				AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 			}
 		}

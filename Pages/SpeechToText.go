@@ -23,6 +23,15 @@ import (
 	"whispering-tiger-ui/Settings"
 )
 
+var baseTranscriptionTaskOnChanged func(CustomWidget.TextValueOption)
+
+func defaultTranscriptionTaskOptions() []CustomWidget.TextValueOption {
+	return []CustomWidget.TextValueOption{
+		{Text: lang.L("transcribe"), Value: "transcribe"},
+		{Text: lang.L("translate (to English)"), Value: "translate"},
+	}
+}
+
 func CreateSpeechToTextWindow() fyne.CanvasObject {
 	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
 		scope.SetTag("GoRoutine", "Pages\\SpeechToText->CreateSpeechToTextWindow")
@@ -31,9 +40,33 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 	var additionalWidgets fyne.CanvasObject
 
 	speechLanguageLabel := widget.NewLabel(lang.L("Speech Language") + ":")
+	// The completion entry is shared between page instances. Clear a filter
+	// installed by a previously selected model before applying this model's
+	// task-specific language rules below.
+	Fields.Field.TranscriptionSpeakerLanguageCombo.SetBaseFilterFunc(nil)
+	Fields.Field.TranscriptionSpeakerLanguageCombo.ResetOptionsFilter()
+	sharedTaskSelect := Fields.Field.TranscriptionTaskCombo
+	if baseTranscriptionTaskOnChanged == nil {
+		baseTranscriptionTaskOnChanged = sharedTaskSelect.OnChanged
+	}
+	sharedTaskSelect.OnChanged = baseTranscriptionTaskOnChanged
+	sharedTaskSelect.Options = defaultTranscriptionTaskOptions()
+	sharedTaskSelect.Show()
+	if selected := sharedTaskSelect.GetEntry(&CustomWidget.TextValueOption{Value: Settings.Config.Whisper_task}, CustomWidget.CompareValue); selected != nil {
+		sharedTaskSelect.Selected = selected.Text
+	} else if Settings.Config.Stt_type == "phi4" || Settings.Config.Stt_type == "phi4-onnx" || Settings.Config.Stt_type == "voxtral" {
+		// These backends install additional task options below. Keep the saved
+		// value intact while the shared selector briefly has generic options.
+		sharedTaskSelect.Selected = sharedTaskSelect.Options[0].Text
+	} else {
+		// A task saved for another backend (notably transcribe_translate) must
+		// not leak into a backend that cannot execute it.
+		Settings.Config.Whisper_task = "transcribe"
+		sharedTaskSelect.SetSelected("transcribe")
+	}
 
 	speechTaskWidgetLabel := widget.NewLabel(lang.L("Speech Task") + ":")
-	var speechTaskWidget fyne.CanvasObject = Fields.Field.TranscriptionTaskCombo
+	var speechTaskWidget fyne.CanvasObject = sharedTaskSelect
 	// disable task for seamless_m4t model, as it always translates to target language (Speech Language)
 	if Settings.Config.Stt_type == "seamless_m4t" || Settings.Config.Stt_type == "nemo_canary" {
 		speechTaskWidgetLabel.SetText(lang.L("Target Language") + ":")

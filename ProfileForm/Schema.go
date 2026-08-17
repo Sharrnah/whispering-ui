@@ -44,6 +44,8 @@ func GenericTextPrecisionOptions() []TVO {
 		{Text: "int8 " + lang.L("Precision"), Value: "int8"},
 		{Text: "bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "bfloat16"},
 		{Text: "int8_bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "int8_bfloat16"},
+		{Text: "8bit " + lang.L("Precision"), Value: "8bit"},
+		{Text: "4bit " + lang.L("Precision"), Value: "4bit"},
 	}
 }
 
@@ -52,6 +54,8 @@ func GenericOcrPrecisionOptions() []TVO {
 		{Text: "float32 " + lang.L("Precision"), Value: "float32"},
 		{Text: "float16 " + lang.L("Precision"), Value: "float16"},
 		{Text: "bfloat16 " + lang.L("Precision"), Value: "bfloat16"},
+		{Text: "8bit " + lang.L("Precision"), Value: "8bit"},
+		{Text: "4bit " + lang.L("Precision"), Value: "4bit"},
 	}
 }
 
