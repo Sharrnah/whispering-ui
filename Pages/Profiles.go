@@ -708,6 +708,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		// so that later model changes can set the maximum value correctly
 		fyne.Do(func() {
 			if coord != nil {
+				coord.ComputeCapability = ComputeCapability
 				coord.TotalGPUMemoryMiB = totalGPUMemory
 				if GPUMemoryBar.Max <= 0 && totalGPUMemory > 0 {
 					GPUMemoryBar.Max = float64(totalGPUMemory)

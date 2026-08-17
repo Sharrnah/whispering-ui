@@ -111,6 +111,12 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		speechTaskWidgetLabel.SetText("")
 		speechTaskWidget.Hide()
 	}
+	if Settings.Config.Stt_type == "qwen3_asr" {
+		speechTaskWidgetLabel.SetText("")
+		speechTaskWidget.(*CustomWidget.TextValueSelect).Selected = "transcribe"
+		Settings.Config.Whisper_task = "transcribe"
+		speechTaskWidget.Hide()
+	}
 	if (Settings.Config.Stt_type == "faster_whisper" || Settings.Config.Stt_type == "transformer_whisper" || Settings.Config.Stt_type == "original_whisper") &&
 		strings.HasSuffix(Settings.Config.Model, "-turbo") {
 		speechTaskWidgetLabel.SetText("")

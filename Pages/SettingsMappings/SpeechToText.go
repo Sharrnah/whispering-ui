@@ -166,7 +166,7 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 		{
 			SettingsName:         "Search beams",
 			SettingsInternalName: "beam_size",
-			SettingsDescription:  "Number of beams to search for the best result.\nCan be 1-5. (lower = faster)",
+			SettingsDescription:  "Beam-search width for compatible speech models, including Whisper and Qwen3-ASR.\n1 uses greedy decoding and the least memory; 2-5 may improve accuracy.",
 			_widget: func() fyne.CanvasObject {
 				sliderWidget := widget.NewSlider(1, 5)
 				sliderState := widget.NewLabel(fmt.Sprintf("%.0f", sliderWidget.Min))
@@ -180,7 +180,7 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 		{
 			SettingsName:         "Temperature fallback",
 			SettingsInternalName: "temperature_fallback",
-			SettingsDescription:  "If enabled, the temperature will fallback the temperature on low confidence.\n(disable for faster processing)",
+			SettingsDescription:  "Whisper only: retries low-confidence output at higher temperatures. Qwen3-ASR uses one deterministic pass, so this has no effect on Qwen.\nDisable for faster Whisper processing.",
 			_widget: func() fyne.CanvasObject {
 				return widget.NewCheck("", func(b bool) {})
 			},
@@ -188,7 +188,7 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 		{
 			SettingsName:         "Condition on previous text",
 			SettingsInternalName: "condition_on_previous_text",
-			SettingsDescription:  "Provides the previous text to the A.I. to improve the results.\n(disable for faster processing)\n(disabling can also reduce hallucinations)",
+			SettingsDescription:  "Whisper only: provides previous transcript text as context. Disabling it can improve speed and reduce loops.\nQwen3-ASR ignores this switch; use Initial prompt for Qwen context.",
 			_widget: func() fyne.CanvasObject {
 				return widget.NewCheck("", func(b bool) {})
 			},
@@ -196,9 +196,9 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 		{
 			SettingsName:         "Repetition penalty",
 			SettingsInternalName: "repetition_penalty",
-			SettingsDescription:  "penalize the score of previously generated tokens (set > 1 to penalize)",
+			SettingsDescription:  "Supported by faster-whisper, SeamlessM4T, and Qwen3-ASR. 1.0 is neutral; values above 1 penalize repeated tokens. This is not a speed optimization.",
 			_widget: func() fyne.CanvasObject {
-				sliderWidget := widget.NewSlider(0, 2)
+				sliderWidget := widget.NewSlider(1, 2)
 				sliderState := widget.NewLabel(fmt.Sprintf("%.2f", sliderWidget.Min))
 				sliderWidget.Step = 0.01
 				sliderWidget.OnChanged = func(value float64) {
@@ -240,7 +240,7 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 		{
 			SettingsName:         "Search beams for real-time mode",
 			SettingsInternalName: "realtime_whisper_beam_size",
-			SettingsDescription:  "Number of beams to search for the best result.\nCan be 1-5. (lower = faster)",
+			SettingsDescription:  "Real-time beam-search width for compatible speech models, including Qwen3-ASR.\n1 uses greedy decoding and the least memory; 2-5 may improve accuracy.",
 			_widget: func() fyne.CanvasObject {
 				sliderWidget := widget.NewSlider(1, 5)
 				sliderState := widget.NewLabel(fmt.Sprintf("%.0f", sliderWidget.Min))
@@ -254,7 +254,7 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 		{
 			SettingsName:         "Temperature fallback for real-time mode",
 			SettingsInternalName: "realtime_temperature_fallback",
-			SettingsDescription:  "If enabled, the temperature will fallback the temperature on low confidence.\n(disable for faster processing)",
+			SettingsDescription:  "Whisper only: retries low-confidence real-time output at higher temperatures. Qwen3-ASR uses one deterministic pass, so this has no effect on Qwen.\nDisable for faster Whisper processing.",
 			_widget: func() fyne.CanvasObject {
 				return widget.NewCheck("", func(b bool) {})
 			},

@@ -510,12 +510,12 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			return
 		}
 		go func(dl_ Messages.DownloadMessage) {
-			err = dl_.StartDownload()
-			if err != nil {
+			downloadErr := dl_.StartDownload()
+			if downloadErr != nil {
 				fyne.Do(func() {
 					if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
 						currentMainWindow, _ := Utilities.GetCurrentMainWindow("")
-						dialog.ShowError(err, currentMainWindow)
+						dialog.ShowError(downloadErr, currentMainWindow)
 					}
 				})
 				return

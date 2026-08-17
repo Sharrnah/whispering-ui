@@ -55,6 +55,10 @@ func removeDownload(target string) {
 }
 
 func DownloadFile(urls []string, targetDir string, checksum string, title string, extractFormat string) error {
+	if len(urls) == 0 {
+		return fmt.Errorf("no download URLs were provided")
+	}
+
 	// If the file is already being downloaded, skip and return.
 	if isDownloading(targetDir) {
 		return fmt.Errorf("File is already being downloaded: %s", targetDir)
@@ -190,9 +194,12 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 		})
 		if err := Updater.CheckFileHash(targetDir, checksum); err != nil {
 			fmt.Printf("Error: %s\n", err.Error())
+			if removeErr := os.Remove(targetDir); removeErr != nil && !os.IsNotExist(removeErr) {
+				err = fmt.Errorf("%w (could not remove invalid archive: %v)", err, removeErr)
+			}
 			fyne.Do(func() {
 				dialog.ShowError(err, window)
-				statusBarContainer.Add(widget.NewLabel("Checksum check failed. Please delete temporary file and download again. If it still fails, please contact support."))
+				statusBarContainer.Add(widget.NewLabel("Checksum check failed. Please retry. If it still fails, please contact support."))
 			})
 			return err
 		}

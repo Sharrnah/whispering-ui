@@ -129,6 +129,13 @@ func (c *Coordinator) ConfirmOption(titleKey, messageKey string, onYes func()) {
 	}, parent).Show()
 }
 
+func hasKnownUnsupportedBFloat16Capability(precision string, computeCapability float32) bool {
+	isBFloat16 := precision == "bfloat16" || precision == "int8_bfloat16"
+	// A zero capability means detection has not completed or nvidia-smi could
+	// not report it. Unknown hardware must not be presented as unsupported.
+	return isBFloat16 && computeCapability > 0 && computeCapability < 8.0
+}
+
 func (c *Coordinator) EnsurePrecisionDeviceCompatibility(device, precision string) {
 	// Do not show prompts while loading settings or during programmatic updates
 	if c == nil || c.InProgrammaticUpdate || c.SuppressPrompts || (c.IsLoadingSettings != nil && *c.IsLoadingSettings) {
@@ -146,7 +153,7 @@ func (c *Coordinator) EnsurePrecisionDeviceCompatibility(device, precision strin
 		if precision == "int16" {
 			dialog.ShowInformation(lang.L("Information"), lang.L("Most Devices of this type do not support this precision computation. Please consider switching to some other precision.", map[string]interface{}{"Device": "CUDA GPU's", "Precision": "int16"}), c.getParentWindow())
 		}
-		if (precision == "bfloat16" || precision == "int8_bfloat16") && c.ComputeCapability < 8.0 {
+		if hasKnownUnsupportedBFloat16Capability(precision, c.ComputeCapability) {
 			dialog.ShowInformation(lang.L("Information"), lang.L("Your Device most likely does not support this precision computation. Please consider switching to some other precision.", map[string]interface{}{"Device": "CUDA GPU", "Precision": "bfloat16"}), c.getParentWindow())
 		}
 	}

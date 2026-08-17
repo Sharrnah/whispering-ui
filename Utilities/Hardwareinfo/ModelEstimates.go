@@ -42,6 +42,9 @@ var Models = []AIModel{
 	{"Whisper", "transformer_whisper", "small", 3432.0},
 	{"Whisper", "transformer_whisper", "medium", 7634.0},
 	{"Whisper", "transformer_whisper", "large", 13702.0},
+	// Qwen3-ASR models (weights plus a practical inference overhead allowance)
+	{"Whisper", "qwen3_asr", "qwen3-asr-0.6b-hf", 4200.0},
+	{"Whisper", "qwen3_asr", "qwen3-asr-1.7b-hf", 10000.0},
 	// Speech T5
 	{"Whisper", "speech_t5", "tiny", 927.0},
 	{"Whisper", "speech_t5", "base", 927.0},
@@ -98,6 +101,10 @@ var Models = []AIModel{
 	{"TxtTranslator", "hunyuan_mt", "small", 2100.0},
 	{"TxtTranslator", "hunyuan_mt", "medium", 8932.0},
 	{"TxtTranslator", "hunyuan_mt", "large", 40000.0},
+	// MiLMMT-46 v1.0 models (float32 weights plus practical inference overhead)
+	{"TxtTranslator", "milmmt", "milmmt-46-1b-v1.0", 5200.0},
+	{"TxtTranslator", "milmmt", "milmmt-46-4b-v1.0", 20000.0},
+	{"TxtTranslator", "milmmt", "milmmt-46-12b-v1.0", 56000.0},
 	// TTS types
 	{"ttsType", "silero", "", 1533.0},
 	{"ttsType", "f5_e2", "", 1200.0},

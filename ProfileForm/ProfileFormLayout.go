@@ -338,8 +338,13 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 			}
 			AIModel := Hardwareinfo.ProfileAIModelOption{AIModel: "TxtTranslator", Precision: precisionType}
 			AIModel.CalculateMemoryConsumption(deps.CPUMemoryBar, deps.GPUMemoryBar, total)
-			if engine.Coord != nil && !engine.Coord.InProgrammaticUpdate {
-				engine.Coord.HandleMultiModalAllSync()
+			if engine.Coord != nil {
+				if txt.DeviceSelect.GetSelected() != nil {
+					engine.Coord.EnsurePrecisionDeviceCompatibility(txt.DeviceSelect.GetSelected().Value, s.Value)
+				}
+				if !engine.Coord.InProgrammaticUpdate {
+					engine.Coord.HandleMultiModalAllSync()
+				}
 			}
 		}
 		txt.SizeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
