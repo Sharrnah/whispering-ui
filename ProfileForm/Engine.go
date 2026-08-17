@@ -83,7 +83,7 @@ func (e *FormEngine) SetOptionsWithFallback(sel *CustomWidget.TextValueSelect, o
 	}
 	// fallback without coordinator
 	current := sel.GetSelected()
-	sel.Options = options
+	sel.SetValueOptions(options)
 	if current == nil || !sel.ContainsEntry(current, CustomWidget.CompareValue) {
 		if len(options) > 0 {
 			sel.SetSelectedIndex(0)

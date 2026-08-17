@@ -8,9 +8,11 @@ import (
 
 type TextValueSelect struct {
 	widget.Select
-	Name      string
-	Options   []TextValueOption
-	OnChanged func(TextValueOption) `json:"-"`
+	Name             string
+	Options          []TextValueOption
+	OnChanged        func(TextValueOption) `json:"-"`
+	selectedValue    string
+	hasSelectedValue bool
 }
 
 type TextValueOption struct {
@@ -34,10 +36,11 @@ func NewTextValueSelect(name string, options []TextValueOption, changed func(Tex
 		s.updateSelected(text)
 	}
 	s.Options = options
+	s.syncBaseOptions()
 	s.PlaceHolder = lang.L("(Select one)")
 
 	if defaultIndex > -1 && defaultIndex < len(s.Options) && len(s.Options) > 0 {
-		s.Selected = s.Options[defaultIndex].Text
+		s.rememberSelected(s.Options[defaultIndex])
 	}
 
 	s.ExtendBaseWidget(s)
@@ -48,7 +51,13 @@ func NewTextValueSelect(name string, options []TextValueOption, changed func(Tex
 // clearing the current option, the Select widget's PlaceHolder will
 // be displayed.
 func (s *TextValueSelect) ClearSelected() {
-	s.updateSelected("")
+	s.Selected = ""
+	s.selectedValue = ""
+	s.hasSelectedValue = false
+	if s.OnChanged != nil {
+		s.OnChanged(TextValueOption{})
+	}
+	s.Refresh()
 }
 
 func (s *TextValueSelect) GetName() string {
@@ -60,7 +69,21 @@ func (s *TextValueSelect) GetName() string {
 func (s *TextValueSelect) SelectedIndex() int {
 	for i, option := range s.Options {
 		if s.Selected == option.Text {
+			s.selectedValue = option.Value
+			s.hasSelectedValue = true
 			return i
+		}
+	}
+	// The embedded Fyne Select and this value-aware wrapper keep different
+	// representations (display text vs. setting value). A stale Fyne refresh
+	// must not silently discard a valid setting selection before a profile is
+	// saved. Restore it from the last canonical value when possible.
+	if s.hasSelectedValue {
+		for i, option := range s.Options {
+			if s.selectedValue == option.Value {
+				s.Selected = option.Text
+				return i
+			}
 		}
 	}
 	return -1 // not selected/found
@@ -106,19 +129,68 @@ func (s *TextValueSelect) SetSelectedIndex(index int) {
 }
 
 func (s *TextValueSelect) updateSelected(text string) {
-	var lastSelected TextValueOption
+	selectedIndex := -1
 	for i := 0; i < len(s.Options); i++ {
 		if s.Options[i].Text == text {
-			s.Selected = s.Options[i].Text
-			lastSelected = s.Options[i]
+			selectedIndex = i
+			break
 		}
 	}
 
+	// Ignore invalid/stale display events instead of forwarding a zero-value
+	// option. Forwarding one used to make model-type handlers behave exactly as
+	// if the user had disabled the model, while the widget could still look
+	// selected. That in turn saved an empty model type into the profile.
+	if selectedIndex == -1 {
+		restored := false
+		if s.hasSelectedValue {
+			for _, option := range s.Options {
+				if option.Value == s.selectedValue {
+					s.Selected = option.Text
+					restored = true
+					break
+				}
+			}
+		}
+		if !restored {
+			s.Selected = ""
+			s.selectedValue = ""
+			s.hasSelectedValue = false
+		}
+		s.Refresh()
+		return
+	}
+
+	lastSelected := s.Options[selectedIndex]
+	s.rememberSelected(lastSelected)
 	if s.OnChanged != nil {
 		s.OnChanged(lastSelected)
 	}
 
 	s.Refresh()
+}
+
+func (s *TextValueSelect) rememberSelected(option TextValueOption) {
+	s.Selected = option.Text
+	s.selectedValue = option.Value
+	s.hasSelectedValue = true
+}
+
+// SetValueOptions updates both the value-aware options and the embedded Fyne
+// Select's display options. Keeping them synchronized avoids stale keyboard or
+// popup events after a model type replaces a dependent option list.
+func (s *TextValueSelect) SetValueOptions(options []TextValueOption) {
+	s.Options = options
+	s.syncBaseOptions()
+	s.Refresh()
+}
+
+func (s *TextValueSelect) syncBaseOptions() {
+	items := make([]string, 0, len(s.Options))
+	for i := range s.Options {
+		items = append(items, s.Options[i].Text)
+	}
+	s.Select.Options = items
 }
 
 const (
@@ -166,13 +238,6 @@ func (s *TextValueSelect) GetEntry(compareEntry *TextValueOption, compareType in
 
 // Tapped is called when a pointer tapped event is captured and triggers any tap handler
 func (s *TextValueSelect) Tapped(tapEvent *fyne.PointEvent) {
-	// copy options over to base widget
-	var items []string
-	for i := range s.Options {
-		items = append(items, s.Options[i].Text)
-	}
-	s.Select.Options = items
-
+	s.syncBaseOptions()
 	s.Select.Tapped(tapEvent)
-
 }

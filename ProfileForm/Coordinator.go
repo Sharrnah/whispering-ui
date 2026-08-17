@@ -36,7 +36,7 @@ func (c *Coordinator) SetOptionsWithFallback(sel *CustomWidget.TextValueSelect, 
 		return
 	}
 	current := sel.GetSelected()
-	sel.Options = options
+	sel.SetValueOptions(options)
 	if current == nil || !sel.ContainsEntry(current, CustomWidget.CompareValue) {
 		if len(options) > 0 {
 			sel.SetSelectedIndex(0)

@@ -1053,12 +1053,13 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		profileHelpTextContent.Hide()
 		profileListContent.Show()
 		submitButton.Hide()
+		selectedProfilePath := filepath.Join(profilesDir, settingsFiles[id])
 
 		profileSettings := ProfileSettings.Presets[createProfilePresetSelect.GetSelected().Value]
 		profileSettings.SettingsFilename = settingsFiles[id]
 
-		if Utilities.FileExists(filepath.Join(profilesDir, settingsFiles[id])) {
-			err = profileSettings.LoadYamlSettings(filepath.Join(profilesDir, settingsFiles[id]))
+		if Utilities.FileExists(selectedProfilePath) {
+			err = profileSettings.LoadYamlSettings(selectedProfilePath)
 			if err != nil {
 				Logging.CaptureException(err)
 				dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
@@ -1126,8 +1127,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			engine.SaveToSettings(&profileSettings)
 
 			// update existing settings or create new one if it does not exist yet
-			if Utilities.FileExists(filepath.Join(profilesDir, settingsFiles[id])) {
-				profileSettings.WriteYamlSettings(filepath.Join(profilesDir, settingsFiles[id]))
+			if Utilities.FileExists(selectedProfilePath) {
+				profileSettings.WriteYamlSettings(selectedProfilePath)
 			} else {
 				newProfileEntry := Profiles.Profile{
 					SettingsFilename: settingsFiles[id],
@@ -1170,7 +1171,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					Ocr_ai_device: profileSettings.Ocr_ai_device,
 					Ocr_precision: profileSettings.Ocr_precision,
 				}
-				newProfileEntry.Save(filepath.Join(profilesDir, settingsFiles[id]))
+				newProfileEntry.Save(selectedProfilePath)
 			}
 			Settings.Config = profileSettings
 
@@ -1212,6 +1213,12 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 						Logging.CaptureException(err)
 						dialog.ShowError(err, fyne.CurrentApp().Driver().AllWindows()[1])
 					} else {
+						// The previous backend is another writer of this YAML file.
+						// Reassert the profile only after that process has stopped so
+						// a pending save from its stale in-memory settings cannot become
+						// the configuration read by the replacement backend.
+						profileSettings.WriteYamlSettings(selectedProfilePath)
+						Settings.Config = profileSettings
 						stopAndClose(&playBackDevice, onClose)
 					}
 					backendCheckDialog.Hide()
