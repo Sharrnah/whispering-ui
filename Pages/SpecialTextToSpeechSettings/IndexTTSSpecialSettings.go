@@ -48,7 +48,9 @@ func BuildIndexTTSSpecialSettings() fyne.CanvasObject {
 	repetition, repetitionLabel, repetitionControl := newSlider(1, 20, 0.1, GetSpecialSettingFallback("tts_index_tts", "repetition_penalty", 10.0).(float64), 1)
 	maxMel, maxMelLabel, maxMelControl := newSlider(128, 1815, 1, GetSpecialSettingFallback("tts_index_tts", "max_mel_tokens", 1500.0).(float64), 0)
 	segmentTokens, segmentTokensLabel, segmentTokensControl := newSlider(20, 500, 1, GetSpecialSettingFallback("tts_index_tts", "max_text_tokens_per_segment", 120.0).(float64), 0)
+	streamingSegmentLength, streamingSegmentLengthLabel, streamingSegmentLengthControl := newSlider(40, 1000, 10, GetSpecialSettingFallback("tts_index_tts", "streaming_segment_goal_length", 120.0).(float64), 0)
 	segmentPause, segmentPauseLabel, segmentPauseControl := newSlider(1, 5000, 10, GetSpecialSettingFallback("tts_index_tts", "pause_between_segments_ms", 200.0).(float64), 0)
+	voiceChangePause, voiceChangePauseLabel, voiceChangePauseControl := newSlider(0, 5000, 10, GetSpecialSettingFallback("tts_index_tts", "pause_between_voice_change_ms", 400.0).(float64), 0)
 
 	doSample := widget.NewCheck(lang.L("Enable"), nil)
 	doSample.SetChecked(GetSpecialSettingFallback("tts_index_tts", "do_sample", true).(bool))
@@ -86,7 +88,9 @@ func BuildIndexTTSSpecialSettings() fyne.CanvasObject {
 		UpdateSpecialTTSSettings("tts_index_tts", "repetition_penalty", repetition.Value)
 		UpdateSpecialTTSSettings("tts_index_tts", "max_mel_tokens", int(maxMel.Value))
 		UpdateSpecialTTSSettings("tts_index_tts", "max_text_tokens_per_segment", int(segmentTokens.Value))
+		UpdateSpecialTTSSettings("tts_index_tts", "streaming_segment_goal_length", int(streamingSegmentLength.Value))
 		UpdateSpecialTTSSettings("tts_index_tts", "pause_between_segments_ms", int(segmentPause.Value))
+		UpdateSpecialTTSSettings("tts_index_tts", "pause_between_voice_change_ms", int(voiceChangePause.Value))
 		UpdateSpecialTTSSettings("tts_index_tts", "text_normalization", textNormalization.Checked)
 		UpdateSpecialTTSSettings("tts_index_tts", "emotion_enabled", emotionEnabled.Checked)
 		UpdateSpecialTTSSettings("tts_index_tts", "emotion_happy", emotionHappy.Value)
@@ -116,7 +120,8 @@ func BuildIndexTTSSpecialSettings() fyne.CanvasObject {
 		{temperature, temperatureLabel, 2}, {topP, topPLabel, 2},
 		{topK, topKLabel, 0}, {repetition, repetitionLabel, 1},
 		{maxMel, maxMelLabel, 0}, {segmentTokens, segmentTokensLabel, 0},
-		{segmentPause, segmentPauseLabel, 0},
+		{streamingSegmentLength, streamingSegmentLengthLabel, 0},
+		{segmentPause, segmentPauseLabel, 0}, {voiceChangePause, voiceChangePauseLabel, 0},
 		{emotionHappy, emotionHappyLabel, 2}, {emotionAngry, emotionAngryLabel, 2},
 		{emotionSad, emotionSadLabel, 2}, {emotionAfraid, emotionAfraidLabel, 2},
 		{emotionDisgusted, emotionDisgustedLabel, 2}, {emotionMelancholic, emotionMelancholicLabel, 2},
@@ -131,10 +136,12 @@ func BuildIndexTTSSpecialSettings() fyne.CanvasObject {
 	for _, check := range []*widget.Check{doSample, textNormalization, emotionEnabled, emotionRandom} {
 		check.OnChanged = func(bool) { update() }
 	}
+	streamingDescription := widget.NewLabel(lang.L("Streamed playback uses sentence-aware chunks. Put [voice_name] at the start of a line to switch to that voice file; untagged text uses the selected voice."))
+	streamingDescription.Wrapping = fyne.TextWrapWord
 
 	return container.New(layout.NewVBoxLayout(),
 		widget.NewLabel(" "),
-		widget.NewLabel(lang.L("IndexTTS streaming emits each decoded text segment as soon as it is ready.")),
+		streamingDescription,
 		container.New(layout.NewFormLayout(),
 			widget.NewLabel(lang.L("Language")+":"), languageSelect,
 			widget.NewLabel(lang.L("Precision")+":"), precisionSelect,
@@ -142,7 +149,9 @@ func BuildIndexTTSSpecialSettings() fyne.CanvasObject {
 			widget.NewLabel(lang.L("Duration Factor (higher is slower)")+":"), durationControl,
 			widget.NewLabel(lang.L("Beams")+":"), beamsControl,
 			widget.NewLabel(lang.L("Text Normalization")+":"), textNormalization,
+			widget.NewLabel(lang.L("Streaming Segment Target (characters)")+":"), streamingSegmentLengthControl,
 			widget.NewLabel(lang.L("Pause Between Segments (ms)")+":"), segmentPauseControl,
+			widget.NewLabel(lang.L("Pause Between Voice Changes (ms)")+":"), voiceChangePauseControl,
 		),
 		widget.NewAccordion(
 			widget.NewAccordionItem(lang.L("Sampling"), container.New(layout.NewFormLayout(),
