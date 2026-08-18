@@ -604,17 +604,13 @@ func HandleSendMessage(sendMessage *SendMessageChannel.SendMessageStruct) {
 				sendMessage.Value = SkipMessage
 			}
 		case "tts_model":
-			selectedModel := sendMessage.Value.(string)
-			var voiceLanguage = ""
-			for _, language := range Messages.TtsLanguages.Languages {
-				for _, model := range language.Models {
-					if model == selectedModel {
-						voiceLanguage = language.Language
-						break
-					}
-				}
+			selection, ok := normalizeTTSModelSelection(sendMessage.Value)
+			if !ok {
+				log.Printf("Ignoring invalid TTS model selection: %#v", sendMessage.Value)
+				sendMessage.Value = SkipMessage
+				break
 			}
-			sendMessage.Value = []string{voiceLanguage, selectedModel}
+			sendMessage.Value = selection
 		case "ocr_lang":
 			//langCode := Messages.OcrLanguagesList.GetCodeByName(sendMessage.Value.(string))
 			langCode := sendMessage.Value.(string)
@@ -641,4 +637,49 @@ func HandleSendMessage(sendMessage *SendMessageChannel.SendMessageStruct) {
 			Fields.DataBindings.OSCEnabledDataBinding.Set(val)
 		}
 	}
+}
+
+// normalizeTTSModelSelection accepts both the canonical [group, model] value
+// used by value-aware selectors and the legacy display/raw string previously
+// sent by the generic TTS selector. Keeping this conversion at the WebSocket
+// boundary prevents an array-valued setting from reaching a string type
+// assertion and crashing the client during profile startup.
+func normalizeTTSModelSelection(value interface{}) ([]string, bool) {
+	switch selected := value.(type) {
+	case []string:
+		if len(selected) < 2 || strings.TrimSpace(selected[1]) == "" {
+			return nil, false
+		}
+		return []string{selected[0], selected[1]}, true
+	case []interface{}:
+		if len(selected) < 2 {
+			return nil, false
+		}
+		group, groupOK := selected[0].(string)
+		model, modelOK := selected[1].(string)
+		if !groupOK || !modelOK || strings.TrimSpace(model) == "" {
+			return nil, false
+		}
+		return []string{group, model}, true
+	case string:
+		selectedModel := strings.TrimSpace(selected)
+		if selectedModel == "" {
+			return nil, false
+		}
+
+		if canonical, exists := Fields.TtsModelSelectionValues[selectedModel]; exists && len(canonical) >= 2 && strings.TrimSpace(canonical[1]) != "" {
+			return []string{canonical[0], canonical[1]}, true
+		}
+
+		for _, language := range Messages.TtsLanguages.Languages {
+			for _, model := range language.Models {
+				displayValue := model + " (" + language.Language + ")"
+				if selectedModel == model || selectedModel == displayValue {
+					return []string{language.Language, model}, true
+				}
+			}
+		}
+	}
+
+	return nil, false
 }

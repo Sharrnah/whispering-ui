@@ -1,6 +1,7 @@
 package Pages
 
 import (
+	"errors"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/dialog"
@@ -14,7 +15,7 @@ import (
 	"log"
 	"os"
 	"path/filepath"
-	"strings"
+	"runtime"
 	"time"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
@@ -25,27 +26,77 @@ import (
 	"whispering-tiger-ui/Utilities"
 )
 
+func handoffTTSExportWriter(writer fyne.URIWriteCloser, saveFunc func(string)) (string, error) {
+	if writer == nil {
+		return "", errors.New("TTS export did not provide a destination file")
+	}
+
+	uri := writer.URI()
+	path := ""
+	if uri != nil && uri.Scheme() == "file" {
+		path = filepath.FromSlash(uri.Path())
+		// A parsed file:///C:/... URI can retain the URI root slash even
+		// though the backend needs a native C:\... path on Windows.
+		if runtime.GOOS == "windows" && len(path) >= 3 && path[0] == os.PathSeparator && path[2] == ':' {
+			path = path[1:]
+		}
+		path = filepath.Clean(path)
+	}
+
+	// Fyne creates/opens the selected file for the dialog callback. Python is
+	// the component that writes generated TTS audio, so release Fyne's handle
+	// before sending the path to the backend. Keeping both owners alive is a
+	// sharing race on Windows and can truncate or fail the export.
+	if err := writer.Close(); err != nil {
+		return "", err
+	}
+	if path == "" {
+		return "", errors.New("TTS export only supports local file destinations")
+	}
+	if saveFunc == nil {
+		return "", errors.New("TTS export callback is unavailable")
+	}
+
+	saveFunc(path)
+	return path, nil
+}
+
+type ttsFileDialog interface {
+	Show()
+	Resize(fyne.Size)
+}
+
+func showSizedTTSFileDialog(fileDialog ttsFileDialog, size fyne.Size) {
+	// This vendored Fyne version dereferences FileDialog.dialog from Resize's
+	// MinSize call. Show initializes that field, so Resize must come second.
+	fileDialog.Show()
+	fileDialog.Resize(size)
+}
+
 func ShowSaveTTSWindow(saveFunc func(string)) {
 	// find active window
 	window, _ := Utilities.GetCurrentMainWindow(lang.L("Save TTS File"))
 
 	fileSaveDialog := dialog.NewFileSave(func(writer fyne.URIWriteCloser, err error) {
+		if err != nil {
+			log.Println("Error saving file:", err)
+			if writer != nil {
+				_ = writer.Close()
+			}
+			return
+		}
 		if writer == nil {
 			return
 		}
+
+		path, err := handoffTTSExportWriter(writer, saveFunc)
 		if err != nil {
-			log.Println("Error saving file:", err)
+			log.Println("Error preparing TTS export:", err)
+			dialog.ShowError(err, window)
 			return
 		}
-		defer writer.Close()
 
-		uri := writer.URI().String()
-		// replace "file://" from the beginning of the string
-		uri, _ = strings.CutPrefix(uri, "file://")
-
-		saveFunc(uri)
-
-		fyne.CurrentApp().Preferences().SetString("LastTTSSavePath", filepath.Dir(writer.URI().Path()))
+		fyne.CurrentApp().Preferences().SetString("LastTTSSavePath", filepath.Dir(path))
 
 	}, window)
 
@@ -67,12 +118,10 @@ func ShowSaveTTSWindow(saveFunc func(string)) {
 		}
 	}
 
-	dialogSize := fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size()
+	dialogSize := window.Canvas().Size()
 	dialogSize.Height = dialogSize.Height - 50
 	dialogSize.Width = dialogSize.Width - 50
-	fileSaveDialog.Resize(dialogSize)
-
-	fileSaveDialog.Show()
+	showSizedTTSFileDialog(fileSaveDialog, dialogSize)
 
 	return
 }
@@ -180,7 +229,7 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 			sendMessage.SendMessage()
 			Fields.Field.TtsVoiceCombo.SetSelected("last")
 		})
-	case "f5_e2", "zonos", "zonos2", "kokoro", "chatterbox", "maya1":
+	case "f5_e2", "zonos", "zonos2", "kokoro", "chatterbox", "index_tts", "qwen3_tts", "maya1":
 		saveRandomVoiceButton = widget.NewButtonWithIcon("", theme.ViewRefreshIcon(), func() {
 			sendMessage := SendMessageChannel.SendMessageStruct{
 				Type: "tts_voice_reload_req",
@@ -199,6 +248,12 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 		}
 		if Settings.Config.Tts_type == "chatterbox" {
 			advancedSettings = SpecialTextToSpeechSettings.BuildChatterboxSpecialSettings()
+		}
+		if Settings.Config.Tts_type == "index_tts" {
+			advancedSettings = SpecialTextToSpeechSettings.BuildIndexTTSSpecialSettings()
+		}
+		if Settings.Config.Tts_type == "qwen3_tts" {
+			advancedSettings = SpecialTextToSpeechSettings.BuildQwen3TTSSpecialSettings()
 		}
 		if Settings.Config.Tts_type == "maya1" {
 			advancedSettings = SpecialTextToSpeechSettings.BuildMaya1SpecialSettings()

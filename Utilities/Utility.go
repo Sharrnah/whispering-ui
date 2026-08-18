@@ -358,27 +358,17 @@ func QuitBackendRobust(websocketAddr string, processId int, maxRetries int) erro
 	return fmt.Errorf("failed to quit backend after %d attempts", maxRetries)
 }
 
-// waitForProcessTermination waits for a process to terminate by checking if the port is no longer in use
-// and optionally checking if the process ID is still running. Returns true if termination is confirmed.
+// waitForProcessTermination waits until both the listener and the backend
+// process are gone. A WebSocket worker can stop its listener before the Python
+// process exits, and that process may still have a delayed profile save queued.
 func waitForProcessTermination(websocketAddr string, processId int, timeout time.Duration) bool {
 	start := time.Now()
 	checkInterval := 200 * time.Millisecond
 
 	for time.Since(start) < timeout {
-		// Check if port is no longer in use
-		if !CheckPortInUse(websocketAddr) {
-			// Double check by trying to find the process if we have a valid PID
-			if processId > 0 {
-				process, err := os.FindProcess(processId)
-				if err != nil {
-					// Process not found, it's terminated
-					return true
-				}
-				// On Windows, FindProcess always succeeds, so we need to try to signal it
-				// Using Signal(syscall.Signal(0)) would be ideal but it's platform specific
-				// For now, we'll trust that if the port is not in use, the process is likely terminated
-				_ = process // Avoid unused variable warning
-			}
+		portStopped := !CheckPortInUse(websocketAddr)
+		processStopped := processId <= 0 || !isProcessRunning(processId)
+		if portStopped && processStopped {
 			return true
 		}
 

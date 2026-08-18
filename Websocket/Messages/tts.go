@@ -29,23 +29,45 @@ type TtsLanguagesListing struct {
 
 var TtsLanguages TtsLanguagesListing
 
+func ttsModelDisplayValue(selection []string) string {
+	if len(selection) < 2 {
+		return ""
+	}
+	for displayValue, canonicalValue := range Fields.TtsModelSelectionValues {
+		if len(canonicalValue) == 2 && canonicalValue[0] == selection[0] && canonicalValue[1] == selection[1] {
+			return displayValue
+		}
+	}
+	return ""
+}
+
 func (res TtsLanguagesListing) Update() *TtsLanguagesListing {
 	Fields.Field.TtsModelCombo.Options = nil
+	Fields.TtsModelSelectionValues = make(map[string][]string)
 	for _, languageItem := range res.Languages {
 		//elementName := languageItem.Language
 		for _, modelItem := range languageItem.Models {
 			if Settings.Config.Tts_type == "silero" {
 				if strings.Contains(modelItem, "v3") || strings.Contains(modelItem, "v4") {
 					Fields.Field.TtsModelCombo.Options = append(Fields.Field.TtsModelCombo.Options, modelItem)
+					Fields.TtsModelSelectionValues[modelItem] = []string{languageItem.Language, modelItem}
 				}
 			} else {
 				modelEntry := modelItem + " (" + languageItem.Language + ")"
 				Fields.Field.TtsModelCombo.Options = append(Fields.Field.TtsModelCombo.Options, modelEntry)
+				Fields.TtsModelSelectionValues[modelEntry] = []string{languageItem.Language, modelItem}
 			}
 		}
 	}
-	if len(Settings.Config.Tts_model) > 0 {
-		Fields.Field.TtsModelCombo.Selected = Settings.Config.Tts_model[1]
+	if selected := ttsModelDisplayValue(Settings.Config.Tts_model); selected != "" {
+		Fields.Field.TtsModelCombo.Selected = selected
+		Fields.Field.TtsModelCombo.Refresh()
+	} else if len(Fields.Field.TtsModelCombo.Options) > 0 {
+		// A profile can retain the previous TTS family's model. Select and send
+		// the new family's first backend-provided model so the UI never displays
+		// an empty value and the profile receives a canonical [group, model].
+		Fields.Field.TtsModelCombo.SetSelected(Fields.Field.TtsModelCombo.Options[0])
+	} else {
 		Fields.Field.TtsModelCombo.Refresh()
 	}
 	return &res
@@ -64,10 +86,14 @@ type Voice struct {
 
 var TtsVoices TtsVoicesListing
 
+func hasSelectableTTSVoice(options []CustomWidget.TextValueOption) bool {
+	return len(options) > 0 && !(len(options) == 1 && options[0].Value == "")
+}
+
 func (res TtsVoicesListing) Update() *TtsVoicesListing {
 	lastSelectedVoice := ""
-	if len(Fields.Field.TtsVoiceCombo.Options) > 0 {
-		lastSelectedVoice = Fields.Field.TtsVoiceCombo.Selected
+	if selected := Fields.Field.TtsVoiceCombo.GetSelected(); selected != nil {
+		lastSelectedVoice = selected.Value
 	}
 	Fields.Field.TtsVoiceCombo.Options = nil
 	for _, voice := range res.Voices {
@@ -99,8 +125,7 @@ func (res TtsVoicesListing) Update() *TtsVoicesListing {
 	}
 	// only set new tts voice if select is not received tts_voice and
 	// if select is not empty and does not contain only one empty element
-	if !voicesListContainsSelectedVoice && Fields.Field.TtsVoiceCombo.Options != nil && (len(Fields.Field.TtsVoiceCombo.Options) > 0 &&
-		(len(Fields.Field.TtsVoiceCombo.Options) == 1 && Fields.Field.TtsVoiceCombo.Options[0].Value != "")) {
+	if !voicesListContainsSelectedVoice && hasSelectableTTSVoice(Fields.Field.TtsVoiceCombo.Options) {
 		Fields.Field.TtsVoiceCombo.SetSelectedIndex(0)
 	}
 	if Settings.Config.Tts_voice != "" && voicesListContainsSelectedVoice {
@@ -158,7 +183,8 @@ func (res TtsSpeechAudio) SaveWav() {
 	dialogSize := fyne.CurrentApp().Driver().AllWindows()[0].Canvas().Size()
 	dialogSize.Height = dialogSize.Height - 50
 	dialogSize.Width = dialogSize.Width - 50
-	fileSaveDialog.Resize(dialogSize)
-
 	fileSaveDialog.Show()
+	// FileDialog.Resize calls MinSize and requires Show to initialize its
+	// internal dialog first in the vendored Fyne version.
+	fileSaveDialog.Resize(dialogSize)
 }

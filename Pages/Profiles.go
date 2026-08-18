@@ -1217,6 +1217,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 						// Reassert the profile only after that process has stopped so
 						// a pending save from its stale in-memory settings cannot become
 						// the configuration read by the replacement backend.
+						profileSettings.Process_id = 0
 						profileSettings.WriteYamlSettings(selectedProfilePath)
 						Settings.Config = profileSettings
 						stopAndClose(&playBackDevice, onClose)

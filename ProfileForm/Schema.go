@@ -75,7 +75,7 @@ func TXTTypeOptions() []TVO {
 
 func TTSTypeOptions() []TVO {
 	//return []TVO{{Text: "Silero", Value: "silero"}, {Text: "F5/E2", Value: "f5_e2"}, {Text: "Zonos", Value: "zonos"}, {Text: "Kokoro", Value: "kokoro"}, {Text: "Orpheus", Value: "orpheus"}, {Text: "Parler", Value: "parler"}, {Text: lang.L("Disabled"), Value: ""}}
-	return []TVO{{Text: "Silero", Value: "silero"}, {Text: "F5/E2", Value: "f5_e2"}, {Text: "Zonos", Value: "zonos"}, {Text: "ZONOS2 (BF16 / FP8)", Value: "zonos2"}, {Text: "Kokoro", Value: "kokoro"}, {Text: "Orpheus", Value: "orpheus"}, {Text: "Chatterbox", Value: "chatterbox"}, {Text: "Maya1", Value: "maya1"}, {Text: lang.L("Disabled"), Value: ""}}
+	return []TVO{{Text: "Silero", Value: "silero"}, {Text: "F5/E2", Value: "f5_e2"}, {Text: "Zonos", Value: "zonos"}, {Text: "ZONOS2 (BF16 / FP8)", Value: "zonos2"}, {Text: "Kokoro", Value: "kokoro"}, {Text: "Orpheus", Value: "orpheus"}, {Text: "Chatterbox", Value: "chatterbox"}, {Text: "IndexTTS 2.5 (Voice Cloning)", Value: "index_tts"}, {Text: "Qwen3-TTS (Cloning / Voice Design)", Value: "qwen3_tts"}, {Text: "Maya1", Value: "maya1"}, {Text: lang.L("Disabled"), Value: ""}}
 }
 
 func OcrTypeOptions() []TVO {

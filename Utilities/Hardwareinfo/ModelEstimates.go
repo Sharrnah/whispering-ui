@@ -105,6 +105,12 @@ var Models = []AIModel{
 	{"ttsType", "zonos2", "", 15150.0},
 	{"ttsType", "kokoro", "", 312.0},
 	{"ttsType", "chatterbox", "", 3470.0},
+	// IndexTTS defaults to BF16 on CUDA. A real RTX 5090 beam-3 run reserved
+	// about 5694 MiB, so retain headroom for longer generations and plugins.
+	{"ttsType", "index_tts", "", 6500.0},
+	// Covers the practical BF16 footprint of both Qwen3-TTS sizes. The tested
+	// 0.6B Base path peaks near 2.2 GiB; 1.7B checkpoints need more headroom.
+	{"ttsType", "qwen3_tts", "", 5200.0},
 	// OCR types
 	{"ocrType", "easyocr", "", 520.0},
 	{"ocrType", "got_ocr_20", "", 1559.0},

@@ -24,6 +24,11 @@ const OscLimitLabelConst = "[%d / %d]"
 
 var OscLimitHintUpdateFunc = func() {}
 
+// TtsModelSelectionValues maps the user-facing model label received from the
+// backend to its canonical [group, model] setting.  Several TTS families have
+// multiple models and the display label alone is not a valid tts_model value.
+var TtsModelSelectionValues = map[string][]string{}
+
 var fieldCreationFunctions = struct {
 	TranscriptionTaskCombo        func() *CustomWidget.TextValueSelect
 	TranscriptionInput            func(dataBinding binding.String) *CustomWidget.EntryWithPopupMenu
@@ -269,10 +274,15 @@ func InitializeGlobalFields() {
 	Field.TargetLanguageTxtTranslateCombo = CustomWidget.NewCompletionEntry([]string{"None"})
 
 	Field.TtsModelCombo = widget.NewSelect([]string{}, func(value string) {
+		canonicalValue, ok := TtsModelSelectionValues[value]
+		if !ok || len(canonicalValue) != 2 {
+			log.Println("Ignoring unknown TTS model selection", value)
+			return
+		}
 		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "setting_change",
 			Name:  "tts_model",
-			Value: value,
+			Value: []string{canonicalValue[0], canonicalValue[1]},
 		}
 		sendMessage.SendMessage()
 
