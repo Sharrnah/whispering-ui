@@ -6,8 +6,10 @@ import (
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
+	"fyne.io/fyne/v2/dialog"
 	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/layout"
+	"fyne.io/fyne/v2/theme"
 	"fyne.io/fyne/v2/widget"
 )
 
@@ -136,24 +138,41 @@ func BuildIndexTTSSpecialSettings() fyne.CanvasObject {
 	for _, check := range []*widget.Check{doSample, textNormalization, emotionEnabled, emotionRandom} {
 		check.OnChanged = func(bool) { update() }
 	}
-	streamingDescription := widget.NewLabel(lang.L("Streamed playback uses sentence-aware chunks. Put [voice_name] at the start of a line to switch to that voice file; untagged text uses the selected voice."))
-	streamingDescription.Wrapping = fyne.TextWrapWord
+	voiceSwitchingInfo := widget.NewButtonWithIcon(lang.L("Voice Switching"), theme.InfoIcon(), func() {
+		windows := fyne.CurrentApp().Driver().AllWindows()
+		if len(windows) > 0 {
+			dialog.ShowInformation(
+				lang.L("Voice Switching"),
+				lang.L("Put [voice_name] at the start of a line to switch to the matching voice file. Untagged text and [main] use the selected voice."),
+				windows[0],
+			)
+		}
+	})
+	voiceSwitchingInfo.Importance = widget.LowImportance
 
 	return container.New(layout.NewVBoxLayout(),
 		widget.NewLabel(" "),
-		streamingDescription,
-		container.New(layout.NewFormLayout(),
-			widget.NewLabel(lang.L("Language")+":"), languageSelect,
-			widget.NewLabel(lang.L("Precision")+":"), precisionSelect,
-			widget.NewLabel(lang.L("Seed")+":"), seedInput,
-			widget.NewLabel(lang.L("Duration Factor (higher is slower)")+":"), durationControl,
-			widget.NewLabel(lang.L("Beams")+":"), beamsControl,
-			widget.NewLabel(lang.L("Text Normalization")+":"), textNormalization,
-			widget.NewLabel(lang.L("Streaming Segment Target (characters)")+":"), streamingSegmentLengthControl,
-			widget.NewLabel(lang.L("Pause Between Segments (ms)")+":"), segmentPauseControl,
-			widget.NewLabel(lang.L("Pause Between Voice Changes (ms)")+":"), voiceChangePauseControl,
-		),
 		widget.NewAccordion(
+			widget.NewAccordionItem(lang.L("General"), container.NewVBox(
+				container.NewGridWithColumns(2,
+					container.New(layout.NewFormLayout(),
+						widget.NewLabel(lang.L("Language")+":"), languageSelect,
+						widget.NewLabel(lang.L("Precision")+":"), precisionSelect,
+						widget.NewLabel(lang.L("Seed")+":"), seedInput,
+					),
+					container.New(layout.NewFormLayout(),
+						widget.NewLabel(lang.L("Duration Factor (higher is slower)")+":"), durationControl,
+						widget.NewLabel(lang.L("Beams")+":"), beamsControl,
+						widget.NewLabel(lang.L("Text Normalization")+":"), textNormalization,
+					),
+				),
+				container.New(layout.NewFormLayout(),
+					widget.NewLabel(lang.L("Streaming Segment Target (characters)")+":"), streamingSegmentLengthControl,
+					widget.NewLabel(lang.L("Pause Between Segments (ms)")+":"), segmentPauseControl,
+					widget.NewLabel(lang.L("Pause Between Voice Changes (ms)")+":"), voiceChangePauseControl,
+				),
+				container.NewHBox(layout.NewSpacer(), voiceSwitchingInfo),
+			)),
 			widget.NewAccordionItem(lang.L("Sampling"), container.New(layout.NewFormLayout(),
 				widget.NewLabel(lang.L("Sampling")+":"), doSample,
 				widget.NewLabel(lang.L("Temperature")+":"), temperatureControl,
@@ -164,18 +183,25 @@ func BuildIndexTTSSpecialSettings() fyne.CanvasObject {
 				widget.NewLabel(lang.L("Max Text Tokens Per Segment")+":"), segmentTokensControl,
 			)),
 			widget.NewAccordionItem(lang.L("Emotion"), container.NewVBox(
-				widget.NewLabel(lang.L("Emotion values are normalized by IndexTTS when their total exceeds the supported range.")),
 				container.New(layout.NewFormLayout(),
 					widget.NewLabel(lang.L("Emotion Control")+":"), emotionEnabled,
 					widget.NewLabel(lang.L("Random Emotion Prototype")+":"), emotionRandom,
-					widget.NewLabel(lang.L("Happy")+":"), emotionHappyControl,
-					widget.NewLabel(lang.L("Angry")+":"), emotionAngryControl,
-					widget.NewLabel(lang.L("Sad")+":"), emotionSadControl,
-					widget.NewLabel(lang.L("Afraid")+":"), emotionAfraidControl,
-					widget.NewLabel(lang.L("Disgusted")+":"), emotionDisgustedControl,
-					widget.NewLabel(lang.L("Melancholic")+":"), emotionMelancholicControl,
-					widget.NewLabel(lang.L("Surprised")+":"), emotionSurprisedControl,
-					widget.NewLabel(lang.L("Calm")+":"), emotionCalmControl,
+				),
+				container.NewGridWithColumns(2,
+					container.New(layout.NewFormLayout(),
+						widget.NewLabel(lang.L("Happy")+":"), emotionHappyControl,
+						widget.NewLabel(lang.L("Sad")+":"), emotionSadControl,
+						widget.NewLabel(lang.L("Disgusted")+":"), emotionDisgustedControl,
+						widget.NewLabel(lang.L("Surprised")+":"), emotionSurprisedControl,
+					),
+					container.New(layout.NewFormLayout(),
+						widget.NewLabel(lang.L("Angry")+":"), emotionAngryControl,
+						widget.NewLabel(lang.L("Afraid")+":"), emotionAfraidControl,
+						widget.NewLabel(lang.L("Melancholic")+":"), emotionMelancholicControl,
+						widget.NewLabel(lang.L("Calm")+":"), emotionCalmControl,
+					),
+				),
+				container.New(layout.NewFormLayout(),
 					widget.NewLabel(lang.L("Strength")+":"), emotionStrengthControl,
 				),
 			)),
