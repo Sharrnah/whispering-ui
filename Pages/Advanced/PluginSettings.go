@@ -323,7 +323,11 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 					if _, ok := group[0].(string); ok {
 						var settingsGroup []string
 						for _, item := range group {
-							settingsGroup = append(settingsGroup, item.(string))
+							settingName, ok := item.(string)
+							if !ok {
+								continue
+							}
+							settingsGroup = append(settingsGroup, settingName)
 						}
 						sort.Strings(settingsGroup)
 						for _, settingName := range settingsGroup {
@@ -338,9 +342,16 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 						// Handle multiple columns
 						columnContainers := []fyne.CanvasObject{}
 						for _, column := range group {
+							columnSettings, ok := column.([]interface{})
+							if !ok {
+								continue
+							}
 							columnFields := []fyne.CanvasObject{}
-							for _, item := range column.([]interface{}) {
-								settingName := item.(string)
+							for _, item := range columnSettings {
+								settingName, ok := item.(string)
+								if !ok {
+									continue
+								}
 								if _, ok := pluginSettings[settingName]; ok && settingName != "settings_groups" {
 									settingsFields := createSettingsFields(pluginSettings, settingName, &SettingsFile, pluginClassName, window)
 									columnFields = append(columnFields, settingsFields...)
