@@ -215,6 +215,7 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
 		scope.SetTag("GoRoutine", "Pages\\TextToSpeech->CreateTextToSpeechWindow")
 	})
+	Fields.TtsModelSelectionChanged = nil
 
 	ttsModels := container.New(layout.NewFormLayout(), widget.NewLabel(lang.L("Model")+":"), Fields.Field.TtsModelCombo)
 

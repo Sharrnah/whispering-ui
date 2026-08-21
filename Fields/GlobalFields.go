@@ -29,6 +29,10 @@ var OscLimitHintUpdateFunc = func() {}
 // multiple models and the display label alone is not a valid tts_model value.
 var TtsModelSelectionValues = map[string][]string{}
 
+// TtsModelSelectionChanged lets the active TTS settings panel react to a
+// model change without replacing the selector's setting-change handler.
+var TtsModelSelectionChanged func(string)
+
 var fieldCreationFunctions = struct {
 	TranscriptionTaskCombo        func() *CustomWidget.TextValueSelect
 	TranscriptionInput            func(dataBinding binding.String) *CustomWidget.EntryWithPopupMenu
@@ -285,6 +289,9 @@ func InitializeGlobalFields() {
 			Value: []string{canonicalValue[0], canonicalValue[1]},
 		}
 		sendMessage.SendMessage()
+		if TtsModelSelectionChanged != nil {
+			TtsModelSelectionChanged(value)
+		}
 
 		log.Println("Select set to", value)
 	})

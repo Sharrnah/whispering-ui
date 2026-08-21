@@ -11,12 +11,25 @@ import (
 	"fyne.io/fyne/v2/widget"
 
 	"whispering-tiger-ui/CustomWidget"
+	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/SendMessageChannel"
 )
 
+func qwen3TTSInstructionSupported(modelName string) bool {
+	return modelName == "Qwen3-TTS-12Hz-1.7B-CustomVoice" ||
+		modelName == "Qwen3-TTS-12Hz-1.7B-VoiceDesign"
+}
+
+func qwen3TTSCanonicalModel(displayValue string) string {
+	if canonical, ok := Fields.TtsModelSelectionValues[displayValue]; ok && len(canonical) >= 2 {
+		return canonical[1]
+	}
+	return displayValue
+}
+
 // BuildQwen3TTSSpecialSettings exposes the controls shared by Qwen3-TTS Base,
-// CustomVoice, and VoiceDesign checkpoints. Capabilities that do not apply to
-// the selected checkpoint are safely ignored by the Python adapter.
+// CustomVoice, and VoiceDesign checkpoints. Instruction controls are disabled
+// for checkpoints that do not consume them.
 func BuildQwen3TTSSpecialSettings() fyne.CanvasObject {
 	const settingsGroup = "tts_qwen3_tts"
 
@@ -95,6 +108,18 @@ func BuildQwen3TTSSpecialSettings() fyne.CanvasObject {
 
 	applyProsody := widget.NewCheck(lang.L("Append the shared rate and pitch controls to the instruction"), nil)
 	applyProsody.SetChecked(GetSpecialSettingFallback(settingsGroup, "apply_prosody_to_instruction", true).(bool))
+	updateInstructionControls := func(displayValue string) {
+		if qwen3TTSInstructionSupported(qwen3TTSCanonicalModel(displayValue)) {
+			instructionInput.Enable()
+			applyProsody.Enable()
+			return
+		}
+		instructionInput.Disable()
+		applyProsody.Disable()
+	}
+	Fields.TtsModelSelectionChanged = updateInstructionControls
+	updateInstructionControls(Fields.Field.TtsModelCombo.Selected)
+
 	doSample := widget.NewCheck(lang.L("Enable"), nil)
 	doSample.SetChecked(GetSpecialSettingFallback(settingsGroup, "do_sample", true).(bool))
 	subtalkerDoSample := widget.NewCheck(lang.L("Enable"), nil)

@@ -62,6 +62,9 @@ func (res TtsLanguagesListing) Update() *TtsLanguagesListing {
 	if selected := ttsModelDisplayValue(Settings.Config.Tts_model); selected != "" {
 		Fields.Field.TtsModelCombo.Selected = selected
 		Fields.Field.TtsModelCombo.Refresh()
+		if Fields.TtsModelSelectionChanged != nil {
+			Fields.TtsModelSelectionChanged(selected)
+		}
 	} else if len(Fields.Field.TtsModelCombo.Options) > 0 {
 		// A profile can retain the previous TTS family's model. Select and send
 		// the new family's first backend-provided model so the UI never displays
@@ -69,6 +72,9 @@ func (res TtsLanguagesListing) Update() *TtsLanguagesListing {
 		Fields.Field.TtsModelCombo.SetSelected(Fields.Field.TtsModelCombo.Options[0])
 	} else {
 		Fields.Field.TtsModelCombo.Refresh()
+		if Fields.TtsModelSelectionChanged != nil {
+			Fields.TtsModelSelectionChanged("")
+		}
 	}
 	return &res
 }
