@@ -297,6 +297,7 @@
     "Are you sure you want to reset the settings for this plugin?": "क्या आप सुनिश्चित हैं कि आप ' {{.PluginClassName}}' की सेटिंग्स रीसेट करना चाहते हैं?",
     "Hide (Download will continue)": "छिपाएँ (डाउनलोड जारी रहेगा)",
     "Downloading...": "डाउनलोड हो रहा है..।",
+    "Change server": "सर्वर बदलें",
     "vad_confidence_threshold.Name": "आवाज़ गतिविधि आत्मविश्वास",
     "vad_confidence_threshold.Description": "वॉयस एक्टिविटी डिटेक्शन (VAD) विश्वास थ्रेशोल्ड। 0-1 हो सकता है।",
     "pause.Name": "भाषण विराम का पता लगाना",

@@ -245,6 +245,7 @@
     "and place the *.py file in the Plugins folder.": "ثم ضع ملف *.py في مجلد الإضافات.",
     "Hide (Download will continue)": "إخفاء (سيستمر التحميل)",
     "Downloading...": "جارٍ التحميل...",
+    "Change server": "تغيير الخادم",
     "Resuming": "استئناف",
     "Platform not found": "المنصة غير موجودة",
     "App Update available": "تحديث التطبيق متاح",

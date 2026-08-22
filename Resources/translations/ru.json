@@ -190,6 +190,7 @@
     "Or download Plugins manually from:": "Или загрузите плагины вручную с сайта:",
     "and place the *.py file in the Plugins folder.": "и поместите файл *.py в папку Plugins.",
     "Downloading...": "Загрузка...",
+    "Change server": "Сменить сервер",
     "Resuming": "Возобновление",
     "Downloading from location": "Загрузка с сайта {{.Location}}... {{.TotalSize}} ({{.Speed}})",
     "Checking checksum...": "Проверка контрольной суммы...",

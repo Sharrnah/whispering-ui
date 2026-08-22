@@ -153,6 +153,7 @@
     "and place the *.py file in the Plugins folder.": "를 클릭하고 *.py 파일을 플러그인 폴더에 넣습니다.",
     "Hide (Download will continue)": "숨기기(다운로드가 계속 진행됨)",
     "Downloading...": "다운로드 중...",
+    "Change server": "서버 변경",
     "Resuming": "재개",
     "Downloading from location": "{{.Location}} 에서 다운로드 ... {{.TotalSize}} ({{.Speed}})",
     "Checking checksum...": "체크섬 확인 중...",

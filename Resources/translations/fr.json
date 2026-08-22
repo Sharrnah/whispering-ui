@@ -161,6 +161,7 @@
     "Reload": "Recharger",
     "Hide (Download will continue)": "Masquer (Le téléchargement continuera)",
     "Downloading...": "Téléchargement...",
+    "Change server": "Changer de serveur",
     "Resuming": "Reprise",
     "Downloading from location": "Téléchargement depuis {{.Location}}... {{.TotalSize}} ({{.Speed}})",
     "Checking checksum...": "Vérification du checksum...",

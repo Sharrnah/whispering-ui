@@ -184,6 +184,7 @@
     "Hide (Download will continue)": "隱藏（下載會持續）",
     "Removing old version...": "移除舊版…",
     "Downloading...": "下載中…",
+    "Change server": "更換伺服器",
     "Resuming": "恢復中",
     "Checking checksum...": "檢查雜湊值…",
     "Checksum check failed. Please delete temporary file and download again. If it still fails, please contact support.": "雜湊值檢查失敗。請刪除暫存檔並重新下載。若仍失敗，請聯絡支援。",

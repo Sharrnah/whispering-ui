@@ -224,6 +224,7 @@
     "and place the *.py file in the Plugins folder.": "og placer *.py-filen i mappen Plugins.",
     "Hide (Download will continue)": "Skjul (download fortsætter)",
     "Downloading...": "Downloading...",
+    "Change server": "Skift server",
     "Resuming": "Genoptagelse",
     "Downloading from location": "Downloading fra {{.Location}}... {{.TotalSize}} ({{.Speed}})",
     "Checksum check failed. Please delete temporary file and download again. If it still fails, please contact support.": "Kontrol af checksum mislykkedes. Slet venligst den midlertidige fil, og download igen. Hvis det stadig mislykkes, bedes du kontakte support.",

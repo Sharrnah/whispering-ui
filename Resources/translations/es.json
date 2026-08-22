@@ -198,6 +198,7 @@
     "and place the *.py file in the Plugins folder.": "y coloque el archivo *.py en la carpeta Plugins.",
     "Hide (Download will continue)": "Ocultar (la descarga continuará)",
     "Downloading...": "Descargando...",
+    "Change server": "Cambiar servidor",
     "Resuming": "Reanudar",
     "Downloading from location": "Descarga desde {{.Location}}... {{.TotalSize}} ({{.Speed}})",
     "Checking checksum...": "Comprobando la suma de comprobación...",

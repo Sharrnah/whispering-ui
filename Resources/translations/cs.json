@@ -216,6 +216,7 @@
     "and place the *.py file in the Plugins folder.": "a umístěte soubor *.py do složky Plugins.",
     "Hide (Download will continue)": "Skrýt (stahování bude pokračovat)",
     "Downloading...": "Stahování...",
+    "Change server": "Změnit server",
     "Resuming": "Obnovování",
     "Downloading from location": "Stahování z {{.Location}}... {{.TotalSize}} ({{.Speed}})",
     "Checking checksum...": "Kontrola checksum...",

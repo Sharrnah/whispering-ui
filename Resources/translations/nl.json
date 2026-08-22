@@ -167,6 +167,7 @@
     "Or download Plugins manually from:": "Of download Plug-ins handmatig van:",
     "Hide (Download will continue)": "Verbergen (Download blijft doorgaan)",
     "Downloading...": "Downloaden...",
+    "Change server": "Server wijzigen",
     "Resuming": "Hervatten",
     "Downloading from location": "Downloaden van {{.Location}}... {{.TotalSize}} ({{.Speed}})",
     "Checking checksum...": "Checksum controleren...",

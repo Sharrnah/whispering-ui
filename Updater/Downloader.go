@@ -2,6 +2,7 @@ package Updater
 
 import (
 	"context"
+	"errors"
 	"fmt"
 	"github.com/hashicorp/go-cleanhttp"
 	"io"
@@ -21,6 +22,11 @@ const defaultConcurrentDownloads = 1
 
 var netClient = cleanhttp.DefaultPooledClient()
 
+// ErrDownloadCanceled is returned when an in-progress download is canceled by
+// its caller, for example when the user asks the model downloader to use the
+// next mirror.
+var ErrDownloadCanceled = errors.New("download canceled")
+
 type OnProgress func(bytesWritten, contentLength uint64, speed float64)
 
 type WriteCounter struct {
@@ -30,6 +36,7 @@ type WriteCounter struct {
 	startTime     time.Time
 	LastUpdate    time.Time
 	speedMA       *MovingAverage
+	sessionTotal  uint64
 }
 
 type Download struct {
@@ -49,6 +56,35 @@ type Download struct {
 	downloaded             map[int64][]byte
 	nextWrite              int64
 	remoteFileSize         int64
+	cancelMu               sync.Mutex
+	cancel                 context.CancelFunc
+	cancelRequested        bool
+}
+
+// Cancel stops the active request and its chunk workers. A cancellation made
+// just before DownloadFile installs its context is remembered as well.
+func (d *Download) Cancel() {
+	d.cancelMu.Lock()
+	d.cancelRequested = true
+	cancel := d.cancel
+	d.cancelMu.Unlock()
+
+	if cancel != nil {
+		cancel()
+	}
+}
+
+func (d *Download) installCancel(cancel context.CancelFunc) bool {
+	d.cancelMu.Lock()
+	defer d.cancelMu.Unlock()
+	d.cancel = cancel
+	return d.cancelRequested
+}
+
+func (d *Download) clearCancel() {
+	d.cancelMu.Lock()
+	d.cancel = nil
+	d.cancelMu.Unlock()
 }
 
 func (d *Download) getUserAgent() string {
@@ -57,10 +93,10 @@ func (d *Download) getUserAgent() string {
 	return "Whispering_Tiger_DL/" + Utilities.AppVersion + " (" + build + ")"
 }
 
-func (d *Download) getRemoteFileSize() (int64, error) {
+func (d *Download) getRemoteFileSize(ctx context.Context) (int64, error) {
 	currentUrl := d.getCurrentUrl()
 
-	req, err := http.NewRequest("HEAD", currentUrl, nil)
+	req, err := http.NewRequestWithContext(ctx, "HEAD", currentUrl, nil)
 	if err != nil {
 		return 0, err
 	}
@@ -79,16 +115,27 @@ func (d *Download) getRemoteFileSize() (int64, error) {
 	return resp.ContentLength, nil
 }
 
-func (d *Download) getRemoteFileSizeWithRetry(retries int) (int64, error) {
+func (d *Download) getRemoteFileSizeWithRetry(ctx context.Context, retries int) (int64, error) {
 	for i := 0; i <= retries; i++ {
-		remoteFileSize, err := d.getRemoteFileSize()
+		if ctx.Err() != nil {
+			return 0, ErrDownloadCanceled
+		}
+
+		remoteFileSize, err := d.getRemoteFileSize(ctx)
 		if err == nil {
 			return remoteFileSize, nil
+		}
+		if ctx.Err() != nil {
+			return 0, ErrDownloadCanceled
 		}
 
 		if i < retries {
 			fmt.Printf("Error getting remote file size %s: %s. Retrying in 1 second...\n", d.Url, err.Error())
-			time.Sleep(1 * time.Second)
+			select {
+			case <-time.After(1 * time.Second):
+			case <-ctx.Done():
+				return 0, ErrDownloadCanceled
+			}
 		} else {
 			// Switch to the next fallback url if available
 			if d.urlIndex < len(d.FallbackUrls) {
@@ -108,12 +155,16 @@ func (d *Download) getRemoteFileSizeWithRetry(retries int) (int64, error) {
 func (d *Download) addBytes(n uint64) {
 	if n > 0 {
 		d.WriteCounter.Total += n
+		d.WriteCounter.sessionTotal += n
 	}
 	if time.Since(d.WriteCounter.LastUpdate).Seconds() >= 1 || n == 0 {
 		elapsed := time.Since(d.WriteCounter.startTime).Seconds()
-		speed := float64(d.WriteCounter.Total) / elapsed
-		d.WriteCounter.speedMA.Add(speed)
-		avgSpeed := d.WriteCounter.speedMA.Average()
+		avgSpeed := 0.0
+		if d.WriteCounter.sessionTotal > 0 && elapsed > 0 {
+			speed := float64(d.WriteCounter.sessionTotal) / elapsed
+			d.WriteCounter.speedMA.Add(speed)
+			avgSpeed = d.WriteCounter.speedMA.Average()
+		}
 		d.WriteCounter.OnProgress(d.WriteCounter.Total, d.WriteCounter.ContentLength, avgSpeed)
 		d.WriteCounter.LastUpdate = time.Now()
 	}
@@ -131,18 +182,13 @@ func (d *Download) GetTotalDownloadedSize() int64 {
 }
 
 func (d *Download) DownloadFile(retries int) error {
-	progressCtx, progressCancel := context.WithCancel(context.Background())
-	defer progressCancel()
-
-	go func() {
-		for {
-			select {
-			case <-time.After(1 * time.Second):
-				d.addBytes(0)
-			case <-progressCtx.Done():
-				return
-			}
-		}
+	downloadCtx, downloadCancel := context.WithCancel(context.Background())
+	if d.installCancel(downloadCancel) {
+		downloadCancel()
+	}
+	defer func() {
+		downloadCancel()
+		d.clearCancel()
 	}()
 
 	d.downloaded = make(map[int64][]byte)
@@ -155,11 +201,24 @@ func (d *Download) DownloadFile(retries int) error {
 	}
 	d.WriteCounter.speedMA = NewMovingAverage(movingAverageWindow) // 10 is the moving average window size
 	d.WriteCounter.startTime = time.Now()                          // Record the start time when download starts
+	d.WriteCounter.LastUpdate = time.Time{}
+	d.WriteCounter.sessionTotal = 0
+
+	go func() {
+		for {
+			select {
+			case <-time.After(1 * time.Second):
+				d.addBytes(0)
+			case <-downloadCtx.Done():
+				return
+			}
+		}
+	}()
 
 	// check if the server file is smaller than the local file (which means something is wrong)
 	// Call getRemoteFileSize to get the size of the remote file
 	err := error(nil)
-	d.remoteFileSize, err = d.getRemoteFileSizeWithRetry(retries)
+	d.remoteFileSize, err = d.getRemoteFileSizeWithRetry(downloadCtx, retries)
 	if err != nil {
 		return err
 	}
@@ -186,7 +245,7 @@ func (d *Download) DownloadFile(retries int) error {
 		}
 	}
 
-	return d.downloadFileWithRetry(retries, progressCtx, progressCancel)
+	return d.downloadFileWithRetry(retries, downloadCtx, downloadCancel)
 }
 
 func (d *Download) getCurrentUrl() string {
@@ -198,11 +257,19 @@ func (d *Download) getCurrentUrl() string {
 }
 
 func (d *Download) retryAction(retries int, err error, progressCtx context.Context, contextCancel context.CancelFunc) error {
+	if progressCtx.Err() != nil {
+		return ErrDownloadCanceled
+	}
+
 	currentUrl := d.getCurrentUrl()
 
 	if retries > 0 {
 		fmt.Printf("Error downloading %s: %s. Retrying in 1 seconds...\n", d.Url, err.Error())
-		time.Sleep(2 * time.Second)
+		select {
+		case <-time.After(2 * time.Second):
+		case <-progressCtx.Done():
+			return ErrDownloadCanceled
+		}
 		return d.downloadFileWithRetry(retries-1, progressCtx, contextCancel)
 	} else {
 		if d.urlIndex < len(d.FallbackUrls) {
@@ -225,14 +292,14 @@ func (d *Download) IsResuming() bool {
 	return d.isResumed
 }
 
-func (d *Download) downloadFullFile(url string) error {
+func (d *Download) downloadFullFile(ctx context.Context, url string) error {
 	out, err := os.Create(d.Filepath)
 	if err != nil {
 		return err
 	}
 	defer out.Close()
 
-	req, err := http.NewRequest("GET", url, nil)
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return err
 	}
@@ -245,6 +312,9 @@ func (d *Download) downloadFullFile(url string) error {
 
 	_, err = io.Copy(out, resp.Body)
 	if err != nil {
+		if ctx.Err() != nil {
+			return ErrDownloadCanceled
+		}
 		return err
 	}
 
@@ -252,6 +322,10 @@ func (d *Download) downloadFullFile(url string) error {
 }
 
 func (d *Download) downloadFileWithRetry(retries int, progressCtx context.Context, contextCancel context.CancelFunc) error {
+	if progressCtx.Err() != nil {
+		return ErrDownloadCanceled
+	}
+
 	allUrls := append([]string{d.Url}, d.FallbackUrls...)
 	if !d.UseMultiServerDownload {
 		allUrls = []string{d.getCurrentUrl()}
@@ -270,7 +344,7 @@ func (d *Download) downloadFileWithRetry(retries int, progressCtx context.Contex
 	if contentLength == -1 {
 		// If the server doesn't support resuming, download the full file
 		println("Server doesn't support resuming. downloading full file...")
-		err = d.downloadFullFile(currentUrl)
+		err = d.downloadFullFile(progressCtx, currentUrl)
 		if err != nil {
 			return err
 		}
@@ -311,6 +385,14 @@ func (d *Download) downloadFileWithRetry(retries int, progressCtx context.Contex
 
 		// Initialize d.nextWrite
 		d.nextWrite = startBytes
+		d.isResumed = startBytes > 0
+		if d.nextWrite == totalSize {
+			d.addBytes(0)
+			return nil
+		}
+
+		attemptCtx, attemptCancel := context.WithCancel(progressCtx)
+		defer attemptCancel()
 
 		// Concurrent download loop
 		for i := 0; i < d.ConcurrentDownloads; i++ {
@@ -320,7 +402,7 @@ func (d *Download) downloadFileWithRetry(retries int, progressCtx context.Contex
 
 				for {
 					select {
-					case <-progressCtx.Done():
+					case <-attemptCtx.Done():
 						return
 					default:
 						chunkIndex := atomic.AddInt64(&startingChunk, 1) - 1
@@ -347,14 +429,21 @@ func (d *Download) downloadFileWithRetry(retries int, progressCtx context.Contex
 							println("Downloading chunk %d of %d from %s", chunkIndex, totalChunks, currentUrl)
 						}
 
-						chunk, downloaded, err := d.downloadChunk(currentUrl, start, end)
+						chunk, downloaded, err := d.downloadChunk(attemptCtx, currentUrl, start, end)
 						if err != nil {
-							errorsChannel <- err
+							select {
+							case errorsChannel <- err:
+							case <-attemptCtx.Done():
+							}
 							return
 						}
 
 						if downloaded {
-							chunksChannel <- *chunk
+							select {
+							case chunksChannel <- *chunk:
+							case <-attemptCtx.Done():
+								return
+							}
 						}
 					}
 				}
@@ -364,7 +453,13 @@ func (d *Download) downloadFileWithRetry(retries int, progressCtx context.Contex
 	loop:
 		for {
 			select {
+			case <-progressCtx.Done():
+				attemptCancel()
+				wg.Wait()
+				return ErrDownloadCanceled
 			case err := <-errorsChannel:
+				attemptCancel()
+				wg.Wait()
 				return d.retryAction(retries, err, progressCtx, contextCancel)
 			case chunk := <-chunksChannel:
 				d.mu.Lock()
@@ -465,8 +560,8 @@ func (d *Download) CreateFinishedFile(fileExtension string, maxRetries int, retr
 	return nil
 }
 
-func (d *Download) downloadChunk(url string, start, end int64) (*Chunk, bool, error) {
-	req, err := http.NewRequest("GET", url, nil)
+func (d *Download) downloadChunk(ctx context.Context, url string, start, end int64) (*Chunk, bool, error) {
+	req, err := http.NewRequestWithContext(ctx, "GET", url, nil)
 	if err != nil {
 		return nil, false, err
 	}

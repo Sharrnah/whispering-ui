@@ -145,6 +145,7 @@
     "and place the *.py file in the Plugins folder.": "を作成し、*.py ファイルを Plugins フォルダに置きます。",
     "Hide (Download will continue)": "非表示（ダウンロードは継続されます）",
     "Downloading...": "ダウンロード...",
+    "Change server": "サーバーを変更",
     "Resuming": "再開",
     "Downloading from location": "{{.Location}} からダウンロード ...{{.TotalSize}} ({{.Speed}})",
     "Checking checksum...": "チェックサムをチェック中...",

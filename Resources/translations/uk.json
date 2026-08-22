@@ -161,6 +161,7 @@
     "and place the *.py file in the Plugins folder.": "і помістіть файл *.py до теки Plugins.",
     "Hide (Download will continue)": "Приховати (завантаження продовжиться)",
     "Downloading...": "Завантаження...",
+    "Change server": "Змінити сервер",
     "Resuming": "Підсумовуючи",
     "Downloading from location": "Завантажити з {{.Location}}... {{.TotalSize}} ({{.Speed}})",
     "Checking checksum...": "Перевірка контрольної суми...",

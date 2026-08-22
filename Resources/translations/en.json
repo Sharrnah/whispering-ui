@@ -180,6 +180,7 @@
     "Are you sure you want to reinitialize this plugin?": "Are you sure you want to reinitialize {{.PluginClassName}}?",
     "Hide (Download will continue)": "Hide (Download will continue)",
     "Downloading...": "Downloading...",
+    "Change server": "Change server",
     "Resuming": "Resuming",
     "Downloading from location": "Downloading from {{.Location}}... {{.TotalSize}} ({{.Speed}})",
     "Checking checksum...": "Checking checksum...",
