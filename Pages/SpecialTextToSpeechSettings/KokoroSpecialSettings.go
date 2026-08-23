@@ -10,7 +10,10 @@ import (
 	"whispering-tiger-ui/Fields"
 )
 
-const kokoroThorstenModel = "Kokoro-German-Thorsten"
+const (
+	kokoroThorstenModel = "Kokoro-German-Thorsten"
+	kokoroRussianModel  = "Kokoro-Russian-v2"
+)
 
 func kokoroCanonicalModel(displayValue string) string {
 	if canonical, ok := Fields.TtsModelSelectionValues[displayValue]; ok && len(canonical) >= 2 {
@@ -19,8 +22,15 @@ func kokoroCanonicalModel(displayValue string) string {
 	return displayValue
 }
 
-func kokoroIsGermanModel(displayValue string) bool {
-	return kokoroCanonicalModel(displayValue) == kokoroThorstenModel
+func kokoroForcedLanguage(displayValue string) (CustomWidget.TextValueOption, bool) {
+	switch kokoroCanonicalModel(displayValue) {
+	case kokoroThorstenModel:
+		return CustomWidget.TextValueOption{Text: lang.L("German"), Value: "d"}, true
+	case kokoroRussianModel:
+		return CustomWidget.TextValueOption{Text: "Russian", Value: "r"}, true
+	default:
+		return CustomWidget.TextValueOption{}, false
+	}
 }
 
 func kokoroStockLanguageOptions() []CustomWidget.TextValueOption {
@@ -70,17 +80,15 @@ func buildKokoroSpecialSettings() (fyne.CanvasObject, *CustomWidget.CompletionEn
 	applyLanguageForModel := func(displayValue string, notifyBackend bool) {
 		targetLanguage := ""
 		selected := languageSelect.GetCurrentValueOptionEntry()
-		if kokoroIsGermanModel(displayValue) {
-			targetLanguage = "d"
-			setKokoroLanguageOptions(languageSelect, []CustomWidget.TextValueOption{
-				{Text: lang.L("German"), Value: "d"},
-			})
-			languageSelect.SetSelected("d")
+		if forcedLanguage, forced := kokoroForcedLanguage(displayValue); forced {
+			targetLanguage = forcedLanguage.Value
+			setKokoroLanguageOptions(languageSelect, []CustomWidget.TextValueOption{forcedLanguage})
+			languageSelect.SetSelected(forcedLanguage.Value)
 			languageSelect.Disable()
 		} else {
 			setKokoroLanguageOptions(languageSelect, kokoroStockLanguageOptions())
 			languageSelect.Enable()
-			if selected == nil || selected.Value == "d" {
+			if selected == nil || selected.Value == "d" || selected.Value == "r" {
 				targetLanguage = "a"
 				languageSelect.SetSelected("a")
 			} else {

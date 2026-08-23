@@ -167,9 +167,16 @@ Kokoro-TTS is a multi-lingual TTS Model that supports fast inference with high q
 </details>
 
 German uses the separately selectable `Kokoro-German-Thorsten` checkpoint. It
-is a German-only, single-voice model and exposes the `thorsten` voice. Selecting
-it automatically locks Kokoro's language setting to German. Audio voice-change
-plugins can still process its generated output normally.
+is a German-only, single-voice model and exposes the `thorsten` voice. Russian
+uses `Kokoro-Russian-v2`, based on the flagship `kokoro-ru-v2-base.pth`
+checkpoint, and exposes the compatible `sveta` and `masha` voices. The optional
+`dima` voice is not included because it requires a different checkpoint.
+
+Selecting either specialized model shows and locks only its matching language.
+The stock `kokoro-v1_0` model continues to show only its nine supported
+languages, so German and Russian cannot accidentally be selected with the
+English-centric stock weights. Audio voice-change plugins can still process the
+generated output normally.
 
 Demo:
 <video src='https://github.com/user-attachments/assets/8bd6ecb8-1f67-4b97-abac-dc218d8590fa' width=300></video>

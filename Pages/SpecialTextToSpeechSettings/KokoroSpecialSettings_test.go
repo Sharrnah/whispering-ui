@@ -21,11 +21,14 @@ func TestKokoroCanonicalModel(t *testing.T) {
 
 	Fields.TtsModelSelectionValues = map[string][]string{
 		"Kokoro-German-Thorsten (German)": {"German", kokoroThorstenModel},
+		"Kokoro-Russian-v2 (Russian)":     {"Russian", kokoroRussianModel},
 	}
 
 	cases := map[string]string{
 		"Kokoro-German-Thorsten (German)": kokoroThorstenModel,
+		"Kokoro-Russian-v2 (Russian)":     kokoroRussianModel,
 		kokoroThorstenModel:               kokoroThorstenModel,
+		kokoroRussianModel:                kokoroRussianModel,
 		"kokoro-v1_0 (Default)":           "kokoro-v1_0 (Default)",
 	}
 	for displayValue, expected := range cases {
@@ -38,11 +41,14 @@ func TestKokoroCanonicalModel(t *testing.T) {
 	if !reflect.DeepEqual(Fields.TtsModelSelectionValues["Kokoro-German-Thorsten (German)"], want) {
 		t.Fatal("canonical Kokoro model mapping changed unexpectedly")
 	}
-	if !kokoroIsGermanModel("Kokoro-German-Thorsten (German)") {
-		t.Fatal("Thorsten should be recognized as the German Kokoro model")
+	if option, forced := kokoroForcedLanguage("Kokoro-German-Thorsten (German)"); !forced || option.Value != "d" {
+		t.Fatalf("Thorsten forced language = %#v, %v; want German", option, forced)
 	}
-	if kokoroIsGermanModel("kokoro-v1_0 (Default)") {
-		t.Fatal("stock Kokoro should not be recognized as a German model")
+	if option, forced := kokoroForcedLanguage("Kokoro-Russian-v2 (Russian)"); !forced || option.Value != "r" {
+		t.Fatalf("Russian v2 forced language = %#v, %v; want Russian", option, forced)
+	}
+	if _, forced := kokoroForcedLanguage("kokoro-v1_0 (Default)"); forced {
+		t.Fatal("stock Kokoro should not have a forced language")
 	}
 }
 
@@ -81,7 +87,8 @@ func TestKokoroSettingsBuildDoesNotWaitForWebsocketConsumer(t *testing.T) {
 	Fields.Field.TtsModelCombo = widget.NewSelect(nil, nil)
 	Fields.Field.TtsModelCombo.Selected = displayValue
 	Fields.TtsModelSelectionValues = map[string][]string{
-		displayValue: {"German", kokoroThorstenModel},
+		displayValue:                  {"German", kokoroThorstenModel},
+		"Kokoro-Russian-v2 (Russian)": {"Russian", kokoroRussianModel},
 	}
 	Settings.Config.Special_settings = map[string]interface{}{
 		"tts_kokoro": map[string]interface{}{"language": "a"},
@@ -115,6 +122,23 @@ func TestKokoroSettingsBuildDoesNotWaitForWebsocketConsumer(t *testing.T) {
 	go func() {
 		received <- <-SendMessageChannel.SendMessageChannel
 	}()
+	Fields.TtsModelSelectionChanged("Kokoro-Russian-v2 (Russian)")
+	select {
+	case <-received:
+	case <-time.After(time.Second):
+		t.Fatal("switching to Russian did not notify the backend")
+	}
+	if !languageSelect.Disabled() {
+		t.Fatal("Russian language selector should be disabled")
+	}
+	if values := completionEntryValues(languageSelect); !reflect.DeepEqual(values, []string{"r"}) {
+		t.Fatalf("Russian language options = %v; want [r]", values)
+	}
+
+	received = make(chan SendMessageChannel.SendMessageStruct, 1)
+	go func() {
+		received <- <-SendMessageChannel.SendMessageChannel
+	}()
 	Fields.TtsModelSelectionChanged("kokoro-v1_0 (Default)")
 	select {
 	case <-received:
@@ -127,6 +151,9 @@ func TestKokoroSettingsBuildDoesNotWaitForWebsocketConsumer(t *testing.T) {
 	values := completionEntryValues(languageSelect)
 	if slicesContain(values, "d") {
 		t.Fatalf("stock Kokoro unexpectedly advertises German: %v", values)
+	}
+	if slicesContain(values, "r") {
+		t.Fatalf("stock Kokoro unexpectedly advertises Russian: %v", values)
 	}
 	if len(values) != 9 {
 		t.Fatalf("stock Kokoro language option count = %d; want 9", len(values))
