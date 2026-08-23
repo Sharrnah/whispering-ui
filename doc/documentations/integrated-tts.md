@@ -152,7 +152,7 @@ To generate audio with different speakers, you can add the Speaker name at the b
 Kokoro-TTS is a multi-lingual TTS Model that supports fast inference with high quality.
 
 <details>
-  <summary>8 Supported Languages (Single model)</summary>
+  <summary>9 Supported Languages (Stock model)</summary>
   <ul>
     <li>English (US)</li>
     <li>English (British)</li>
@@ -165,6 +165,11 @@ Kokoro-TTS is a multi-lingual TTS Model that supports fast inference with high q
     <li>Chinese</li>
   </ul>
 </details>
+
+German uses the separately selectable `Kokoro-German-Thorsten` checkpoint. It
+is a German-only, single-voice model and exposes the `thorsten` voice. Selecting
+it automatically locks Kokoro's language setting to German. Audio voice-change
+plugins can still process its generated output normally.
 
 Demo:
 <video src='https://github.com/user-attachments/assets/8bd6ecb8-1f67-4b97-abac-dc218d8590fa' width=300></video>

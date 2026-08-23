@@ -388,6 +388,7 @@
     "open_voice_dir": "（打开语音目录）",
     "Reload model every N segments": "每 N 个区段重新加载模型",
     "General": "常规",
+    "German": "德语",
     "Emotion": "情绪",
     "Sampling": "采样",
     "Beams": "搜索束数",

@@ -388,6 +388,7 @@
     "open_voice_dir": "(فتح مجلد الصوت)",
     "Reload model every N segments": "إعادة تحميل النموذج كل N من المقاطع",
     "General": "عام",
+    "German": "الألمانية",
     "Emotion": "العاطفة",
     "Sampling": "أخذ العينات",
     "Beams": "حزم البحث",

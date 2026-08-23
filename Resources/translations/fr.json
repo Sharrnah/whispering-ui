@@ -399,6 +399,7 @@
     "open_voice_dir": "(Ouvrir le Répertoire des Voix)",
     "Reload model every N segments": "Recharger le modèle tous les N segments",
     "General": "Général",
+    "German": "Allemand",
     "Emotion": "Émotion",
     "Sampling": "Échantillonnage",
     "Beams": "Faisceaux de recherche",

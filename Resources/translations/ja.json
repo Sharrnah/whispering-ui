@@ -388,6 +388,7 @@
     "open_voice_dir": "(オープン・ボイス・ディレクトリ)",
     "Reload model every N segments": "Nセグメントごとにモデルをリロード",
     "General": "一般",
+    "German": "ドイツ語",
     "Emotion": "感情",
     "Sampling": "サンプリング",
     "Beams": "検索ビーム数",

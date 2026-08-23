@@ -388,6 +388,7 @@
     "open_voice_dir": "(음성 디렉터리 열기)",
     "Reload model every N segments": "N 세그먼트마다 모델 로드",
     "General": "일반",
+    "German": "독일어",
     "Emotion": "감정",
     "Sampling": "샘플링",
     "Beams": "검색 빔 수",

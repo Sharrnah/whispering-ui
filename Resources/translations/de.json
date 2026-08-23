@@ -401,6 +401,7 @@
     "open_voice_dir": "(Öffne Stimmen-Verzeichnis)",
     "Reload model every N segments": "Alle N Segmente Modell neu laden",
     "General": "Allgemein",
+    "German": "Deutsch",
     "Emotion": "Emotion",
     "Sampling": "Sampling",
     "Beams": "Suchstrahlen",

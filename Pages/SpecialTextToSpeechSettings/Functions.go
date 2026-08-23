@@ -7,7 +7,10 @@ import (
 	"whispering-tiger-ui/Settings"
 )
 
-func UpdateSpecialTTSSettings(specialSettingType string, stringName string, value interface{}) {
+// SetSpecialTTSSetting updates the in-memory profile without sending a backend
+// message. It is useful while constructing controls, before the WebSocket
+// sender is guaranteed to be running.
+func SetSpecialTTSSetting(specialSettingType string, stringName string, value interface{}) bool {
 	// Ensure outer map exists
 	if Settings.Config.Special_settings == nil {
 		Settings.Config.Special_settings = make(map[string]interface{})
@@ -22,11 +25,19 @@ func UpdateSpecialTTSSettings(specialSettingType string, stringName string, valu
 
 	// If the value is the same, do nothing (safe compare for non-comparable types)
 	if old, exists := inner[stringName]; exists && reflect.DeepEqual(old, value) {
-		return
+		return false
 	}
 
-	// Update and notify
+	// Update locally. The caller decides whether the backend must be notified.
 	inner[stringName] = value
+	return true
+}
+
+func UpdateSpecialTTSSettings(specialSettingType string, stringName string, value interface{}) {
+	if !SetSpecialTTSSetting(specialSettingType, stringName, value) {
+		return
+	}
+	inner := Settings.Config.Special_settings[specialSettingType].(map[string]interface{})
 
 	sendMessage := SendMessageChannel.SendMessageStruct{
 		Type:  "special_settings",

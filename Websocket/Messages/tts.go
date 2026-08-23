@@ -53,7 +53,7 @@ func (res TtsLanguagesListing) Update() *TtsLanguagesListing {
 					Fields.TtsModelSelectionValues[modelItem] = []string{languageItem.Language, modelItem}
 				}
 			} else {
-				modelEntry := modelItem + " (" + languageItem.Language + ")"
+				modelEntry := modelItem + " (" + lang.L(languageItem.Language) + ")"
 				Fields.Field.TtsModelCombo.Options = append(Fields.Field.TtsModelCombo.Options, modelEntry)
 				Fields.TtsModelSelectionValues[modelEntry] = []string{languageItem.Language, modelItem}
 			}
