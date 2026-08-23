@@ -19,13 +19,14 @@ func kokoroCanonicalModel(displayValue string) string {
 	return displayValue
 }
 
-func BuildKokoroSpecialSettings() fyne.CanvasObject {
+func kokoroIsGermanModel(displayValue string) bool {
+	return kokoroCanonicalModel(displayValue) == kokoroThorstenModel
+}
 
-	languageSelect := CustomWidget.NewCompletionEntry([]string{})
-	languageSelect.SetValueOptions([]CustomWidget.TextValueOption{
+func kokoroStockLanguageOptions() []CustomWidget.TextValueOption {
+	return []CustomWidget.TextValueOption{
 		{Text: "English (US)", Value: "a"},
 		{Text: "English (British)", Value: "b"},
-		{Text: lang.L("German"), Value: "d"},
 		{Text: "Spanish", Value: "e"},
 		{Text: "French", Value: "f"},
 		{Text: "Hindi", Value: "h"},
@@ -33,7 +34,22 @@ func BuildKokoroSpecialSettings() fyne.CanvasObject {
 		{Text: "Japanese", Value: "j"},
 		{Text: "Brazilian Portuguese", Value: "p"},
 		{Text: "Chinese", Value: "z"},
-	})
+	}
+}
+
+func setKokoroLanguageOptions(languageSelect *CustomWidget.CompletionEntry, options []CustomWidget.TextValueOption) {
+	languageSelect.OptionsTextValue = append([]CustomWidget.TextValueOption(nil), options...)
+	displayOptions := make([]string, 0, len(options))
+	for _, option := range options {
+		displayOptions = append(displayOptions, option.Text)
+	}
+	languageSelect.SetOptions(displayOptions)
+}
+
+func buildKokoroSpecialSettings() (fyne.CanvasObject, *CustomWidget.CompletionEntry) {
+
+	languageSelect := CustomWidget.NewCompletionEntry([]string{})
+	setKokoroLanguageOptions(languageSelect, kokoroStockLanguageOptions())
 
 	languageSetting := GetSpecialSettingFallback("tts_kokoro", "language", "a").(string)
 	languageSelect.SetSelected(languageSetting)
@@ -53,23 +69,25 @@ func BuildKokoroSpecialSettings() fyne.CanvasObject {
 
 	applyLanguageForModel := func(displayValue string, notifyBackend bool) {
 		targetLanguage := ""
-		if kokoroCanonicalModel(displayValue) == kokoroThorstenModel {
+		selected := languageSelect.GetCurrentValueOptionEntry()
+		if kokoroIsGermanModel(displayValue) {
 			targetLanguage = "d"
-			selected := languageSelect.GetCurrentValueOptionEntry()
-			if selected == nil || selected.Value != "d" {
-				languageSelect.SetSelected("d")
-				languageSelect.Refresh()
-			}
+			setKokoroLanguageOptions(languageSelect, []CustomWidget.TextValueOption{
+				{Text: lang.L("German"), Value: "d"},
+			})
+			languageSelect.SetSelected("d")
 			languageSelect.Disable()
 		} else {
+			setKokoroLanguageOptions(languageSelect, kokoroStockLanguageOptions())
 			languageSelect.Enable()
-			selected := languageSelect.GetCurrentValueOptionEntry()
-			if selected != nil && selected.Value == "d" {
+			if selected == nil || selected.Value == "d" {
 				targetLanguage = "a"
 				languageSelect.SetSelected("a")
-				languageSelect.Refresh()
+			} else {
+				languageSelect.SetSelected(selected.Value)
 			}
 		}
+		languageSelect.Refresh()
 
 		if targetLanguage == "" {
 			return
@@ -95,5 +113,10 @@ func BuildKokoroSpecialSettings() fyne.CanvasObject {
 			languageSelect,
 		),
 	)
+	return advancedSettings, languageSelect
+}
+
+func BuildKokoroSpecialSettings() fyne.CanvasObject {
+	advancedSettings, _ := buildKokoroSpecialSettings()
 	return advancedSettings
 }

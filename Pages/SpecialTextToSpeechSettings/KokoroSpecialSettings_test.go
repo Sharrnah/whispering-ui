@@ -8,8 +8,10 @@ import (
 	"fyne.io/fyne/v2/lang"
 	fynetest "fyne.io/fyne/v2/test"
 	"fyne.io/fyne/v2/widget"
+	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Resources"
+	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Settings"
 )
 
@@ -35,6 +37,12 @@ func TestKokoroCanonicalModel(t *testing.T) {
 	want := []string{"German", kokoroThorstenModel}
 	if !reflect.DeepEqual(Fields.TtsModelSelectionValues["Kokoro-German-Thorsten (German)"], want) {
 		t.Fatal("canonical Kokoro model mapping changed unexpectedly")
+	}
+	if !kokoroIsGermanModel("Kokoro-German-Thorsten (German)") {
+		t.Fatal("Thorsten should be recognized as the German Kokoro model")
+	}
+	if kokoroIsGermanModel("kokoro-v1_0 (Default)") {
+		t.Fatal("stock Kokoro should not be recognized as a German model")
 	}
 }
 
@@ -79,14 +87,15 @@ func TestKokoroSettingsBuildDoesNotWaitForWebsocketConsumer(t *testing.T) {
 		"tts_kokoro": map[string]interface{}{"language": "a"},
 	}
 
-	done := make(chan struct{})
+	languageResult := make(chan *CustomWidget.CompletionEntry, 1)
 	go func() {
-		BuildKokoroSpecialSettings()
-		close(done)
+		_, languageSelect := buildKokoroSpecialSettings()
+		languageResult <- languageSelect
 	}()
 
+	var languageSelect *CustomWidget.CompletionEntry
 	select {
-	case <-done:
+	case languageSelect = <-languageResult:
 	case <-time.After(time.Second):
 		t.Fatal("building Kokoro settings blocked without a WebSocket message consumer")
 	}
@@ -95,4 +104,48 @@ func TestKokoroSettingsBuildDoesNotWaitForWebsocketConsumer(t *testing.T) {
 	if actual := kokoroSettings["language"]; actual != "d" {
 		t.Fatalf("local Kokoro language = %v; want d", actual)
 	}
+	if !languageSelect.Disabled() {
+		t.Fatal("Thorsten language selector should be disabled")
+	}
+	if values := completionEntryValues(languageSelect); !reflect.DeepEqual(values, []string{"d"}) {
+		t.Fatalf("Thorsten language options = %v; want [d]", values)
+	}
+
+	received := make(chan SendMessageChannel.SendMessageStruct, 1)
+	go func() {
+		received <- <-SendMessageChannel.SendMessageChannel
+	}()
+	Fields.TtsModelSelectionChanged("kokoro-v1_0 (Default)")
+	select {
+	case <-received:
+	case <-time.After(time.Second):
+		t.Fatal("switching from Thorsten did not notify the backend")
+	}
+	if languageSelect.Disabled() {
+		t.Fatal("stock Kokoro language selector should be enabled")
+	}
+	values := completionEntryValues(languageSelect)
+	if slicesContain(values, "d") {
+		t.Fatalf("stock Kokoro unexpectedly advertises German: %v", values)
+	}
+	if len(values) != 9 {
+		t.Fatalf("stock Kokoro language option count = %d; want 9", len(values))
+	}
+}
+
+func completionEntryValues(entry *CustomWidget.CompletionEntry) []string {
+	values := make([]string, 0, len(entry.OptionsTextValue))
+	for _, option := range entry.OptionsTextValue {
+		values = append(values, option.Value)
+	}
+	return values
+}
+
+func slicesContain(values []string, target string) bool {
+	for _, value := range values {
+		if value == target {
+			return true
+		}
+	}
+	return false
 }
