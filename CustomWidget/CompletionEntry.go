@@ -178,8 +178,20 @@ func (c *CompletionEntry) DoubleTapped(ev *fyne.PointEvent) {
 func (c *CompletionEntry) Move(pos fyne.Position) {
 	c.Entry.Move(pos)
 	if c.popupMenu != nil && c.popupMenu.Canvas != nil {
-		c.popupMenu.Resize(c.maxSize())
-		c.popupMenu.Move(c.popUpPos())
+		popupSize, popupPos := c.popupGeometry()
+		c.popupMenu.Resize(popupSize)
+		c.popupMenu.Move(popupPos)
+	}
+}
+
+// Resize changes the size of the completion entry and keeps an open popup
+// aligned with it.
+func (c *CompletionEntry) Resize(size fyne.Size) {
+	c.Entry.Resize(size)
+	if c.popupMenu != nil && c.popupMenu.Canvas != nil {
+		popupSize, popupPos := c.popupGeometry()
+		c.popupMenu.Resize(popupSize)
+		c.popupMenu.Move(popupPos)
 	}
 }
 
@@ -259,18 +271,26 @@ func (c *CompletionEntry) ShowCompletion() {
 		c.navigableList.selected = -1
 	}
 	holder := fyne.CurrentApp().Driver().CanvasForObject(c)
+	if holder == nil {
+		return
+	}
 
 	if c.popupMenu == nil {
 		c.popupMenu = widget.NewPopUp(c.navigableList, holder)
 	}
-	c.popupMenu.Resize(c.maxSize())
-	c.popupMenu.ShowAtPosition(c.popUpPos())
+	popupSize, popupPos := c.popupGeometry()
+	c.popupMenu.Resize(popupSize)
+	c.popupMenu.ShowAtPosition(popupPos)
 	holder.Focus(c.navigableList)
 }
 
-// calculate the max size to make the popup to cover everything below the entry
-func (c *CompletionEntry) maxSize() fyne.Size {
-	cnv := fyne.CurrentApp().Driver().CanvasForObject(c)
+// popupGeometry calculates the size and position of the completion popup. It
+// starts below the entry, then shifts up and constrains its size to the canvas
+// interactive area in the same way as Fyne's Select popup. A constrained List
+// automatically provides vertical scrolling.
+func (c *CompletionEntry) popupGeometry() (fyne.Size, fyne.Position) {
+	driver := fyne.CurrentApp().Driver()
+	cnv := driver.CanvasForObject(c)
 
 	if c.itemHeight == 0 {
 		// set item height to cache
@@ -278,30 +298,35 @@ func (c *CompletionEntry) maxSize() fyne.Size {
 	}
 
 	listheight := float32(len(c.FilteredOptions))*(c.itemHeight+2*theme.Padding()+theme.SeparatorThicknessSize()) + 2*theme.Padding()
-	canvasSize := fyne.Size{
-		Width:  0,
-		Height: 200,
-	}
-	// try to fall back if cnv is nil for some reason...
-	if cnv != nil {
-		canvasSize = cnv.Size()
-	} else if len(fyne.CurrentApp().Driver().AllWindows()) > 0 {
-		canvasSize = fyne.CurrentApp().Driver().AllWindows()[0].Content().Size()
-	}
 	entrySize := c.Size()
-	if canvasSize.Height > listheight {
-		return fyne.NewSize(entrySize.Width, listheight)
+	popupSize := fyne.NewSize(entrySize.Width, listheight)
+	entryPos := driver.AbsolutePositionForObject(c)
+	popupPos := entryPos.Add(fyne.NewPos(0, entrySize.Height-theme.InputBorderSize()))
+
+	if cnv == nil {
+		return popupSize, popupPos
 	}
 
-	return fyne.NewSize(
-		entrySize.Width,
-		canvasSize.Height-c.Position().Y-entrySize.Height-theme.InputBorderSize()-theme.Padding())
-}
+	_, areaSize := cnv.InteractiveArea()
+	if areaSize.IsZero() {
+		areaSize = cnv.Size()
+	}
 
-// calculate where the popup should appear
-func (c *CompletionEntry) popUpPos() fyne.Position {
-	entryPos := fyne.CurrentApp().Driver().AbsolutePositionForObject(c)
-	return entryPos.Add(fyne.NewPos(0, c.Size().Height))
+	popupSize = popupSize.Min(areaSize)
+	if popupPos.X+popupSize.Width > areaSize.Width {
+		popupPos.X = areaSize.Width - popupSize.Width
+	}
+	if popupPos.X < 0 {
+		popupPos.X = 0
+	}
+	if popupPos.Y+popupSize.Height > areaSize.Height {
+		popupPos.Y = areaSize.Height - popupSize.Height
+	}
+	if popupPos.Y < 0 {
+		popupPos.Y = 0
+	}
+
+	return popupSize, popupPos
 }
 
 func (c *CompletionEntry) selectCurrentItem() {
@@ -346,7 +371,9 @@ func (c *CompletionEntry) setTextFromMenu(s string) {
 	if c.ShowAllEntryText != "" && (s == "" || s == c.ShowAllEntryText) {
 		c.ResetOptionsFilter()
 
-		c.popupMenu.Resize(c.maxSize())
+		popupSize, popupPos := c.popupGeometry()
+		c.popupMenu.Resize(popupSize)
+		c.popupMenu.Move(popupPos)
 		c.selectCurrentItem()
 
 		c.pause = false
