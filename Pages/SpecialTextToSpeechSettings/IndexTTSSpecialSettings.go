@@ -3,6 +3,7 @@ package SpecialTextToSpeechSettings
 import (
 	"strconv"
 	"whispering-tiger-ui/CustomWidget"
+	"whispering-tiger-ui/Fields"
 
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -13,16 +14,53 @@ import (
 	"fyne.io/fyne/v2/widget"
 )
 
-func BuildIndexTTSSpecialSettings() fyne.CanvasObject {
-	languageSelect := CustomWidget.NewTextValueSelect("index_tts_language", []CustomWidget.TextValueOption{
+const indexTTSGermanModel = "IndexTTS-2.5-German"
+
+func indexTTSCanonicalModel(displayValue string) string {
+	if canonical, ok := Fields.TtsModelSelectionValues[displayValue]; ok && len(canonical) >= 2 {
+		return canonical[1]
+	}
+	return displayValue
+}
+
+func indexTTSStockLanguageOptions() []CustomWidget.TextValueOption {
+	return []CustomWidget.TextValueOption{
 		{Text: "Auto", Value: "auto"},
 		{Text: "Chinese", Value: "zh"},
 		{Text: "English", Value: "en"},
 		{Text: "Japanese", Value: "ja"},
 		{Text: "Arabic", Value: "ar"},
 		{Text: "Spanish", Value: "es"},
-	}, nil, 0)
-	languageSelect.SetSelected(GetSpecialSettingFallback("tts_index_tts", "language", "auto").(string))
+	}
+}
+
+func indexTTSLanguageOptions(displayValue string) []CustomWidget.TextValueOption {
+	options := indexTTSStockLanguageOptions()
+	if indexTTSCanonicalModel(displayValue) == indexTTSGermanModel {
+		options = append(options, CustomWidget.TextValueOption{Text: lang.L("German"), Value: "de"})
+	}
+	return options
+}
+
+func containsIndexTTSLanguage(options []CustomWidget.TextValueOption, value string) bool {
+	for _, option := range options {
+		if option.Value == value {
+			return true
+		}
+	}
+	return false
+}
+
+func buildIndexTTSSpecialSettings() (fyne.CanvasObject, *CustomWidget.TextValueSelect) {
+	modelDisplay := Fields.Field.TtsModelCombo.Selected
+	languageOptions := indexTTSLanguageOptions(modelDisplay)
+	languageSelect := CustomWidget.NewTextValueSelect("index_tts_language", languageOptions, nil, 0)
+	languageSetting := GetSpecialSettingFallback("tts_index_tts", "language", "auto").(string)
+	if !containsIndexTTSLanguage(languageOptions, languageSetting) {
+		languageSetting = "auto"
+		SetSpecialTTSSetting("tts_index_tts", "language", languageSetting)
+	}
+	languageSelect.SetSelected(languageSetting)
 
 	precisionSelect := CustomWidget.NewTextValueSelect("index_tts_precision", []CustomWidget.TextValueOption{
 		{Text: "BFloat16 (recommended for CUDA)", Value: "bfloat16"},
@@ -138,6 +176,25 @@ func BuildIndexTTSSpecialSettings() fyne.CanvasObject {
 	for _, check := range []*widget.Check{doSample, textNormalization, emotionEnabled, emotionRandom} {
 		check.OnChanged = func(bool) { update() }
 	}
+	Fields.TtsModelSelectionChanged = func(displayValue string) {
+		selectedLanguage := "auto"
+		if selected := languageSelect.GetSelected(); selected != nil {
+			selectedLanguage = selected.Value
+		}
+		previousLanguage := selectedLanguage
+		options := indexTTSLanguageOptions(displayValue)
+		languageSelect.SetValueOptions(options)
+		if !containsIndexTTSLanguage(options, selectedLanguage) {
+			selectedLanguage = "auto"
+		}
+		onChanged := languageSelect.OnChanged
+		languageSelect.OnChanged = nil
+		languageSelect.SetSelected(selectedLanguage)
+		languageSelect.OnChanged = onChanged
+		if selectedLanguage != previousLanguage {
+			UpdateSpecialTTSSettings("tts_index_tts", "language", selectedLanguage)
+		}
+	}
 	voiceSwitchingInfo := widget.NewButtonWithIcon(lang.L("Voice Switching"), theme.InfoIcon(), func() {
 		windows := fyne.CurrentApp().Driver().AllWindows()
 		if len(windows) > 0 {
@@ -206,5 +263,10 @@ func BuildIndexTTSSpecialSettings() fyne.CanvasObject {
 				),
 			)),
 		),
-	)
+	), languageSelect
+}
+
+func BuildIndexTTSSpecialSettings() fyne.CanvasObject {
+	advancedSettings, _ := buildIndexTTSSpecialSettings()
+	return advancedSettings
 }
