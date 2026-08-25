@@ -94,10 +94,7 @@ func (c *WhisperProcessConfig) RunWithStreams(name string, arguments []string, s
 		_ = stdOutPipeWriter.Close()
 		_ = stdErrPipeWriter.Close()
 
-		c.runMu.Lock()
-		c.running = false
-		c.Program = nil
-		c.runMu.Unlock()
+		c.clearProcessIfCurrent(proc)
 		return err
 	}
 
@@ -109,10 +106,7 @@ func (c *WhisperProcessConfig) RunWithStreams(name string, arguments []string, s
 	_ = stdErrPipeWriter.Close()
 
 	// clear running state
-	c.runMu.Lock()
-	c.running = false
-	c.Program = nil
-	c.runMu.Unlock()
+	c.clearProcessIfCurrent(proc)
 
 	return err
 }
@@ -152,13 +146,48 @@ func (c *WhisperProcessConfig) IsRunning() bool {
 	return c.running
 }
 
+// clearProcessIfCurrent prevents cleanup from an older process from clearing a
+// replacement that has already been installed in the config.
+func (c *WhisperProcessConfig) clearProcessIfCurrent(proc *exec.Cmd) {
+	c.runMu.Lock()
+	defer c.runMu.Unlock()
+	if c.Program == proc {
+		c.running = false
+		c.Program = nil
+	}
+}
+
+func (c *WhisperProcessConfig) stopProcess(proc *exec.Cmd, process *os.Process, timeout time.Duration) {
+	time.Sleep(timeout)
+
+	if process != nil {
+		// gentle
+		_ = process.Signal(syscall.SIGINT)
+		time.Sleep(timeout / 2)
+	}
+
+	closeJobObject(c) // kills the complete process tree on Windows; no-op elsewhere
+
+	if process != nil {
+		_ = process.Kill()
+		_ = process.Signal(syscall.SIGKILL)
+		_ = process.Signal(syscall.SIGTERM)
+	}
+
+	c.clearProcessIfCurrent(proc)
+}
+
 func (c *WhisperProcessConfig) Stop() {
 	c.runMu.Lock()
 	running := c.running
 	proc := c.Program
+	var process *os.Process
+	if proc != nil {
+		process = proc.Process
+	}
 	c.runMu.Unlock()
 
-	if !running || proc == nil || proc.Process == nil {
+	if !running || proc == nil || process == nil {
 		return
 	}
 
@@ -172,33 +201,10 @@ func (c *WhisperProcessConfig) Stop() {
 	}
 	sendMessage.SendMessage()
 
-	time.Sleep(timeout)
-
-	if c.Program.Process != nil {
-		// gentle
-		_ = proc.Process.Signal(syscall.SIGINT)
-		time.Sleep(timeout / 2)
-	}
-
-	closeJobObject(c) // NEW: kills entire tree on Windows; no-op elsewhere
-
-	if c.Program.Process != nil {
-		_ = c.Program.Process.Kill()
-		_ = c.Program.Process.Signal(syscall.SIGKILL)
-		_ = c.Program.Process.Signal(syscall.SIGTERM)
-	}
-
-	//c.Program.Stdout = nil
-	//c.Program.Stdin = nil
-	//c.Program.Stderr = nil
-	//
-	//c.Program.Process = nil
-
-	// clear state
-	c.runMu.Lock()
-	c.running = false
-	c.Program = nil
-	c.runMu.Unlock()
+	// RunWithStreams may clear c.Program as soon as the graceful quit completes.
+	// Continue with the captured process instead of dereferencing that mutable
+	// config field during the delayed shutdown sequence.
+	c.stopProcess(proc, process, timeout)
 }
 
 // init only once
