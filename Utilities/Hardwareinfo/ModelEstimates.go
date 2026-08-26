@@ -111,6 +111,9 @@ var Models = []AIModel{
 	// Covers the practical BF16 footprint of both Qwen3-TTS sizes. The tested
 	// 0.6B Base path peaks near 2.2 GiB; 1.7B checkpoints need more headroom.
 	{"ttsType", "qwen3_tts", "", 5200.0},
+	// Includes the 0.6B generator and shared 44.1 kHz codec in BF16, plus
+	// generation and codec-decoding headroom.
+	{"ttsType", "audio8_tts", "", 4200.0},
 	// OCR types
 	{"ocrType", "easyocr", "", 520.0},
 	{"ocrType", "got_ocr_20", "", 1559.0},

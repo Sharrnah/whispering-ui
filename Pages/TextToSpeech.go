@@ -230,7 +230,7 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 			sendMessage.SendMessage()
 			Fields.Field.TtsVoiceCombo.SetSelected("last")
 		})
-	case "f5_e2", "zonos", "zonos2", "kokoro", "chatterbox", "index_tts", "qwen3_tts", "maya1":
+	case "f5_e2", "zonos", "zonos2", "kokoro", "chatterbox", "index_tts", "qwen3_tts", "audio8_tts", "maya1":
 		saveRandomVoiceButton = widget.NewButtonWithIcon("", theme.ViewRefreshIcon(), func() {
 			sendMessage := SendMessageChannel.SendMessageStruct{
 				Type: "tts_voice_reload_req",
@@ -255,6 +255,9 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 		}
 		if Settings.Config.Tts_type == "qwen3_tts" {
 			advancedSettings = SpecialTextToSpeechSettings.BuildQwen3TTSSpecialSettings()
+		}
+		if Settings.Config.Tts_type == "audio8_tts" {
+			advancedSettings = SpecialTextToSpeechSettings.BuildAudio8TTSSpecialSettings()
 		}
 		if Settings.Config.Tts_type == "maya1" {
 			advancedSettings = SpecialTextToSpeechSettings.BuildMaya1SpecialSettings()
