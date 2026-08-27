@@ -9,9 +9,71 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
+type ExtractionProgress func(extractedBytes, totalBytes uint64)
+
+const extractionProgressInterval = 100 * time.Millisecond
+
+type extractionProgressReporter struct {
+	callback     ExtractionProgress
+	total        uint64
+	extracted    uint64
+	lastReported uint64
+	lastUpdate   time.Time
+}
+
+func newExtractionProgressReporter(total uint64, callback ExtractionProgress) *extractionProgressReporter {
+	reporter := &extractionProgressReporter{
+		callback:   callback,
+		total:      total,
+		lastUpdate: time.Now(),
+	}
+	if callback != nil {
+		callback(0, total)
+	}
+	return reporter
+}
+
+func (r *extractionProgressReporter) add(bytes uint64) {
+	r.extracted += bytes
+	if r.callback == nil {
+		return
+	}
+	if (r.total > 0 && r.extracted >= r.total) || time.Since(r.lastUpdate) >= extractionProgressInterval {
+		r.callback(r.extracted, r.total)
+		r.lastReported = r.extracted
+		r.lastUpdate = time.Now()
+	}
+}
+
+func (r *extractionProgressReporter) finish() {
+	if r.callback != nil && r.lastReported != r.extracted {
+		r.callback(r.extracted, r.total)
+		r.lastReported = r.extracted
+	}
+}
+
+type extractionProgressWriter struct {
+	writer   io.Writer
+	reporter *extractionProgressReporter
+}
+
+func (w extractionProgressWriter) Write(data []byte) (int, error) {
+	written, err := w.writer.Write(data)
+	w.reporter.add(uint64(written))
+	return written, err
+}
+
 func Unzip(src, dest string) error {
+	return UnzipWithProgress(src, dest, nil)
+}
+
+// UnzipWithProgress extracts a ZIP archive and reports progress using the
+// exact total of its uncompressed file sizes. The callback is throttled to
+// avoid flooding a UI event queue while large files are copied.
+func UnzipWithProgress(src, dest string, onProgress ExtractionProgress) error {
 	r, err := zip.OpenReader(src)
 	if err != nil {
 		return err
@@ -22,7 +84,18 @@ func Unzip(src, dest string) error {
 		}
 	}()
 
-	os.MkdirAll(dest, 0755)
+	if err := os.MkdirAll(dest, 0755); err != nil {
+		return err
+	}
+
+	var totalBytes uint64
+	for _, archiveFile := range r.File {
+		if !archiveFile.FileInfo().IsDir() {
+			totalBytes += archiveFile.UncompressedSize64
+		}
+	}
+	progressReporter := newExtractionProgressReporter(totalBytes, onProgress)
+	defer progressReporter.finish()
 
 	// Closure to address file descriptors issue with all the deferred .Close() methods
 	extractAndWriteFile := func(f *zip.File) error {
@@ -57,7 +130,7 @@ func Unzip(src, dest string) error {
 				}
 			}()
 
-			_, err = io.Copy(f, rc)
+			_, err = io.Copy(extractionProgressWriter{writer: f, reporter: progressReporter}, rc)
 			if err != nil {
 				return err
 			}

@@ -40,18 +40,6 @@ func TestRotateDownloadURLsSelectsStartingServer(t *testing.T) {
 	}
 }
 
-func TestNextDownloadServerIndexWrapsAround(t *testing.T) {
-	if got := nextDownloadServerIndex(0, 3); got != 1 {
-		t.Fatalf("expected the next server after 0 to be 1, got %d", got)
-	}
-	if got := nextDownloadServerIndex(2, 3); got != 0 {
-		t.Fatalf("expected the final server to wrap to 0, got %d", got)
-	}
-	if got := nextDownloadServerIndex(0, 1); got != 0 {
-		t.Fatalf("a one-server list must remain at 0, got %d", got)
-	}
-}
-
 func TestDownloadURLDisplayHelpers(t *testing.T) {
 	downloadURL := "https://eu2.example.test/models/model.zip?version=2"
 	if got := downloadURLFilename(downloadURL); got != "model.zip" {
@@ -72,9 +60,24 @@ func TestChangeServerLabelIsLocalized(t *testing.T) {
 	if got := lang.L("Change server"); got != "Change server" {
 		t.Fatalf("unexpected English label: %q", got)
 	}
+	if got := lang.L("Pause"); got != "Pause" {
+		t.Fatalf("unexpected English pause label: %q", got)
+	}
+	if got := lang.L("Resume"); got != "Resume" {
+		t.Fatalf("unexpected English resume label: %q", got)
+	}
 
 	lang.SetPreferredLocale("de")
 	if got := lang.L("Change server"); got != "Server wechseln" {
 		t.Fatalf("unexpected German label: %q", got)
+	}
+	if got := lang.L("Pause"); got != "Pausieren" {
+		t.Fatalf("unexpected German pause label: %q", got)
+	}
+	if got := lang.L("Resume"); got != "Fortsetzen" {
+		t.Fatalf("unexpected German resume label: %q", got)
+	}
+	if got := lang.L("Download paused."); got != "Download pausiert." {
+		t.Fatalf("unexpected German paused status: %q", got)
 	}
 }

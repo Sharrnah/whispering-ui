@@ -2,7 +2,6 @@ package ModelDownloader
 
 import (
 	cryptoRand "crypto/rand"
-	"errors"
 	"fmt"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -17,6 +16,7 @@ import (
 	"path/filepath"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/Updater"
@@ -105,13 +105,6 @@ func randomizedUniqueURLs(urls []string) []string {
 	return rotateDownloadURLs(unique, randomDownloadServerIndex(len(unique)))
 }
 
-func nextDownloadServerIndex(currentIndex, serverCount int) int {
-	if serverCount <= 1 {
-		return 0
-	}
-	return (currentIndex + 1) % serverCount
-}
-
 func downloadURLFilename(downloadURL string) string {
 	parsedURL, err := url.Parse(downloadURL)
 	if err == nil {
@@ -133,7 +126,7 @@ func downloadServerName(downloadURL string) string {
 func DownloadFile(urls []string, targetDir string, checksum string, title string, extractFormat string) error {
 	downloadURLs := randomizedUniqueURLs(urls)
 	if len(downloadURLs) == 0 {
-		return fmt.Errorf("no download URLs were provided")
+		return Updater.ErrNoDownloadURLs
 	}
 
 	// If the file is already being downloaded, skip and return.
@@ -147,12 +140,49 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 	// find active window
 	window, _ := Utilities.GetCurrentMainWindow("Downloading " + title)
 
-	// get file name from download url
 	filename := downloadURLFilename(downloadURLs[0])
-
-	// create download dialog
 	statusBar := widget.NewProgressBar()
 	statusBarContainer := container.NewVBox(statusBar)
+	var infiniteProgress *widget.ProgressBarInfinite
+	determinateProgressVisible := true
+	infiniteProgressVisible := false
+	showIndeterminateProgress := func() {
+		if determinateProgressVisible {
+			statusBarContainer.Remove(statusBar)
+			determinateProgressVisible = false
+		}
+		if infiniteProgress == nil {
+			infiniteProgress = widget.NewProgressBarInfinite()
+		}
+		if !infiniteProgressVisible {
+			statusBarContainer.Add(infiniteProgress)
+			infiniteProgressVisible = true
+		}
+		infiniteProgress.Show()
+		infiniteProgress.Start()
+		statusBarContainer.Refresh()
+	}
+	stopIndeterminateProgress := func() {
+		if infiniteProgress == nil || !infiniteProgressVisible {
+			return
+		}
+		infiniteProgress.Stop()
+		infiniteProgress.Hide()
+		statusBarContainer.Remove(infiniteProgress)
+		infiniteProgressVisible = false
+		statusBarContainer.Refresh()
+	}
+	showDeterminateProgress := func(progress, total uint64) {
+		stopIndeterminateProgress()
+		if !determinateProgressVisible {
+			statusBarContainer.Add(statusBar)
+			determinateProgressVisible = true
+		}
+		statusBar.Show()
+		statusBar.Max = float64(total)
+		statusBar.SetValue(float64(progress))
+		statusBarContainer.Refresh()
+	}
 
 	dialogTitlePart := filename
 	if title != "" {
@@ -161,31 +191,42 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 	downloadDialog := dialog.NewCustomWithoutButtons("Downloading "+dialogTitlePart, statusBarContainer, window)
 	downloadingLabel := widget.NewLabel(lang.L("Downloading...") + " ")
 
-	var downloadStateMutex sync.Mutex
-	var activeDownloader *Updater.Download
-	switchRequested := false
+	downloadTargetDir := filepath.Dir(targetDir)
+	if err := os.MkdirAll(downloadTargetDir, 0755); err != nil {
+		return err
+	}
+	downloadSession := Updater.NewDownloadSession(downloadURLs, targetDir, 4, 15*1024*1024)
+
+	var pauseDownloadButton *widget.Button
 	changeServerButton := widget.NewButton(lang.L("Change server"), nil)
 	changeServerButton.OnTapped = func() {
-		downloadStateMutex.Lock()
-		if activeDownloader == nil || switchRequested || len(downloadURLs) <= 1 {
-			downloadStateMutex.Unlock()
+		if downloadSession.SwitchServer() {
+			changeServerButton.Disable()
+			pauseDownloadButton.Disable()
+			downloadingLabel.SetText(lang.L("Downloading...") + " ")
+		}
+	}
+	pauseDownloadButton = widget.NewButton(lang.L("Pause"), func() {
+		if downloadSession.IsPaused() {
+			if downloadSession.Resume() {
+				pauseDownloadButton.Disable()
+				downloadingLabel.SetText(lang.L("Downloading...") + " ")
+			}
 			return
 		}
-		switchRequested = true
-		downloaderToCancel := activeDownloader
-		downloadStateMutex.Unlock()
-
-		changeServerButton.Disable()
-		downloadingLabel.SetText(lang.L("Downloading...") + " ")
-		downloaderToCancel.Cancel()
-	}
+		if downloadSession.Pause() {
+			pauseDownloadButton.Disable()
+			changeServerButton.Disable()
+			downloadingLabel.SetText(lang.L("Pausing...") + " ")
+		}
+	})
 	hideDownloadButton := widget.NewButton(lang.L("Hide (Download will continue)"), func() {
 		downloadDialog.Hide()
 	})
 
-	reOpenAfterHide := false
+	var reOpenAfterHide atomic.Bool
 	downloadDialog.SetOnClosed(func() {
-		reOpenAfterHide = true
+		reOpenAfterHide.Store(true)
 	})
 
 	// is filename a zip file?
@@ -206,15 +247,7 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 		extractType = extractFormat
 	}
 
-	//appExec, _ := os.Executable()
-
-	downloadTargetDir := filepath.Dir(targetDir)
-	os.MkdirAll(downloadTargetDir, 0755)
-	//downloadTargetFile := filepath.Join(downloadTargetDir, filename)
 	receiptWriter := Updater.Download{Filepath: targetDir}
-
-	// guard for adding the infinite bar only once
-	var infiniteOnce sync.Once
 
 	fyne.Do(func() {
 		statusBarContainer.Add(downloadingLabel)
@@ -222,102 +255,79 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 		if len(downloadURLs) <= 1 {
 			changeServerButton.Disable()
 		}
-		downloadDialog.SetButtons([]fyne.CanvasObject{changeServerButton, hideDownloadButton})
+		changeServerButton.Disable()
+		pauseDownloadButton.Disable()
+		downloadDialog.SetButtons([]fyne.CanvasObject{changeServerButton, pauseDownloadButton, hideDownloadButton})
 		downloadDialog.Show()
 	})
 
-	var err error
-	serverIndex := 0
-	automaticFailures := 0
-	for {
-		downloadURL := downloadURLs[serverIndex]
-		downloader := &Updater.Download{
-			Url:                 downloadURL,
-			Filepath:            targetDir,
-			ConcurrentDownloads: 4,
-			ChunkSize:           15 * 1024 * 1024, // 15 MB
-		}
-		serverName := downloadServerName(downloadURL)
-		downloader.WriteCounter.OnProgress = func(progress, total uint64, speed float64) {
-			if int64(total) == -1 {
-				infiniteOnce.Do(func() {
-					fyne.Do(func() {
-						statusBarContainer.Remove(statusBar)
-						statusBarContainer.Add(widget.NewProgressBarInfinite())
-						statusBarContainer.Refresh()
-					})
-				})
-			} else {
-				fyne.Do(func() {
-					statusBar.Max = float64(total)
-					statusBar.SetValue(float64(progress))
-				})
-				resumeStatusText := ""
-				if downloader.IsResuming() {
-					resumeStatusText = " (" + lang.L("Resuming") + ")"
-				}
-
-				speedStr := ""
-				if speed < 1024 {
-					speedStr = fmt.Sprintf("%.2f B/s", speed)
-				} else if speed < 1024*1024 {
-					speedStr = fmt.Sprintf("%.2f KiB/s", speed/1024)
-				} else {
-					speedStr = fmt.Sprintf("%.2f MiB/s", speed/(1024*1024))
-				}
-				fyne.Do(func() {
-					downloadingLabel.SetText(lang.L("Downloading from location", map[string]interface{}{
-						"Location":  serverName,
-						"TotalSize": humanize.Bytes(total),
-						"Speed":     speedStr,
-					}) + " " + resumeStatusText)
-				})
-			}
-		}
-
-		downloadStateMutex.Lock()
-		activeDownloader = downloader
-		switchRequested = false
-		downloadStateMutex.Unlock()
-		displayServerIndex := serverIndex
+	downloadSession.OnAttempt = func(_ string, serverIndex, serverCount int) {
 		fyne.Do(func() {
-			changeServerButton.SetText(fmt.Sprintf("%s (%d/%d)", lang.L("Change server"), displayServerIndex+1, len(downloadURLs)))
-			if len(downloadURLs) > 1 {
+			changeServerButton.SetText(fmt.Sprintf("%s (%d/%d)", lang.L("Change server"), serverIndex+1, serverCount))
+			if serverCount > 1 {
 				changeServerButton.Enable()
 			} else {
 				changeServerButton.Disable()
 			}
+			pauseDownloadButton.SetText(lang.L("Pause"))
+			pauseDownloadButton.Enable()
 		})
-
-		err = downloader.DownloadFile(3)
-
-		downloadStateMutex.Lock()
-		wasSwitchRequested := switchRequested
-		activeDownloader = nil
-		switchRequested = false
-		downloadStateMutex.Unlock()
-
-		if err == nil {
-			break
-		}
-		if errors.Is(err, Updater.ErrDownloadCanceled) && wasSwitchRequested {
-			automaticFailures = 0
-			serverIndex = nextDownloadServerIndex(serverIndex, len(downloadURLs))
-			continue
-		}
-		Logging.CaptureException(err)
-		automaticFailures++
-		if automaticFailures >= len(downloadURLs) {
-			break
-		}
-		serverIndex = nextDownloadServerIndex(serverIndex, len(downloadURLs))
 	}
+	downloadSession.OnProgress = func(downloadURL string, progress, total uint64, speed float64, resuming bool) {
+		serverName := downloadServerName(downloadURL)
+		if int64(total) == -1 {
+			fyne.Do(showIndeterminateProgress)
+			return
+		}
+		fyne.Do(func() {
+			showDeterminateProgress(progress, total)
+		})
+		resumeStatusText := ""
+		if resuming {
+			resumeStatusText = " (" + lang.L("Resuming") + ")"
+		}
+		speedStr := ""
+		if speed < 1024 {
+			speedStr = fmt.Sprintf("%.2f B/s", speed)
+		} else if speed < 1024*1024 {
+			speedStr = fmt.Sprintf("%.2f KiB/s", speed/1024)
+		} else {
+			speedStr = fmt.Sprintf("%.2f MiB/s", speed/(1024*1024))
+		}
+		fyne.Do(func() {
+			downloadingLabel.SetText(lang.L("Downloading from location", map[string]interface{}{
+				"Location":  serverName,
+				"TotalSize": humanize.Bytes(total),
+				"Speed":     speedStr,
+			}) + " " + resumeStatusText)
+		})
+	}
+	downloadSession.OnPaused = func() {
+		fyne.Do(func() {
+			downloadingLabel.SetText(lang.L("Download paused.") + " ")
+			pauseDownloadButton.SetText(lang.L("Resume"))
+			pauseDownloadButton.Enable()
+			changeServerButton.Disable()
+		})
+	}
+	downloadSession.OnResumed = func() {
+		fyne.Do(func() {
+			downloadingLabel.SetText(lang.L("Downloading...") + " ")
+			pauseDownloadButton.SetText(lang.L("Pause"))
+			pauseDownloadButton.Enable()
+		})
+	}
+
+	err := downloadSession.Run(3)
 	fyne.Do(func() {
 		changeServerButton.Disable()
+		pauseDownloadButton.Disable()
 	})
 
 	if err != nil {
+		Logging.CaptureException(err)
 		fyne.Do(func() {
+			stopIndeterminateProgress()
 			dialog.ShowError(err, window)
 		})
 		return err
@@ -334,8 +344,9 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 				err = fmt.Errorf("%w (could not remove invalid archive: %v)", err, removeErr)
 			}
 			fyne.Do(func() {
+				stopIndeterminateProgress()
 				dialog.ShowError(err, window)
-				statusBarContainer.Add(widget.NewLabel("Checksum check failed. Please retry. If it still fails, please contact support."))
+				statusBarContainer.Add(widget.NewLabel(lang.L("Checksum check failed. Please retry. If it still fails, please contact support.")))
 			})
 			return err
 		}
@@ -344,17 +355,44 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 	// wait a bit before trying to extract
 	if needsExtract {
 		time.Sleep(1 * time.Second)
-		fyne.Do(func() {
+		fyne.DoAndWait(func() {
+			if extractType == "zip" {
+				statusBar.TextFormatter = func() string {
+					if statusBar.Max <= 0 {
+						return ""
+					}
+					percentage := statusBar.Value / statusBar.Max * 100
+					return fmt.Sprintf("%.0f%% (%s / %s)", percentage, humanize.Bytes(uint64(statusBar.Value)), humanize.Bytes(uint64(statusBar.Max)))
+				}
+				showIndeterminateProgress()
+			} else {
+				showIndeterminateProgress()
+			}
 			statusBarContainer.Add(widget.NewLabel(lang.L("Extracting...")))
 			statusBarContainer.Refresh()
 		})
 		if extractType == "zip" {
-			err = Updater.Unzip(targetDir, downloadTargetDir)
+			var firstProgress atomic.Bool
+			err = Updater.UnzipWithProgress(targetDir, downloadTargetDir, func(extracted, total uint64) {
+				updateProgress := func() {
+					if total == 0 {
+						showIndeterminateProgress()
+						return
+					}
+					showDeterminateProgress(extracted, total)
+				}
+				if firstProgress.CompareAndSwap(false, true) {
+					fyne.DoAndWait(updateProgress)
+				} else {
+					fyne.Do(updateProgress)
+				}
+			})
 		} else if extractType == "tar.gz" {
 			err = Updater.Untar(targetDir, downloadTargetDir)
 		}
 		if err != nil {
 			fyne.Do(func() {
+				stopIndeterminateProgress()
 				dialog.ShowError(err, window)
 			})
 			return err
@@ -362,6 +400,7 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 		err = receiptWriter.CreateFinishedFile(".finished", 5, 3*time.Second)
 		if err != nil {
 			fyne.Do(func() {
+				stopIndeterminateProgress()
 				dialog.ShowError(err, window)
 			})
 			return err
@@ -383,6 +422,7 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 		err = receiptWriter.CreateFinishedFile(".finished", 5, 3*time.Second)
 		if err != nil {
 			fyne.Do(func() {
+				stopIndeterminateProgress()
 				dialog.ShowError(err, window)
 			})
 			return err
@@ -391,6 +431,8 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 
 	fyne.Do(func() {
 		changeServerButton.Disable()
+		pauseDownloadButton.Disable()
+		stopIndeterminateProgress()
 		statusBarContainer.Add(widget.NewLabel(lang.L("Finished.")))
 		downloadDialog.SetButtons([]fyne.CanvasObject{
 			widget.NewButton(lang.L("Close"), func() {
@@ -398,7 +440,7 @@ func DownloadFile(urls []string, targetDir string, checksum string, title string
 			}),
 		})
 		downloadDialog.Refresh()
-		if reOpenAfterHide {
+		if reOpenAfterHide.Load() {
 			downloadDialog.Show()
 		} else {
 			downloadDialog.Hide()

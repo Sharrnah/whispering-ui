@@ -990,19 +990,26 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 	})
 	checkForUpdatesButton := widget.NewButton(lang.L("Check for App updates now"), func() {
-		hasAppUpdate := UpdateUtility.VersionCheck(fyne.CurrentApp().Driver().AllWindows()[1], true)
-		hasPluginUpdate := false
-		if UpdateUtility.PluginsUpdateAvailable() {
-			hasPluginUpdate = true
-			dialog.ShowConfirm(lang.L("New Plugin updates available"), lang.L("Whispering Tiger has new Plugin updates available. Go to Plugin List now?"), func(b bool) {
-				if b {
-					Advanced.CreatePluginListWindow(nil, true)
+		updateWindow := fyne.CurrentApp().Driver().AllWindows()[1]
+		go func() {
+			hasAppUpdate, checkErr := UpdateUtility.VersionCheck(updateWindow, true)
+			if checkErr != nil {
+				return
+			}
+			hasPluginUpdate := UpdateUtility.PluginsUpdateAvailable()
+			fyne.Do(func() {
+				if hasPluginUpdate {
+					dialog.ShowConfirm(lang.L("New Plugin updates available"), lang.L("Whispering Tiger has new Plugin updates available. Go to Plugin List now?"), func(b bool) {
+						if b {
+							Advanced.CreatePluginListWindow(nil, true)
+						}
+					}, updateWindow)
 				}
-			}, fyne.CurrentApp().Driver().AllWindows()[1])
-		}
-		if !hasAppUpdate && !hasPluginUpdate {
-			dialog.ShowInformation(lang.L("No update available"), lang.L("You are already using the latest version of Whispering Tiger and all installed Plugins."), fyne.CurrentApp().Driver().AllWindows()[1])
-		}
+				if !hasAppUpdate && !hasPluginUpdate {
+					dialog.ShowInformation(lang.L("No update available"), lang.L("You are already using the latest version of Whispering Tiger and all installed Plugins."), updateWindow)
+				}
+			})
+		}()
 	})
 	checkForUpdatesButton.Importance = widget.LowImportance
 

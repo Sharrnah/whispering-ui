@@ -375,25 +375,26 @@ func startBackgroundTasks() {
 	// check for app updates
 	if fyne.CurrentApp().Preferences().BoolWithFallback("CheckForUpdateAtStartup", true) ||
 		(!Utilities.FileExists("audioWhisper/audioWhisper.exe") && !Utilities.FileExists("audioWhisper.py")) {
-		go func() {
-			fyne.Do(func() {
-				wList := fyne.CurrentApp().Driver().AllWindows()
-				if len(wList) >= 2 {
-					UpdateUtility.VersionCheck(wList[1], false)
-				}
-			})
-		}()
+		windowList := fyne.CurrentApp().Driver().AllWindows()
+		if len(windowList) >= 2 {
+			updateWindow := windowList[1]
+			go func() {
+				_, _ = UpdateUtility.VersionCheck(updateWindow, false)
+			}()
+		}
 	}
 
 	// check for plugin updates
 	if fyne.CurrentApp().Preferences().BoolWithFallback("CheckForPluginUpdatesAtStartup", true) {
-		go func() {
-			fyne.Do(func() {
-				last := fyne.CurrentApp().Preferences().IntWithFallback("CheckForPluginUpdatesAtStartupLastTime", 0)
-				now := time.Now()
-				if time.Unix(int64(last), 0).YearDay() != now.YearDay() {
-					fyne.CurrentApp().Preferences().SetInt("CheckForPluginUpdatesAtStartupLastTime", int(now.Unix()))
-					if UpdateUtility.PluginsUpdateAvailable() {
+		last := fyne.CurrentApp().Preferences().IntWithFallback("CheckForPluginUpdatesAtStartupLastTime", 0)
+		now := time.Now()
+		windowList := fyne.CurrentApp().Driver().AllWindows()
+		if time.Unix(int64(last), 0).YearDay() != now.YearDay() && len(windowList) >= 2 {
+			fyne.CurrentApp().Preferences().SetInt("CheckForPluginUpdatesAtStartupLastTime", int(now.Unix()))
+			pluginWindow := windowList[1]
+			go func() {
+				if UpdateUtility.PluginsUpdateAvailable() {
+					fyne.Do(func() {
 						dialog.ShowConfirm(
 							lang.L("New Plugin updates available"),
 							lang.L("Whispering Tiger has new Plugin updates available. Go to Plugin List now?"),
@@ -402,12 +403,12 @@ func startBackgroundTasks() {
 									Advanced.CreatePluginListWindow(nil, false)
 								}
 							},
-							fyne.CurrentApp().Driver().AllWindows()[1],
+							pluginWindow,
 						)
-					}
+					})
 				}
-			})
-		}()
+			}()
+		}
 	}
 }
 

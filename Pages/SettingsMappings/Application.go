@@ -79,9 +79,15 @@ var ApplicationSettingsMapping = SettingsMapping{
 				widgetCheckbox.Checked = fyne.CurrentApp().Preferences().BoolWithFallback("CheckForUpdateAtStartup", true)
 
 				checkForUpdatesButton := widget.NewButton(lang.L("Check for App updates now"), func() {
-					if !UpdateUtility.VersionCheck(fyne.CurrentApp().Driver().AllWindows()[0], true) {
-						dialog.ShowInformation(lang.L("No update available"), lang.L("You are running the latest version of Whispering Tiger."), fyne.CurrentApp().Driver().AllWindows()[0])
-					}
+					updateWindow := fyne.CurrentApp().Driver().AllWindows()[0]
+					go func() {
+						hasUpdate, checkErr := UpdateUtility.VersionCheck(updateWindow, true)
+						if checkErr == nil && !hasUpdate {
+							fyne.Do(func() {
+								dialog.ShowInformation(lang.L("No update available"), lang.L("You are running the latest version of Whispering Tiger."), updateWindow)
+							})
+						}
+					}()
 				})
 
 				return container.NewHBox(widgetCheckbox, checkForUpdatesButton)

@@ -7,7 +7,12 @@ import (
 	"log"
 	"net/http"
 	"os"
+	"time"
 )
+
+const updateInfoRequestTimeout = 15 * time.Second
+
+var updateInfoHTTPClient = &http.Client{Timeout: updateInfoRequestTimeout}
 
 /* example yaml
 packages:
@@ -71,7 +76,7 @@ func (u *UpdatePackages) parsePackagesFromYaml(data []byte) error {
 }
 
 func (u *UpdatePackages) getYaml(url string) ([]byte, error) {
-	resp, err := http.Get(url)
+	resp, err := updateInfoHTTPClient.Get(url)
 	if err != nil {
 		return []byte{}, fmt.Errorf("GET error: %v", err)
 	}
