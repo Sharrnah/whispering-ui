@@ -14,6 +14,8 @@ var DefaultProfileSetting = Settings.Conf{
 	Device_out_index:            -1,
 	Audio_api:                   AudioAPI.AudioBackends[0].Name,
 	Audio_input_device:          "",
+	Audio_input_process:         "",
+	Audio_input_process_id:      0,
 	Audio_output_device:         "",
 	Ai_device:                   "cpu",
 	Model:                       "tiny",

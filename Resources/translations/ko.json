@@ -129,6 +129,8 @@
     "About Whispering Tiger": "위스퍼링 타이거 소개",
     "Advanced Settings": "고급 설정",
     "Application Options": "애플리케이션 옵션",
+    "Application Audio": "애플리케이션 오디오",
+    "Please select a running application for Application Audio.": "애플리케이션 오디오에 사용할 실행 중인 애플리케이션을 선택하세요.",
     "Speech-to-Text Options": "음성-텍스트 변환 옵션",
     "Text-Translate Options": "텍스트 번역 옵션",
     "Text-to-Speech Options": "텍스트 음성 변환 옵션",

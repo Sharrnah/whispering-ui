@@ -147,6 +147,8 @@
     },
     "Plugins": "外掛",
     "Application Options": "應用程式選項",
+    "Application Audio": "應用程式音訊",
+    "Please select a running application for Application Audio.": "請為應用程式音訊選擇一個正在執行的應用程式。",
     "Speech-to-Text Options": "語音轉文字選項",
     "This will record for energyDetectionTime seconds and sets the energy to the max detected level. Please behave normally (breathing etc.) but don't say anything. This value can later be fine-tuned without restarting by setting the energy value in Advanced-Settings.": "這會錄製 {{.EnergyDetectionTime}}，並將能量設為偵測到的最高水平。\n請保持正常狀態（呼吸等），但不要說話。\n\n之後可以在「進階 → 設定」中調整「語音音量等級」來微調此數值，無需重新啟動。",
     "... show all": "... 顯示全部",

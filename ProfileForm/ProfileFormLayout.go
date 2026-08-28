@@ -33,7 +33,7 @@ func BuildDefaultProfileLayout() []RowSpec {
 		RowSpec{Label: lang.L("Websocket IP + Port"), Hint: lang.L("IP + Port of the websocket server the backend will start and the UI will connect to."), ControlNames: []string{"WebsocketIP", "WebsocketPort", "RunBackend"}, Cols: 3},
 		RowSpec{Spacer: true},
 		RowSpec{Label: lang.L("Audio API"), ControlNames: []string{"AudioAPI"}, Cols: 1},
-		RowSpec{Label: lang.L("Audio Input (mic)"), ControlNames: []string{"AudioInput"}, Cols: 1},
+		RowSpec{Label: lang.L("Audio Input (mic)"), CustomKey: "AudioInputRow"},
 		RowSpec{CustomKey: "AudioInputProgress"},
 		RowSpec{Label: lang.L("Audio Output (speaker)"), ControlNames: []string{"AudioOutput"}, Cols: 1},
 		RowSpec{CustomKey: "AudioOutputProgress"},
@@ -63,7 +63,7 @@ func BuildFullProfileLayout() []RowSpec {
 		RowSpec{Label: lang.L("Websocket IP + Port"), Hint: lang.L("IP + Port of the websocket server the backend will start and the UI will connect to."), ControlNames: []string{"WebsocketIP", "WebsocketPort", "RunBackend"}, Cols: 3},
 		RowSpec{Spacer: true},
 		RowSpec{Label: lang.L("Audio API"), ControlNames: []string{"AudioAPI"}, Cols: 1},
-		RowSpec{Label: lang.L("Audio Input (mic)"), ControlNames: []string{"AudioInput"}, Cols: 1},
+		RowSpec{Label: lang.L("Audio Input (mic)"), CustomKey: "AudioInputRow"},
 		RowSpec{CustomKey: "AudioInputProgress"},
 		RowSpec{Label: lang.L("Audio Output (speaker)"), ControlNames: []string{"AudioOutput"}, Cols: 1},
 		RowSpec{CustomKey: "AudioOutputProgress"},
@@ -99,36 +99,42 @@ func BuildFullProfileLayout() []RowSpec {
 }
 
 type FullFormDeps struct {
-	InputOptions         []CustomWidget.TextValueOption
-	OutputOptions        []CustomWidget.TextValueOption
-	AudioInputProgress   fyne.CanvasObject
-	AudioOutputProgress  fyne.CanvasObject
-	OnAudioAPIChanged    func(CustomWidget.TextValueOption)
-	OnAudioInputChanged  func(CustomWidget.TextValueOption)
-	OnAudioOutputChanged func(CustomWidget.TextValueOption)
-	OnDetectEnergy       func(apiValue, deviceIndexValue, deviceText string) (float64, error)
-	AfterDetectEnergy    func()
-	CPUMemoryBar         *widget.ProgressBar
-	GPUMemoryBar         *widget.ProgressBar
-	TotalGPUMemory       func() int64
-	HasNvidiaGPU         func() bool
+	InputOptions              []CustomWidget.TextValueOption
+	ApplicationOptions        []CustomWidget.TextValueOption
+	OutputOptions             []CustomWidget.TextValueOption
+	AudioInputProgress        fyne.CanvasObject
+	AudioOutputProgress       fyne.CanvasObject
+	OnAudioAPIChanged         func(CustomWidget.TextValueOption)
+	OnAudioInputChanged       func(CustomWidget.TextValueOption)
+	OnAudioApplicationChanged func(CustomWidget.TextValueOption)
+	OnAudioOutputChanged      func(CustomWidget.TextValueOption)
+	OnDetectEnergy            func(apiValue, deviceIndexValue, deviceText string) (float64, error)
+	AfterDetectEnergy         func()
+	CPUMemoryBar              *widget.ProgressBar
+	GPUMemoryBar              *widget.ProgressBar
+	TotalGPUMemory            func() int64
+	HasNvidiaGPU              func() bool
 }
 
 func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullFormDeps) *AllProfileControls {
 	builder := NewProfileBuilder()
 
-	build := builder.BuildAll(engine, deps.InputOptions, deps.OutputOptions)
+	build := builder.BuildAll(engine, deps.InputOptions, deps.ApplicationOptions, deps.OutputOptions)
 	// Convenience local vars to preserve old names for handler wiring
 	audioSection := struct {
-		ApiSelect    *CustomWidget.TextValueSelect
-		InputSelect  *CustomWidget.TextValueSelect
-		OutputSelect *CustomWidget.TextValueSelect
-	}{ApiSelect: engine.Controls.AudioAPI, InputSelect: engine.Controls.AudioInput, OutputSelect: engine.Controls.AudioOutput}
+		ApiSelect         *CustomWidget.TextValueSelect
+		InputSelect       *CustomWidget.TextValueSelect
+		ApplicationSelect *CustomWidget.TextValueSelect
+		OutputSelect      *CustomWidget.TextValueSelect
+	}{ApiSelect: engine.Controls.AudioAPI, InputSelect: engine.Controls.AudioInput, ApplicationSelect: engine.Controls.AudioApplication, OutputSelect: engine.Controls.AudioOutput}
 	if audioSection.ApiSelect != nil && deps.OnAudioAPIChanged != nil {
 		audioSection.ApiSelect.OnChanged = deps.OnAudioAPIChanged
 	}
 	if audioSection.InputSelect != nil && deps.OnAudioInputChanged != nil {
 		audioSection.InputSelect.OnChanged = deps.OnAudioInputChanged
+	}
+	if audioSection.ApplicationSelect != nil && deps.OnAudioApplicationChanged != nil {
+		audioSection.ApplicationSelect.OnChanged = deps.OnAudioApplicationChanged
 	}
 	if audioSection.OutputSelect != nil && deps.OnAudioOutputChanged != nil {
 		audioSection.OutputSelect.OnChanged = deps.OnAudioOutputChanged
@@ -460,7 +466,7 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 	}
 	phraseSlider.OnChanged = func(v float64) { phraseState.SetText(fmt.Sprintf("%.1f", v)) }
 
-	custom := map[string]fyne.CanvasObject{"AudioInputProgress": deps.AudioInputProgress, "AudioOutputProgress": deps.AudioOutputProgress, "VADGroup": vadSection.GroupRow, "VADConfidence": vadSection.ConfidenceRow, "EnergyRow": energyRow, "PauseRow": pauseRow, "PhraseRow": phraseRow}
+	custom := map[string]fyne.CanvasObject{"AudioInputRow": build.AudioInputRow, "AudioInputProgress": deps.AudioInputProgress, "AudioOutputProgress": deps.AudioOutputProgress, "VADGroup": vadSection.GroupRow, "VADConfidence": vadSection.ConfidenceRow, "EnergyRow": energyRow, "PauseRow": pauseRow, "PhraseRow": phraseRow}
 	AppendProfileLayout(form, engine.Controls, BuildFullProfileLayout(), custom)
 
 	engine.Controls.VadEnable.OnChanged = func(b bool) {

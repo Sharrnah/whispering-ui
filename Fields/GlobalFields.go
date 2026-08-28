@@ -33,6 +33,13 @@ var TtsModelSelectionValues = map[string][]string{}
 // model change without replacing the selector's setting-change handler.
 var TtsModelSelectionChanged func(string)
 
+// AudioInputSwitchResult lets the active Settings page finish or roll back its
+// optimistic live input selection after the backend replaces the callback stream.
+var AudioInputSwitchResult func(requestID string, success bool, errorMessage string)
+
+// AudioOutputSwitchResult does the same for a runtime playback-device change.
+var AudioOutputSwitchResult func(requestID string, success bool, errorMessage string)
+
 var fieldCreationFunctions = struct {
 	TranscriptionTaskCombo        func() *CustomWidget.TextValueSelect
 	TranscriptionInput            func(dataBinding binding.String) *CustomWidget.EntryWithPopupMenu

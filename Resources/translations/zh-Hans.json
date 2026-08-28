@@ -111,6 +111,8 @@
     "repetition_penalty.Description": "惩罚先前生成的标记的得分（设置 > 1 为惩罚）",
     "Settings Saved": "保存的设置",
     "Application Options": "应用选项",
+    "Application Audio": "应用程序音频",
+    "Please select a running application for Application Audio.": "请为应用程序音频选择一个正在运行的应用程序。",
     "Most Devices of this type do not support this precision computation. Please consider switching to some other precision.": "大多数{{.Device}} 不支持{{.Precision}} 计算。请考虑改用其他精度。",
     "Send to Text-to-Speech": "发送到文本转语音",
     "Save Random Voice": "保存随机音色",

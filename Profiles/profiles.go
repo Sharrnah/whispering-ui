@@ -13,9 +13,11 @@ type Profile struct {
 	Device_index     interface{} `yaml:"device_index"`
 	Device_out_index interface{} `yaml:"device_out_index"`
 
-	Audio_api           string `yaml:"audio_api"`
-	Audio_input_device  string `yaml:"audio_input_device"`
-	Audio_output_device string `yaml:"audio_output_device"`
+	Audio_api              string `yaml:"audio_api"`
+	Audio_input_device     string `yaml:"audio_input_device"`
+	Audio_input_process    string `yaml:"audio_input_process,omitempty"`
+	Audio_input_process_id int    `yaml:"audio_input_process_id,omitempty"`
+	Audio_output_device    string `yaml:"audio_output_device"`
 
 	Phrase_time_limit float64 `yaml:"phrase_time_limit"`
 	Pause             float64 `yaml:"pause"`

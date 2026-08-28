@@ -42,6 +42,7 @@ import (
 type CurrentPlaybackDevice struct {
 	InputDeviceName  string
 	OutputDeviceName string
+	ProcessLoopback  bool
 	InputWaveWidget  *widget.ProgressBar
 	OutputWaveWidget *widget.ProgressBar
 	Context          *malgo.AllocatedContext
@@ -62,6 +63,10 @@ type CurrentPlaybackDevice struct {
 	// We wait on this (via polling) before starting a new context when switching APIs
 	// to avoid racing between freeing the underlying C context and creating devices.
 	contextWG sync.WaitGroup
+
+	applicationMeter           *Utilities.ApplicationAudioMeter
+	applicationMeterGeneration uint64
+	applicationMeterMu         sync.Mutex
 }
 
 // Context lifecycle overview:
@@ -79,6 +84,55 @@ type CurrentPlaybackDevice struct {
 func (c *CurrentPlaybackDevice) StartContext() {
 	c.contextWG.Add(1)
 	go c.Init()
+}
+
+func (c *CurrentPlaybackDevice) StopApplicationAudioMeter() {
+	c.applicationMeterMu.Lock()
+	c.applicationMeterGeneration++
+	meter := c.applicationMeter
+	c.applicationMeter = nil
+	inputWaveWidget := c.InputWaveWidget
+	c.applicationMeterMu.Unlock()
+	if meter != nil {
+		meter.Stop()
+	}
+	if inputWaveWidget != nil {
+		fyne.Do(func() { inputWaveWidget.SetValue(0) })
+	}
+}
+
+func (c *CurrentPlaybackDevice) StartApplicationAudioMeter(processID uint32, executable string) error {
+	c.StopApplicationAudioMeter()
+	c.applicationMeterMu.Lock()
+	c.applicationMeterGeneration++
+	generation := c.applicationMeterGeneration
+	c.applicationMeterMu.Unlock()
+
+	meter, err := Utilities.StartApplicationAudioMeter(processID, executable, func(peak float32) {
+		level := normalizedAudioMeterLevel(float64(peak))
+		fyne.Do(func() {
+			c.applicationMeterMu.Lock()
+			current := generation == c.applicationMeterGeneration
+			inputWaveWidget := c.InputWaveWidget
+			c.applicationMeterMu.Unlock()
+			if current && inputWaveWidget != nil {
+				inputWaveWidget.SetValue(level)
+			}
+		})
+	})
+	if err != nil {
+		return err
+	}
+
+	c.applicationMeterMu.Lock()
+	if generation != c.applicationMeterGeneration {
+		c.applicationMeterMu.Unlock()
+		meter.Stop()
+		return nil
+	}
+	c.applicationMeter = meter
+	c.applicationMeterMu.Unlock()
+	return nil
 }
 
 // StopAndWaitContext signals the Init goroutine to stop (via Stop()) and waits until it has fully exited.
@@ -282,6 +336,12 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 		}
 	}
 
+	if c.ProcessLoopback {
+		// The profile preview uses miniaudio, which only supports endpoint
+		// loopback. Keep output testing available while the Python backend owns
+		// the process-specific WASAPI capture stream.
+		isPlayback = true
+	}
 	deviceConfig := malgo.DefaultDeviceConfig(malgo.Duplex)
 	if isLoopback {
 		deviceConfig = malgo.DefaultDeviceConfig(malgo.Loopback)
@@ -549,6 +609,91 @@ func GetAudioDevices(audioApi malgo.Backend, deviceTypes []malgo.DeviceType, dev
 	return devicesOptions, deviceList, nil
 }
 
+func appendApplicationAudioInputOption(options []CustomWidget.TextValueOption, audioAPI malgo.Backend) []CustomWidget.TextValueOption {
+	if audioAPI != malgo.BackendWasapi {
+		return options
+	}
+	applicationOption := CustomWidget.TextValueOption{
+		Text:  lang.L("Application Audio"),
+		Value: Utilities.AudioApplicationOptionValue,
+	}
+	result := make([]CustomWidget.TextValueOption, 0, len(options)+1)
+	inserted := false
+	for _, option := range options {
+		result = append(result, option)
+		if !inserted && (option.Value == "-1" || strings.HasPrefix(option.Value, "-1#|")) {
+			result = append(result, applicationOption)
+			inserted = true
+		}
+	}
+	if !inserted {
+		result = append(result, applicationOption)
+	}
+	return result
+}
+
+func applicationCaptureOptions() []CustomWidget.TextValueOption {
+	options := make([]CustomWidget.TextValueOption, 0)
+	for _, process := range Utilities.GetApplicationProcesses() {
+		label := fmt.Sprintf("%s (PID %d)", process.Executable, process.PID)
+		if process.WindowTitle != "" && !strings.EqualFold(process.WindowTitle, process.Executable) {
+			title := []rune(process.WindowTitle)
+			if len(title) > 60 {
+				title = append(title[:57], '.', '.', '.')
+			}
+			label = fmt.Sprintf("%s - %s (PID %d)", process.Executable, string(title), process.PID)
+		}
+		options = append(options, CustomWidget.TextValueOption{
+			Text:  label,
+			Value: Utilities.FormatAudioProcessOptionValue(process.PID, process.Executable),
+		})
+	}
+	return options
+}
+
+func refreshApplicationCaptureOptions(selection *CustomWidget.TextValueSelect) {
+	if selection == nil {
+		return
+	}
+	previous := selection.GetSelected()
+	onChanged := selection.OnChanged
+	selection.OnChanged = nil
+	defer func() { selection.OnChanged = onChanged }()
+	options := applicationCaptureOptions()
+	selection.SetValueOptions(options)
+	if previous == nil {
+		return
+	}
+	for _, option := range options {
+		if option.Value == previous.Value {
+			selection.SetSelected(option.Value)
+			return
+		}
+	}
+	_, previousExecutable, previousWasProcess := Utilities.ParseAudioProcessOptionValue(previous.Value)
+	if previousWasProcess {
+		matchingValues := make([]string, 0, 1)
+		for _, option := range options {
+			_, executable, isProcess := Utilities.ParseAudioProcessOptionValue(option.Value)
+			if isProcess && strings.EqualFold(executable, previousExecutable) {
+				matchingValues = append(matchingValues, option.Value)
+			}
+		}
+		if len(matchingValues) == 1 {
+			selection.SetSelected(matchingValues[0])
+			return
+		}
+		// Keep a saved/offline application visible. The backend will resolve its
+		// executable when the profile starts and report clearly if it is absent
+		// or ambiguous.
+		options = append(options, *previous)
+		selection.SetValueOptions(options)
+		selection.SetSelected(previous.Value)
+		return
+	}
+	selection.SetSelected(previous.Value)
+}
+
 func fillAudioDeviceLists() {
 	// loop through AudioBackends
 	for _, backendItem := range AudioAPI.AudioBackends {
@@ -588,6 +733,7 @@ func stopAndClose(playBackDevice *CurrentPlaybackDevice, onClose func()) {
 	time.Sleep(200 * time.Millisecond)
 
 	// Closes profile window, stop audio device, and call onClose
+	playBackDevice.StopApplicationAudioMeter()
 	playBackDevice.Stop()
 	time.Sleep(200 * time.Millisecond) // wait for device to stop (hopefully fixes a crash when closing the profile window)
 	onClose()
@@ -631,6 +777,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	if err != nil {
 		Logging.CaptureException(err)
 	}
+	audioInputDevicesOptions = appendApplicationAudioInputOption(audioInputDevicesOptions, playBackDevice.AudioAPI)
+	audioApplicationOptions := applicationCaptureOptions()
 
 	// fill audio device lists for later access
 	fillAudioDeviceLists()
@@ -754,9 +902,13 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			// Try to refresh device option lists for this backend (plain values)
 			// Remember previously selected labels (text) to attempt preservation
 			prevInputLabel := ""
+			prevInputValue := ""
 			prevOutputLabel := ""
 			if engine.Controls.AudioInput != nil {
 				prevInputLabel = engine.Controls.AudioInput.Selected
+				if selected := engine.Controls.AudioInput.GetSelected(); selected != nil {
+					prevInputValue = selected.Value
+				}
 			}
 			if engine.Controls.AudioOutput != nil {
 				prevOutputLabel = engine.Controls.AudioOutput.Selected
@@ -787,10 +939,21 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 			inOpts, _, _ := GetAudioDevices(backend.Backend, []malgo.DeviceType{malgo.Capture, malgo.Loopback}, 0, "", "")
 			outOpts, _, _ := GetAudioDevices(backend.Backend, []malgo.DeviceType{malgo.Playback}, len(inOpts), "", "")
+			inOpts = appendApplicationAudioInputOption(inOpts, backend.Backend)
+			refreshApplicationCaptureOptions(engine.Controls.AudioApplication)
 			if engine.Controls.AudioInput != nil {
-				engine.Controls.AudioInput.Options = inOpts
+				engine.Controls.AudioInput.SetValueOptions(inOpts)
 				preserved := false
-				if prevInputLabel != "" {
+				if prevInputValue != "" {
+					for _, option := range inOpts {
+						if option.Value == prevInputValue {
+							engine.Controls.AudioInput.SetSelected(option.Value)
+							preserved = true
+							break
+						}
+					}
+				}
+				if !preserved && prevInputLabel != "" {
 					// try exact or truncated match
 					for _, o := range inOpts {
 						if namesEqualOrTruncated(o.Text, prevInputLabel) {
@@ -819,7 +982,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				}
 			}
 			if engine.Controls.AudioOutput != nil {
-				engine.Controls.AudioOutput.Options = outOpts
+				engine.Controls.AudioOutput.SetValueOptions(outOpts)
 				preserved := false
 				if prevOutputLabel != "" {
 					for _, o := range outOpts {
@@ -857,21 +1020,63 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			inName := ""
 			outName := ""
 			if engine.Controls.AudioInput != nil && engine.Controls.AudioInput.GetSelected() != nil {
-				inName = engine.Controls.AudioInput.GetSelected().Text
+				selectedInput := engine.Controls.AudioInput.GetSelected()
+				playBackDevice.ProcessLoopback = Utilities.IsAudioApplicationOptionValue(selectedInput.Value)
+				if !playBackDevice.ProcessLoopback {
+					inName = selectedInput.Text
+				}
 			}
 			if engine.Controls.AudioOutput != nil && engine.Controls.AudioOutput.GetSelected() != nil {
 				outName = engine.Controls.AudioOutput.GetSelected().Text
 			}
 			_ = playBackDevice.SwitchBackend(backend.Backend, inName, outName)
 		}
+		startApplicationMeter := func(opt CustomWidget.TextValueOption) {
+			processID, executable, ok := Utilities.ParseAudioProcessOptionValue(opt.Value)
+			if !ok {
+				playBackDevice.StopApplicationAudioMeter()
+				return
+			}
+			if err := playBackDevice.StartApplicationAudioMeter(processID, executable); err != nil {
+				fmt.Printf("Could not start application audio meter: %v\n", err)
+				Logging.CaptureException(err)
+			}
+		}
 		onAudioInputChanged := func(opt CustomWidget.TextValueOption) {
-			playBackDevice.InputDeviceName = opt.Text
+			playBackDevice.ProcessLoopback = Utilities.IsAudioApplicationOptionValue(opt.Value)
+			if playBackDevice.ProcessLoopback {
+				playBackDevice.InputDeviceName = ""
+				if engine.Controls.AudioApplication != nil {
+					engine.Controls.AudioApplication.Show()
+				}
+			} else {
+				playBackDevice.InputDeviceName = opt.Text
+				playBackDevice.StopApplicationAudioMeter()
+				if engine.Controls.AudioApplication != nil {
+					engine.Controls.AudioApplication.Hide()
+				}
+			}
 			// During profile loading or API-driven option replacement no re-init
 			if isLoadingSettingsFile || updatingAudioDeviceOptions {
 				return
 			}
-			// Re-init to apply new input immediately
-			go func() { _ = playBackDevice.InitDevices(false) }()
+			if playBackDevice.ProcessLoopback && engine.Controls.AudioApplication != nil {
+				if selectedApplication := engine.Controls.AudioApplication.GetSelected(); selectedApplication != nil {
+					startApplicationMeter(*selectedApplication)
+				} else {
+					playBackDevice.StopApplicationAudioMeter()
+				}
+			}
+			// Re-init to apply new input immediately. Application capture is owned
+			// by the Python backend, so the profile window keeps playback only and
+			// obtains its input level from the Core Audio session meter above.
+			go func() { _ = playBackDevice.InitDevices(playBackDevice.ProcessLoopback) }()
+		}
+		onAudioApplicationChanged := func(opt CustomWidget.TextValueOption) {
+			if !playBackDevice.ProcessLoopback || isLoadingSettingsFile || updatingAudioDeviceOptions {
+				return
+			}
+			startApplicationMeter(opt)
 		}
 		onAudioOutputChanged := func(opt CustomWidget.TextValueOption) {
 			playBackDevice.OutputDeviceName = opt.Text
@@ -890,21 +1095,28 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		afterDetectEnergy := func() {}
 
 		deps := PF.FullFormDeps{
-			InputOptions:         audioInputDevicesOptions,
-			OutputOptions:        audioOutputDevicesOptions,
-			AudioInputProgress:   audioInputProgress,
-			AudioOutputProgress:  audioOutputProgress,
-			OnAudioAPIChanged:    onAudioAPIChanged,
-			OnAudioInputChanged:  onAudioInputChanged,
-			OnAudioOutputChanged: onAudioOutputChanged,
-			OnDetectEnergy:       onDetectEnergy,
-			AfterDetectEnergy:    afterDetectEnergy,
-			CPUMemoryBar:         CPUMemoryBar,
-			GPUMemoryBar:         GPUMemoryBar,
-			TotalGPUMemory:       func() int64 { return totalGPUMemory },
-			HasNvidiaGPU:         func() bool { return HasNvidiaGPU },
+			InputOptions:              audioInputDevicesOptions,
+			ApplicationOptions:        audioApplicationOptions,
+			OutputOptions:             audioOutputDevicesOptions,
+			AudioInputProgress:        audioInputProgress,
+			AudioOutputProgress:       audioOutputProgress,
+			OnAudioAPIChanged:         onAudioAPIChanged,
+			OnAudioInputChanged:       onAudioInputChanged,
+			OnAudioApplicationChanged: onAudioApplicationChanged,
+			OnAudioOutputChanged:      onAudioOutputChanged,
+			OnDetectEnergy:            onDetectEnergy,
+			AfterDetectEnergy:         afterDetectEnergy,
+			CPUMemoryBar:              CPUMemoryBar,
+			GPUMemoryBar:              GPUMemoryBar,
+			TotalGPUMemory:            func() int64 { return totalGPUMemory },
+			HasNvidiaGPU:              func() bool { return HasNvidiaGPU },
 		}
 		controls = PF.BuildAndRenderFullProfile(profileForm, engine, deps)
+		if controls.AudioApplication != nil {
+			controls.AudioApplication.BeforeTapped = func() {
+				refreshApplicationCaptureOptions(controls.AudioApplication)
+			}
+		}
 
 		profileForm.Append("", layout.NewSpacer())
 
@@ -1079,11 +1291,40 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		// After loading: actively apply the profile's Audio API because onAudioAPIChanged is suppressed during loading.
 		if profileSettings.Audio_api != "" {
 			backend := AudioAPI.GetAudioBackendByName(profileSettings.Audio_api)
+			processLoopback := false
+			if controls.AudioInput != nil {
+				if selectedInput := controls.AudioInput.GetSelected(); selectedInput != nil {
+					processLoopback = Utilities.IsAudioApplicationOptionValue(selectedInput.Value)
+				}
+			}
 			// Apply carried over device selection from settings (if present)
 			inputName := profileSettings.Audio_input_device
+			playBackDevice.ProcessLoopback = processLoopback
+			if processLoopback {
+				inputName = ""
+				if controls.AudioApplication != nil {
+					controls.AudioApplication.Show()
+				}
+			} else {
+				playBackDevice.StopApplicationAudioMeter()
+				if controls.AudioApplication != nil {
+					controls.AudioApplication.Hide()
+				}
+			}
 			outputName := profileSettings.Audio_output_device
 			// Start backend switch (or re-init if equal) asynchronously
 			_ = playBackDevice.SwitchBackend(backend.Backend, inputName, outputName)
+			if processLoopback && controls.AudioApplication != nil {
+				if selectedApplication := controls.AudioApplication.GetSelected(); selectedApplication != nil {
+					processID, executable, ok := Utilities.ParseAudioProcessOptionValue(selectedApplication.Value)
+					if ok {
+						if meterErr := playBackDevice.StartApplicationAudioMeter(processID, executable); meterErr != nil {
+							fmt.Printf("Could not start application audio meter: %v\n", meterErr)
+							Logging.CaptureException(meterErr)
+						}
+					}
+				}
+			}
 		}
 		// Ensure dynamic option sets and group sync are applied post-load
 		if coord != nil {
@@ -1120,6 +1361,35 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 
 		formSubmitFunction = func(load bool) {
+			if controls.AudioInput != nil {
+				if selectedInput := controls.AudioInput.GetSelected(); selectedInput != nil && Utilities.IsAudioApplicationOptionValue(selectedInput.Value) {
+					if controls.AudioApplication == nil {
+						dialog.ShowInformation(
+							lang.L("Information"),
+							lang.L("Please select a running application for Application Audio."),
+							fyne.CurrentApp().Driver().AllWindows()[1],
+						)
+						return
+					}
+					selectedApplication := controls.AudioApplication.GetSelected()
+					if selectedApplication == nil {
+						dialog.ShowInformation(
+							lang.L("Information"),
+							lang.L("Please select a running application for Application Audio."),
+							fyne.CurrentApp().Driver().AllWindows()[1],
+						)
+						return
+					}
+					if _, _, ok := Utilities.ParseAudioProcessOptionValue(selectedApplication.Value); !ok {
+						dialog.ShowInformation(
+							lang.L("Information"),
+							lang.L("Please select a running application for Application Audio."),
+							fyne.CurrentApp().Driver().AllWindows()[1],
+						)
+						return
+					}
+				}
+			}
 			if load {
 				loadingDialog := dialog.NewCustomWithoutButtons(lang.L("Loading..."), widget.NewProgressBarInfinite(), fyne.CurrentApp().Driver().AllWindows()[1])
 				fyne.Do(func() {
@@ -1143,11 +1413,13 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					Websocket_port:   profileSettings.Websocket_port,
 					Run_Backend:      profileSettings.Run_backend,
 
-					Audio_api:           profileSettings.Audio_api,
-					Device_index:        profileSettings.Device_index,
-					Audio_input_device:  profileSettings.Audio_input_device,
-					Device_out_index:    profileSettings.Device_out_index,
-					Audio_output_device: profileSettings.Audio_output_device,
+					Audio_api:              profileSettings.Audio_api,
+					Device_index:           profileSettings.Device_index,
+					Audio_input_device:     profileSettings.Audio_input_device,
+					Audio_input_process:    profileSettings.Audio_input_process,
+					Audio_input_process_id: profileSettings.Audio_input_process_id,
+					Device_out_index:       profileSettings.Device_out_index,
+					Audio_output_device:    profileSettings.Audio_output_device,
 
 					Vad_enabled:              profileSettings.Vad_enabled,
 					Realtime:                 profileSettings.Realtime,

@@ -6,6 +6,29 @@ import (
 	"testing"
 )
 
+func TestNormalizedAudioMeterLevel(t *testing.T) {
+	tests := []struct {
+		name      string
+		amplitude float64
+		want      float64
+	}{
+		{name: "silence", amplitude: 0, want: 0},
+		{name: "below floor", amplitude: 0.0001, want: 0},
+		{name: "minus six decibels", amplitude: 0.5, want: 90},
+		{name: "full scale", amplitude: 1, want: 100},
+		{name: "clamped above full scale", amplitude: 2, want: 100},
+	}
+
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := normalizedAudioMeterLevel(tt.amplitude)
+			if math.Abs(got-tt.want) > 0.05 {
+				t.Fatalf("normalizedAudioMeterLevel() = %.3f, want %.3f", got, tt.want)
+			}
+		})
+	}
+}
+
 func TestS32AudioMeterLevel(t *testing.T) {
 	tests := []struct {
 		name    string

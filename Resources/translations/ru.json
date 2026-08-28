@@ -169,6 +169,8 @@
     "About Whispering Tiger": "О \"Шепчущем тигре",
     "Advanced Settings": "Дополнительные настройки",
     "Application Options": "Варианты применения",
+    "Application Audio": "Звук приложения",
+    "Please select a running application for Application Audio.": "Выберите запущенное приложение для захвата звука приложения.",
     "Speech-to-Text Options": "Опции преобразования речи в текст",
     "Text-Translate Options": "Параметры перевода текста",
     "Text-to-Speech Options": "Параметры преобразования текста в речь",

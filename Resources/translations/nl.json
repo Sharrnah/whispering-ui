@@ -145,6 +145,8 @@
     "temperature_fallback.Description": "Indien ingeschakeld, zal de temperatuur terugvallen op de temperatuur met lage zekerheid.\n(uitschakelen voor snellere verwerking)",
     "condition_on_previous_text.Description": "Levert de voorgaande tekst aan de A.I. om de resultaten te verbeteren.\n(uitschakelen voor snellere werking)\n(uitschakelen kan ook hallucinaties verminderen)",
     "Application Options": "Applicatie Opties",
+    "Application Audio": "Applicatie-audio",
+    "Please select a running application for Application Audio.": "Selecteer een actieve applicatie voor Applicatie-audio.",
     "WebsiteUrl": "https://whispering-tiger.github.io",
     "KofiUrl": "https://ko-fi.com/sharrnah",
     "Speech-to-Text Options": "Spraak-naar-Tekst Opties",

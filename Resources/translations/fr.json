@@ -143,6 +143,8 @@
     "About Whispering Tiger": "À propos de Whispering Tiger",
     "Advanced Settings": "Paramètres avancés",
     "Application Options": "Options de l'application",
+    "Application Audio": "Audio de l’application",
+    "Please select a running application for Application Audio.": "Veuillez sélectionner une application en cours d’exécution pour l’audio de l’application.",
     "Speech-to-Text Options": "Options de reconnaissance vocale",
     "Text-to-Speech Options": "Options de synthèse vocale",
     "OSC (VRChat) Options": "Options OSC (VRChat)",

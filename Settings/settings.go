@@ -50,9 +50,11 @@ type Conf struct {
 	Device_index     interface{} `yaml:"device_index,omitempty" json:"device_index,omitempty"`
 	Device_out_index interface{} `yaml:"device_out_index,omitempty" json:"device_out_index,omitempty"`
 
-	Audio_api           string `yaml:"audio_api" json:"audio_api"`
-	Audio_input_device  string `yaml:"audio_input_device" json:"audio_input_device"`
-	Audio_output_device string `yaml:"audio_output_device" json:"audio_output_device"`
+	Audio_api              string `yaml:"audio_api" json:"audio_api"`
+	Audio_input_device     string `yaml:"audio_input_device" json:"audio_input_device"`
+	Audio_input_process    string `yaml:"audio_input_process,omitempty" json:"audio_input_process,omitempty"`
+	Audio_input_process_id int    `yaml:"audio_input_process_id,omitempty" json:"audio_input_process_id,omitempty"`
+	Audio_output_device    string `yaml:"audio_output_device" json:"audio_output_device"`
 
 	Phrase_time_limit float64 `yaml:"phrase_time_limit" json:"phrase_time_limit"`
 	Pause             float64 `yaml:"pause" json:"pause"`
@@ -244,6 +246,8 @@ var ExcludeConfigFields = []string{
 	"plugin_timer",
 	"audio_api",
 	"audio_input_device",
+	"audio_input_process",
+	"audio_input_process_id",
 	"audio_output_device",
 	"last_auto_txt_translate_lang",
 	"stt_enabled",

@@ -141,6 +141,8 @@
     "Advanced": "上級",
     "Advanced Settings": "詳細設定",
     "Application Options": "アプリケーション・オプション",
+    "Application Audio": "アプリケーション音声",
+    "Please select a running application for Application Audio.": "アプリケーション音声用に実行中のアプリケーションを選択してください。",
     "Speech-to-Text Options": "音声テキストオプション",
     "silence_cutting_enabled.Name": "無音部分をカットする",
     "normalize_enabled.Name": "オーディオのノーマライズ",

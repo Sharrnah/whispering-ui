@@ -202,6 +202,8 @@
     "About Whispering Tiger": "Om Whispering Tiger",
     "Advanced Settings": "Avancerede indstillinger",
     "Application Options": "Muligheder for anvendelse",
+    "Application Audio": "Applikationslyd",
+    "Please select a running application for Application Audio.": "Vælg en kørende applikation til applikationslyd.",
     "Speech-to-Text Options": "Indstillinger for tale-til-tekst",
     "Text-Translate Options": "Indstillinger for tekstoversættelse",
     "Text-to-Speech Options": "Tekst-til-tale-indstillinger",

@@ -18,12 +18,18 @@ func audioMeterLevel(sumSquares float64, sampleCount int) float64 {
 		return 0
 	}
 
-	rms := math.Sqrt(sumSquares / float64(sampleCount))
-	if rms >= 1 {
+	return normalizedAudioMeterLevel(math.Sqrt(sumSquares / float64(sampleCount)))
+}
+
+func normalizedAudioMeterLevel(amplitude float64) float64 {
+	if amplitude <= 0 {
+		return 0
+	}
+	if amplitude >= 1 {
 		return audioMeterMax
 	}
 
-	decibels := 20 * math.Log10(rms)
+	decibels := 20 * math.Log10(amplitude)
 	if decibels <= audioMeterFloorDB {
 		return 0
 	}

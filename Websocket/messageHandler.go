@@ -280,6 +280,42 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		fyne.Do(func() {
 			Messages.TranslateSettings.Update()
 		})
+	case "audio_input_switch_result":
+		result := struct {
+			RequestID string `json:"request_id"`
+			Success   bool   `json:"success"`
+			Error     string `json:"error"`
+		}{}
+		err = json.Unmarshal(c.Data, &result)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		fyne.Do(func() {
+			if Fields.AudioInputSwitchResult != nil {
+				Fields.AudioInputSwitchResult(result.RequestID, result.Success, result.Error)
+			} else if !result.Success {
+				log.Printf("Could not switch audio input: %s", result.Error)
+			}
+		})
+	case "audio_output_switch_result":
+		result := struct {
+			RequestID string `json:"request_id"`
+			Success   bool   `json:"success"`
+			Error     string `json:"error"`
+		}{}
+		err = json.Unmarshal(c.Data, &result)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		fyne.Do(func() {
+			if Fields.AudioOutputSwitchResult != nil {
+				Fields.AudioOutputSwitchResult(result.RequestID, result.Success, result.Error)
+			} else if !result.Success {
+				log.Printf("Could not switch audio output: %s", result.Error)
+			}
+		})
 	case "transcript":
 		c.Text = strings.TrimSpace(c.Text)
 		c.TxtTranslation = strings.TrimSpace(c.TxtTranslation)

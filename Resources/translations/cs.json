@@ -185,6 +185,8 @@
     "About Whispering Tiger": "Informace o Whispering Tiger",
     "Advanced Settings": "Pokročilé nastavení",
     "Application Options": "Možnosti aplikace",
+    "Application Audio": "Zvuk aplikace",
+    "Please select a running application for Application Audio.": "Vyberte spuštěnou aplikaci pro zvuk aplikace.",
     "Speech-to-Text Options": "Možnosti převodu řeči na text",
     "Text-Translate Options": "Možnosti překladu textu",
     "Text-to-Speech Options": "Možnosti převodu textu na řeč",

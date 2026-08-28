@@ -11,6 +11,7 @@ type TextValueSelect struct {
 	Name             string
 	Options          []TextValueOption
 	OnChanged        func(TextValueOption) `json:"-"`
+	BeforeTapped     func()                `json:"-"`
 	selectedValue    string
 	hasSelectedValue bool
 }
@@ -238,6 +239,9 @@ func (s *TextValueSelect) GetEntry(compareEntry *TextValueOption, compareType in
 
 // Tapped is called when a pointer tapped event is captured and triggers any tap handler
 func (s *TextValueSelect) Tapped(tapEvent *fyne.PointEvent) {
+	if s.BeforeTapped != nil {
+		s.BeforeTapped()
+	}
 	s.syncBaseOptions()
 	s.Select.Tapped(tapEvent)
 }

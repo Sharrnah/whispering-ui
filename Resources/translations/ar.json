@@ -140,6 +140,8 @@
     "About Whispering Tiger": "حول Whispering Tiger",
     "Advanced Settings": "الإعدادات المتقدمة",
     "Application Options": "خيارات التطبيق",
+    "Application Audio": "صوت التطبيق",
+    "Please select a running application for Application Audio.": "يرجى تحديد تطبيق قيد التشغيل لصوت التطبيق.",
     "Check for App updates at startup": "التحقق من وجود تحديثات للتطبيق عند بدء التشغيل",
     "Check for Plugin updates at startup": "التحقق من وجود تحديثات للمكونات الإضافية عند بدء التشغيل",
     "Save and Load Profile": "احفظ وحمّل الملف الشخصي",

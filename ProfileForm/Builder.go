@@ -56,13 +56,14 @@ func (b *ProfileBuilder) sliderWithLabel(engine *FormEngine, key string, min, ma
 
 // BuildResult collects custom UI rows constructed by the builder, where needed for layout
 type BuildResult struct {
+	AudioInputRow      fyne.CanvasObject
 	VADGroupRow        fyne.CanvasObject
 	VADConfidenceRow   fyne.CanvasObject
 	VADPushToTalkBlock fyne.CanvasObject
 }
 
 // BuildAll creates and registers all controls and custom rows in one pass
-func (b *ProfileBuilder) BuildAll(engine *FormEngine, inputOptions, outputOptions []CustomWidget.TextValueOption) *BuildResult {
+func (b *ProfileBuilder) BuildAll(engine *FormEngine, inputOptions, applicationOptions, outputOptions []CustomWidget.TextValueOption) *BuildResult {
 	if engine == nil || engine.Controls == nil {
 		return &BuildResult{}
 	}
@@ -79,8 +80,11 @@ func (b *ProfileBuilder) BuildAll(engine *FormEngine, inputOptions, outputOption
 	}
 	audioApiSelect := b.newSelect(engine, "audio_api", audioOptions)
 	audioInputSelect := b.newSelect(engine, "device_index", inputOptions)
+	audioApplicationSelect := CustomWidget.NewTextValueSelect("audio_input_application", applicationOptions, func(_ CustomWidget.TextValueOption) {}, -1)
+	audioApplicationSelect.Hide()
 	audioOutputSelect := b.newSelect(engine, "device_out_index", outputOptions)
-	engine.Controls.AudioAPI, engine.Controls.AudioInput, engine.Controls.AudioOutput = audioApiSelect, audioInputSelect, audioOutputSelect
+	engine.Controls.AudioAPI, engine.Controls.AudioInput, engine.Controls.AudioApplication, engine.Controls.AudioOutput = audioApiSelect, audioInputSelect, audioApplicationSelect, audioOutputSelect
+	audioInputRow := container.NewVBox(audioInputSelect, audioApplicationSelect)
 
 	// VAD
 	vadEnable := b.newCheck(engine, "vad_enabled", lang.L("Enable"))
@@ -126,5 +130,5 @@ func (b *ProfileBuilder) BuildAll(engine *FormEngine, inputOptions, outputOption
 	ocrPrecision := b.newSelect(engine, "ocr_precision", GenericOcrPrecisionOptions())
 	engine.Controls.OCRType, engine.Controls.OCRDevice, engine.Controls.OCRPrecision = ocrType, ocrDevice, ocrPrecision
 
-	return &BuildResult{VADGroupRow: vadGroup, VADConfidenceRow: confRow, VADPushToTalkBlock: pushToTalkBlock}
+	return &BuildResult{AudioInputRow: audioInputRow, VADGroupRow: vadGroup, VADConfidenceRow: confRow, VADPushToTalkBlock: pushToTalkBlock}
 }

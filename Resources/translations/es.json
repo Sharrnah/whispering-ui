@@ -176,6 +176,8 @@
     "About Whispering Tiger": "Acerca de Whispering Tiger",
     "Advanced Settings": "Configuración avanzada",
     "Application Options": "Opciones de la aplicación",
+    "Application Audio": "Audio de la aplicación",
+    "Please select a running application for Application Audio.": "Selecciona una aplicación en ejecución para el audio de la aplicación.",
     "Speech-to-Text Options": "Opciones de voz a texto",
     "Text-Translate Options": "Opciones de traducción de texto",
     "Text-to-Speech Options": "Opciones de texto a voz",

@@ -7,6 +7,7 @@ import (
 	"strings"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Settings"
+	"whispering-tiger-ui/Utilities"
 
 	"fyne.io/fyne/v2/widget"
 )
@@ -21,9 +22,10 @@ type AllProfileControls struct {
 	RunBackend    *widget.Check
 
 	// Audio
-	AudioAPI    *CustomWidget.TextValueSelect
-	AudioInput  *CustomWidget.TextValueSelect
-	AudioOutput *CustomWidget.TextValueSelect
+	AudioAPI         *CustomWidget.TextValueSelect
+	AudioInput       *CustomWidget.TextValueSelect
+	AudioApplication *CustomWidget.TextValueSelect
+	AudioOutput      *CustomWidget.TextValueSelect
 
 	// VAD / Recording
 	VadEnable       *widget.Check
@@ -234,6 +236,46 @@ func (e *FormEngine) LoadFromSettings(conf *Settings.Conf) {
 			strVal := fmt.Sprint(val)
 			fallbackText := ""
 			if key == "device_index" {
+				processName := strings.TrimSpace(conf.Audio_input_process)
+				if processName != "" {
+					c.SetSelected(Utilities.AudioApplicationOptionValue)
+					applicationSelect := e.Controls.AudioApplication
+					if applicationSelect == nil {
+						continue
+					}
+					processPID := uint32(0)
+					if conf.Audio_input_process_id > 0 {
+						processPID = uint32(conf.Audio_input_process_id)
+					}
+					selectedValue := ""
+					matchingValues := make([]string, 0, 1)
+					for _, option := range applicationSelect.Options {
+						pid, executable, ok := Utilities.ParseAudioProcessOptionValue(option.Value)
+						if !ok || !strings.EqualFold(executable, processName) {
+							continue
+						}
+						matchingValues = append(matchingValues, option.Value)
+						if pid == processPID {
+							selectedValue = option.Value
+							break
+						}
+					}
+					if selectedValue == "" && len(matchingValues) == 1 {
+						selectedValue = matchingValues[0]
+					}
+					if selectedValue == "" {
+						selectedValue = Utilities.FormatAudioProcessOptionValue(processPID, processName)
+						label := strings.TrimSpace(conf.Audio_input_device)
+						if label == "" {
+							label = fmt.Sprintf("%s (PID %d)", processName, processPID)
+						}
+						options := append([]CustomWidget.TextValueOption(nil), applicationSelect.Options...)
+						options = append(options, CustomWidget.TextValueOption{Text: label, Value: selectedValue})
+						applicationSelect.SetValueOptions(options)
+					}
+					applicationSelect.SetSelected(selectedValue)
+					continue
+				}
 				if name := e.getOptionByLowercase(conf, "audio_input_device"); name != nil {
 					fallbackText = fmt.Sprint(name)
 				}
@@ -291,11 +333,46 @@ func (e *FormEngine) SaveToSettings(conf *Settings.Conf) {
 		case *CustomWidget.TextValueSelect:
 			sel := c.GetSelected()
 			if sel == nil {
+				if key == "device_index" {
+					conf.SetOption("audio_input_process", "")
+					conf.SetOption("audio_input_process_id", 0)
+				}
 				conf.SetOption(key, "")
 				continue
 			}
 			// handle audio devices indexes specially (store int and name)
 			if key == "device_index" || key == "device_out_index" {
+				if key == "device_index" {
+					if Utilities.IsAudioApplicationOptionValue(sel.Value) {
+						application := e.Controls.AudioApplication
+						if application != nil && application.GetSelected() != nil {
+							selectedApplication := application.GetSelected()
+							if pid, executable, ok := Utilities.ParseAudioProcessOptionValue(selectedApplication.Value); ok {
+								conf.SetOption("device_index", -1)
+								conf.SetOption("audio_input_device", selectedApplication.Text)
+								conf.SetOption("audio_input_process", executable)
+								conf.SetOption("audio_input_process_id", int(pid))
+								continue
+							}
+						}
+						conf.SetOption("device_index", -1)
+						conf.SetOption("audio_input_device", "")
+						conf.SetOption("audio_input_process", "")
+						conf.SetOption("audio_input_process_id", 0)
+						continue
+					}
+					// Compatibility with profiles saved by the initial single-list
+					// implementation.
+					if pid, executable, ok := Utilities.ParseAudioProcessOptionValue(sel.Value); ok {
+						conf.SetOption("device_index", -1)
+						conf.SetOption("audio_input_device", sel.Text)
+						conf.SetOption("audio_input_process", executable)
+						conf.SetOption("audio_input_process_id", int(pid))
+						continue
+					}
+					conf.SetOption("audio_input_process", "")
+					conf.SetOption("audio_input_process_id", 0)
+				}
 				if iv, err := strconv.Atoi(sel.Value); err == nil {
 					conf.SetOption(key, iv)
 				} else {
