@@ -35,6 +35,8 @@ type MessageStruct struct {
 	TxtTranslation       string `json:"txt_translation,omitempty"`
 	TxtTranslationSource string `json:"txt_translation_source,omitempty"`
 	TxtTranslationTarget string `json:"txt_translation_target,omitempty"`
+	AudioSourceID        string `json:"audio_source_id,omitempty"`
+	AudioSourceName      string `json:"audio_source_name,omitempty"`
 
 	// only in case of text translate message
 	TranslateResult string `json:"translate_result,omitempty"`
@@ -316,6 +318,24 @@ func (c *MessageStruct) HandleReceiveMessage() {
 				log.Printf("Could not switch audio output: %s", result.Error)
 			}
 		})
+	case "audio_routes_update_result":
+		result := struct {
+			RequestID string `json:"request_id"`
+			Success   bool   `json:"success"`
+			Error     string `json:"error"`
+		}{}
+		err = json.Unmarshal(c.Data, &result)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		fyne.Do(func() {
+			if Fields.AudioRoutesUpdateResult != nil {
+				Fields.AudioRoutesUpdateResult(result.RequestID, result.Success, result.Error)
+			} else if !result.Success {
+				log.Printf("Could not update audio routes: %s", result.Error)
+			}
+		})
 	case "transcript":
 		c.Text = strings.TrimSpace(c.Text)
 		c.TxtTranslation = strings.TrimSpace(c.TxtTranslation)
@@ -324,6 +344,8 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			Language:             c.Language,
 			TxtTranslation:       c.TxtTranslation,
 			TxtTranslationTarget: c.TxtTranslationTarget,
+			AudioSourceID:        c.AudioSourceID,
+			AudioSourceName:      c.AudioSourceName,
 		}
 
 		//go func() {
@@ -469,6 +491,9 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		if err != nil {
 			log.Println(err)
 			return
+		}
+		if c.AudioSourceID != "" && c.AudioSourceID != "main" && c.AudioSourceName != "" {
+			processingData = c.AudioSourceName + ": " + processingData
 		}
 
 		if processingData != "" {

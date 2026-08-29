@@ -108,6 +108,22 @@ func getPluginStatusString(pluginClassName string) string {
 	return pluginStatusString
 }
 
+func routeNewlyEnabledPluginToMainMicrophone(pluginClassName string) bool {
+	if pluginClassName == "SecondaryProfilePlugin" || Settings.Config.Main_audio_plugins == nil {
+		return false
+	}
+
+	selected := append([]string(nil), (*Settings.Config.Main_audio_plugins)...)
+	for _, pluginName := range selected {
+		if pluginName == pluginClassName {
+			return false
+		}
+	}
+	selected = append(selected, pluginClassName)
+	Settings.Config.Main_audio_plugins = &selected
+	return true
+}
+
 func _getFilePathDialogInitPath(v map[string]interface{}, entry *widget.Entry) (fyne.ListableURI, string) {
 	// get file dialog start folder
 	appExec, _ := os.Executable()
@@ -254,6 +270,9 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 	// plugin enabled checkbox
 	pluginEnabledCheckbox := widget.NewCheck(lang.L("pluginClass enabled", map[string]interface{}{"PluginClass": pluginClassName}), func(enabled bool) {
 		Settings.Config.Plugins[pluginClassName] = enabled
+		if enabled {
+			routeNewlyEnabledPluginToMainMicrophone(pluginClassName)
+		}
 		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "setting_change",
 			Name:  "plugins",

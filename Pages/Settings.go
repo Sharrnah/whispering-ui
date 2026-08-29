@@ -25,6 +25,7 @@ func CreateSettingsWindow() fyne.CanvasObject {
 
 	settingsFormTabs := container.NewAppTabs(
 		container.NewTabItem(lang.L("Application Options"), applicationSettings),
+		container.NewTabItem(lang.L("Additional Audio Sources"), createAdditionalAudioRoutesSettings()),
 		container.NewTabItem(lang.L("Speech-to-Text Options"), SettingsMappings.CreateSettingsFormByMapping(SettingsMappings.SpeechToTextSettingsMapping)),
 		container.NewTabItem(lang.L("Text-Translate Options"), SettingsMappings.CreateSettingsFormByMapping(SettingsMappings.TextTranslateSettingsMapping)),
 		container.NewTabItem(lang.L("Text-to-Speech Options"), SettingsMappings.CreateSettingsFormByMapping(SettingsMappings.TextToSpeechSettingsMapping)),

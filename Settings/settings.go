@@ -56,6 +56,11 @@ type Conf struct {
 	Audio_input_process_id int    `yaml:"audio_input_process_id,omitempty" json:"audio_input_process_id,omitempty"`
 	Audio_output_device    string `yaml:"audio_output_device" json:"audio_output_device"`
 
+	Additional_audio_routes []AdditionalAudioRoute `yaml:"additional_audio_routes" json:"additional_audio_routes"`
+	// nil preserves the legacy behavior where every plugin receives microphone
+	// audio. A non-nil pointer is an explicit allowlist, including an empty list.
+	Main_audio_plugins *[]string `yaml:"main_audio_plugins" json:"main_audio_plugins"`
+
 	Phrase_time_limit float64 `yaml:"phrase_time_limit" json:"phrase_time_limit"`
 	Pause             float64 `yaml:"pause" json:"pause"`
 	Energy            int     `yaml:"energy" json:"energy"`
@@ -116,7 +121,7 @@ type Conf struct {
 	Denoise_strength                      float64     `yaml:"denoise_strength" json:"denoise_strength"`                         // Denoise strength (0.0 - 1.0)
 	Whisper_apply_voice_markers           bool        `yaml:"whisper_apply_voice_markers" json:"whisper_apply_voice_markers"`
 	Max_sentence_repetition               int         `yaml:"max_sentence_repetition" json:"max_sentence_repetition"`
-	Thread_per_transcription              bool        `yaml:"thread_per_transcription" json:"thread_per_transcription"`                           // Enable a new thread for each transcription. (can improve speed)
+	Thread_per_transcription              bool        `yaml:"thread_per_transcription" json:"thread_per_transcription"`                           // Legacy profile compatibility; STT inference is serialized.
 	Only_no_speech_threshold_for_segments bool        `yaml:"only_no_speech_threshold_for_segments" json:"only_no_speech_threshold_for_segments"` //  if enabled, only use no_speech_threshold for silence detection in segments.
 	Language_detection_on_each_segment    bool        `yaml:"language_detection_on_each_segment" json:"language_detection_on_each_segment"`       //  if enabled, perform language detection on each segment. (faster-whisper only)
 	Stt_llm_prompt                        string      `yaml:"stt_llm_prompt" json:"stt_llm_prompt"`                                               // LLM prompt for STT (if using LLM for STT)
@@ -225,6 +230,44 @@ type Conf struct {
 	Special_settings             map[string]interface{} `yaml:"special_settings,omitempty" json:"special_settings,omitempty"`
 }
 
+//goland:noinspection GoSnakeCaseUsage
+type AdditionalAudioRoute struct {
+	ID                                   string      `yaml:"id" json:"id"`
+	Name                                 string      `yaml:"name" json:"name"`
+	Enabled                              bool        `yaml:"enabled" json:"enabled"`
+	Audio_api                            string      `yaml:"audio_api" json:"audio_api"`
+	Audio_input_device                   string      `yaml:"audio_input_device" json:"audio_input_device"`
+	Audio_input_process                  string      `yaml:"audio_input_process,omitempty" json:"audio_input_process,omitempty"`
+	Audio_input_process_id               int         `yaml:"audio_input_process_id,omitempty" json:"audio_input_process_id,omitempty"`
+	Device_index                         interface{} `yaml:"device_index,omitempty" json:"device_index,omitempty"`
+	Stt_enabled                          bool        `yaml:"stt_enabled" json:"stt_enabled"`
+	Current_language                     string      `yaml:"current_language" json:"current_language"`
+	Whisper_task                         string      `yaml:"whisper_task" json:"whisper_task"`
+	Energy                               int         `yaml:"energy" json:"energy"`
+	Vad_confidence_threshold             float64     `yaml:"vad_confidence_threshold" json:"vad_confidence_threshold"`
+	Phrase_time_limit                    float64     `yaml:"phrase_time_limit" json:"phrase_time_limit"`
+	Pause                                float64     `yaml:"pause" json:"pause"`
+	Realtime                             bool        `yaml:"realtime" json:"realtime"`
+	Realtime_frequency_time              float64     `yaml:"realtime_frequency_time" json:"realtime_frequency_time"`
+	Silence_cutting_enabled              bool        `yaml:"silence_cutting_enabled" json:"silence_cutting_enabled"`
+	Denoise_audio                        string      `yaml:"denoise_audio" json:"denoise_audio"`
+	Denoise_strength                     float64     `yaml:"denoise_strength" json:"denoise_strength"`
+	Vad_smart_turn_enabled               bool        `yaml:"vad_smart_turn_enabled" json:"vad_smart_turn_enabled"`
+	Vad_smart_turn_min_length            float64     `yaml:"vad_smart_turn_min_length" json:"vad_smart_turn_min_length"`
+	Vad_smart_turn_probability_threshold float64     `yaml:"vad_smart_turn_probability_threshold" json:"vad_smart_turn_probability_threshold"`
+	Vad_smart_turn_pause_length          float64     `yaml:"vad_smart_turn_pause_length" json:"vad_smart_turn_pause_length"`
+	Txt_translate                        bool        `yaml:"txt_translate" json:"txt_translate"`
+	Src_lang                             string      `yaml:"src_lang" json:"src_lang"`
+	Trg_lang                             string      `yaml:"trg_lang" json:"trg_lang"`
+	Txt_romaji                           bool        `yaml:"txt_romaji" json:"txt_romaji"`
+	Websocket_enabled                    bool        `yaml:"websocket_enabled" json:"websocket_enabled"`
+	Osc_enabled                          bool        `yaml:"osc_enabled" json:"osc_enabled"`
+	Osc_typing_indicator                 bool        `yaml:"osc_typing_indicator" json:"osc_typing_indicator"`
+	Osc_chat_notification                bool        `yaml:"osc_chat_notification" json:"osc_chat_notification"`
+	Osc_chat_prefix                      string      `yaml:"osc_chat_prefix" json:"osc_chat_prefix"`
+	Plugins                              []string    `yaml:"plugins,omitempty" json:"plugins,omitempty"`
+}
+
 var ConfigValues map[string]interface{} = nil
 
 // ExcludeConfigFields excludes fields from settings window (all lowercase)
@@ -249,6 +292,8 @@ var ExcludeConfigFields = []string{
 	"audio_input_process",
 	"audio_input_process_id",
 	"audio_output_device",
+	"additional_audio_routes",
+	"main_audio_plugins",
 	"last_auto_txt_translate_lang",
 	"stt_enabled",
 	"ocr_txt_src_lang",

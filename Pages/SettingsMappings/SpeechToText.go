@@ -113,14 +113,6 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 			},
 		},
 		{
-			SettingsName:         "Run each transcription in a separate thread",
-			SettingsInternalName: "thread_per_transcription",
-			SettingsDescription:  "If enabled, each transcription will run in a separate thread.",
-			_widget: func() fyne.CanvasObject {
-				return widget.NewCheck("", func(b bool) {})
-			},
-		},
-		{
 			SettingsName:         "Noise Filter",
 			SettingsInternalName: "denoise_audio",
 			SettingsDescription:  "Requires a restart when switching the Noise Filter type.\nDisabling will stop applying it even without restart.",

@@ -40,6 +40,10 @@ var AudioInputSwitchResult func(requestID string, success bool, errorMessage str
 // AudioOutputSwitchResult does the same for a runtime playback-device change.
 var AudioOutputSwitchResult func(requestID string, success bool, errorMessage string)
 
+// AudioRoutesUpdateResult lets the audio-source editor commit or restore its
+// draft after the backend has opened every configured stream transactionally.
+var AudioRoutesUpdateResult func(requestID string, success bool, errorMessage string)
+
 var fieldCreationFunctions = struct {
 	TranscriptionTaskCombo        func() *CustomWidget.TextValueSelect
 	TranscriptionInput            func(dataBinding binding.String) *CustomWidget.EntryWithPopupMenu

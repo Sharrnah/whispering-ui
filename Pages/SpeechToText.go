@@ -374,20 +374,26 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 			originalTranscriptionLabel := originalTranscriptionContainer.Objects[0].(*widget.Label)
 			originalTranscriptionLabel.Wrapping = fyne.TextWrapWord
 			originalTranscriptionLanguageLabel := originalTranscriptionContainer.Objects[1].(*widget.Label)
+			resultLanguage := whisperMessage.Language
+			translationLanguage := whisperMessage.TxtTranslationTarget
+			if whisperMessage.AudioSourceID != "" && whisperMessage.AudioSourceID != "main" && whisperMessage.AudioSourceName != "" {
+				resultLanguage = whisperMessage.AudioSourceName + " · " + resultLanguage
+				translationLanguage = whisperMessage.AudioSourceName + " · " + translationLanguage
+			}
 
 			// bind data to elements if no translation is generated (sets transcription to top label)
 			if whisperMessage.TxtTranslation == "" {
 				translateResultLabel.SetText(whisperMessage.Text)
-				translateResultLanguageLabel.SetText("[" + whisperMessage.Language + "]")
+				translateResultLanguageLabel.SetText("[" + resultLanguage + "]")
 
 				originalTranscriptionLabel.SetText("")
 				originalTranscriptionLanguageLabel.SetText("")
 			} else { // bind data to elements if translation was generated
 				translateResultLabel.SetText(whisperMessage.TxtTranslation)
-				translateResultLanguageLabel.SetText("[" + whisperMessage.TxtTranslationTarget + "]")
+				translateResultLanguageLabel.SetText("[" + translationLanguage + "]")
 
 				originalTranscriptionLabel.SetText(whisperMessage.Text)
-				originalTranscriptionLanguageLabel.SetText("[" + whisperMessage.Language + "]")
+				originalTranscriptionLanguageLabel.SetText("[" + resultLanguage + "]")
 			}
 
 			// resize

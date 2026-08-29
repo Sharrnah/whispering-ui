@@ -9,6 +9,8 @@ type WhisperResult struct {
 	Language             string `json:"language"`
 	TxtTranslation       string `json:"txt_translation,omitempty"`
 	TxtTranslationTarget string `json:"txt_translation_target,omitempty"`
+	AudioSourceID        string `json:"audio_source_id,omitempty"`
+	AudioSourceName      string `json:"audio_source_name,omitempty"`
 }
 
 var DataBindings = struct {
