@@ -326,7 +326,7 @@
     "realtime_whisper_beam_size.Description": "Aantal stralen om te zoeken voor het beste resultaat.\nKan 1-5 zijn. (lager = sneller)",
     "realtime_temperature_fallback.Name": "Temperatuur terugval voor realtime modus",
     "realtime_temperature_fallback.Description": "Indien ingeschakeld, zal de temperatuur terugvallen op de temperatuur met lage zekerheid.\n(uitschakelen voor snellere verwerking)",
-    "denoise_audio_before_trigger.Name": "Ruistfilter vooraf opnametrigger",
+    "denoise_audio_before_trigger.Name": "Trigger na ruisfilter",
     "speaker_diarization.Description": "Verwerk wisselen van spreker in een gesprek.",
     "speaker_diarization.Name": "Herken sprekerwisselingen",
     "min_speaker_length.Name": "Herken min. spraakduur",

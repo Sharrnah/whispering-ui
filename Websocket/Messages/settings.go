@@ -195,6 +195,9 @@ func (res TranslateSetting) Update() *TranslateSetting {
 	Fields.OscLimitHintUpdateFunc()
 
 	Settings.Config = res.Conf
+	if Fields.AudioRoutesRefresh != nil {
+		Fields.AudioRoutesRefresh()
+	}
 
 	return &res
 }

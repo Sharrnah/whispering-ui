@@ -84,7 +84,7 @@
     "temperature_fallback.Name": "درجة الحرارة الاحتياطية",
     "condition_on_previous_text.Name": "الحالة على النص السابق",
     "Restart backend": "إعادة تشغيل الواجهة الخلفية",
-    "denoise_audio_before_trigger.Name": "مرشح الضوضاء قبل تشغيل التسجيل",
+    "denoise_audio_before_trigger.Name": "التشغيل بعد إزالة الضوضاء",
     "osc_typing_indicator.Name": "مؤشر الكتابة والإخطار بـ OSC",
     "OK": "موافق",
     "Open": "فتح",

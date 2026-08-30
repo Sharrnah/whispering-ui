@@ -157,7 +157,7 @@
     "energy.Description": "वॉल्यूम स्तर जिस पर स्पीच डिटेक्शन ट्रिगर होगा।",
     "realtime_temperature_fallback.Name": "रियल-टाइम मोड के लिए तापमान फॉलबैक",
     "realtime_temperature_fallback.Description": "यदि सक्षम किया गया है, तो कम विश्वसनीयता पर तापमान स्वतः कम हो जाएगा।\n(तेज़ प्रोसेसिंग के लिए अक्षम करें)",
-    "denoise_audio_before_trigger.Name": "रिकॉर्डिंग ट्रिगर से पहले शोर फ़िल्टर",
+    "denoise_audio_before_trigger.Name": "नॉइज़ फ़िल्टर के बाद ट्रिगर",
     "denoise_audio_before_trigger.Description": "वॉल्यूम + VAD ट्रिगर शर्तों का पता लगने से पहले ऑडियो पर नॉइज़ फ़िल्टर लागू किया जाएगा।\nयह ऑडियो की गुणवत्ता को बहुत प्रभावित कर सकता है क्योंकि यह प्रति चंक प्रोसेसिंग समय को बढ़ाता है!",
     "speaker_diarization.Description": "संवाद में स्पीकर परिवर्तन को संसाधित करें।",
     "max_speakers.Name": "अधिकतम वक्ता",

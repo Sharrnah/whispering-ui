@@ -295,7 +295,7 @@
     "realtime_whisper_beam_size.Description": "Antal bjælker, der skal søges efter for at få det bedste resultat.\nKan være 1-5. (lavere = hurtigere)",
     "realtime_temperature_fallback.Name": "Temperaturfallback for realtidstilstand",
     "realtime_temperature_fallback.Description": "Hvis den er aktiveret, vil temperaturen falde tilbage på temperaturen ved lav tillid.\n(deaktiver for hurtigere behandling)",
-    "denoise_audio_before_trigger.Name": "Støjfilter før optagelsesudløser",
+    "denoise_audio_before_trigger.Name": "Trigger efter støjfilter",
     "denoise_audio_before_trigger.Description": "Støjfilteret anvendes på lyden, før Volume + VAD triggerbetingelserne registreres.\nDette kan have stor indflydelse på lydkvaliteten, da det øger behandlingstiden pr. bid!",
     "speaker_diarization.Name": "Genkend ændringer i højttaleren",
     "speaker_diarization.Description": "Behandl talerens ændringer i samtalen.",

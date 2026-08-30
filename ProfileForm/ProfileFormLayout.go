@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strings"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Pages/SettingsMappings"
+	"whispering-tiger-ui/Utilities"
 	"whispering-tiger-ui/Utilities/Hardwareinfo"
 
 	"fyne.io/fyne/v2"
@@ -75,7 +75,7 @@ func BuildFullProfileLayout() []RowSpec {
 	)
 	rows = append(rows,
 		RowSpec{Label: lang.L("energy.Name"), Hint: lang.L("The volume level at which the speech detection will trigger. (0 = Disabled, useful for Push2Talk)"), CustomKey: "EnergyRow"},
-		RowSpec{Label: lang.L("denoise_audio.Name"), Hint: strings.Replace(lang.L("denoise_audio.Description"), "\n", " ", -1), ControlNames: []string{"DenoiseAudio"}, Cols: 1},
+		RowSpec{Label: lang.L("denoise_audio.Name"), CustomKey: "DenoiseRow"},
 		RowSpec{Label: lang.L("pause.Name"), Hint: lang.L("pause.Description"), CustomKey: "PauseRow"},
 		RowSpec{Label: lang.L("phrase_time_limit.Name"), Hint: lang.L("phrase_time_limit.Description"), CustomKey: "PhraseRow"},
 	)
@@ -108,12 +108,14 @@ type FullFormDeps struct {
 	OnAudioInputChanged       func(CustomWidget.TextValueOption)
 	OnAudioApplicationChanged func(CustomWidget.TextValueOption)
 	OnAudioOutputChanged      func(CustomWidget.TextValueOption)
+	OnEnergyChanged           func(float64)
 	OnDetectEnergy            func(apiValue, deviceIndexValue, deviceText string) (float64, error)
 	AfterDetectEnergy         func()
 	CPUMemoryBar              *widget.ProgressBar
 	GPUMemoryBar              *widget.ProgressBar
 	TotalGPUMemory            func() int64
 	HasNvidiaGPU              func() bool
+	OnVADEnabledChanged       func(bool)
 }
 
 func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullFormDeps) *AllProfileControls {
@@ -146,7 +148,7 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 		PushToTalkBlock fyne.CanvasObject
 	}{GroupRow: build.VADGroupRow, ConfidenceRow: build.VADConfidenceRow, PushToTalkBlock: build.VADPushToTalkBlock}
 
-	energyState := widget.NewLabel("0.0")
+	energyState := widget.NewLabel(Utilities.FormatEnergyThresholdDBFS(0, lang.L("Disabled")))
 	energySlider := widget.NewSlider(0, SettingsMappings.EnergySliderMax)
 	engine.Controls.Energy = energySlider
 	engine.Register("energy", energySlider)
@@ -187,6 +189,9 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 		}()
 	})
 	energyRow := container.NewBorder(nil, nil, nil, container.NewHBox(energyState, energyBtn), energySlider)
+	if deps.OnEnergyChanged != nil {
+		deps.OnEnergyChanged(energySlider.Value)
+	}
 
 	pauseState := widget.NewLabel("0.0")
 	pauseSlider := widget.NewSlider(0, 5)
@@ -205,6 +210,25 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 	denoiseSelect := CustomWidget.NewTextValueSelect("denoise_audio", []CustomWidget.TextValueOption{{Text: lang.L("Disabled"), Value: ""}, {Text: "Noise Reduce", Value: "noise_reduce"}, {Text: "DeepFilterNet", Value: "deepfilter"}}, func(_ CustomWidget.TextValueOption) {}, 0)
 	engine.Controls.DenoiseAudio = denoiseSelect
 	engine.Register("denoise_audio", denoiseSelect)
+	denoiseBeforeTrigger := widget.NewCheck(lang.L("denoise_audio_before_trigger.Name"), func(bool) {})
+	engine.Controls.DenoiseBeforeTrigger = denoiseBeforeTrigger
+	engine.Register("denoise_audio_before_trigger", denoiseBeforeTrigger)
+	denoiseInfo := widget.NewButtonWithIcon("", theme.InfoIcon(), func() {
+		app := fyne.CurrentApp()
+		if app == nil || app.Driver() == nil {
+			return
+		}
+		windows := app.Driver().AllWindows()
+		if len(windows) == 0 {
+			return
+		}
+		message := lang.L("denoise_audio.Description") + "\n\n" +
+			lang.L("denoise_audio_before_trigger.Name") + ":\n" +
+			lang.L("denoise_audio_before_trigger.Description")
+		dialog.ShowInformation(lang.L("denoise_audio.Name"), message, windows[len(windows)-1])
+	})
+	denoiseTriggerControl := container.NewBorder(nil, nil, nil, denoiseInfo, denoiseBeforeTrigger)
+	denoiseRow := container.NewGridWithColumns(2, denoiseSelect, denoiseTriggerControl)
 
 	stt := &struct {
 		TypeSelect      *CustomWidget.TextValueSelect
@@ -447,10 +471,13 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 
 	zeroEnergyInfo := dialog.NewError(errors.New(lang.L("You did set Speech volume level to 0 and have no PushToTalk Button set.This would prevent the app from recording anything.")), fyne.CurrentApp().Driver().AllWindows()[1])
 	energySlider.OnChanged = func(v float64) {
+		if deps.OnEnergyChanged != nil {
+			deps.OnEnergyChanged(v)
+		}
 		if v >= energySlider.Max {
 			energySlider.Max += 10
 		}
-		energyState.SetText(fmt.Sprintf("%.0f", v))
+		energyState.SetText(Utilities.FormatEnergyThresholdDBFS(v, lang.L("Disabled")))
 		if engine.Controls.PushToTalk.Text == "" && v == 0 {
 			energySlider.SetValue(1)
 			zeroEnergyInfo.Show()
@@ -466,10 +493,13 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 	}
 	phraseSlider.OnChanged = func(v float64) { phraseState.SetText(fmt.Sprintf("%.1f", v)) }
 
-	custom := map[string]fyne.CanvasObject{"AudioInputRow": build.AudioInputRow, "AudioInputProgress": deps.AudioInputProgress, "AudioOutputProgress": deps.AudioOutputProgress, "VADGroup": vadSection.GroupRow, "VADConfidence": vadSection.ConfidenceRow, "EnergyRow": energyRow, "PauseRow": pauseRow, "PhraseRow": phraseRow}
+	custom := map[string]fyne.CanvasObject{"AudioInputRow": build.AudioInputRow, "AudioInputProgress": deps.AudioInputProgress, "AudioOutputProgress": deps.AudioOutputProgress, "VADGroup": vadSection.GroupRow, "VADConfidence": vadSection.ConfidenceRow, "EnergyRow": energyRow, "DenoiseRow": denoiseRow, "PauseRow": pauseRow, "PhraseRow": phraseRow}
 	AppendProfileLayout(form, engine.Controls, BuildFullProfileLayout(), custom)
 
 	engine.Controls.VadEnable.OnChanged = func(b bool) {
+		if deps.OnVADEnabledChanged != nil {
+			deps.OnVADEnabledChanged(b)
+		}
 		if b {
 			pauseSlider.Min = 0.0
 			phraseSlider.Min = 0.0
@@ -496,6 +526,9 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 			pauseSlider.Min = 0.1
 			phraseSlider.Min = 0.1
 		}
+	}
+	if deps.OnVADEnabledChanged != nil {
+		deps.OnVADEnabledChanged(engine.Controls.VadEnable.Checked)
 	}
 
 	var pushToTalkChanged bool

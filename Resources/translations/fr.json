@@ -330,7 +330,7 @@
     "osc_delay_until_audio_playback.Name": "Délai OSC jusqu'à la lecture de l'audio",
     "temperature_fallback.Description": "Si activée, la température sera rétablie en cas de faible confiance.\n(désactivé pour un traitement plus rapide)",
     "whisper_apply_voice_markers.Description": "Peut réduire les hallucinations de l'I.A.\nPeut ne pas fonctionner correctement avec le langage parlé réglé sur \"Auto\".",
-    "denoise_audio_before_trigger.Name": "Filtre de bruit avant le déclenchement de l'enregistrement",
+    "denoise_audio_before_trigger.Name": "Déclenchement après filtrage",
     "realtime_frequency_time.Name": "Fréquence en temps réel",
     "realtime_frequency_time.Description": "Combien de fois l'audio doit-il être traité par seconde.",
     "realtime_whisper_beam_size.Name": "Rechercher de faisceaux pour le mode temps réel",

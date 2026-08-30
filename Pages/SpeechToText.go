@@ -324,6 +324,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		leftVerticalBottomLayout.Add(additionalWidgets)
 	}
 	leftVerticalBottomLayout.Add(quickOptionsRow)
+	leftVerticalBottomLayout.Add(createAdditionalAudioRoutesPanel())
 
 	// main layout
 	leftVerticalLayout := container.NewBorder(
@@ -419,12 +420,14 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		}()
 	}
 
-	if !Settings.Config.Realtime {
-		Fields.Field.RealtimeResultLabel.Hide()
+	if Settings.Config.Realtime {
+		Fields.Field.RealtimeResultScroll.Show()
+	} else {
+		Fields.Field.RealtimeResultScroll.Hide()
 	}
 	realtimeWhisperResultBlock := container.NewBorder(
 		nil, container.NewVBox(widget.NewSeparator(), widget.NewSeparator()), nil, nil,
-		Fields.Field.RealtimeResultLabel,
+		Fields.Field.RealtimeResultScroll,
 	)
 
 	clearResultListButton := widget.NewButtonWithIcon(lang.L("Clear"), theme.ContentClearIcon(), func() {

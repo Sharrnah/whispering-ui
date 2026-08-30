@@ -302,7 +302,7 @@
     "realtime_whisper_beam_size.Description": "Кількість променів для пошуку найкращого результату.\nМоже бути 1-5. (менше = швидше)",
     "realtime_temperature_fallback.Name": "Резервний температурний режим для режиму реального часу",
     "realtime_temperature_fallback.Description": "Якщо увімкнено, температура буде знижуватися при низькій достовірності.\n(вимкнути для швидшої обробки)",
-    "denoise_audio_before_trigger.Name": "Фільтр шуму перед запуском запису",
+    "denoise_audio_before_trigger.Name": "Запуск після шумозаглушення",
     "denoise_audio_before_trigger.Description": "Фільтр шуму буде застосовано до аудіо до того, як буде виявлено умови запуску гучності + VAD.\nЦе може суттєво вплинути на якість звуку, оскільки збільшує час обробки кожного фрагмента!",
     "speaker_diarization.Name": "Розпізнавати зміни спікера",
     "speaker_diarization.Description": "Обробляйте зміни ораторів у розмові.",

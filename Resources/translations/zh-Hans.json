@@ -41,7 +41,7 @@
     "tts_use_secondary_playback.Name": "将文本转语音发送至次要音频设备",
     "Check for Plugin updates now": "立即检查插件更新",
     "VAD (Voice activity detection)": "VAD（语音活动检测）",
-    "denoise_audio_before_trigger.Name": "开始录音前的噪声过滤",
+    "denoise_audio_before_trigger.Name": "降噪后触发",
     "Check for Plugin updates at startup": "启动时检查插件更新",
     "Hide (Download will continue)": "隐藏（继续下载）",
     "osc_ip.Name": "OSC IP 地址",

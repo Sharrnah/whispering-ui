@@ -28,16 +28,17 @@ type AllProfileControls struct {
 	AudioOutput      *CustomWidget.TextValueSelect
 
 	// VAD / Recording
-	VadEnable       *widget.Check
-	VadOnFullClip   *widget.Check
-	VadRealtime     *widget.Check
-	vadSmartTurn    *widget.Check
-	PushToTalk      *CustomWidget.HotKeyEntry
-	VadConfidence   *widget.Slider
-	Energy          *widget.Slider
-	DenoiseAudio    *CustomWidget.TextValueSelect
-	PauseSeconds    *widget.Slider
-	PhraseTimeLimit *widget.Slider
+	VadEnable            *widget.Check
+	VadOnFullClip        *widget.Check
+	VadRealtime          *widget.Check
+	vadSmartTurn         *widget.Check
+	PushToTalk           *CustomWidget.HotKeyEntry
+	VadConfidence        *widget.Slider
+	Energy               *widget.Slider
+	DenoiseAudio         *CustomWidget.TextValueSelect
+	DenoiseBeforeTrigger *widget.Check
+	PauseSeconds         *widget.Slider
+	PhraseTimeLimit      *widget.Slider
 
 	// STT
 	STTType      *CustomWidget.TextValueSelect

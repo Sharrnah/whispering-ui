@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"sort"
 	"strings"
+	"sync"
 	"time"
 
 	"fyne.io/fyne/v2"
@@ -24,8 +25,13 @@ import (
 )
 
 type audioRoutesUpdateRequest struct {
+	Operation        string                          `json:"operation,omitempty"`
 	RequestID        string                          `json:"request_id"`
-	Routes           []Settings.AdditionalAudioRoute `json:"routes"`
+	Routes           []Settings.AdditionalAudioRoute `json:"routes,omitempty"`
+	Route            *Settings.AdditionalAudioRoute  `json:"route,omitempty"`
+	RouteID          string                          `json:"route_id,omitempty"`
+	Enabled          *bool                           `json:"enabled,omitempty"`
+	RoutePlugins     map[string][]string             `json:"route_plugins,omitempty"`
 	MainAudioPlugins *[]string                       `json:"main_audio_plugins"`
 }
 
@@ -240,7 +246,10 @@ func selectConfiguredRouteApplication(route *Settings.AdditionalAudioRoute, sele
 	selection.SetSelected(exactValue)
 }
 
-func createRouteAudioControls(route *Settings.AdditionalAudioRoute) (*widget.Select, fyne.CanvasObject) {
+func createRouteAudioControls(
+	route *Settings.AdditionalAudioRoute,
+	sourceChanged func(),
+) (*widget.Select, fyne.CanvasObject) {
 	backendNames := make([]string, 0, len(AudioAPI.AudioBackends))
 	for _, backend := range AudioAPI.AudioBackends {
 		backendNames = append(backendNames, backend.Name)
@@ -294,6 +303,9 @@ func createRouteAudioControls(route *Settings.AdditionalAudioRoute) (*widget.Sel
 					route.Device_index = -1
 				}
 			}
+			if sourceChanged != nil {
+				sourceChanged()
+			}
 			return
 		}
 		applicationSelection.Hide()
@@ -301,6 +313,9 @@ func createRouteAudioControls(route *Settings.AdditionalAudioRoute) (*widget.Sel
 		route.Audio_input_process = ""
 		route.Audio_input_process_id = 0
 		route.Device_index = nil
+		if sourceChanged != nil {
+			sourceChanged()
+		}
 	}
 	applicationSelection.OnChanged = func(option CustomWidget.TextValueOption) {
 		pid, executable, ok := Utilities.ParseAudioProcessOptionValue(option.Value)
@@ -311,6 +326,9 @@ func createRouteAudioControls(route *Settings.AdditionalAudioRoute) (*widget.Sel
 		route.Audio_input_process = executable
 		route.Audio_input_process_id = int(pid)
 		route.Device_index = -1
+		if sourceChanged != nil {
+			sourceChanged()
+		}
 	}
 	inputSelection.BeforeTapped = func() {
 		currentBackend := AudioAPI.GetAudioBackendByName(route.Audio_api)
@@ -332,6 +350,9 @@ func createRouteAudioControls(route *Settings.AdditionalAudioRoute) (*widget.Sel
 		applicationSelection.Hide()
 		inputSelection.SetValueOptions(liveAudioInputOptions(selectedBackend.Backend))
 		inputSelection.SetSelected("-1")
+		if sourceChanged != nil {
+			sourceChanged()
+		}
 	}
 
 	return apiSelection, container.NewVBox(inputSelection, applicationSelection)
@@ -346,6 +367,22 @@ func newRouteSlider(
 	extendMaximum bool,
 	changed func(float64),
 ) (*widget.Slider, fyne.CanvasObject) {
+	return newRouteSliderWithFormatter(
+		value, minimum, maximum, step,
+		func(updated float64) string { return fmt.Sprintf(valueFormat, updated) },
+		extendMaximum, changed,
+	)
+}
+
+func newRouteSliderWithFormatter(
+	value float64,
+	minimum float64,
+	maximum float64,
+	step float64,
+	formatValue func(float64) string,
+	extendMaximum bool,
+	changed func(float64),
+) (*widget.Slider, fyne.CanvasObject) {
 	if extendMaximum && value >= maximum {
 		maximum = value + 10
 	} else if value > maximum {
@@ -357,12 +394,12 @@ func newRouteSlider(
 	slider := widget.NewSlider(minimum, maximum)
 	slider.Step = step
 	slider.SetValue(value)
-	state := widget.NewLabel(fmt.Sprintf(valueFormat, slider.Value))
+	state := widget.NewLabel(formatValue(slider.Value))
 	slider.OnChanged = func(updated float64) {
 		if extendMaximum && updated >= slider.Max {
 			slider.Max += 10
 		}
-		state.SetText(fmt.Sprintf(valueFormat, updated))
+		state.SetText(formatValue(updated))
 		if changed != nil {
 			changed(updated)
 		}
@@ -370,13 +407,14 @@ func newRouteSlider(
 	return slider, container.NewBorder(nil, nil, nil, state, slider)
 }
 
-func createAudioRouteEditor(route *Settings.AdditionalAudioRoute, remove func()) fyne.CanvasObject {
+func createAudioRouteDetails(
+	route *Settings.AdditionalAudioRoute,
+	preview *routeAudioInputPreview,
+) fyne.CanvasObject {
 	name := widget.NewEntry()
 	name.SetText(route.Name)
 	name.OnChanged = func(value string) { route.Name = value }
 
-	enabled := widget.NewCheck("", func(value bool) { route.Enabled = value })
-	enabled.SetChecked(route.Enabled)
 	sttEnabled := widget.NewCheck("", func(value bool) { route.Stt_enabled = value })
 	sttEnabled.SetChecked(route.Stt_enabled)
 	realtime := widget.NewCheck("", nil)
@@ -401,7 +439,10 @@ func createAudioRouteEditor(route *Settings.AdditionalAudioRoute, remove func())
 	oscChatPrefix.SetText(route.Osc_chat_prefix)
 	oscChatPrefix.OnChanged = func(value string) { route.Osc_chat_prefix = value }
 
-	apiSelection, inputSelection := createRouteAudioControls(route)
+	apiSelection, inputSelection := createRouteAudioControls(route, func() {
+		preview.Update(*route)
+	})
+	inputAndLevel := container.NewVBox(inputSelection, preview.CanvasObject())
 
 	task := CustomWidget.NewTextValueSelect(
 		"additional_audio_task_"+route.ID,
@@ -431,9 +472,15 @@ func createAudioRouteEditor(route *Settings.AdditionalAudioRoute, remove func())
 		func(value string) { route.Trg_lang = value },
 	)
 
-	_, energy := newRouteSlider(
-		float64(route.Energy), 0, EnergySliderMax, 1, "%.0f", true,
-		func(value float64) { route.Energy = int(value) },
+	_, energy := newRouteSliderWithFormatter(
+		float64(route.Energy), 0, EnergySliderMax, 1,
+		func(value float64) string {
+			return Utilities.FormatEnergyThresholdDBFS(value, lang.L("Disabled"))
+		}, true,
+		func(value float64) {
+			route.Energy = int(value)
+			preview.SetThreshold(route.Energy)
+		},
 	)
 	_, vadConfidence := newRouteSlider(
 		route.Vad_confidence_threshold, 0, 1, 0.01, "%.2f", false,
@@ -545,16 +592,22 @@ func createAudioRouteEditor(route *Settings.AdditionalAudioRoute, remove func())
 	}
 	updateOSCState()
 
-	form := container.New(
+	sourceForm := container.New(
 		layout.NewFormLayout(),
 		widget.NewLabel(lang.L("Audio Source Name")), name,
-		widget.NewLabel(lang.L("Enabled")), enabled,
 		widget.NewLabel(lang.L("Audio API")), apiSelection,
-		widget.NewLabel(lang.L("Audio Input (mic)")), inputSelection,
+		widget.NewLabel(lang.L("Audio Input (mic)")), inputAndLevel,
+		widget.NewLabel(lang.L("energy.Name")), energy,
+	)
+	recognitionForm := container.New(
+		layout.NewFormLayout(),
 		widget.NewLabel(lang.L("Speech-to-Text Enabled")), sttEnabled,
 		widget.NewLabel(lang.L("Task")), task,
 		widget.NewLabel(lang.L("Speech Language")), speechLanguage,
 		widget.NewLabel(lang.L("Realtime")), realtime,
+	)
+	translationOutputForm := container.New(
+		layout.NewFormLayout(),
 		widget.NewLabel(lang.L("Text-Translate")), translate,
 		widget.NewLabel(lang.L("Source Language")), sourceLanguage,
 		widget.NewLabel(lang.L("Target Language")), targetLanguage,
@@ -567,7 +620,6 @@ func createAudioRouteEditor(route *Settings.AdditionalAudioRoute, remove func())
 	)
 	processingForm := container.New(
 		layout.NewFormLayout(),
-		widget.NewLabel(lang.L("energy.Name")), energy,
 		widget.NewLabel(lang.L("vad_confidence_threshold.Name")), vadConfidence,
 		widget.NewLabel(lang.L("phrase_time_limit.Name")), phraseLimit,
 		widget.NewLabel(lang.L("pause.Name")), pause,
@@ -580,11 +632,14 @@ func createAudioRouteEditor(route *Settings.AdditionalAudioRoute, remove func())
 		widget.NewLabel(lang.L("Turn Probability Threshold")), smartTurnProbability,
 		widget.NewLabel(lang.L("Turn Pause Length")), smartTurnPause,
 	)
-	processingAccordion := widget.NewAccordion(
+	details := widget.NewAccordion(
+		widget.NewAccordionItem(lang.L("Audio Source"), sourceForm),
+		widget.NewAccordionItem(lang.L("Speech-to-Text"), recognitionForm),
+		widget.NewAccordionItem(lang.L("Text-Translate"), translationOutputForm),
 		widget.NewAccordionItem(lang.L("Audio Processing"), processingForm),
 	)
-	removeButton := widget.NewButtonWithIcon(lang.L("Remove Audio Source"), theme.DeleteIcon(), remove)
-	return widget.NewCard(route.Name, "", container.NewVBox(form, processingAccordion, removeButton))
+	details.Open(0)
+	return details
 }
 
 func createPluginRouting(
@@ -685,58 +740,219 @@ func defaultAdditionalAudioRoute(index int) Settings.AdditionalAudioRoute {
 	}
 }
 
-func createAdditionalAudioRoutesSettings() fyne.CanvasObject {
-	pluginNames := enabledAudioRoutePlugins()
-	draftRoutes := cloneAudioRoutes(Settings.Config.Additional_audio_routes)
-	committedRoutes := cloneAudioRoutes(draftRoutes)
-	draftMainPlugins := clonePluginAllowlist(Settings.Config.Main_audio_plugins)
-	committedMainPlugins := clonePluginAllowlist(draftMainPlugins)
-	mainSelectionExplicit := draftMainPlugins != nil
+type audioRouteResultCallback func(success bool, errorMessage string)
 
-	routesBox := container.NewVBox()
-	routingBox := container.NewVBox()
+var (
+	audioRouteResultMutex     sync.Mutex
+	audioRouteResultCallbacks = map[string]audioRouteResultCallback{}
+)
+
+func installAudioRouteResultHandler() {
+	Fields.AudioRoutesUpdateResult = func(requestID string, success bool, errorMessage string) {
+		audioRouteResultMutex.Lock()
+		callback := audioRouteResultCallbacks[requestID]
+		delete(audioRouteResultCallbacks, requestID)
+		audioRouteResultMutex.Unlock()
+		if callback != nil {
+			callback(success, errorMessage)
+		}
+	}
+}
+
+func sendAudioRouteRequest(request audioRoutesUpdateRequest, callback audioRouteResultCallback) {
+	request.RequestID = fmt.Sprintf("%d", time.Now().UnixNano())
+	audioRouteResultMutex.Lock()
+	audioRouteResultCallbacks[request.RequestID] = callback
+	audioRouteResultMutex.Unlock()
+	SendMessageChannel.SendMessageStruct{
+		Type:  "audio_routes_update",
+		Value: request,
+	}.SendMessage()
+}
+
+func currentAudioRouteWindow() fyne.Window {
+	if app := fyne.CurrentApp(); app != nil {
+		windows := app.Driver().AllWindows()
+		if len(windows) > 0 {
+			return windows[0]
+		}
+	}
+	return nil
+}
+
+func showAudioRouteError(parent fyne.Window, errorMessage string) {
+	if parent == nil {
+		return
+	}
+	if strings.TrimSpace(errorMessage) == "" {
+		errorMessage = lang.L("Error")
+	}
+	dialog.ShowError(errors.New(errorMessage), parent)
+}
+
+func resizeAudioRouteDialog(modal *dialog.CustomDialog, parent fyne.Window, maximum fyne.Size) {
+	if modal == nil || parent == nil {
+		return
+	}
+	size := parent.Canvas().Size()
+	size.Width -= 80
+	size.Height -= 80
+	if size.Width > maximum.Width {
+		size.Width = maximum.Width
+	}
+	if size.Height > maximum.Height {
+		size.Height = maximum.Height
+	}
+	if size.Width < 480 {
+		size.Width = 480
+	}
+	if size.Height < 360 {
+		size.Height = 360
+	}
+	modal.Resize(size)
+}
+
+func showAudioRouteDialog(route Settings.AdditionalAudioRoute, isNew bool, refresh func()) {
+	parent := currentAudioRouteWindow()
+	if parent == nil {
+		return
+	}
+	draft := route
+	draft.Plugins = append([]string(nil), route.Plugins...)
+	preview := newRouteAudioInputPreview(draft.Energy)
+	details := createAudioRouteDetails(&draft, preview)
+	detailsScroll := container.NewVScroll(details)
+	detailsScroll.SetMinSize(fyne.NewSize(520, 420))
+
 	progress := widget.NewProgressBarInfinite()
 	progress.Stop()
 	progress.Hide()
-	addButton := widget.NewButtonWithIcon(lang.L("Add Audio Source"), theme.ContentAddIcon(), nil)
-	applyButton := widget.NewButtonWithIcon(lang.L("Apply Audio Sources"), theme.ConfirmIcon(), nil)
-	pendingRequestID := ""
-
-	var renderRoutes func()
-	var renderPluginRouting func()
-	renderRoutes = func() {
-		routesBox.RemoveAll()
-		if pendingRequestID == "" && len(draftRoutes) < maxAdditionalAudioRoutes {
-			addButton.Enable()
-		} else {
-			addButton.Disable()
-		}
-		if len(draftRoutes) == 0 {
-			message := widget.NewLabel(lang.L("No Additional Audio Sources Configured"))
-			message.Alignment = fyne.TextAlignCenter
-			routesBox.Add(message)
-			return
-		}
-		for index := range draftRoutes {
-			currentIndex := index
-			routesBox.Add(createAudioRouteEditor(&draftRoutes[currentIndex], func() {
-				draftRoutes = append(draftRoutes[:currentIndex], draftRoutes[currentIndex+1:]...)
-				renderRoutes()
-				renderPluginRouting()
-			}))
-		}
-		routesBox.Refresh()
+	saveButton := widget.NewButtonWithIcon(lang.L("Save"), theme.ConfirmIcon(), nil)
+	saveButton.Importance = widget.HighImportance
+	cancelButton := widget.NewButton(lang.L("Cancel"), nil)
+	removeButton := widget.NewButtonWithIcon(lang.L("Remove Audio Source"), theme.DeleteIcon(), nil)
+	removeButton.Importance = widget.DangerImportance
+	if isNew {
+		removeButton.Hide()
 	}
 
-	renderPluginRouting = func() {
-		routingBox.RemoveAll()
-		routingBox.Add(createPluginRouting(
-			audioRoutePluginOptions(pluginNames, draftRoutes, draftMainPlugins),
+	var modal *dialog.CustomDialog
+	setBusy := func(busy bool) {
+		if busy {
+			saveButton.Disable()
+			cancelButton.Disable()
+			removeButton.Disable()
+			progress.Show()
+			progress.Start()
+			return
+		}
+		saveButton.Enable()
+		cancelButton.Enable()
+		removeButton.Enable()
+		progress.Stop()
+		progress.Hide()
+	}
+	cancelButton.OnTapped = func() { modal.Hide() }
+	saveButton.OnTapped = func() {
+		if strings.TrimSpace(draft.Name) == "" {
+			showAudioRouteError(parent, lang.L("Audio Source Name Is Required"))
+			return
+		}
+		setBusy(true)
+		requestDraft := draft
+		request := audioRoutesUpdateRequest{
+			Operation: "upsert",
+			Route:     &requestDraft,
+		}
+		sendAudioRouteRequest(request, func(success bool, errorMessage string) {
+			if success {
+				modal.Hide()
+				refresh()
+				return
+			}
+			setBusy(false)
+			showAudioRouteError(parent, errorMessage)
+		})
+	}
+	removeButton.OnTapped = func() {
+		confirm := dialog.NewConfirm(
+			lang.L("Remove Audio Source"),
+			strings.TrimSpace(draft.Name)+"?",
+			func(confirmed bool) {
+				if !confirmed {
+					return
+				}
+				setBusy(true)
+				sendAudioRouteRequest(audioRoutesUpdateRequest{
+					Operation: "delete",
+					RouteID:   draft.ID,
+				}, func(success bool, errorMessage string) {
+					if success {
+						modal.Hide()
+						refresh()
+						return
+					}
+					setBusy(false)
+					showAudioRouteError(parent, errorMessage)
+				})
+			},
+			parent,
+		)
+		confirm.SetConfirmImportance(widget.DangerImportance)
+		confirm.Show()
+	}
+
+	footer := container.NewBorder(
+		nil,
+		nil,
+		removeButton,
+		container.NewHBox(cancelButton, saveButton),
+		progress,
+	)
+	content := container.NewBorder(
+		nil,
+		container.NewVBox(widget.NewSeparator(), footer),
+		nil,
+		nil,
+		detailsScroll,
+	)
+	title := lang.L("Add Audio Source")
+	if !isNew {
+		title = lang.L("Audio Source") + ": " + route.Name
+	}
+	modal = dialog.NewCustomWithoutButtons(title, content, parent)
+	modal.SetOnClosed(preview.Stop)
+	resizeAudioRouteDialog(modal, parent, fyne.NewSize(760, 720))
+	modal.Show()
+	preview.Update(draft)
+}
+
+func createAudioRoutePluginRoutingEditor(
+	parent fyne.Window,
+	onSaved func(),
+) (*fyne.Container, func()) {
+	editor := container.NewStack()
+	var render func()
+	render = func() {
+		draftRoutes := cloneAudioRoutes(Settings.Config.Additional_audio_routes)
+		draftMainPlugins := clonePluginAllowlist(Settings.Config.Main_audio_plugins)
+		mainSelectionExplicit := draftMainPlugins != nil
+		pluginNames := enabledAudioRoutePlugins()
+		pluginOptions := audioRoutePluginOptions(
+			pluginNames, draftRoutes, draftMainPlugins,
+		)
+		allPluginNames := make([]string, 0, len(pluginOptions))
+		for _, option := range pluginOptions {
+			allPluginNames = append(allPluginNames, option.Name)
+		}
+
+		routing := createPluginRouting(
+			pluginOptions,
 			draftRoutes,
 			draftMainPlugins,
 			func(pluginName string, selected bool) {
 				mainSelectionExplicit = true
-				current := append([]string(nil), pluginNames...)
+				current := append([]string(nil), allPluginNames...)
 				if draftMainPlugins != nil {
 					current = append([]string(nil), (*draftMainPlugins)...)
 				}
@@ -745,99 +961,299 @@ func createAdditionalAudioRoutesSettings() fyne.CanvasObject {
 			},
 			func(routeIndex int, pluginName string, selected bool) {
 				draftRoutes[routeIndex].Plugins = setPluginSelected(
-					draftRoutes[routeIndex].Plugins,
-					pluginName,
-					selected,
+					draftRoutes[routeIndex].Plugins, pluginName, selected,
 				)
 			},
-		))
-		routingBox.Refresh()
+		)
+		routingScroll := container.NewVScroll(routing)
+		routingScroll.SetMinSize(fyne.NewSize(600, 420))
+
+		progress := widget.NewProgressBarInfinite()
+		progress.Stop()
+		progress.Hide()
+		saveButton := widget.NewButtonWithIcon(lang.L("Save"), theme.ConfirmIcon(), nil)
+		saveButton.Importance = widget.HighImportance
+		setBusy := func(busy bool) {
+			if busy {
+				saveButton.Disable()
+				progress.Show()
+				progress.Start()
+				return
+			}
+			saveButton.Enable()
+			progress.Stop()
+			progress.Hide()
+		}
+		saveButton.OnTapped = func() {
+			setBusy(true)
+			routePlugins := make(map[string][]string, len(draftRoutes))
+			for _, route := range draftRoutes {
+				routePlugins[route.ID] = append([]string(nil), route.Plugins...)
+			}
+			requestMainPlugins := draftMainPlugins
+			if !mainSelectionExplicit {
+				requestMainPlugins = nil
+			}
+			sendAudioRouteRequest(audioRoutesUpdateRequest{
+				Operation:        "plugin_routing",
+				RoutePlugins:     routePlugins,
+				MainAudioPlugins: clonePluginAllowlist(requestMainPlugins),
+			}, func(success bool, errorMessage string) {
+				if success {
+					render()
+					if onSaved != nil {
+						onSaved()
+					}
+					return
+				}
+				setBusy(false)
+				showAudioRouteError(parent, errorMessage)
+			})
+		}
+		footer := container.NewBorder(
+			nil, nil, nil, container.NewHBox(saveButton), progress,
+		)
+		content := container.NewBorder(
+			nil,
+			container.NewVBox(widget.NewSeparator(), footer),
+			nil,
+			nil,
+			routingScroll,
+		)
+		editor.RemoveAll()
+		editor.Add(content)
+		editor.Refresh()
+	}
+	render()
+	return editor, render
+}
+
+func audioRouteInputSummary(route Settings.AdditionalAudioRoute) string {
+	input := strings.TrimSpace(route.Audio_input_device)
+	if input == "" {
+		input = "Default"
+	}
+	api := strings.TrimSpace(route.Audio_api)
+	if api == "" {
+		return input
+	}
+	return api + " - " + input
+}
+
+func audioRoutePanelTitle(routes []Settings.AdditionalAudioRoute) string {
+	activeCount := 0
+	for _, route := range routes {
+		if route.Enabled {
+			activeCount++
+		}
+	}
+	return fmt.Sprintf(
+		"%s (%d/%d)", lang.L("Additional Audio Sources"), activeCount, len(routes),
+	)
+}
+
+func audioRouteEnabledUpdateRequest(routeID string, enabled bool) audioRoutesUpdateRequest {
+	requestedEnabled := enabled
+	return audioRoutesUpdateRequest{
+		Operation: "set_enabled",
+		RouteID:   routeID,
+		Enabled:   &requestedEnabled,
+	}
+}
+
+func newAudioRouteEnabledCheck(name string, enabled bool) *widget.Check {
+	check := widget.NewCheck(name, nil)
+	check.SetChecked(enabled)
+	return check
+}
+
+func renderAdditionalAudioRouteRows(
+	routesBox *fyne.Container,
+	routes []Settings.AdditionalAudioRoute,
+	refresh func(),
+) {
+	routesBox.RemoveAll()
+	if len(routes) == 0 {
+		message := widget.NewLabel(lang.L("No Additional Audio Sources Configured"))
+		message.Alignment = fyne.TextAlignCenter
+		routesBox.Add(message)
+		routesBox.Refresh()
+		return
+	}
+
+	for routeIndex, configuredRoute := range routes {
+		route := configuredRoute
+		enabled := newAudioRouteEnabledCheck(route.Name, route.Enabled)
+		summary := widget.NewLabel(audioRouteInputSummary(route))
+		summary.Truncation = fyne.TextTruncateEllipsis
+		status := widget.NewLabel(lang.L("Disabled"))
+		if route.Enabled {
+			status.SetText(lang.L("Enabled"))
+		}
+		progress := widget.NewActivity()
+		progress.Stop()
+		progress.Hide()
+		editButton := widget.NewButtonWithIcon("", theme.SettingsIcon(), func() {
+			showAudioRouteDialog(route, false, refresh)
+		})
+		editButton.Importance = widget.LowImportance
+		enabledCell := container.New(
+			layout.NewGridWrapLayout(fyne.NewSize(190, enabled.MinSize().Height)),
+			enabled,
+		)
+
+		enabled.OnChanged = func(selected bool) {
+			enabled.Disable()
+			editButton.Disable()
+			status.Hide()
+			progress.Show()
+			progress.Start()
+			sendAudioRouteRequest(audioRouteEnabledUpdateRequest(
+				route.ID, selected,
+			), func(success bool, errorMessage string) {
+				if !success {
+					showAudioRouteError(currentAudioRouteWindow(), errorMessage)
+				}
+				refresh()
+			})
+		}
+
+		row := container.NewBorder(
+			nil,
+			nil,
+			enabledCell,
+			container.NewHBox(status, progress, editButton),
+			summary,
+		)
+		routesBox.Add(row)
+		if routeIndex < len(routes)-1 {
+			routesBox.Add(widget.NewSeparator())
+		}
+	}
+	routesBox.Refresh()
+}
+
+func newAdditionalAudioRoutesManagerTabs(
+	sources fyne.CanvasObject,
+	routing fyne.CanvasObject,
+) *container.AppTabs {
+	return container.NewAppTabs(
+		container.NewTabItem(lang.L("Additional Audio Sources"), sources),
+		container.NewTabItem(lang.L("Plugin Routing"), routing),
+	)
+}
+
+func showAdditionalAudioRoutesManagerDialog(
+	refreshSummary func(),
+	onClosed func(),
+) func() {
+	parent := currentAudioRouteWindow()
+	if parent == nil {
+		return nil
+	}
+	routesBox := container.NewVBox()
+	routesScroll := container.NewVScroll(routesBox)
+	addButton := widget.NewButtonWithIcon(
+		lang.L("Add Audio Source"), theme.ContentAddIcon(), nil,
+	)
+	sourcesContent := container.NewBorder(
+		nil,
+		container.NewHBox(addButton),
+		nil,
+		nil,
+		routesScroll,
+	)
+	routingEditor, renderPluginRouting := createAudioRoutePluginRoutingEditor(
+		parent,
+		refreshSummary,
+	)
+	tabs := newAdditionalAudioRoutesManagerTabs(sourcesContent, routingEditor)
+	routingTab := tabs.Items[1]
+	tabs.OnSelected = func(selected *container.TabItem) {
+		if selected == routingTab {
+			renderPluginRouting()
+		}
+	}
+
+	var render func()
+	refreshAll := func() {
+		render()
+		if refreshSummary != nil {
+			refreshSummary()
+		}
+	}
+	render = func() {
+		routes := cloneAudioRoutes(Settings.Config.Additional_audio_routes)
+		renderAdditionalAudioRouteRows(routesBox, routes, refreshAll)
+		if len(routes) >= maxAdditionalAudioRoutes {
+			addButton.Disable()
+		} else {
+			addButton.Enable()
+		}
+		height := routesBox.MinSize().Height + theme.Padding()*2
+		if height < 80 {
+			height = 80
+		}
+		if height > 340 {
+			height = 340
+		}
+		routesScroll.SetMinSize(fyne.NewSize(640, height))
+		if tabs.Selected() == routingTab {
+			renderPluginRouting()
+		}
+		sourcesContent.Refresh()
+		tabs.Refresh()
 	}
 
 	addButton.OnTapped = func() {
-		if len(draftRoutes) >= maxAdditionalAudioRoutes {
+		if len(Settings.Config.Additional_audio_routes) >= maxAdditionalAudioRoutes {
 			return
 		}
-		draftRoutes = append(draftRoutes, defaultAdditionalAudioRoute(len(draftRoutes)+1))
-		renderRoutes()
-		renderPluginRouting()
+		showAudioRouteDialog(
+			defaultAdditionalAudioRoute(len(Settings.Config.Additional_audio_routes)+1),
+			true,
+			refreshAll,
+		)
 	}
-	applyButton.OnTapped = func() {
-		if pendingRequestID != "" {
-			return
-		}
-		for _, route := range draftRoutes {
-			if strings.TrimSpace(route.Name) == "" {
-				dialog.ShowError(errors.New(lang.L("Audio Source Name Is Required")), fyne.CurrentApp().Driver().AllWindows()[0])
-				return
-			}
-		}
-		requestMainPlugins := draftMainPlugins
-		if !mainSelectionExplicit {
-			requestMainPlugins = nil
-		}
-		request := audioRoutesUpdateRequest{
-			RequestID:        fmt.Sprintf("%d", time.Now().UnixNano()),
-			Routes:           cloneAudioRoutes(draftRoutes),
-			MainAudioPlugins: clonePluginAllowlist(requestMainPlugins),
-		}
-		pendingRequestID = request.RequestID
-		addButton.Disable()
-		applyButton.Disable()
-		progress.Show()
-		progress.Start()
-		SendMessageChannel.SendMessageStruct{Type: "audio_routes_update", Value: request}.SendMessage()
-	}
-
-	Fields.AudioRoutesUpdateResult = func(requestID string, success bool, errorMessage string) {
-		if requestID == "" || requestID != pendingRequestID {
-			return
-		}
-		pendingRequestID = ""
-		progress.Stop()
-		progress.Hide()
-		if len(draftRoutes) < maxAdditionalAudioRoutes {
-			addButton.Enable()
-		} else {
-			addButton.Disable()
-		}
-		applyButton.Enable()
-		if success {
-			committedRoutes = cloneAudioRoutes(draftRoutes)
-			committedMainPlugins = clonePluginAllowlist(draftMainPlugins)
-			Settings.Config.Additional_audio_routes = cloneAudioRoutes(draftRoutes)
-			Settings.Config.Main_audio_plugins = clonePluginAllowlist(draftMainPlugins)
-			return
-		}
-
-		draftRoutes = cloneAudioRoutes(committedRoutes)
-		draftMainPlugins = clonePluginAllowlist(committedMainPlugins)
-		mainSelectionExplicit = draftMainPlugins != nil
-		renderRoutes()
-		renderPluginRouting()
-		if strings.TrimSpace(errorMessage) == "" {
-			errorMessage = lang.L("Error")
-		}
-		if app := fyne.CurrentApp(); app != nil && len(app.Driver().AllWindows()) > 0 {
-			dialog.ShowError(errors.New(errorMessage), app.Driver().AllWindows()[0])
-		}
-	}
-
-	renderRoutes()
-	renderPluginRouting()
-	explanation := widget.NewLabel(lang.L("Additional Audio Sources Share the Loaded Speech Model"))
-	explanation.Wrapping = fyne.TextWrapWord
-	content := container.NewVBox(
-		explanation,
-		routesBox,
-		container.NewHBox(addButton),
-		widget.NewCard(lang.L("Plugin Routing"), "", routingBox),
+	render()
+	manager := dialog.NewCustom(
+		lang.L("Additional Audio Sources"), lang.L("Close"), tabs, parent,
 	)
-	scroll := container.NewVScroll(content)
-	footer := container.NewVBox(
-		widget.NewSeparator(),
-		progress,
-		container.NewHBox(layout.NewSpacer(), applyButton),
-	)
-	return container.NewBorder(nil, footer, nil, nil, scroll)
+	manager.SetOnClosed(onClosed)
+	manager.Show()
+	resizeAudioRouteDialog(manager, parent, fyne.NewSize(840, 650))
+	return render
+}
+
+func createAdditionalAudioRoutesPanel() fyne.CanvasObject {
+	installAudioRouteResultHandler()
+	button := widget.NewButtonWithIcon("", theme.SettingsIcon(), nil)
+	button.Alignment = widget.ButtonAlignLeading
+	button.Importance = widget.LowImportance
+	var managerRefresh func()
+	refreshSummary := func() {
+		button.SetText(audioRoutePanelTitle(Settings.Config.Additional_audio_routes))
+	}
+	refresh := func() {
+		refreshSummary()
+		if managerRefresh != nil {
+			managerRefresh()
+		}
+	}
+	button.OnTapped = func() {
+		if managerRefresh != nil {
+			return
+		}
+		button.Disable()
+		managerRefresh = showAdditionalAudioRoutesManagerDialog(refreshSummary, func() {
+			managerRefresh = nil
+			button.Enable()
+		})
+		if managerRefresh == nil {
+			button.Enable()
+		}
+	}
+	Fields.AudioRoutesRefresh = refresh
+	refresh()
+	return button
 }

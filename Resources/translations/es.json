@@ -306,7 +306,7 @@
     "realtime_whisper_beam_size.Description": "Número de haces a buscar para obtener el mejor resultado.\nPuede ser de 1 a 5. (menor = más rápido)",
     "realtime_temperature_fallback.Name": "Retroceso de temperatura para el modo en tiempo real",
     "realtime_temperature_fallback.Description": "Si está habilitado, la temperatura se retrocederá la temperatura en baja confianza.\n(desactivar para un procesamiento más rápido)",
-    "denoise_audio_before_trigger.Name": "Filtro de ruido antes del disparo de grabación",
+    "denoise_audio_before_trigger.Name": "Disparo tras reducción de ruido",
     "denoise_audio_before_trigger.Description": "El filtro de ruido se aplicará al audio antes de que se detecten las condiciones de activación de Volumen + VAD.\nEsto puede influir mucho en la calidad del audio, ya que aumenta el tiempo de procesamiento por fragmento!",
     "speaker_diarization.Name": "Reconocer los cambios de orador",
     "speaker_diarization.Description": "Procesar los cambios de interlocutor en la conversación.",

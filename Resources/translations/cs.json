@@ -182,7 +182,7 @@
     "realtime_whisper_beam_size.Name": "Vyhledejte paprsky pro režim v reálném čase",
     "realtime_temperature_fallback.Name": "Pokles teploty pro režim reálného času",
     "realtime_temperature_fallback.Description": "Pokud je povoleno, teplota sníží teplotu s nízkou spolehlivostí.\n(vypnout pro rychlejší zpracování)",
-    "denoise_audio_before_trigger.Name": "Filtr šumu před spuštěním záznamu",
+    "denoise_audio_before_trigger.Name": "Spuštění po odšumění",
     "Settings have been saved to settingsFile This might require a restart of the application for some changes to take effect.": "Nastavení byla uložena do {{.SettingsFile}}\n To může vyžadovat restart aplikace, aby se některé změny projevily.",
     "realtime_whisper_beam_size.Description": "Počet paprsků pro hledání nejlepšího výsledku.\nMůže být 1-5. (nižší = rychlejší)",
     "osc_min_time_between_messages.Name": "OSC minimální doba mezi zprávami",

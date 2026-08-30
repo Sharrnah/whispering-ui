@@ -320,9 +320,11 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		})
 	case "audio_routes_update_result":
 		result := struct {
-			RequestID string `json:"request_id"`
-			Success   bool   `json:"success"`
-			Error     string `json:"error"`
+			RequestID        string                          `json:"request_id"`
+			Success          bool                            `json:"success"`
+			Error            string                          `json:"error"`
+			Routes           []Settings.AdditionalAudioRoute `json:"routes"`
+			MainAudioPlugins *[]string                       `json:"main_audio_plugins"`
 		}{}
 		err = json.Unmarshal(c.Data, &result)
 		if err != nil {
@@ -330,6 +332,10 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			return
 		}
 		fyne.Do(func() {
+			if result.Success {
+				Settings.Config.Additional_audio_routes = result.Routes
+				Settings.Config.Main_audio_plugins = result.MainAudioPlugins
+			}
 			if Fields.AudioRoutesUpdateResult != nil {
 				Fields.AudioRoutesUpdateResult(result.RequestID, result.Success, result.Error)
 			} else if !result.Success {
@@ -508,7 +514,7 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			fyne.Do(func() {
 				Fields.Field.ProcessingStatus.Start()
 				//Fields.Field.ProcessingStatus.Refresh()
-				Fields.Field.RealtimeResultLabel.Show()
+				Fields.Field.RealtimeResultScroll.Show()
 				//Fields.Field.RealtimeResultLabel.SetText(processingData)
 				//Fields.Field.RealtimeResultLabel.Refresh()
 			})

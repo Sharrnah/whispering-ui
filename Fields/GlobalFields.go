@@ -20,7 +20,10 @@ import (
 	"whispering-tiger-ui/SendMessageChannel"
 )
 
-const OscLimitLabelConst = "[%d / %d]"
+const (
+	OscLimitLabelConst     = "[%d / %d]"
+	realtimeResultMaxLines = 3
+)
 
 var OscLimitHintUpdateFunc = func() {}
 
@@ -40,9 +43,13 @@ var AudioInputSwitchResult func(requestID string, success bool, errorMessage str
 // AudioOutputSwitchResult does the same for a runtime playback-device change.
 var AudioOutputSwitchResult func(requestID string, success bool, errorMessage string)
 
-// AudioRoutesUpdateResult lets the audio-source editor commit or restore its
-// draft after the backend has opened every configured stream transactionally.
+// AudioRoutesUpdateResult lets audio-source controls finish or roll back a
+// transactional route operation after the backend responds.
 var AudioRoutesUpdateResult func(requestID string, success bool, errorMessage string)
+
+// AudioRoutesRefresh lets the persistent Speech-to-Text page redraw its compact
+// source list after a profile or backend settings snapshot replaces Config.
+var AudioRoutesRefresh func()
 
 var fieldCreationFunctions = struct {
 	TranscriptionTaskCombo        func() *CustomWidget.TextValueSelect
@@ -214,6 +221,7 @@ var fieldCreationFunctions = struct {
 
 var Field = struct {
 	RealtimeResultLabel                             *widget.Label // only displayed if realtime is enabled
+	RealtimeResultScroll                            *container.Scroll
 	ProcessingStatus                                *widget.Activity
 	WhisperResultList                               *widget.List
 	TranscriptionTaskCombo                          *CustomWidget.TextValueSelect
@@ -275,7 +283,7 @@ func InitializeGlobalFields() {
 	})
 
 	// Initialize basic fields
-	Field.RealtimeResultLabel = widget.NewLabelWithData(DataBindings.WhisperResultIntermediateResult)
+	Field.RealtimeResultLabel, Field.RealtimeResultScroll = newRealtimeResultDisplay(DataBindings.WhisperResultIntermediateResult)
 	Field.ProcessingStatus = widget.NewActivity()
 	Field.TranscriptionSpeakerLanguageCombo = CustomWidget.NewCompletionEntry([]string{"Auto"})
 	Field.TranscriptionTargetLanguageCombo = CustomWidget.NewCompletionEntry([]string{})
@@ -354,9 +362,6 @@ func InitializeGlobalFields() {
 	Field.StatusText = widget.NewLabelWithData(DataBindings.StatusTextBinding)
 
 	createFields()
-
-	Field.RealtimeResultLabel.Wrapping = fyne.TextWrapWord
-	Field.RealtimeResultLabel.TextStyle = fyne.TextStyle{Italic: true}
 
 	Field.SourceLanguageCombo.OptionsTextValue = []CustomWidget.TextValueOption{{
 		Text:  "Auto",
@@ -640,4 +645,30 @@ func InitializeGlobalFields() {
 	Field.TranscriptionTranslationTextToSpeechInput.OnChanged = func(value string) {
 		OscClient.SendChatboxTyping(true)
 	}
+}
+
+func newRealtimeResultDisplay(data binding.String) (*widget.Label, *container.Scroll) {
+	label := widget.NewLabelWithData(data)
+	label.Wrapping = fyne.TextWrapWord
+	label.TextStyle = fyne.TextStyle{Italic: true}
+
+	scroll := container.NewVScroll(label)
+	oneLineHeight := label.MinSize().Height
+	lineProbe := widget.NewLabel(strings.Repeat("M\n", realtimeResultMaxLines-1) + "M")
+	lineProbe.TextStyle = label.TextStyle
+	maxHeight := lineProbe.MinSize().Height
+	scroll.SetMinSize(fyne.NewSize(0, oneLineHeight))
+	data.AddListener(binding.NewDataListener(func() {
+		// Let short results use one or two lines, but stop a hallucinated interim
+		// transcript from raising the minimum height of the whole window.
+		viewportHeight := fyne.Min(maxHeight, fyne.Max(oneLineHeight, label.MinSize().Height))
+		scroll.SetMinSize(fyne.NewSize(0, viewportHeight))
+
+		// Refresh first so the scroller lays out the label at its new wrapped
+		// height before calculating the bottom offset.
+		scroll.Refresh()
+		scroll.ScrollToBottom()
+	}))
+
+	return label, scroll
 }

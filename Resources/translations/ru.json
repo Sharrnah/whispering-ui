@@ -302,7 +302,7 @@
     "realtime_whisper_beam_size.Description": "Количество лучей для поиска наилучшего результата.\nМожет быть 1-5. (меньше = быстрее)",
     "realtime_temperature_fallback.Name": "Откат температуры для режима реального времени",
     "realtime_temperature_fallback.Description": "Если эта функция включена, то при низком уровне доверия температура будет понижаться.\n(отключите для ускорения обработки)",
-    "denoise_audio_before_trigger.Name": "Фильтр шумов перед запуском записи",
+    "denoise_audio_before_trigger.Name": "Запуск после шумоподавления",
     "denoise_audio_before_trigger.Description": "Фильтр шума будет применен к аудио до обнаружения условий срабатывания Volume + VAD.\nЭто может сильно повлиять на качество звука, так как увеличивает время обработки каждого чанка!",
     "speaker_diarization.Name": "Распознавание изменений в речи",
     "speaker_diarization.Description": "Обработайте изменения в разговоре.",

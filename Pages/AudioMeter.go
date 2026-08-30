@@ -56,6 +56,35 @@ func s32AudioMeterLevel(samples []byte) float64 {
 	return audioMeterLevel(sumSquares, sampleCount)
 }
 
+// s32AudioPeakMeterLevel matches the backend's speech-volume trigger, which
+// compares the largest absolute int16 sample in each chunk instead of RMS.
+func s32AudioPeakMeterLevel(samples []byte) float64 {
+	var peak int64
+	for offset := 0; offset+4 <= len(samples); offset += 4 {
+		sample := int64(int32(binary.LittleEndian.Uint32(samples[offset : offset+4])))
+		if sample < 0 {
+			sample = -sample
+		}
+		if sample > peak {
+			peak = sample
+		}
+	}
+	if peak == 0 {
+		return 0
+	}
+	return normalizedAudioMeterLevel(float64(peak) / float64(int64(math.MaxInt32)+1))
+}
+
+// s32SpeechTriggerMeterLevel follows the recorder selected in the profile:
+// the VAD recorder uses peak amplitude, while speech_recognition's legacy
+// non-VAD recorder applies the same energy value to an RMS measurement.
+func s32SpeechTriggerMeterLevel(samples []byte, vadEnabled bool) float64 {
+	if vadEnabled {
+		return s32AudioPeakMeterLevel(samples)
+	}
+	return s32AudioMeterLevel(samples)
+}
+
 func f32AudioMeterLevel(samples []byte) float64 {
 	var sumSquares float64
 	validSampleCount := 0

@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Logging"
@@ -67,6 +68,7 @@ type CurrentPlaybackDevice struct {
 	applicationMeter           *Utilities.ApplicationAudioMeter
 	applicationMeterGeneration uint64
 	applicationMeterMu         sync.Mutex
+	inputMeterUsesPeak         atomic.Bool
 }
 
 // Context lifecycle overview:
@@ -99,6 +101,10 @@ func (c *CurrentPlaybackDevice) StopApplicationAudioMeter() {
 	if inputWaveWidget != nil {
 		fyne.Do(func() { inputWaveWidget.SetValue(0) })
 	}
+}
+
+func (c *CurrentPlaybackDevice) SetInputMeterUsesPeak(usePeak bool) {
+	c.inputMeterUsesPeak.Store(usePeak)
 }
 
 func (c *CurrentPlaybackDevice) StartApplicationAudioMeter(processID uint32, executable string) error {
@@ -407,7 +413,9 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 		testAudioMutex.Unlock()
 
 		if len(pInputSamples) > 0 {
-			currentVolume := s32AudioMeterLevel(pInputSamples)
+			currentVolume := s32SpeechTriggerMeterLevel(
+				pInputSamples, c.inputMeterUsesPeak.Load(),
+			)
 			fyne.Do(func() {
 				c.InputWaveWidget.SetValue(currentVolume)
 			})
@@ -764,7 +772,16 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		{Text: lang.L("CPU, Low Memory (<=8GB), Accuracy optimized"), Value: "CPU-LowPerformance-Accuracy"},
 	}, nil, 0)
 
-	playBackDevice := CurrentPlaybackDevice{}
+	inputWaveWidget := widget.NewProgressBar()
+	inputWaveWidget.Max = audioMeterMax
+	inputWaveWidget.TextFormatter = func() string { return "" }
+	outputWaveWidget := widget.NewProgressBar()
+	outputWaveWidget.Max = audioMeterMax
+	outputWaveWidget.TextFormatter = func() string { return "" }
+	playBackDevice := CurrentPlaybackDevice{
+		InputWaveWidget:  inputWaveWidget,
+		OutputWaveWidget: outputWaveWidget,
+	}
 
 	playBackDevice.AudioAPI = AudioAPI.AudioBackends[0].Backend
 	playBackDevice.StartContext()
@@ -887,7 +904,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		// Rendering and control creation is done centrally in BuildAndRenderFullProfile
 		updatingAudioDeviceOptions := false
 
-		audioInputProgress := playBackDevice.InputWaveWidget
+		audioInputThresholdMeter := newAudioThresholdMeter(
+			playBackDevice.InputWaveWidget, Settings.Config.Energy,
+		)
+		audioInputProgress := audioInputThresholdMeter.CanvasObject()
 		audioOutputProgress := container.NewBorder(nil, nil, nil, widget.NewButtonWithIcon(lang.L("Test"), theme.MediaPlayIcon(), func() { playBackDevice.PlayStopTestAudio() }), playBackDevice.OutputWaveWidget)
 
 		// Define local handlers for deps
@@ -1104,12 +1124,16 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			OnAudioInputChanged:       onAudioInputChanged,
 			OnAudioApplicationChanged: onAudioApplicationChanged,
 			OnAudioOutputChanged:      onAudioOutputChanged,
-			OnDetectEnergy:            onDetectEnergy,
-			AfterDetectEnergy:         afterDetectEnergy,
-			CPUMemoryBar:              CPUMemoryBar,
-			GPUMemoryBar:              GPUMemoryBar,
-			TotalGPUMemory:            func() int64 { return totalGPUMemory },
-			HasNvidiaGPU:              func() bool { return HasNvidiaGPU },
+			OnEnergyChanged: func(value float64) {
+				audioInputThresholdMeter.SetThreshold(int(value))
+			},
+			OnVADEnabledChanged: playBackDevice.SetInputMeterUsesPeak,
+			OnDetectEnergy:      onDetectEnergy,
+			AfterDetectEnergy:   afterDetectEnergy,
+			CPUMemoryBar:        CPUMemoryBar,
+			GPUMemoryBar:        GPUMemoryBar,
+			TotalGPUMemory:      func() int64 { return totalGPUMemory },
+			HasNvidiaGPU:        func() bool { return HasNvidiaGPU },
 		}
 		controls = PF.BuildAndRenderFullProfile(profileForm, engine, deps)
 		if controls.AudioApplication != nil {

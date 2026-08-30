@@ -90,7 +90,7 @@
     "realtime_whisper_beam_size.Description": "Liczba wiązek do przeszukania w celu uzyskania najlepszego wyniku.\nMoże wynosić od 1 do 5. (niższa = szybciej)",
     "realtime_temperature_fallback.Name": "Temperatura awaryjna dla trybu czasu rzeczywistego",
     "realtime_temperature_fallback.Description": "Jeśli opcja ta jest włączona, temperatura zostanie przywrócona w przypadku niskiego poziomu zaufania.\n(Wyłącz dla szybszego przetwarzania)",
-    "denoise_audio_before_trigger.Name": "Filtr szumów przed wyzwoleniem nagrywania",
+    "denoise_audio_before_trigger.Name": "Wyzwalanie po odszumieniu",
     "denoise_audio_before_trigger.Description": "Filtr szumów zostanie zastosowany do dźwięku przed wykryciem warunków wyzwalania Volume + VAD.\nMoże to znacząco wpłynąć na jakość dźwięku, ponieważ zwiększa czas przetwarzania na fragment!",
     "speaker_diarization.Name": "Rozpoznawanie zmian głośników",
     "speaker_diarization.Description": "Przetwarzanie zmian mówcy w rozmowie.",

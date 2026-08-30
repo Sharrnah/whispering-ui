@@ -7,6 +7,7 @@ import (
 	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
 	"whispering-tiger-ui/CustomWidget"
+	"whispering-tiger-ui/Utilities"
 )
 
 var SpeechToTextSettingsMapping = SettingsMapping{
@@ -14,16 +15,16 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 		{
 			SettingsName:         "Speech volume level",
 			SettingsInternalName: "energy",
-			SettingsDescription:  "Volume level at which the speech detection will trigger.",
+			SettingsDescription:  "Audio level at which speech detection triggers. The UI displays dBFS; the saved profile keeps the original PCM16 amplitude value.",
 			_widget: func() fyne.CanvasObject {
 				sliderWidget := widget.NewSlider(0, EnergySliderMax)
-				sliderState := widget.NewLabel(fmt.Sprintf("%.0f", sliderWidget.Min))
+				sliderState := widget.NewLabel(Utilities.FormatEnergyThresholdDBFS(sliderWidget.Min, lang.L("Disabled")))
 				sliderWidget.Step = 1
 				sliderWidget.OnChanged = func(value float64) {
 					if value >= sliderWidget.Max {
 						sliderWidget.Max += 10
 					}
-					sliderState.SetText(fmt.Sprintf("%.0f", value))
+					sliderState.SetText(Utilities.FormatEnergyThresholdDBFS(value, lang.L("Disabled")))
 				}
 				return container.NewBorder(nil, nil, nil, sliderState, sliderWidget)
 			},
@@ -128,7 +129,7 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 		{
 			SettingsName:         "Denoise Strength",
 			SettingsInternalName: "denoise_strength",
-			SettingsDescription:  "Strength of the noise reduction filter. (only for Noise Reduce filter)",
+			SettingsDescription:  "Strength of the selected noise filter. Noise Reduce changes attenuation; DeepFilterNet blends enhanced and original audio.",
 			_widget: func() fyne.CanvasObject {
 				sliderWidget := widget.NewSlider(0, 1)
 				sliderState := widget.NewLabel(fmt.Sprintf("%.2f", sliderWidget.Min))
@@ -137,6 +138,14 @@ var SpeechToTextSettingsMapping = SettingsMapping{
 					sliderState.SetText(fmt.Sprintf("%.2f", value))
 				}
 				return container.NewBorder(nil, nil, nil, sliderState, sliderWidget)
+			},
+		},
+		{
+			SettingsName:         "Denoised trigger",
+			SettingsInternalName: "denoise_audio_before_trigger",
+			SettingsDescription:  "After raw Volume + VAD find a possible start, a background worker filters a short context window and checks the Volume threshold again.\nThis adds processing work and may increase CPU/GPU usage and trigger latency. Audio capture keeps buffering while it runs; quiet speech may be rejected.",
+			_widget: func() fyne.CanvasObject {
+				return widget.NewCheck("", func(b bool) {})
 			},
 		},
 		{

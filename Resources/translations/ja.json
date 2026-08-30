@@ -305,7 +305,7 @@
     "realtime_whisper_beam_size.Description": "最良の結果を得るために検索するビームの数。\n1～5まで可能。(低いほど速い）",
     "realtime_temperature_fallback.Name": "リアルタイムモードの温度フォールバック",
     "realtime_temperature_fallback.Description": "有効にすると、信頼度が低い場合に温度がフォールバックする。\n(高速処理の場合は無効にする)",
-    "denoise_audio_before_trigger.Name": "録音トリガー前のノイズフィルター",
+    "denoise_audio_before_trigger.Name": "ノイズ除去後トリガー",
     "denoise_audio_before_trigger.Description": "ノイズフィルターは、Volume + VADトリガー条件が検出される前にオーディオに適用されます。\nチャンクあたりの処理時間が長くなるため、音質に大きな影響を与える可能性があります！",
     "speaker_diarization.Name": "スピーカーの変化を認識する",
     "speaker_diarization.Description": "会話における話者の変化を処理する。",

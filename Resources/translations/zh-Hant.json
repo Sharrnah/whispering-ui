@@ -301,7 +301,7 @@
     "osc_port.Name": "OSC 埠號",
     "whisper_apply_voice_markers.Name": "為音訊加上語音標記",
     "realtime_whisper_beam_size.Name": "即時模式搜尋波束",
-    "denoise_audio_before_trigger.Name": "錄製觸發前的噪音過濾",
+    "denoise_audio_before_trigger.Name": "降噪後觸發",
     "osc_min_time_between_messages.Name": "OSC 訊息間的最短時間",
     "osc_min_time_between_messages.Description": "允許的最短訊息間隔時間（秒）。",
     "osc_typing_indicator.Name": "OSC 輸入指示與通知",
