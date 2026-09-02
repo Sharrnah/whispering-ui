@@ -21,6 +21,34 @@ type Coordinator struct {
 	InProgrammaticUpdate bool
 	SuppressPrompts      bool
 	MirrorLocked         map[string]bool
+	GPUOptions           []TVO
+}
+
+func (c *Coordinator) SetGPUOptions(options []TVO) {
+	if c == nil || c.Controls == nil || len(options) == 0 {
+		return
+	}
+	c.GPUOptions = append([]TVO(nil), options...)
+	for _, gpuSelect := range []*CustomWidget.TextValueSelect{
+		c.Controls.STTGPU, c.Controls.TxtGPU, c.Controls.TTSGPU, c.Controls.OCRGPU,
+	} {
+		c.SetOptionsWithFallback(gpuSelect, c.GPUOptions)
+	}
+	c.updateGPUSelectorState(c.Controls.STTDevice, c.Controls.STTGPU)
+	c.updateGPUSelectorState(c.Controls.TxtDevice, c.Controls.TxtGPU)
+	c.updateGPUSelectorState(c.Controls.TTSDevice, c.Controls.TTSGPU)
+	c.updateGPUSelectorState(c.Controls.OCRDevice, c.Controls.OCRGPU)
+}
+
+func (c *Coordinator) updateGPUSelectorState(deviceSelect, gpuSelect *CustomWidget.TextValueSelect) {
+	if gpuSelect == nil {
+		return
+	}
+	if deviceSelect != nil && !deviceSelect.Disabled() && selectedValue(deviceSelect) == "cuda" {
+		gpuSelect.Enable()
+		return
+	}
+	gpuSelect.Disable()
 }
 
 func (c *Coordinator) getParentWindow() fyne.Window {
@@ -195,20 +223,23 @@ func (c *Coordinator) enableGroup(g string) {
 	switch g {
 	case groupSTT:
 		c.Enable(c.Controls.STTModelSize, c.Controls.STTPrecision, c.Controls.STTDevice)
+		c.updateGPUSelectorState(c.Controls.STTDevice, c.Controls.STTGPU)
 	case groupTXT:
 		c.Enable(c.Controls.TxtSize, c.Controls.TxtPrecision, c.Controls.TxtDevice)
+		c.updateGPUSelectorState(c.Controls.TxtDevice, c.Controls.TxtGPU)
 	case groupOCR:
 		c.Enable(c.Controls.OCRPrecision, c.Controls.OCRDevice)
+		c.updateGPUSelectorState(c.Controls.OCRDevice, c.Controls.OCRGPU)
 	}
 }
 func (c *Coordinator) disableGroup(g string) {
 	switch g {
 	case groupSTT:
-		c.Disable(c.Controls.STTModelSize, c.Controls.STTPrecision, c.Controls.STTDevice)
+		c.Disable(c.Controls.STTModelSize, c.Controls.STTPrecision, c.Controls.STTDevice, c.Controls.STTGPU)
 	case groupTXT:
-		c.Disable(c.Controls.TxtSize, c.Controls.TxtPrecision, c.Controls.TxtDevice)
+		c.Disable(c.Controls.TxtSize, c.Controls.TxtPrecision, c.Controls.TxtDevice, c.Controls.TxtGPU)
 	case groupOCR:
-		c.Disable(c.Controls.OCRPrecision, c.Controls.OCRDevice)
+		c.Disable(c.Controls.OCRPrecision, c.Controls.OCRDevice, c.Controls.OCRGPU)
 	}
 }
 
@@ -247,6 +278,26 @@ func (c *Coordinator) mirrorFromTo(controller, target string) {
 	}
 	if devSource != nil && devTarget != nil && devSource.GetSelected() != nil && devTarget.ContainsEntry(devSource.GetSelected(), CustomWidget.CompareValue) {
 		devTarget.SetSelected(devSource.GetSelected().Value)
+	}
+	var gpuSource, gpuTarget *CustomWidget.TextValueSelect
+	switch controller {
+	case groupSTT:
+		gpuSource = c.Controls.STTGPU
+	case groupTXT:
+		gpuSource = c.Controls.TxtGPU
+	case groupOCR:
+		gpuSource = c.Controls.OCRGPU
+	}
+	switch target {
+	case groupSTT:
+		gpuTarget = c.Controls.STTGPU
+	case groupTXT:
+		gpuTarget = c.Controls.TxtGPU
+	case groupOCR:
+		gpuTarget = c.Controls.OCRGPU
+	}
+	if gpuSource != nil && gpuTarget != nil && gpuSource.GetSelected() != nil && gpuTarget.ContainsEntry(gpuSource.GetSelected(), CustomWidget.CompareValue) {
+		gpuTarget.SetSelected(gpuSource.GetSelected().Value)
 	}
 	var precSource, precTarget *CustomWidget.TextValueSelect
 	switch controller {
@@ -368,6 +419,7 @@ func (c *Coordinator) ApplySTTTypeChange(modelType string) {
 		c.Controls.STTModelSize,
 		c.Controls.STTPrecision,
 		c.Controls.STTDevice,
+		c.Controls.STTGPU,
 		STTModelOptions,
 		STTPrecisionOptions,
 		nil, // default device options
@@ -388,6 +440,7 @@ func (c *Coordinator) ApplyTXTTypeChange(modelType string) {
 		c.Controls.TxtSize,
 		c.Controls.TxtPrecision,
 		c.Controls.TxtDevice,
+		c.Controls.TxtGPU,
 		TXTSizeOptions,
 		TXTPrecisionOptions,
 		nil, // default device options
@@ -406,10 +459,11 @@ func (c *Coordinator) ApplyTTSTypeChange(modelType string) {
 	c.applyTypeChangeGeneric(
 		modelType,
 		nil,
-		nil,
+		c.Controls.TTSPrecision,
 		c.Controls.TTSDevice,
+		c.Controls.TTSGPU,
 		nil,
-		nil,
+		TTSPrecisionOptions,
 		nil, // default device options
 		"ttsType",
 		true, // fixed float32 precision for memory estimation
@@ -427,6 +481,7 @@ func (c *Coordinator) ApplyOCRTypeChange(modelType string) {
 		nil,
 		c.Controls.OCRPrecision,
 		c.Controls.OCRDevice,
+		c.Controls.OCRGPU,
 		nil,
 		OCRPrecisionOptions,
 		OCRDeviceOptions,
@@ -470,7 +525,7 @@ func BuildProfileMemoryOption(
 // applyTypeChangeGeneric centralizes option population, enable/disable logic, and memory estimation.
 func (c *Coordinator) applyTypeChangeGeneric(
 	modelType string,
-	sizeSel, precSel, devSel *CustomWidget.TextValueSelect,
+	sizeSel, precSel, devSel, gpuSel *CustomWidget.TextValueSelect,
 	getSizeOptions func(string) ([]TVO, int, bool),
 	getPrecisionOptions func(string) ([]TVO, bool),
 	getDeviceOptions func(string) []TVO,
@@ -487,6 +542,9 @@ func (c *Coordinator) applyTypeChangeGeneric(
 		}
 		if devSel != nil {
 			devSel.Disable()
+		}
+		if gpuSel != nil {
+			gpuSel.Disable()
 		}
 		AIModel := BuildProfileMemoryOption(aiModel, "-", sizeSel, precSel, devSel)
 		if setFixedFloat32Precision {
@@ -512,6 +570,12 @@ func (c *Coordinator) applyTypeChangeGeneric(
 		} else {
 			devSel.Enable()
 		}
+	}
+	if gpuSel != nil {
+		if len(c.GPUOptions) > 0 {
+			c.SetOptionsWithFallback(gpuSel, c.GPUOptions)
+		}
+		c.updateGPUSelectorState(devSel, gpuSel)
 	}
 
 	// Size options

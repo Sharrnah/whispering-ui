@@ -428,6 +428,8 @@
     "Streaming Mode": "Mode streaming",
     "More Options": "Plus d'options",
     "Precision": "Précision",
+    "GPU": "GPU",
+    "Float16 request (safe BF16/FP32 fallback)": "Requête Float16 (repli sûr BF16/FP32)",
     "Seed": "Seed",
     "Enter manual seed": "Entrer un Seed manuel",
     "Reset to defaults": "Réinitialisater les valeurs par défaut",

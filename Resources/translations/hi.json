@@ -276,6 +276,8 @@
     "Attach log file": "लॉग फ़ाइल संलग्न करें",
     "Error Report Sent": "त्रुटि रिपोर्ट भेजी गई",
     "Precision": "सूक्ष्मता",
+    "GPU": "GPU",
+    "Float16 request (safe BF16/FP32 fallback)": "Float16 request (safe BF16/FP32 fallback)",
     "It looks like you are running Whispering Tiger from a temporary directory. Please extract the application and run it from a different folder.": "ऐसा लगता है कि आप व्हिस्परिंग टाइगर को एक अस्थायी निर्देशिका से चला रहे हैं।\n\nकृपया एप्लिकेशन को एक्सट्रैक्ट करें और इसे एक अलग फ़ोल्डर से चलाएँ।",
     "Low Disk Space": "डिस्क स्थान कम",
     "Only ? GB free space remaining. The space might not be enough.": "{{.Directory}} पर केवल {{.SpaceRemaining}} GB मुफ़्त जगह बची है।\n\nयह जगह शायद पर्याप्त न हो।",

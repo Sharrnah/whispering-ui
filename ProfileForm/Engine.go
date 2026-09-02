@@ -43,22 +43,27 @@ type AllProfileControls struct {
 	// STT
 	STTType      *CustomWidget.TextValueSelect
 	STTDevice    *CustomWidget.TextValueSelect
+	STTGPU       *CustomWidget.TextValueSelect
 	STTModelSize *CustomWidget.TextValueSelect
 	STTPrecision *CustomWidget.TextValueSelect
 
 	// Text translation
 	TxtType      *CustomWidget.TextValueSelect
 	TxtDevice    *CustomWidget.TextValueSelect
+	TxtGPU       *CustomWidget.TextValueSelect
 	TxtSize      *CustomWidget.TextValueSelect
 	TxtPrecision *CustomWidget.TextValueSelect
 
 	// TTS
-	TTSType   *CustomWidget.TextValueSelect
-	TTSDevice *CustomWidget.TextValueSelect
+	TTSType      *CustomWidget.TextValueSelect
+	TTSDevice    *CustomWidget.TextValueSelect
+	TTSGPU       *CustomWidget.TextValueSelect
+	TTSPrecision *CustomWidget.TextValueSelect
 
 	// OCR
 	OCRType      *CustomWidget.TextValueSelect
 	OCRDevice    *CustomWidget.TextValueSelect
+	OCRGPU       *CustomWidget.TextValueSelect
 	OCRPrecision *CustomWidget.TextValueSelect
 }
 

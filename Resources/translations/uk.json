@@ -417,6 +417,8 @@
     "Streaming Mode": "Потоковий режим",
     "More Options": "Більше опцій",
     "Precision": "Точність",
+    "GPU": "GPU",
+    "Float16 request (safe BF16/FP32 fallback)": "Запит Float16 (безпечний відкат BF16/FP32)",
     "Seed": "Посівний матеріал",
     "Enter manual seed": "Введіть посівний матеріал вручну",
     "Reset to defaults": "Скидання до налаштувань за замовчуванням",

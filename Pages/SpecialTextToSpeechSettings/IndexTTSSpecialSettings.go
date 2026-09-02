@@ -117,7 +117,7 @@ func buildIndexTTSSpecialSettings() (fyne.CanvasObject, *CustomWidget.TextValueS
 			seed = -1
 		}
 		UpdateSpecialTTSSettings("tts_index_tts", "language", languageSelect.GetSelected().Value)
-		UpdateSpecialTTSSettings("tts_index_tts", "precision", precisionSelect.GetSelected().Value)
+		UpdateTTSPrecision("tts_index_tts", precisionSelect.GetSelected().Value)
 		UpdateSpecialTTSSettings("tts_index_tts", "seed", seed)
 		UpdateSpecialTTSSettings("tts_index_tts", "duration_factor", duration.Value)
 		UpdateSpecialTTSSettings("tts_index_tts", "num_beams", int(beams.Value))

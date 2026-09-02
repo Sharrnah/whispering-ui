@@ -425,6 +425,8 @@
     "Streaming Mode": "Streaming-tilstand",
     "More Options": "Flere muligheder",
     "Precision": "Præcision",
+    "GPU": "GPU",
+    "Float16 request (safe BF16/FP32 fallback)": "Float16 request (safe BF16/FP32 fallback)",
     "denoise_strength.Name": "Støjfjernelsesstyrke",
     "denoise_strength.Description": "Styrken af støjreduceringsfilteret. (kun til Noise Reduce‑filteret)",
     "Segment goal length": "Segmentets mållængde",

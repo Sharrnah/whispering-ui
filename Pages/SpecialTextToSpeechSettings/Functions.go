@@ -47,6 +47,19 @@ func UpdateSpecialTTSSettings(specialSettingType string, stringName string, valu
 	sendMessage.SendMessage()
 }
 
+func UpdateTTSPrecision(specialSettingType string, precision string) {
+	changed := Settings.Config.Tts_precision != precision
+	Settings.Config.Tts_precision = precision
+	UpdateSpecialTTSSettings(specialSettingType, "precision", precision)
+	if changed {
+		SendMessageChannel.SendMessageStruct{
+			Type:  "setting_change",
+			Name:  "tts_precision",
+			Value: precision,
+		}.SendMessage()
+	}
+}
+
 func GetSpecialTTSSettings(specialSettingType string, stringName string) interface{} {
 	// Ensure outer map exists
 	if Settings.Config.Special_settings == nil {

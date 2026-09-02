@@ -150,6 +150,8 @@
     "Only ? GB free space remaining. The space might not be enough.": "只有 {{.SpaceRemaining}} GB 可用空間剩餘於 {{.Directory}}。空間可能不夠。",
     "Save Profile": "儲存設定檔",
     "Precision": "精度",
+    "GPU": "GPU",
+    "Float16 request (safe BF16/FP32 fallback)": "Float16 請求（安全回退至 BF16/FP32）",
     "Language": "語言",
     "Show Log": "顯示日誌",
     "Quit running backend": "退出執行中的後端",

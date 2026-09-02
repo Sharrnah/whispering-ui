@@ -1,7 +1,9 @@
 package ProfileForm
 
 import (
+	"fmt"
 	"whispering-tiger-ui/CustomWidget"
+	"whispering-tiger-ui/Utilities/Hardwareinfo"
 
 	"fyne.io/fyne/v2/lang"
 )
@@ -18,6 +20,59 @@ func MultiModalModels() map[string]bool {
 
 func DefaultDeviceOptions() []TVO {
 	return []TVO{{Text: "CPU", Value: "cpu"}, {Text: "CUDA", Value: "cuda"}}
+}
+
+// DefaultGPUOptions keeps profile loading deterministic before asynchronous
+// hardware discovery finishes. Detected adapter names replace these entries.
+func DefaultGPUOptions() []TVO {
+	options := make([]TVO, 16)
+	for index := range options {
+		options[index] = TVO{Text: fmt.Sprintf("%s %d", lang.L("GPU"), index), Value: fmt.Sprint(index)}
+	}
+	return options
+}
+
+func CUDADeviceOptions(devices []Hardwareinfo.CUDADeviceInfo) []TVO {
+	options := make([]TVO, 0, len(devices))
+	for _, device := range devices {
+		label := fmt.Sprintf("%s %d", lang.L("GPU"), device.Index)
+		if device.Name != "" {
+			label += " - " + device.Name
+		}
+		options = append(options, TVO{Text: label, Value: fmt.Sprint(device.Index)})
+	}
+	return options
+}
+
+func GenericTTSPrecisionOptions() []TVO {
+	return []TVO{
+		{Text: lang.L("Automatic (BF16 on supported CUDA)"), Value: "auto"},
+		{Text: "float32 " + lang.L("Precision"), Value: "float32"},
+		{Text: "float16 " + lang.L("Precision"), Value: "float16"},
+		{Text: "bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "bfloat16"},
+		{Text: "8bit " + lang.L("Precision"), Value: "8bit"},
+	}
+}
+
+func TTSPrecisionOptions(modelType string) (options []TVO, enablePrecision bool) {
+	switch modelType {
+	case "silero", "f5_e2", "kokoro":
+		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}}, false
+	case "zonos", "zonos2", "maya1":
+		return []TVO{{Text: "bfloat16 " + lang.L("Precision"), Value: "bfloat16"}}, false
+	case "orpheus":
+		return []TVO{{Text: "8bit " + lang.L("Precision"), Value: "8bit"}}, false
+	case "chatterbox":
+		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}, {Text: "float16 " + lang.L("Precision"), Value: "float16"}}, true
+	case "index_tts":
+		return []TVO{{Text: "bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "bfloat16"}, {Text: "float32 " + lang.L("Precision"), Value: "float32"}}, true
+	case "qwen3_tts":
+		return []TVO{{Text: lang.L("Automatic (BF16 on supported CUDA)"), Value: "auto"}, {Text: "bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "bfloat16"}, {Text: lang.L("Float16 request (safe BF16/FP32 fallback)"), Value: "float16"}, {Text: "float32 " + lang.L("Precision"), Value: "float32"}}, true
+	case "audio8_tts":
+		return []TVO{{Text: lang.L("Automatic (BF16 on supported CUDA)"), Value: "auto"}, {Text: "bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "bfloat16"}, {Text: "float32 " + lang.L("Precision"), Value: "float32"}}, true
+	default:
+		return nil, false
+	}
 }
 
 // Generic precision lists used for initial population; Coordinator will narrow them by type later
@@ -193,7 +248,7 @@ func TXTPrecisionOptions(modelType string) (options []TVO, enablePrecision bool)
 func OCRPrecisionOptions(modelType string) (options []TVO, enablePrecision bool) {
 	switch modelType {
 	case "easyocr":
-		// EasyOCR is CPU-only in our app and does not expose precision tuning
+		// EasyOCR chooses CPU/CUDA independently but does not expose precision tuning.
 		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}}, false
 	case "got_ocr_20":
 		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}, {Text: "float16 " + lang.L("Precision"), Value: "float16"}, {Text: "bfloat16 " + lang.L("Precision"), Value: "bfloat16"}}, true
@@ -205,11 +260,11 @@ func OCRPrecisionOptions(modelType string) (options []TVO, enablePrecision bool)
 }
 
 // OCRDeviceOptions returns allowed AI device options by OCR model type.
-// For easyocr we only allow CPU; others default to CPU/CUDA like the rest of the app.
+// All integrated OCR engines accept the shared CPU/CUDA selection.
 func OCRDeviceOptions(modelType string) []TVO {
 	switch modelType {
 	case "easyocr":
-		return []TVO{{Text: "CPU", Value: "cpu"}}
+		return DefaultDeviceOptions()
 	case "got_ocr_20", "phi4":
 		return DefaultDeviceOptions()
 	default:

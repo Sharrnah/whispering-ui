@@ -422,6 +422,8 @@
     "Streaming Mode": "وضع البث",
     "More Options": "المزيد من الخيارات",
     "Precision": "الدقة",
+    "GPU": "GPU",
+    "Float16 request (safe BF16/FP32 fallback)": "Float16 request (safe BF16/FP32 fallback)",
     "Seed": "البذور",
     "Enter manual seed": "أدخل البذور اليدوية",
     "Reset to defaults": "إعادة التعيين إلى الإعدادات الافتراضية",

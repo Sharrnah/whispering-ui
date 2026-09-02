@@ -420,6 +420,8 @@
     "You are running the latest version of Whispering Tiger and all installed Plugins.": "U gebruikt de laatste versie van Whispering Tiger en alle geïnstalleerde Plugins.",
     "You are already using the latest version of Whispering Tiger and all installed Plugins.": "Je gebruikt al de laatste versie van Whispering Tiger en alle geïnstalleerde Plugins.",
     "Precision": "Precisie",
+    "GPU": "GPU",
+    "Float16 request (safe BF16/FP32 fallback)": "Float16-verzoek (veilige BF16/FP32-terugval)",
     "CFG/Pace": "CFG/tempo",
     "Max new tokens": "Max nieuwe tokens",
     "Repetition penalty": "Straf voor herhaling",

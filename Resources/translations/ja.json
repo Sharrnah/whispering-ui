@@ -417,6 +417,8 @@
     "Streaming Mode": "配信モード",
     "More Options": "もっと設定",
     "Precision": "精度",
+    "GPU": "GPU",
+    "Float16 request (safe BF16/FP32 fallback)": "Float16 要求（安全な BF16/FP32 フォールバック）",
     "Seed": "シード",
     "Enter manual seed": "手動シードを入力",
     "Reset to defaults": "デフォルトにリセット",

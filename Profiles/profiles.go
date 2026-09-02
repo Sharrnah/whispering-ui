@@ -32,16 +32,19 @@ type Profile struct {
 	Denoise_audio                string `yaml:"denoise_audio"`
 	Denoise_audio_before_trigger bool   `yaml:"denoise_audio_before_trigger"`
 
-	Ocr_type      string `yaml:"ocr_type"`
-	Ocr_ai_device string `yaml:"ocr_ai_device"`
-	Ocr_precision string `yaml:"ocr_precision"`
+	Ocr_type            string `yaml:"ocr_type"`
+	Ocr_ai_device       string `yaml:"ocr_ai_device"`
+	Ocr_ai_device_index int    `yaml:"ocr_ai_device_index"`
+	Ocr_precision       string `yaml:"ocr_precision"`
 
 	// Whisper Settings
 	Ai_device                   interface{} `yaml:"ai_device"`
+	Ai_device_index             int         `yaml:"ai_device_index"`
 	Model                       string      `yaml:"model"`
 	Txt_translator              string      `yaml:"txt_translator"`
 	Txt_translator_size         string      `yaml:"txt_translator_size"`
 	Txt_translator_device       string      `yaml:"txt_translator_device"`
+	Txt_translator_device_index int         `yaml:"txt_translator_device_index"`
 	Txt_translator_precision    string      `yaml:"txt_translator_precision"`
 	Txt_translate_realtime_sync bool        `yaml:"txt_translate_realtime_sync"`
 	Websocket_ip                string      `yaml:"websocket_ip"`
@@ -51,6 +54,8 @@ type Profile struct {
 	Osc_port                    int         `yaml:"osc_port"`
 	Tts_type                    string      `yaml:"tts_type"`
 	Tts_ai_device               string      `yaml:"tts_ai_device"`
+	Tts_ai_device_index         int         `yaml:"tts_ai_device_index"`
+	Tts_precision               string      `yaml:"tts_precision"`
 	Whisper_precision           string      `yaml:"whisper_precision"`
 	Stt_type                    string      `yaml:"stt_type"`
 	Realtime                    bool        `yaml:"realtime"`

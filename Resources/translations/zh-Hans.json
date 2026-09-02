@@ -417,6 +417,8 @@
     "Streaming Mode": "流媒体模式",
     "More Options": "更多选项",
     "Precision": "精度",
+    "GPU": "GPU",
+    "Float16 request (safe BF16/FP32 fallback)": "Float16 请求（安全回退到 BF16/FP32）",
     "Seed": "种子",
     "Enter manual seed": "输入手动种子",
     "Reset to defaults": "重置为默认",

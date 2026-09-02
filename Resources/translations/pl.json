@@ -418,6 +418,8 @@
     "Streaming Mode": "Tryb strumieniowy",
     "More Options": "Więcej opcji",
     "Precision": "Precyzja",
+    "GPU": "GPU",
+    "Float16 request (safe BF16/FP32 fallback)": "Żądanie Float16 (bezpieczny fallback BF16/FP32)",
     "Seed": "Ziarno",
     "Enter manual seed": "Wpisz ręczne ziarno",
     "Reset to defaults": "Resetuj do domyślnych",

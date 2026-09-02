@@ -409,6 +409,8 @@
     "You are running the latest version of Whispering Tiger and all installed Plugins.": "Вы используете последнюю версию Whispering Tiger и все установленные плагины.",
     "You are already using the latest version of Whispering Tiger and all installed Plugins.": "Вы уже используете последнюю версию Whispering Tiger и все установленные плагины.",
     "Precision": "Точность",
+    "GPU": "GPU",
+    "Float16 request (safe BF16/FP32 fallback)": "Запрос Float16 (безопасный откат BF16/FP32)",
     "Seed": "Семена",
     "Enter manual seed": "Введите посевной материал вручную",
     "Reset to defaults": "Сброс настроек по умолчанию",

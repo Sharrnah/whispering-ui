@@ -86,6 +86,7 @@ type Conf struct {
 	// Whisper Settings
 	Stt_enabled                           bool        `yaml:"stt_enabled" json:"stt_enabled"`
 	Ai_device                             interface{} `yaml:"ai_device" json:"ai_device"`
+	Ai_device_index                       int         `yaml:"ai_device_index" json:"ai_device_index"`
 	Whisper_task                          string      `yaml:"whisper_task" json:"whisper_task"`
 	Current_language                      string      `yaml:"current_language" json:"current_language"`
 	Target_language                       string      `yaml:"target_language" json:"target_language"`
@@ -142,6 +143,7 @@ type Conf struct {
 	// text translate settings
 	Txt_translate               bool   `yaml:"txt_translate" json:"txt_translate"`
 	Txt_translator_device       string `yaml:"txt_translator_device" json:"txt_translator_device"`
+	Txt_translator_device_index int    `yaml:"txt_translator_device_index" json:"txt_translator_device_index"`
 	Src_lang                    string `yaml:"src_lang" json:"src_lang"`
 	Trg_lang                    string `yaml:"trg_lang" json:"trg_lang"`
 	Txt_romaji                  bool   `yaml:"txt_romaji" json:"txt_romaji"`
@@ -191,17 +193,20 @@ type Conf struct {
 	Osc_sync_afk    bool   `yaml:"osc_sync_afk" json:"osc_sync_afk"`
 
 	// OCR settings
-	Ocr_type         string `yaml:"ocr_type" json:"ocr_type"`
-	Ocr_ai_device    string `yaml:"ocr_ai_device" json:"ocr_ai_device"`
-	Ocr_precision    string `yaml:"ocr_precision" json:"ocr_precision"`
-	Ocr_txt_src_lang string `yaml:"ocr_txt_src_lang" json:"ocr_txt_src_lang"`
-	Ocr_txt_trg_lang string `yaml:"ocr_txt_trg_lang" json:"ocr_txt_trg_lang"`
-	Ocr_lang         string `yaml:"ocr_lang" json:"ocr_lang"`
-	Ocr_window_name  string `yaml:"ocr_window_name" json:"ocr_window_name"`
+	Ocr_type            string `yaml:"ocr_type" json:"ocr_type"`
+	Ocr_ai_device       string `yaml:"ocr_ai_device" json:"ocr_ai_device"`
+	Ocr_ai_device_index int    `yaml:"ocr_ai_device_index" json:"ocr_ai_device_index"`
+	Ocr_precision       string `yaml:"ocr_precision" json:"ocr_precision"`
+	Ocr_txt_src_lang    string `yaml:"ocr_txt_src_lang" json:"ocr_txt_src_lang"`
+	Ocr_txt_trg_lang    string `yaml:"ocr_txt_trg_lang" json:"ocr_txt_trg_lang"`
+	Ocr_lang            string `yaml:"ocr_lang" json:"ocr_lang"`
+	Ocr_window_name     string `yaml:"ocr_window_name" json:"ocr_window_name"`
 
 	// TTS settings
 	Tts_type                      string   `yaml:"tts_type" json:"tts_type"`
 	Tts_ai_device                 string   `yaml:"tts_ai_device" json:"tts_ai_device"`
+	Tts_ai_device_index           int      `yaml:"tts_ai_device_index" json:"tts_ai_device_index"`
+	Tts_precision                 string   `yaml:"tts_precision" json:"tts_precision"`
 	Tts_answer                    bool     `yaml:"tts_answer" json:"tts_answer"`
 	Tts_model                     []string `yaml:"tts_model" json:"tts_model"`
 	Tts_voice                     string   `yaml:"tts_voice" json:"tts_voice"`
@@ -415,7 +420,73 @@ func (c *Conf) LoadYamlSettings(fileName string) error {
 		//log.Fatalf("Unmarshal: %v", err)
 		return err
 	}
+	var rawSettings map[string]interface{}
+	if err = yaml.Unmarshal(yamlFile, &rawSettings); err != nil {
+		return err
+	}
+	if _, exists := rawSettings["tts_precision"]; !exists {
+		c.Tts_precision = legacyTTSPrecision(c.Tts_type, c.Special_settings)
+	}
+	c.SyncTTSPrecisionCompatibility()
 	return nil
+}
+
+func legacyTTSPrecision(ttsType string, specialSettings map[string]interface{}) string {
+	defaults := map[string]string{
+		"silero": "float32", "f5_e2": "float32", "zonos": "bfloat16",
+		"zonos2": "bfloat16", "kokoro": "float32", "orpheus": "8bit",
+		"chatterbox": "float32", "index_tts": "bfloat16", "qwen3_tts": "auto",
+		"audio8_tts": "auto", "maya1": "bfloat16",
+	}
+	precision := defaults[ttsType]
+	if precision == "" {
+		precision = "float32"
+	}
+	specialNames := map[string]string{
+		"chatterbox": "tts_chatterbox",
+		"index_tts":  "tts_index_tts",
+		"qwen3_tts":  "tts_qwen3_tts",
+		"audio8_tts": "tts_audio8_tts",
+	}
+	settingsName := specialNames[ttsType]
+	if settingsName == "" || specialSettings == nil {
+		return precision
+	}
+	modelSettings, ok := specialSettings[settingsName].(map[string]interface{})
+	if !ok {
+		return precision
+	}
+	if legacyPrecision, ok := modelSettings["precision"].(string); ok && strings.TrimSpace(legacyPrecision) != "" {
+		return strings.ToLower(strings.TrimSpace(legacyPrecision))
+	}
+	return precision
+}
+
+// SyncTTSPrecisionCompatibility keeps the legacy per-engine field aligned
+// while older backend versions and the advanced TTS panels still understand it.
+func (c *Conf) SyncTTSPrecisionCompatibility() {
+	if c == nil || strings.TrimSpace(c.Tts_precision) == "" {
+		return
+	}
+	specialNames := map[string]string{
+		"chatterbox": "tts_chatterbox",
+		"index_tts":  "tts_index_tts",
+		"qwen3_tts":  "tts_qwen3_tts",
+		"audio8_tts": "tts_audio8_tts",
+	}
+	settingsName := specialNames[c.Tts_type]
+	if settingsName == "" {
+		return
+	}
+	if c.Special_settings == nil {
+		c.Special_settings = make(map[string]interface{})
+	}
+	modelSettings, ok := c.Special_settings[settingsName].(map[string]interface{})
+	if !ok || modelSettings == nil {
+		modelSettings = make(map[string]interface{})
+		c.Special_settings[settingsName] = modelSettings
+	}
+	modelSettings["precision"] = c.Tts_precision
 }
 
 func (c *Conf) WriteYamlSettings(fileName string) {
