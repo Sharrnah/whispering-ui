@@ -49,7 +49,8 @@ func BuildDefaultProfileLayout() []RowSpec {
 		RowSpec{Label: lang.L("Text-Translation A.I. Size"), ControlNames: []string{"TxtSize", "TxtPrecision"}, Cols: 2},
 		RowSpec{Spacer: true},
 		RowSpec{Label: lang.L("Integrated Text-to-Speech"), ControlNames: []string{"TTSType"}, Cols: 2},
-		RowSpec{Label: lang.L("A.I. Device for Text-to-Speech"), ControlNames: []string{"TTSDevice", "TTSGPU", "TTSPrecision"}, Cols: 3},
+		RowSpec{Label: lang.L("A.I. Device for Text-to-Speech"), ControlNames: []string{"TTSDevice", "TTSGPU"}, Cols: 2},
+		RowSpec{Label: lang.L("Text-to-Speech Model"), ControlNames: []string{"TTSModel", "TTSPrecision"}, Cols: 2},
 		RowSpec{Spacer: true},
 		RowSpec{Label: lang.L("Integrated Image-to-Text"), ControlNames: []string{"OCRType"}, Cols: 1},
 		RowSpec{Label: lang.L("A.I. Device for Image-to-Text"), ControlNames: []string{"OCRDevice", "OCRGPU", "OCRPrecision"}, Cols: 3},
@@ -90,7 +91,8 @@ func BuildFullProfileLayout() []RowSpec {
 		RowSpec{Label: lang.L("Text-Translation A.I. Size"), ControlNames: []string{"TxtSize", "TxtPrecision"}, Cols: 2},
 		RowSpec{Spacer: true},
 		RowSpec{Label: lang.L("Integrated Text-to-Speech"), ControlNames: []string{"TTSType"}, Cols: 2},
-		RowSpec{Label: lang.L("A.I. Device for Text-to-Speech"), ControlNames: []string{"TTSDevice", "TTSGPU", "TTSPrecision"}, Cols: 3},
+		RowSpec{Label: lang.L("A.I. Device for Text-to-Speech"), ControlNames: []string{"TTSDevice", "TTSGPU"}, Cols: 2},
+		RowSpec{Label: lang.L("Text-to-Speech Model"), ControlNames: []string{"TTSModel", "TTSPrecision"}, Cols: 2},
 		RowSpec{Spacer: true},
 		RowSpec{Label: lang.L("Integrated Image-to-Text"), ControlNames: []string{"OCRType"}, Cols: 1},
 		RowSpec{Label: lang.L("A.I. Device for Image-to-Text"), ControlNames: []string{"OCRDevice", "OCRGPU", "OCRPrecision"}, Cols: 3},
@@ -273,31 +275,12 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 			}
 		}
 		stt.PrecisionSelect.OnChanged = func(s CustomWidget.TextValueOption) {
-			precisionType := Hardwareinfo.Float32
-			switch s.Value {
-			case "float32":
-				precisionType = Hardwareinfo.Float32
-			case "float16":
-				precisionType = Hardwareinfo.Float16
-			case "int32":
-				precisionType = Hardwareinfo.Int32
-			case "int16":
-				precisionType = Hardwareinfo.Int16
-			case "int8_float16", "int8", "int8_bfloat16":
-				precisionType = Hardwareinfo.Int8
-			case "bfloat16":
-				precisionType = Hardwareinfo.Float16
-			case "8bit":
-				precisionType = Hardwareinfo.Bit8
-			case "4bit":
-				precisionType = Hardwareinfo.Bit4
-			}
 			total := int64(0)
 			if deps.TotalGPUMemory != nil {
 				total = deps.TotalGPUMemory()
 			}
 			AIModel := BuildProfileMemoryOption("Whisper", selectedValue(stt.TypeSelect), stt.SizeSelect, stt.PrecisionSelect, stt.DeviceSelect)
-			AIModel.Precision = precisionType
+			AIModel.Precision = Hardwareinfo.PrecisionMemoryFactor(s.Value)
 			AIModel.CalculateMemoryConsumption(deps.CPUMemoryBar, deps.GPUMemoryBar, total)
 			if engine.Coord != nil && stt.DeviceSelect.GetSelected() != nil {
 				engine.Coord.EnsurePrecisionDeviceCompatibility(stt.DeviceSelect.GetSelected().Value, s.Value)
@@ -307,6 +290,9 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 			}
 		}
 		stt.SizeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+			if engine.Coord != nil {
+				engine.Coord.RefreshSTTPrecisionForModel()
+			}
 			total := int64(0)
 			if deps.TotalGPUMemory != nil {
 				total = deps.TotalGPUMemory()
@@ -423,9 +409,9 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 		}
 	}
 
-	tts := &struct{ TypeSelect, DeviceSelect, GPUSelect, PrecisionSelect *CustomWidget.TextValueSelect }{
+	tts := &struct{ TypeSelect, DeviceSelect, GPUSelect, ModelSelect, PrecisionSelect *CustomWidget.TextValueSelect }{
 		TypeSelect: engine.Controls.TTSType, DeviceSelect: engine.Controls.TTSDevice,
-		GPUSelect: engine.Controls.TTSGPU, PrecisionSelect: engine.Controls.TTSPrecision,
+		GPUSelect: engine.Controls.TTSGPU, ModelSelect: engine.Controls.TTSModel, PrecisionSelect: engine.Controls.TTSPrecision,
 	}
 	if tts.DeviceSelect != nil {
 		tts.DeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {
@@ -439,8 +425,10 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 			if deps.TotalGPUMemory != nil {
 				total = deps.TotalGPUMemory()
 			}
-			AIModel := BuildProfileMemoryOption("ttsType", selectedValue(tts.TypeSelect), nil, tts.PrecisionSelect, tts.DeviceSelect)
-			AIModel.Precision = Hardwareinfo.Float32
+			AIModel := BuildProfileMemoryOption("ttsType", selectedValue(tts.TypeSelect), tts.ModelSelect, tts.PrecisionSelect, tts.DeviceSelect)
+			if selectedValue(tts.TypeSelect) != "audio_cpp" {
+				AIModel.Precision = Hardwareinfo.Float32
+			}
 			AIModel.Device = s.Value
 			AIModel.CalculateMemoryConsumption(deps.CPUMemoryBar, deps.GPUMemoryBar, total)
 		}
@@ -451,14 +439,35 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 			if deps.TotalGPUMemory != nil {
 				total = deps.TotalGPUMemory()
 			}
-			AIModel := BuildProfileMemoryOption("ttsType", selectedValue(tts.TypeSelect), nil, tts.PrecisionSelect, tts.DeviceSelect)
+			AIModel := BuildProfileMemoryOption("ttsType", selectedValue(tts.TypeSelect), tts.ModelSelect, tts.PrecisionSelect, tts.DeviceSelect)
 			// TTS estimates are measured per engine and already reflect their
-			// supported/default dtype; do not apply the generic precision scaler.
-			AIModel.Precision = Hardwareinfo.Float32
+			// supported/default dtype. audio.cpp is the exception because its
+			// package selector exposes materially different GGUF variants.
+			if selectedValue(tts.TypeSelect) != "audio_cpp" {
+				AIModel.Precision = Hardwareinfo.Float32
+			}
 			AIModel.CalculateMemoryConsumption(deps.CPUMemoryBar, deps.GPUMemoryBar, total)
 			if engine.Coord != nil && tts.DeviceSelect.GetSelected() != nil {
 				engine.Coord.EnsurePrecisionDeviceCompatibility(tts.DeviceSelect.GetSelected().Value, s.Value)
 			}
+		}
+	}
+	if tts.ModelSelect != nil {
+		tts.ModelSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+			if engine.Coord != nil {
+				engine.Coord.RefreshTTSPrecisionForModel()
+			}
+			total := int64(0)
+			if deps.TotalGPUMemory != nil {
+				total = deps.TotalGPUMemory()
+			}
+			AIModel := BuildProfileMemoryOption("ttsType", selectedValue(tts.TypeSelect), tts.ModelSelect, tts.PrecisionSelect, tts.DeviceSelect)
+			AIModel.AIModelSize = s.Value
+			// TTS estimates are measured for their actual supported dtype.
+			if selectedValue(tts.TypeSelect) != "audio_cpp" {
+				AIModel.Precision = Hardwareinfo.Float32
+			}
+			AIModel.CalculateMemoryConsumption(deps.CPUMemoryBar, deps.GPUMemoryBar, total)
 		}
 	}
 	if tts.TypeSelect != nil {

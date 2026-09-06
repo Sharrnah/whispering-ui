@@ -9,6 +9,12 @@ import (
 
 func TestAdditionalAudioRouteStringsExistInEveryLocale(t *testing.T) {
 	required := []string{
+		"osc_type_transfer.Name",
+		"osc_type_transfer_split.Name",
+		"osc_send.option.Send Translation",
+		"osc_send.option.Send Source Text",
+		"osc_send.option.Send both Source and Translation",
+		"osc_send.option.Send both (inverted) Translation and Source",
 		"Additional Audio Sources",
 		"Add Audio Source",
 		"Additional Audio Sources Share the Loaded Speech Model",

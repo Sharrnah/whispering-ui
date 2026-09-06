@@ -41,6 +41,23 @@ func ttsModelDisplayValue(selection []string) string {
 	return ""
 }
 
+func audioCppTTSModelDescription(model string) string {
+	descriptions := map[string]string{
+		"Supertonic-3-GGUF":                "fastest; 31 languages; 10 preset voices",
+		"Confucius4-TTS-GGUF":              "experimental multilingual cloning; very large",
+		"DotTTS-SOAR-GGUF":                 "multilingual cloning and style control; SOAR baseline",
+		"DotTTS-MeanFlow-GGUF":             "multilingual cloning and style control; MeanFlow",
+		"DotTTS-Edit-GGUF":                 "speech editing from a source recording",
+		"IndexTTS2-GGUF":                   "Chinese/English cloning and emotion control",
+		"IndexTTS2.5-GGUF":                 "multilingual cloning and emotion control",
+		"MagpieTTS-Multilingual-357M-GGUF": "small; 13 locales; 5 preset voices",
+		"OmniVoice-GGUF":                   "600+ languages; cloning and voice design",
+		"VoxCPM1-0.5B-GGUF":                "compact cloning model; 16 kHz output",
+		"VoxCPM2-GGUF":                     "2B cloning and voice design; 48 kHz output",
+	}
+	return descriptions[model]
+}
+
 func (res TtsLanguagesListing) Update() *TtsLanguagesListing {
 	Fields.Field.TtsModelCombo.Options = nil
 	Fields.TtsModelSelectionValues = make(map[string][]string)
@@ -54,6 +71,13 @@ func (res TtsLanguagesListing) Update() *TtsLanguagesListing {
 				}
 			} else {
 				modelEntry := modelItem + " (" + lang.L(languageItem.Language) + ")"
+				if Settings.Config.Tts_type == "audio_cpp" {
+					if description := audioCppTTSModelDescription(modelItem); description != "" {
+						modelEntry = modelItem + " (" + description + ")"
+					} else {
+						modelEntry = modelItem
+					}
+				}
 				Fields.Field.TtsModelCombo.Options = append(Fields.Field.TtsModelCombo.Options, modelEntry)
 				Fields.TtsModelSelectionValues[modelEntry] = []string{languageItem.Language, modelItem}
 			}

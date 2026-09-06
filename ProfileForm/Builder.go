@@ -125,8 +125,9 @@ func (b *ProfileBuilder) BuildAll(engine *FormEngine, inputOptions, applicationO
 	ttsType := b.newSelect(engine, "tts_type", TTSTypeOptions())
 	ttsDevice := b.newSelect(engine, "tts_ai_device", DefaultDeviceOptions())
 	ttsGPU := b.newSelect(engine, "tts_ai_device_index", DefaultGPUOptions())
+	ttsModel := b.newSelect(engine, "tts_model", nil)
 	ttsPrecision := b.newSelect(engine, "tts_precision", GenericTTSPrecisionOptions())
-	engine.Controls.TTSType, engine.Controls.TTSDevice, engine.Controls.TTSGPU, engine.Controls.TTSPrecision = ttsType, ttsDevice, ttsGPU, ttsPrecision
+	engine.Controls.TTSType, engine.Controls.TTSDevice, engine.Controls.TTSGPU, engine.Controls.TTSModel, engine.Controls.TTSPrecision = ttsType, ttsDevice, ttsGPU, ttsModel, ttsPrecision
 
 	// OCR
 	ocrType := b.newSelect(engine, "ocr_type", OcrTypeOptions())

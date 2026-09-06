@@ -1,6 +1,7 @@
 package ProfileForm
 
 import (
+	"fmt"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Utilities/Hardwareinfo"
 
@@ -22,17 +23,16 @@ type Coordinator struct {
 	SuppressPrompts      bool
 	MirrorLocked         map[string]bool
 	GPUOptions           []TVO
+	NativeGPUOptions     map[string][]TVO
 }
 
 func (c *Coordinator) SetGPUOptions(options []TVO) {
-	if c == nil || c.Controls == nil || len(options) == 0 {
+	if c == nil {
 		return
 	}
 	c.GPUOptions = append([]TVO(nil), options...)
-	for _, gpuSelect := range []*CustomWidget.TextValueSelect{
-		c.Controls.STTGPU, c.Controls.TxtGPU, c.Controls.TTSGPU, c.Controls.OCRGPU,
-	} {
-		c.SetOptionsWithFallback(gpuSelect, c.GPUOptions)
+	if c.Controls == nil {
+		return
 	}
 	c.updateGPUSelectorState(c.Controls.STTDevice, c.Controls.STTGPU)
 	c.updateGPUSelectorState(c.Controls.TxtDevice, c.Controls.TxtGPU)
@@ -40,11 +40,60 @@ func (c *Coordinator) SetGPUOptions(options []TVO) {
 	c.updateGPUSelectorState(c.Controls.OCRDevice, c.Controls.OCRGPU)
 }
 
+func (c *Coordinator) SetNativeGPUOptions(options map[string][]TVO) {
+	if c == nil {
+		return
+	}
+	c.NativeGPUOptions = make(map[string][]TVO, len(options))
+	for backend, entries := range options {
+		c.NativeGPUOptions[backend] = append([]TVO(nil), entries...)
+	}
+	if c.Controls == nil {
+		return
+	}
+	c.updateGPUSelectorState(c.Controls.STTDevice, c.Controls.STTGPU)
+	c.updateGPUSelectorState(c.Controls.TTSDevice, c.Controls.TTSGPU)
+}
+
+func currentGPUFallback(gpuSelect *CustomWidget.TextValueSelect, nativeBackend bool) []TVO {
+	index := "0"
+	if current := gpuSelect.GetSelected(); current != nil && current.Value != "" {
+		index = current.Value
+	}
+	text := fmt.Sprintf("%s %s", lang.L("GPU"), index)
+	if nativeBackend {
+		text += " - " + lang.L("not detected by audio.cpp")
+	}
+	return []TVO{{
+		Text:  text,
+		Value: index,
+	}}
+}
+
 func (c *Coordinator) updateGPUSelectorState(deviceSelect, gpuSelect *CustomWidget.TextValueSelect) {
 	if gpuSelect == nil {
 		return
 	}
-	if deviceSelect != nil && !deviceSelect.Disabled() && selectedValue(deviceSelect) == "cuda" {
+	device := selectedValue(deviceSelect)
+	usesGPUIndex := device == "cuda" || device == "vulkan" || device == "hip" || device == "rocm" || device == "metal"
+	if deviceSelect != nil && !deviceSelect.Disabled() && usesGPUIndex {
+		var options []TVO
+		if device == "cuda" {
+			options = c.GPUOptions
+			if len(options) == 0 {
+				options = currentGPUFallback(gpuSelect, false)
+			}
+		} else {
+			nativeDevice := device
+			if nativeDevice == "rocm" {
+				nativeDevice = "hip"
+			}
+			options = c.NativeGPUOptions[nativeDevice]
+			if len(options) == 0 {
+				options = currentGPUFallback(gpuSelect, true)
+			}
+		}
+		c.SetOptionsWithFallback(gpuSelect, options)
 		gpuSelect.Enable()
 		return
 	}
@@ -422,11 +471,30 @@ func (c *Coordinator) ApplySTTTypeChange(modelType string) {
 		c.Controls.STTGPU,
 		STTModelOptions,
 		STTPrecisionOptions,
-		nil, // default device options
+		STTDeviceOptions,
 		"Whisper",
 		false,
 	)
+	c.RefreshSTTPrecisionForModel()
 	c.promptMultiModalAdoption(modelType, groupSTT)
+}
+
+// RefreshSTTPrecisionForModel applies the package-level GGUF variants exposed
+// by audio.cpp. Most backends have one precision list for the whole type.
+func (c *Coordinator) RefreshSTTPrecisionForModel() {
+	if c == nil || c.Controls == nil || selectedValue(c.Controls.STTType) != "audio_cpp" || c.Controls.STTPrecision == nil {
+		return
+	}
+	options, enabled := STTPrecisionOptionsForModel("audio_cpp", selectedValue(c.Controls.STTModelSize))
+	c.SetOptionsWithFallback(c.Controls.STTPrecision, options)
+	if !enabled || len(options) <= 1 {
+		if len(options) == 1 {
+			c.Controls.STTPrecision.SetSelected(options[0].Value)
+		}
+		c.Controls.STTPrecision.Disable()
+	} else {
+		c.Controls.STTPrecision.Enable()
+	}
 }
 
 func (c *Coordinator) ApplyTXTTypeChange(modelType string) {
@@ -456,18 +524,46 @@ func (c *Coordinator) ApplyTTSTypeChange(modelType string) {
 	}
 	c.InProgrammaticUpdate = true
 	defer func() { c.InProgrammaticUpdate = false }()
+	// The remaining TTS engines populate their model choices from the running
+	// backend. While loading, Engine keeps their exact saved model visible as a
+	// read-only entry. On an interactive type change, clear that now-incompatible
+	// entry instead of showing a model belonging to the previous engine.
+	loadingSettings := c.IsLoadingSettings != nil && *c.IsLoadingSettings
+	if modelType != "audio_cpp" && !loadingSettings && c.Controls.TTSModel != nil {
+		c.Controls.TTSModel.SetValueOptions(nil)
+		c.Controls.TTSModel.ClearSelected()
+	}
 	c.applyTypeChangeGeneric(
 		modelType,
-		nil,
+		c.Controls.TTSModel,
 		c.Controls.TTSPrecision,
 		c.Controls.TTSDevice,
 		c.Controls.TTSGPU,
-		nil,
+		TTSModelOptions,
 		TTSPrecisionOptions,
-		nil, // default device options
+		TTSDeviceOptions,
 		"ttsType",
-		true, // fixed float32 precision for memory estimation
+		modelType != "audio_cpp", // native GGUF packages have model-specific sizes
 	)
+	c.RefreshTTSPrecisionForModel()
+}
+
+// RefreshTTSPrecisionForModel keeps the precision selector in lockstep with
+// the selected audio.cpp package (some models publish only one GGUF variant).
+func (c *Coordinator) RefreshTTSPrecisionForModel() {
+	if c == nil || c.Controls == nil || selectedValue(c.Controls.TTSType) != "audio_cpp" || c.Controls.TTSPrecision == nil {
+		return
+	}
+	options, enabled := TTSPrecisionOptionsForModel("audio_cpp", selectedValue(c.Controls.TTSModel))
+	c.SetOptionsWithFallback(c.Controls.TTSPrecision, options)
+	if !enabled || len(options) <= 1 {
+		if len(options) == 1 {
+			c.Controls.TTSPrecision.SetSelected(options[0].Value)
+		}
+		c.Controls.TTSPrecision.Disable()
+	} else {
+		c.Controls.TTSPrecision.Enable()
+	}
 }
 
 func (c *Coordinator) ApplyOCRTypeChange(modelType string) {
@@ -572,9 +668,6 @@ func (c *Coordinator) applyTypeChangeGeneric(
 		}
 	}
 	if gpuSel != nil {
-		if len(c.GPUOptions) > 0 {
-			c.SetOptionsWithFallback(gpuSel, c.GPUOptions)
-		}
 		c.updateGPUSelectorState(devSel, gpuSel)
 	}
 

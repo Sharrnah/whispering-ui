@@ -136,6 +136,33 @@ func newPluginRouteCheck(label string, checked bool, changed func(bool)) *widget
 	return check
 }
 
+// Routes share the primary model, including its task capabilities.
+func routeSpeechTaskOptions(sttType, model string) []CustomWidget.TextValueOption {
+	switch sttType {
+	case "qwen3_asr", "audio_cpp", "wav2vec_bert", "mms", "vibevoice_asr", "higgs_audio", "", "seamless_m4t", "nemo_canary":
+		return nil
+	case "faster_whisper", "transformer_whisper", "original_whisper":
+		if strings.HasSuffix(strings.ToLower(model), "-turbo") {
+			return nil
+		}
+	case "phi4", "phi4-onnx":
+		return []CustomWidget.TextValueOption{
+			{Text: lang.L("transcribe"), Value: "transcribe"},
+			{Text: lang.L("translate"), Value: "translate"},
+			{Text: lang.L("transcribe & translate"), Value: "transcribe_translate"},
+			{Text: lang.L("question & answering"), Value: "question_answering"},
+			{Text: lang.L("function calling"), Value: "function_calling"},
+		}
+	case "voxtral":
+		return []CustomWidget.TextValueOption{
+			{Text: lang.L("transcribe"), Value: "transcribe"},
+			{Text: lang.L("translate"), Value: "translate"},
+			{Text: lang.L("question & answering"), Value: "question_answering"},
+		}
+	}
+	return defaultTranscriptionTaskOptions()
+}
+
 func routeSpeechLanguageOptions() []CustomWidget.TextValueOption {
 	options := []CustomWidget.TextValueOption{{Text: lang.L("Autodetect"), Value: ""}}
 	seen := map[string]bool{"": true}
@@ -439,6 +466,29 @@ func createAudioRouteDetails(
 	oscChatPrefix.SetText(route.Osc_chat_prefix)
 	oscChatPrefix.OnChanged = func(value string) { route.Osc_chat_prefix = value }
 
+	oscTransfer := CustomWidget.NewTextValueSelect("additional_audio_osc_transfer_"+route.ID, []CustomWidget.TextValueOption{
+		{Text: lang.L("osc_send.option.Send Translation"), Value: "translation_result"},
+		{Text: lang.L("osc_send.option.Send Source Text"), Value: "source"},
+		{Text: lang.L("osc_send.option.Send both Source and Translation"), Value: "both"},
+		{Text: lang.L("osc_send.option.Send both (inverted) Translation and Source"), Value: "both_inverted"},
+	}, nil, -1)
+	if route.Osc_type_transfer == "" {
+		route.Osc_type_transfer = Settings.Config.Osc_type_transfer
+	}
+	oscTransfer.SetSelected(route.Osc_type_transfer)
+	if oscTransfer.GetSelected() == nil {
+		route.Osc_type_transfer = "translation_result"
+		oscTransfer.SetSelected(route.Osc_type_transfer)
+	}
+	oscSplit := widget.NewEntry()
+	split := Settings.Config.Osc_type_transfer_split
+	if route.Osc_type_transfer_split != nil {
+		split = *route.Osc_type_transfer_split
+	}
+	route.Osc_type_transfer_split = &split
+	oscSplit.SetText(split)
+	oscSplit.OnChanged = func(value string) { route.Osc_type_transfer_split = &value }
+
 	apiSelection, inputSelection := createRouteAudioControls(route, func() {
 		preview.Update(*route)
 	})
@@ -446,20 +496,56 @@ func createAudioRouteDetails(
 
 	task := CustomWidget.NewTextValueSelect(
 		"additional_audio_task_"+route.ID,
-		[]CustomWidget.TextValueOption{
-			{Text: lang.L("transcribe"), Value: "transcribe"},
-			{Text: lang.L("translate (to English)"), Value: "translate"},
-		},
+		routeSpeechTaskOptions(Settings.Config.Stt_type, Settings.Config.Model),
 		func(option CustomWidget.TextValueOption) { route.Whisper_task = option.Value },
 		-1,
 	)
-	selectOrAddRouteOption(task, route.Whisper_task)
+	task.SetSelected(route.Whisper_task)
+	if task.GetSelected() == nil {
+		route.Whisper_task = "transcribe"
+		task.SetSelected(route.Whisper_task)
+	}
+	taskLabel := widget.NewLabel(lang.L("Task"))
+	if len(task.Options) == 0 {
+		task.Hide()
+		taskLabel.Hide()
+	}
 
 	speechLanguage := newRouteLanguageCompletion(
 		routeSpeechLanguageOptions(),
 		route.Current_language,
 		func(value string) { route.Current_language = value },
 	)
+
+	speechLanguageLabel := widget.NewLabel(lang.L("Speech Language"))
+	updateSpeechLanguage := func() {
+		speechLanguage.Enable()
+		speechLanguageLabel.SetText(lang.L("Speech Language"))
+		if Settings.Config.Stt_type == "phi4" || Settings.Config.Stt_type == "phi4-onnx" {
+			speechLanguageLabel.SetText(lang.L("Target Language"))
+			if route.Whisper_task != "translate" && route.Whisper_task != "transcribe_translate" {
+				speechLanguage.Disable()
+			}
+		}
+		if Settings.Config.Stt_type == "voxtral" && route.Whisper_task == "question_answering" {
+			speechLanguage.Disable()
+		}
+	}
+	task.OnChanged = func(option CustomWidget.TextValueOption) {
+		route.Whisper_task = option.Value
+		updateSpeechLanguage()
+	}
+	updateSpeechLanguage()
+	speechTargetLabel := widget.NewLabel(lang.L("Target Language"))
+	targetOptions := routeSpeechLanguageOptions()[1:]
+	if route.Target_language == "" {
+		route.Target_language = Settings.Config.Target_language
+	}
+	speechTarget := newRouteLanguageCompletion(targetOptions, route.Target_language, func(value string) { route.Target_language = value })
+	if Settings.Config.Stt_type != "seamless_m4t" && (Settings.Config.Stt_type != "nemo_canary" || strings.HasPrefix(strings.ToLower(Settings.Config.Model), "parakeet")) {
+		speechTargetLabel.Hide()
+		speechTarget.Hide()
+	}
 
 	sourceLanguage := newRouteLanguageCompletion(
 		routeTranslationLanguageOptions(true),
@@ -576,15 +662,26 @@ func createAudioRouteDetails(
 	updateSmartTurnState()
 
 	updateOSCState := func() {
+		if route.Osc_enabled && (route.Osc_type_transfer == "both" || route.Osc_type_transfer == "both_inverted") {
+			oscSplit.Enable()
+		} else {
+			oscSplit.Disable()
+		}
 		if route.Osc_enabled {
 			oscTypingIndicator.Enable()
 			oscChatNotification.Enable()
 			oscChatPrefix.Enable()
+			oscTransfer.Enable()
 		} else {
 			oscTypingIndicator.Disable()
 			oscChatNotification.Disable()
 			oscChatPrefix.Disable()
+			oscTransfer.Disable()
 		}
+	}
+	oscTransfer.OnChanged = func(option CustomWidget.TextValueOption) {
+		route.Osc_type_transfer = option.Value
+		updateOSCState()
 	}
 	oscEnabled.OnChanged = func(value bool) {
 		route.Osc_enabled = value
@@ -602,8 +699,9 @@ func createAudioRouteDetails(
 	recognitionForm := container.New(
 		layout.NewFormLayout(),
 		widget.NewLabel(lang.L("Speech-to-Text Enabled")), sttEnabled,
-		widget.NewLabel(lang.L("Task")), task,
-		widget.NewLabel(lang.L("Speech Language")), speechLanguage,
+		taskLabel, task,
+		speechLanguageLabel, speechLanguage,
+		speechTargetLabel, speechTarget,
 		widget.NewLabel(lang.L("Realtime")), realtime,
 	)
 	translationOutputForm := container.New(
@@ -614,6 +712,8 @@ func createAudioRouteDetails(
 		widget.NewLabel(lang.L("txt_romaji.Name")), romaji,
 		widget.NewLabel(lang.L("Show Results in Whispering Tiger")), websocketEnabled,
 		widget.NewLabel(lang.L("Automatic OSC (VRChat)")), oscEnabled,
+		widget.NewLabel(lang.L("osc_type_transfer.Name")), oscTransfer,
+		widget.NewLabel(lang.L("osc_type_transfer_split.Name")), oscSplit,
 		widget.NewLabel(lang.L("osc_chat_prefix.Name")), oscChatPrefix,
 		widget.NewLabel(lang.L("VRChat Typing Indicator")), oscTypingIndicator,
 		widget.NewLabel(lang.L("VRChat Notification Sound")), oscChatNotification,
@@ -714,6 +814,7 @@ func defaultAdditionalAudioRoute(index int) Settings.AdditionalAudioRoute {
 		Stt_enabled:                          true,
 		Current_language:                     Settings.Config.Current_language,
 		Whisper_task:                         Settings.Config.Whisper_task,
+		Target_language:                      Settings.Config.Target_language,
 		Energy:                               Settings.Config.Energy,
 		Vad_confidence_threshold:             Settings.Config.Vad_confidence_threshold,
 		Phrase_time_limit:                    Settings.Config.Phrase_time_limit,
@@ -736,6 +837,7 @@ func defaultAdditionalAudioRoute(index int) Settings.AdditionalAudioRoute {
 		Osc_typing_indicator:                 false,
 		Osc_chat_notification:                false,
 		Osc_chat_prefix:                      Settings.Config.Osc_chat_prefix,
+		Osc_type_transfer:                    Settings.Config.Osc_type_transfer,
 		Plugins:                              []string{},
 	}
 }

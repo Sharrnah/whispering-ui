@@ -45,6 +45,15 @@ var Models = []AIModel{
 	// Qwen3-ASR models (weights plus a practical inference overhead allowance)
 	{"Whisper", "qwen3_asr", "qwen3-asr-0.6b-hf", 4200.0},
 	{"Whisper", "qwen3_asr", "qwen3-asr-1.7b-hf", 10000.0},
+	// audio.cpp GGUF estimates use a float32-equivalent base so Q8_0 and F16
+	// continue through the shared precision scaler.
+	{"Whisper", "audio_cpp", "qwen3-asr-0.6b-gguf", 5000.0},
+	{"Whisper", "audio_cpp", "qwen3-asr-1.7b-gguf", 10800.0},
+	{"Whisper", "audio_cpp", "nemotron-3.5-asr-streaming-0.6b-gguf", 6000.0},
+	{"Whisper", "audio_cpp", "vibevoice-asr-gguf", 48000.0},
+	{"Whisper", "audio_cpp", "voxtral-mini-4b-realtime-2602-gguf", 24000.0},
+	{"Whisper", "audio_cpp", "audio8-asr-0.1b-gguf", 4000.0},
+	{"Whisper", "audio_cpp", "kroko-asr-english-64l-gguf", 1600.0},
 	// Speech T5
 	{"Whisper", "speech_t5", "", 927.0},
 	// Seamless M4T
@@ -114,6 +123,20 @@ var Models = []AIModel{
 	// Includes the 0.6B generator and shared 44.1 kHz codec in BF16, plus
 	// generation and codec-decoding headroom.
 	{"ttsType", "audio8_tts", "", 4200.0},
+	// audio.cpp TTS package estimates include practical graph/work-buffer
+	// headroom. The shared precision scaler distinguishes Q8, F16/BF16 and
+	// original-dtype package choices.
+	{"ttsType", "audio_cpp", "supertonic-3-gguf", 900.0},
+	{"ttsType", "audio_cpp", "confucius4-tts-gguf", 10500.0},
+	{"ttsType", "audio_cpp", "dottts-soar-gguf", 14000.0},
+	{"ttsType", "audio_cpp", "dottts-meanflow-gguf", 14000.0},
+	{"ttsType", "audio_cpp", "dottts-edit-gguf", 14000.0},
+	{"ttsType", "audio_cpp", "indextts2-gguf", 12000.0},
+	{"ttsType", "audio_cpp", "indextts2.5-gguf", 12000.0},
+	{"ttsType", "audio_cpp", "magpietts-multilingual-357m-gguf", 9000.0},
+	{"ttsType", "audio_cpp", "omnivoice-gguf", 8000.0},
+	{"ttsType", "audio_cpp", "voxcpm1-0.5b-gguf", 6000.0},
+	{"ttsType", "audio_cpp", "voxcpm2-gguf", 14000.0},
 	// OCR types
 	{"ocrType", "easyocr", "", 520.0},
 	{"ocrType", "got_ocr_20", "", 1559.0},
@@ -137,11 +160,14 @@ func EstimateMemoryUsage(float32MemoryUsage float64, targetType float64) float64
 
 func PrecisionMemoryFactor(precision string) float64 {
 	switch strings.ToLower(strings.TrimSpace(precision)) {
-	case "float16", "bfloat16", "int16":
+	// FP16 and BF16 have different exponent/mantissa layouts, but both store
+	// every value in 16 bits. audio.cpp uses the short "bf16" spelling for its
+	// GGUF packages, while some other engines use "bfloat16".
+	case "float16", "f16", "bfloat16", "bf16", "int16":
 		return Float16
-	case "int8_float16", "int8", "int8_bfloat16", "8bit":
+	case "int8_float16", "int8", "int8_bfloat16", "8bit", "q8_0":
 		return Bit8
-	case "4bit":
+	case "4bit", "q4", "q4_k":
 		return Bit4
 	default:
 		return Float32
@@ -255,7 +281,11 @@ func (p ProfileAIModelOption) CalculateMemoryConsumption(CPUBar *widget.Progress
 		for _, profileAIModelOption := range uniqueOptions {
 			deviceLower := strings.ToLower(profileAIModelOption.Device)
 			if strings.HasPrefix(deviceLower, "cuda") ||
-				strings.HasPrefix(deviceLower, "direct-ml") {
+				strings.HasPrefix(deviceLower, "direct-ml") ||
+				strings.HasPrefix(deviceLower, "vulkan") ||
+				strings.HasPrefix(deviceLower, "hip") ||
+				strings.HasPrefix(deviceLower, "rocm") ||
+				strings.HasPrefix(deviceLower, "metal") {
 				// Wenn Gesamtwert unbekannt UND Max aktuell 0 ist, skaliere Max dynamisch
 				if totalGPUMemory == 0 && GPUBar.Max == 0 {
 					GPUBar.Max = GPUBar.Value + profileAIModelOption.MemoryConsumption

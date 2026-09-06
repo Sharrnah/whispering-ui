@@ -5,12 +5,14 @@ import (
 	"strings"
 	"testing"
 
+	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/lang"
 	fynetest "fyne.io/fyne/v2/test"
 	"fyne.io/fyne/v2/widget"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Settings"
+	"whispering-tiger-ui/Websocket/Messages"
 )
 
 func TestPluginRouteCheckDoesNotChangeRoutingWhileRendering(t *testing.T) {
@@ -239,5 +241,69 @@ func TestRouteAudioPreviewSourceUsesDraftSelection(t *testing.T) {
 	if source.audioAPI != "WASAPI" || source.device != "VRChat.exe" ||
 		source.process != "VRChat.exe" || source.processID != 42388 {
 		t.Fatalf("preview source did not preserve draft selection: %#v", source)
+	}
+}
+
+func TestRouteTasksMatchPrimaryModelCapabilities(t *testing.T) {
+	for _, item := range []struct {
+		kind, model string
+		count       int
+	}{
+		{"qwen3_asr", "Qwen3-ASR-0.6B-hf", 0},
+		{"audio_cpp", "", 0}, {"mms", "", 0}, {"wav2vec_bert", "", 0},
+		{"nemo_canary", "parakeet-tdt-0.6b-v3", 0},
+		{"faster_whisper", "large-v3-turbo", 0},
+		{"faster_whisper", "large-v3", 2}, {"phi4", "", 5}, {"voxtral", "", 3},
+	} {
+		if got := len(routeSpeechTaskOptions(item.kind, item.model)); got != item.count {
+			t.Errorf("%s/%s: got %d tasks, want %d", item.kind, item.model, got, item.count)
+		}
+	}
+}
+
+func TestRouteLanguagesUseLatestBackendModelPayload(t *testing.T) {
+	previous := Messages.TranslateSettings.WhisperLanguages
+	t.Cleanup(func() { Messages.TranslateSettings.WhisperLanguages = previous })
+	for _, code := range []string{"de", "zh-anhui"} {
+		Messages.TranslateSettings.WhisperLanguages = []Messages.WhisperLanguage{
+			{Name: "Auto", Code: ""}, {Name: "Model language", Code: code},
+		}
+		options := routeSpeechLanguageOptions()
+		if len(options) != 2 || options[1].Value != code {
+			t.Fatalf("route languages did not follow latest model: %#v", options)
+		}
+	}
+}
+
+func TestRouteDialogHidesUnsupportedTaskAndEditsOSCIndependently(t *testing.T) {
+	application := fynetest.NewApp()
+	t.Cleanup(application.Quit)
+	previous := Settings.Config
+	t.Cleanup(func() { Settings.Config = previous })
+	Settings.Config.Stt_type = "qwen3_asr"
+	Settings.Config.Audio_api = "WASAPI"
+	Settings.Config.Osc_type_transfer = "source"
+	route := defaultAdditionalAudioRoute(1)
+	route.Whisper_task = "translate"
+	preview := newRouteAudioInputPreview(300)
+	defer preview.Stop()
+	details := createAudioRouteDetails(&route, preview).(*widget.Accordion)
+	recognition := details.Items[1].Detail.(*fyne.Container)
+	if recognition.Objects[2].Visible() || recognition.Objects[3].Visible() || route.Whisper_task != "transcribe" {
+		t.Fatal("transcription-only model exposes a task or retains translate")
+	}
+	output := details.Items[2].Detail.(*fyne.Container)
+	var transfer *CustomWidget.TextValueSelect
+	for _, object := range output.Objects {
+		if selection, ok := object.(*CustomWidget.TextValueSelect); ok && strings.Contains(selection.Name, "osc_transfer") {
+			transfer = selection
+		}
+	}
+	if transfer == nil {
+		t.Fatal("missing OSC transfer selector")
+	}
+	transfer.SetSelected("both_inverted")
+	if route.Osc_type_transfer != "both_inverted" || Settings.Config.Osc_type_transfer != "source" {
+		t.Fatal("route OSC choice did not remain independent of main settings")
 	}
 }

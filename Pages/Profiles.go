@@ -814,10 +814,31 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	totalGPUMemory := int64(0)
 	var ComputeCapability float32 = 0.0
 	HasNvidiaGPU := false
-	detectedGPUOptions := PF.DefaultGPUOptions()
+	var detectedGPUOptions []PF.TVO
 	var detectedGPUOptionsMu sync.RWMutex
+	detectedNativeGPUOptions := make(map[string][]PF.TVO)
+	var detectedNativeGPUOptionsMu sync.RWMutex
+	cloneNativeGPUOptions := func(source map[string][]PF.TVO) map[string][]PF.TVO {
+		result := make(map[string][]PF.TVO, len(source))
+		for backend, entries := range source {
+			result[backend] = append([]PF.TVO(nil), entries...)
+		}
+		return result
+	}
 	// Declare coordinator pointer early so later async updates can access it
 	var coord *PF.Coordinator
+	go func() {
+		audioCppDevices, _ := Hardwareinfo.GetAudioCppDevices()
+		nativeOptions := PF.AudioCppGPUOptions(audioCppDevices, Hardwareinfo.GetGraphicsDevices())
+		detectedNativeGPUOptionsMu.Lock()
+		detectedNativeGPUOptions = cloneNativeGPUOptions(nativeOptions)
+		detectedNativeGPUOptionsMu.Unlock()
+		fyne.Do(func() {
+			if coord != nil {
+				coord.SetNativeGPUOptions(nativeOptions)
+			}
+		})
+	}()
 	go func() {
 		foundGPUVendorName := "Unknown"
 		foundGPUAdapterName := ""
@@ -1177,6 +1198,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		options := append([]PF.TVO(nil), detectedGPUOptions...)
 		detectedGPUOptionsMu.RUnlock()
 		coord.SetGPUOptions(options)
+		detectedNativeGPUOptionsMu.RLock()
+		nativeOptions := cloneNativeGPUOptions(detectedNativeGPUOptions)
+		detectedNativeGPUOptionsMu.RUnlock()
+		coord.SetNativeGPUOptions(nativeOptions)
 
 		// After initialization: if total GPU memory is already detected, set it directly
 		if totalGPUMemory > 0 {
@@ -1399,7 +1424,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 			}
 			if controls.TTSType != nil && controls.TTSType.GetSelected() != nil {
-				AIModel = PF.BuildProfileMemoryOption("ttsType", controls.TTSType.GetSelected().Value, nil, controls.TTSPrecision, controls.TTSDevice)
+				AIModel = PF.BuildProfileMemoryOption("ttsType", controls.TTSType.GetSelected().Value, controls.TTSModel, controls.TTSPrecision, controls.TTSDevice)
 				AIModel.Precision = Hardwareinfo.Float32
 				AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 			}
@@ -1496,6 +1521,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					Tts_type:            profileSettings.Tts_type,
 					Tts_ai_device:       profileSettings.Tts_ai_device,
 					Tts_ai_device_index: profileSettings.Tts_ai_device_index,
+					Tts_model:           append([]string(nil), profileSettings.Tts_model...),
 					Tts_precision:       profileSettings.Tts_precision,
 
 					Osc_ip:              profileSettings.Osc_ip,

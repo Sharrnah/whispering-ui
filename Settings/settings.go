@@ -248,6 +248,7 @@ type AdditionalAudioRoute struct {
 	Stt_enabled                          bool        `yaml:"stt_enabled" json:"stt_enabled"`
 	Current_language                     string      `yaml:"current_language" json:"current_language"`
 	Whisper_task                         string      `yaml:"whisper_task" json:"whisper_task"`
+	Target_language                      string      `yaml:"target_language,omitempty" json:"target_language,omitempty"`
 	Energy                               int         `yaml:"energy" json:"energy"`
 	Vad_confidence_threshold             float64     `yaml:"vad_confidence_threshold" json:"vad_confidence_threshold"`
 	Phrase_time_limit                    float64     `yaml:"phrase_time_limit" json:"phrase_time_limit"`
@@ -270,6 +271,8 @@ type AdditionalAudioRoute struct {
 	Osc_typing_indicator                 bool        `yaml:"osc_typing_indicator" json:"osc_typing_indicator"`
 	Osc_chat_notification                bool        `yaml:"osc_chat_notification" json:"osc_chat_notification"`
 	Osc_chat_prefix                      string      `yaml:"osc_chat_prefix" json:"osc_chat_prefix"`
+	Osc_type_transfer                    string      `yaml:"osc_type_transfer,omitempty" json:"osc_type_transfer,omitempty"`
+	Osc_type_transfer_split              *string     `yaml:"osc_type_transfer_split,omitempty" json:"osc_type_transfer_split,omitempty"`
 	Plugins                              []string    `yaml:"plugins,omitempty" json:"plugins,omitempty"`
 }
 
@@ -436,7 +439,7 @@ func legacyTTSPrecision(ttsType string, specialSettings map[string]interface{}) 
 		"silero": "float32", "f5_e2": "float32", "zonos": "bfloat16",
 		"zonos2": "bfloat16", "kokoro": "float32", "orpheus": "8bit",
 		"chatterbox": "float32", "index_tts": "bfloat16", "qwen3_tts": "auto",
-		"audio8_tts": "auto", "maya1": "bfloat16",
+		"audio8_tts": "auto", "audio_cpp": "orig", "maya1": "bfloat16",
 	}
 	precision := defaults[ttsType]
 	if precision == "" {

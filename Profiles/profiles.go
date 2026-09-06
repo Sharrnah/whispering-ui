@@ -55,6 +55,7 @@ type Profile struct {
 	Tts_type                    string      `yaml:"tts_type"`
 	Tts_ai_device               string      `yaml:"tts_ai_device"`
 	Tts_ai_device_index         int         `yaml:"tts_ai_device_index"`
+	Tts_model                   []string    `yaml:"tts_model"`
 	Tts_precision               string      `yaml:"tts_precision"`
 	Whisper_precision           string      `yaml:"whisper_precision"`
 	Stt_type                    string      `yaml:"stt_type"`

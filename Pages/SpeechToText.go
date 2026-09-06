@@ -144,7 +144,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		speechTaskWidgetLabel.SetText("")
 		speechTaskWidget.Hide()
 	}
-	if Settings.Config.Stt_type == "qwen3_asr" {
+	if Settings.Config.Stt_type == "qwen3_asr" || Settings.Config.Stt_type == "audio_cpp" {
 		speechTaskWidgetLabel.SetText("")
 		speechTaskWidget.(*CustomWidget.TextValueSelect).Selected = "transcribe"
 		Settings.Config.Whisper_task = "transcribe"
@@ -325,6 +325,10 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 	}
 	leftVerticalBottomLayout.Add(quickOptionsRow)
 	leftVerticalBottomLayout.Add(createAdditionalAudioRoutesPanel())
+	if Settings.Config.Stt_type == "audio_cpp" {
+		leftVerticalBottomLayout.Add(widget.NewSeparator())
+		leftVerticalBottomLayout.Add(buildAudioCppSTTSpecialSettings())
+	}
 
 	// main layout
 	leftVerticalLayout := container.NewBorder(

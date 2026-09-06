@@ -58,6 +58,7 @@ type AllProfileControls struct {
 	TTSType      *CustomWidget.TextValueSelect
 	TTSDevice    *CustomWidget.TextValueSelect
 	TTSGPU       *CustomWidget.TextValueSelect
+	TTSModel     *CustomWidget.TextValueSelect
 	TTSPrecision *CustomWidget.TextValueSelect
 
 	// OCR
@@ -237,6 +238,24 @@ func (e *FormEngine) LoadFromSettings(conf *Settings.Conf) {
 				}
 			}
 		case *CustomWidget.TextValueSelect:
+			if key == "tts_model" {
+				if len(conf.Tts_model) < 2 || strings.TrimSpace(conf.Tts_model[1]) == "" {
+					continue
+				}
+				modelGroup := strings.TrimSpace(conf.Tts_model[0])
+				modelName := strings.TrimSpace(conf.Tts_model[1])
+				modelEntry := &CustomWidget.TextValueOption{Value: modelName}
+				if !c.ContainsEntry(modelEntry, CustomWidget.CompareValue) {
+					modelType := selectedValue(e.Controls.TTSType)
+					c.SetValueOptions([]CustomWidget.TextValueOption{{
+						Text:  TTSModelDisplayText(modelType, modelGroup, modelName),
+						Value: modelName,
+					}})
+					c.Disable()
+				}
+				c.SetSelected(modelName)
+				continue
+			}
 			// default: set by value. For audio devices we also have name fields as fallback
 			val := e.getOptionByLowercase(conf, key)
 			strVal := fmt.Sprint(val)
@@ -299,6 +318,19 @@ func (e *FormEngine) LoadFromSettings(conf *Settings.Conf) {
 			}
 		}
 	}
+
+	// The audio.cpp precision choices depend on the selected package, while
+	// profile bindings are intentionally stored in a map. Reconcile once after
+	// every field has loaded so map iteration order cannot discard a valid
+	// saved package precision.
+	if e.Coord != nil && selectedValue(e.Controls.STTType) == "audio_cpp" {
+		e.Coord.RefreshSTTPrecisionForModel()
+		e.selectSetByValueOrText(e.Controls.STTPrecision, conf.Whisper_precision, "")
+	}
+	if e.Coord != nil && selectedValue(e.Controls.TTSType) == "audio_cpp" {
+		e.Coord.RefreshTTSPrecisionForModel()
+		e.selectSetByValueOrText(e.Controls.TTSPrecision, conf.Tts_precision, "")
+	}
 }
 
 // getOptionByLowercase retrieves a field value from Settings.Conf by matching the lowercase key
@@ -338,6 +370,20 @@ func (e *FormEngine) SaveToSettings(conf *Settings.Conf) {
 			conf.SetOption(key, c.Value)
 		case *CustomWidget.TextValueSelect:
 			sel := c.GetSelected()
+			if key == "tts_model" {
+				if sel == nil || strings.TrimSpace(sel.Value) == "" {
+					// Most TTS engines obtain their model list dynamically from the
+					// running backend. A blank/read-only profile control must not
+					// destroy their existing [group, model] selection.
+					continue
+				}
+				if group, ok := TTSModelProfileGroup(selectedValue(e.Controls.TTSType), sel.Value); ok {
+					conf.Tts_model = []string{group, sel.Value}
+				}
+				// Unknown/dynamic models were inserted from conf.Tts_model while
+				// loading and are intentionally preserved unchanged.
+				continue
+			}
 			if sel == nil {
 				if key == "device_index" {
 					conf.SetOption("audio_input_process", "")

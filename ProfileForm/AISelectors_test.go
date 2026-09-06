@@ -1,6 +1,7 @@
 package ProfileForm
 
 import (
+	"reflect"
 	"testing"
 
 	"whispering-tiger-ui/CustomWidget"
@@ -13,6 +14,79 @@ func optionValues(options []TVO) map[string]bool {
 		values[option.Value] = true
 	}
 	return values
+}
+
+func TestAudioCppTTSModelRoundTripPreservesGroup(t *testing.T) {
+	controls := &AllProfileControls{}
+	engine := NewFormEngine(controls, nil)
+	controls.TTSType = CustomWidget.NewTextValueSelect("tts_type", TTSTypeOptions(), nil, -1)
+	models, _, _ := TTSModelOptions("audio_cpp")
+	controls.TTSModel = CustomWidget.NewTextValueSelect("tts_model", models, nil, 0)
+	engine.Register("tts_type", controls.TTSType)
+	engine.Register("tts_model", controls.TTSModel)
+
+	conf := Settings.Conf{
+		Tts_type:  "audio_cpp",
+		Tts_model: []string{"Preset voices", "Supertonic-3-GGUF"},
+	}
+	engine.LoadFromSettings(&conf)
+	if selectedValue(controls.TTSModel) != "Supertonic-3-GGUF" {
+		t.Fatalf("loaded TTS model = %q, want Supertonic-3-GGUF", selectedValue(controls.TTSModel))
+	}
+
+	conf.Tts_model = []string{"stale", "stale"}
+	engine.SaveToSettings(&conf)
+	want := []string{"Preset voices", "Supertonic-3-GGUF"}
+	if !reflect.DeepEqual(conf.Tts_model, want) {
+		t.Fatalf("saved TTS model = %#v, want %#v", conf.Tts_model, want)
+	}
+}
+
+func TestAudioCppTTSModelSpecificPrecisionRoundTrip(t *testing.T) {
+	controls := &AllProfileControls{}
+	coordinator := &Coordinator{Controls: controls}
+	controls.TTSType = CustomWidget.NewTextValueSelect("tts_type", TTSTypeOptions(), nil, -1)
+	controls.TTSType.SetSelected("audio_cpp")
+	models, _, _ := TTSModelOptions("audio_cpp")
+	controls.TTSModel = CustomWidget.NewTextValueSelect("tts_model", models, nil, 0)
+	controls.TTSPrecision = CustomWidget.NewTextValueSelect("tts_precision", GenericTTSPrecisionOptions(), nil, 0)
+	engine := NewFormEngine(controls, coordinator)
+	engine.Register("tts_model", controls.TTSModel)
+	engine.Register("tts_precision", controls.TTSPrecision)
+
+	conf := Settings.Conf{
+		Tts_type:      "audio_cpp",
+		Tts_model:     []string{"Cloning and voice design", "VoxCPM2-GGUF"},
+		Tts_precision: "bf16",
+	}
+	engine.LoadFromSettings(&conf)
+	if selectedValue(controls.TTSModel) != "VoxCPM2-GGUF" || selectedValue(controls.TTSPrecision) != "bf16" {
+		t.Fatalf("loaded model/precision = %q/%q, want VoxCPM2-GGUF/bf16", selectedValue(controls.TTSModel), selectedValue(controls.TTSPrecision))
+	}
+	engine.SaveToSettings(&conf)
+	if conf.Tts_precision != "bf16" || !reflect.DeepEqual(conf.Tts_model, []string{"Cloning and voice design", "VoxCPM2-GGUF"}) {
+		t.Fatalf("saved model/precision = %#v/%q", conf.Tts_model, conf.Tts_precision)
+	}
+}
+
+func TestDynamicTTSModelRemainsVisibleAndUnchanged(t *testing.T) {
+	controls := &AllProfileControls{}
+	engine := NewFormEngine(controls, nil)
+	controls.TTSType = CustomWidget.NewTextValueSelect("tts_type", TTSTypeOptions(), nil, -1)
+	controls.TTSModel = CustomWidget.NewTextValueSelect("tts_model", nil, nil, -1)
+	engine.Register("tts_type", controls.TTSType)
+	engine.Register("tts_model", controls.TTSModel)
+
+	want := []string{"German", "F5-TTS_German"}
+	conf := Settings.Conf{Tts_type: "f5_e2", Tts_model: append([]string(nil), want...)}
+	engine.LoadFromSettings(&conf)
+	if selectedValue(controls.TTSModel) != want[1] || !controls.TTSModel.Disabled() {
+		t.Fatalf("dynamic TTS model = %q disabled=%v, want %q/true", selectedValue(controls.TTSModel), controls.TTSModel.Disabled(), want[1])
+	}
+	engine.SaveToSettings(&conf)
+	if !reflect.DeepEqual(conf.Tts_model, want) {
+		t.Fatalf("dynamic TTS model changed while saving: %#v", conf.Tts_model)
+	}
 }
 
 func TestTTSPrecisionOptionsMatchBackendCapabilities(t *testing.T) {

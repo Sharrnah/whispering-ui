@@ -123,3 +123,26 @@ func TestLegacyProfileClearsRoutesAndExplicitPluginRoutingFromPreviousProfile(t 
 		t.Fatalf("plugin allowlist leaked across profiles: %#v", merged.Main_audio_plugins)
 	}
 }
+
+func TestRouteOSCChoicesSurviveJSONAndYAML(t *testing.T) {
+	for _, mode := range []string{"source", "translation_result", "both", "both_inverted"} {
+		split := ""
+		route := AdditionalAudioRoute{Osc_type_transfer: mode, Osc_type_transfer_split: &split}
+		for _, codec := range []struct {
+			marshal   func(interface{}) ([]byte, error)
+			unmarshal func([]byte, interface{}) error
+		}{{json.Marshal, json.Unmarshal}, {yaml.Marshal, yaml.Unmarshal}} {
+			data, err := codec.marshal(route)
+			if err != nil {
+				t.Fatal(err)
+			}
+			var restored AdditionalAudioRoute
+			if err := codec.unmarshal(data, &restored); err != nil {
+				t.Fatal(err)
+			}
+			if restored.Osc_type_transfer != mode || restored.Osc_type_transfer_split == nil || *restored.Osc_type_transfer_split != "" {
+				t.Fatalf("lost route OSC selection: %#v", restored)
+			}
+		}
+	}
+}

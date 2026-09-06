@@ -24,11 +24,12 @@ func TestDenoisedTriggerSharesNoiseFilterRow(t *testing.T) {
 	}
 }
 
-func TestAIProfileRowsIncludeGPUSelectorsAndTTSPrecision(t *testing.T) {
+func TestAIProfileRowsKeepDeviceAndModelControlsInPairs(t *testing.T) {
 	want := map[string][]string{
 		lang.L("A.I. Device for Speech-to-Text"):   {"STTDevice", "STTGPU"},
 		lang.L("A.I. Device for Text-Translation"): {"TxtDevice", "TxtGPU"},
-		lang.L("A.I. Device for Text-to-Speech"):   {"TTSDevice", "TTSGPU", "TTSPrecision"},
+		lang.L("A.I. Device for Text-to-Speech"):   {"TTSDevice", "TTSGPU"},
+		lang.L("Text-to-Speech Model"):             {"TTSModel", "TTSPrecision"},
 		lang.L("A.I. Device for Image-to-Text"):    {"OCRDevice", "OCRGPU", "OCRPrecision"},
 	}
 	for _, row := range BuildFullProfileLayout() {
