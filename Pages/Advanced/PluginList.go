@@ -27,7 +27,7 @@ import (
 
 var FreshInstalledPlugins []string
 
-func CreatePluginListWindow(closeFunction func(), backendRunning bool) {
+func CreatePluginListWindow(closeFunction func(), backendRunning bool, installed ...func(string, string)) {
 	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
 		scope.SetTag("GoRoutine", "Pages\\Advanced\\PluginList->CreatePluginListWindow")
 	})
@@ -173,10 +173,16 @@ func CreatePluginListWindow(closeFunction func(), backendRunning bool) {
 				Name:  "plugin",
 				Value: map[string]string{"name": class, "file": pluginFileName},
 			}
-			sendMessage.SendMessage()
+			if len(installed) > 0 {
+				installed[0](class, pluginFileName)
+			} else {
+				sendMessage.SendMessage()
+			}
 
 			// add to FreshInstalledPlugins list
-			FreshInstalledPlugins = append(FreshInstalledPlugins, class)
+			if len(installed) == 0 {
+				FreshInstalledPlugins = append(FreshInstalledPlugins, class)
+			}
 		}
 
 		row.Widgets.UpdateButton = titleButton

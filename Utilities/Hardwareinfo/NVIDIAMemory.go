@@ -96,21 +96,21 @@ func GetGPUCard() *pci.Device {
 				foundGpuDevice = card.DeviceInfo
 			}
 			fmt.Printf(" %v\n", card)
-			if strings.ToLower(card.DeviceInfo.Vendor.Name) == strings.ToLower("NVIDIA") {
+			if card.DeviceInfo != nil && card.DeviceInfo.Vendor != nil && strings.EqualFold(card.DeviceInfo.Vendor.Name, "NVIDIA") {
 				fmt.Printf("NVIDIA Card found.\n")
 				return card.DeviceInfo
 			}
 		}
 		for _, card := range gpu.GraphicsCards {
 			fmt.Printf(" %v\n", card)
-			if strings.ToLower(card.DeviceInfo.Vendor.Name) == strings.ToLower("AMD") {
+			if card.DeviceInfo != nil && card.DeviceInfo.Vendor != nil && strings.EqualFold(card.DeviceInfo.Vendor.Name, "AMD") {
 				fmt.Printf("AMD Card found.\n")
 				return card.DeviceInfo
 			}
 		}
 		for _, card := range gpu.GraphicsCards {
 			fmt.Printf(" %v\n", card)
-			if strings.ToLower(card.DeviceInfo.Vendor.Name) == strings.ToLower("Intel") {
+			if card.DeviceInfo != nil && card.DeviceInfo.Vendor != nil && strings.EqualFold(card.DeviceInfo.Vendor.Name, "Intel") {
 				fmt.Printf("Intel Card found.\n")
 				return card.DeviceInfo
 			}
@@ -122,6 +122,9 @@ func GetGPUCard() *pci.Device {
 func IsNVIDIACard(device *pci.Device) bool {
 	if device == nil {
 		device = GetGPUCard()
+	}
+	if device == nil || device.Vendor == nil {
+		return false
 	}
 	if strings.ToLower(device.Vendor.Name) == strings.ToLower("NVIDIA") {
 		return true

@@ -2,6 +2,7 @@ package ProfileForm
 
 import (
 	"fmt"
+	"runtime"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Utilities/AudioAPI"
 
@@ -94,6 +95,9 @@ func (b *ProfileBuilder) BuildAll(engine *FormEngine, inputOptions, applicationO
 	vadRealtime := b.newCheck(engine, "realtime", lang.L("Realtime"))
 	pushToTalk := CustomWidget.NewHotKeyEntry()
 	pushToTalk.PlaceHolder = lang.L("Keypress")
+	if runtime.GOOS == "linux" {
+		pushToTalk.Disable()
+	}
 	pushToTalkBlock := container.NewBorder(nil, nil, container.NewHBox(widget.NewLabel(lang.L("Push to Talk")), widget.NewIcon(theme.ComputerIcon())), nil, pushToTalk)
 	vadGroup := container.NewGridWithColumns(4, vadEnable, vadOnFullClip, vadRealtime, vadSmartTurn, pushToTalkBlock)
 	confSlider, confLabel, confRow := b.sliderWithLabel(engine, "vad_confidence_threshold", 0, 1, 0.01)

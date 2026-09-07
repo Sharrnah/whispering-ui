@@ -4,10 +4,70 @@ import (
 	"archive/zip"
 	"bytes"
 	"os"
+	"os/exec"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"testing"
 )
+
+func TestUnzipPreservesExecutableAndTraversableParents(t *testing.T) {
+	if runtime.GOOS == "windows" {
+		t.Skip("Unix executable permissions")
+	}
+	root := t.TempDir()
+	archive := filepath.Join(root, "backend.zip")
+	file, err := os.Create(archive)
+	if err != nil {
+		t.Fatal(err)
+	}
+	writer := zip.NewWriter(file)
+	dataHeader := &zip.FileHeader{Name: "audioWhisper/_internal/data.txt"}
+	dataHeader.SetMode(0644)
+	data, err := writer.CreateHeader(dataHeader)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, _ = data.Write([]byte("runtime data"))
+	header := &zip.FileHeader{Name: "audioWhisper/audioWhisper"}
+	header.SetMode(0755)
+	entry, err := writer.CreateHeader(header)
+	if err != nil {
+		t.Fatal(err)
+	}
+	_, _ = entry.Write([]byte("#!/bin/sh\nprintf 'backend-ready'\n"))
+	if err := writer.Close(); err != nil {
+		t.Fatal(err)
+	}
+	if err := file.Close(); err != nil {
+		t.Fatal(err)
+	}
+	dest := filepath.Join(root, "app")
+	if err := os.MkdirAll(filepath.Join(dest, "audioWhisper"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	binary := filepath.Join(dest, "audioWhisper", "audioWhisper")
+	if err := os.WriteFile(binary, []byte("old"), 0644); err != nil {
+		t.Fatal(err)
+	}
+	if err := Unzip(archive, dest); err != nil {
+		t.Fatal(err)
+	}
+	info, err := os.Stat(filepath.Join(dest, "audioWhisper", "_internal"))
+	if err != nil {
+		t.Fatal(err)
+	}
+	if info.Mode().Perm()&0111 != 0111 {
+		t.Fatalf("non-traversable parent: %v", info.Mode())
+	}
+	output, err := exec.Command(binary).Output()
+	if err != nil {
+		t.Fatal(err)
+	}
+	if string(output) != "backend-ready" {
+		t.Fatalf("unexpected backend output: %q", output)
+	}
+}
 
 func writeTestZIP(t *testing.T, archivePath string, files map[string][]byte) {
 	t.Helper()

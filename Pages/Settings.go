@@ -6,8 +6,11 @@ import (
 	"fyne.io/fyne/v2/lang"
 	"fyne.io/fyne/v2/widget"
 	"github.com/getsentry/sentry-go"
+	"strconv"
 	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/Pages/SettingsMappings"
+	"whispering-tiger-ui/RemoteAudioView"
+	"whispering-tiger-ui/Settings"
 )
 
 func CreateSettingsWindow() fyne.CanvasObject {
@@ -32,6 +35,14 @@ func CreateSettingsWindow() fyne.CanvasObject {
 		container.NewTabItem(lang.L("Experimental Options"), SettingsMappings.CreateSettingsFormByMapping(SettingsMappings.ExperimentalSettingsMapping)),
 	)
 	settingsFormTabs.SetTabLocation(container.TabLocationLeading)
+	if Settings.Config.Run_backend {
+		windows := fyne.CurrentApp().Driver().AllWindows()
+		if len(windows) > 0 {
+			settingsFormTabs.Append(container.NewTabItem(lang.L("Remote audio"), RemoteAudioView.Host(windows[0], "127.0.0.1:"+strconv.Itoa(Settings.Config.Websocket_port))))
+		}
+	} else {
+		settingsFormTabs.Append(container.NewTabItem(lang.L("Remote audio"), RemoteAudioView.Integrated()))
+	}
 
 	return settingsFormTabs
 }

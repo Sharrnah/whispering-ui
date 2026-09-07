@@ -1,0 +1,3 @@
+BuildTools/*.sh text eol=lf
+BuildTools/Dockerfile text eol=lf
+.drone.yml text eol=lf

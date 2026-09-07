@@ -261,19 +261,26 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			log.Println("failed to type assert data")
 		}
 	case "translate_settings":
+		local := Settings.Config
 		// skip received run_backend value from receiving
 		var runBackend = true
 		var websocketIp string
 		var websocketPort int
-		if !Messages.TranslateSettings.Run_backend {
+		if !local.Run_backend {
 			runBackend = false
-			websocketIp = Messages.TranslateSettings.Websocket_ip
-			websocketPort = Messages.TranslateSettings.Websocket_port
+			websocketIp = local.Websocket_ip
+			websocketPort = local.Websocket_port
 		}
 
 		err = json.Unmarshal(c.Data, &Messages.TranslateSettings)
 
 		if !runBackend {
+			Messages.TranslateSettings.Audio_api = local.Audio_api
+			Messages.TranslateSettings.Audio_input_device = local.Audio_input_device
+			Messages.TranslateSettings.Audio_input_process = local.Audio_input_process
+			Messages.TranslateSettings.Audio_input_process_id = local.Audio_input_process_id
+			Messages.TranslateSettings.Audio_output_device = local.Audio_output_device
+			Messages.TranslateSettings.Push_to_talk_key = local.Push_to_talk_key
 			Messages.TranslateSettings.Run_backend = runBackend
 			Messages.TranslateSettings.Websocket_ip = websocketIp
 			Messages.TranslateSettings.Websocket_port = websocketPort

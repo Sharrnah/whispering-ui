@@ -8,6 +8,7 @@ import (
 	"io"
 	"os"
 	"path/filepath"
+	"runtime"
 	"strings"
 	"time"
 )
@@ -117,12 +118,24 @@ func UnzipWithProgress(src, dest string, onProgress ExtractionProgress) error {
 		}
 
 		if f.FileInfo().IsDir() {
-			os.MkdirAll(path, f.Mode())
+			if err := os.MkdirAll(path, 0755); err != nil {
+				return err
+			}
 		} else {
-			os.MkdirAll(filepath.Dir(path), f.Mode())
+			if err := os.MkdirAll(filepath.Dir(path), 0755); err != nil {
+				return err
+			}
+			mode := f.Mode().Perm()
 			f, err := os.OpenFile(path, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, f.Mode())
 			if err != nil {
 				return err
+			}
+			// OpenFile does not update permissions on an existing file.
+			if runtime.GOOS != "windows" {
+				if err := f.Chmod(mode); err != nil {
+					_ = f.Close()
+					return err
+				}
 			}
 			defer func() {
 				if err := f.Close(); err != nil {

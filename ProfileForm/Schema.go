@@ -31,6 +31,13 @@ func DefaultDeviceOptions() []TVO {
 // intentionally hidden because upstream does not publish a managed binary;
 // the backend still accepts it for legacy/manual custom-runtime profiles.
 func AudioCppDeviceOptions(_ string) []TVO {
+	if runtime.GOOS == "linux" {
+		// The managed Linux runtime archives currently provide CPU and Vulkan.
+		return []TVO{
+			{Text: lang.L("CPU (most compatible, slower)"), Value: "cpu"},
+			{Text: lang.L("Vulkan (AMD / Intel recommended; NVIDIA supported)"), Value: "vulkan"},
+		}
+	}
 	if runtime.GOOS == "darwin" {
 		return []TVO{
 			{Text: lang.L("CPU (most compatible, slower)"), Value: "cpu"},

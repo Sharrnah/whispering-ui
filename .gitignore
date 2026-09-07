@@ -1,1 +1,3 @@
-﻿vendor
+vendor
+Build/
+fyne_metadata_init.go

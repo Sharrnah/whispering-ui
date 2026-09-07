@@ -131,6 +131,10 @@ func TestAudioCppDeviceOptionsAreBackendSpecific(t *testing.T) {
 		if !values["metal"] || values["cuda"] || values["vulkan"] || values["hip"] {
 			t.Fatalf("unexpected macOS audio.cpp devices: %#v", values)
 		}
+	} else if runtime.GOOS == "linux" {
+		if !values["vulkan"] || values["cuda"] || values["hip"] || values["metal"] {
+			t.Fatalf("unexpected managed Linux audio.cpp devices: %#v", values)
+		}
 	} else if !values["cuda"] || !values["vulkan"] || values["hip"] {
 		t.Fatalf("unexpected visible audio.cpp GPU backends: %#v", values)
 	}

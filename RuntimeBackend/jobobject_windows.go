@@ -9,6 +9,8 @@ import (
 	"golang.org/x/sys/windows"
 )
 
+func killBackendProcessGroup(_ int) {} // Windows uses the job object instead.
+
 func (c *WhisperProcessConfig) assignProcessToJobObject(pid int) error {
 	// Create Job if we haven’t already.
 	if c.jobObjectHandle == 0 {

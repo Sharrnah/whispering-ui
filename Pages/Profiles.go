@@ -856,7 +856,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		}
 
 		gpuDeviceInfo := Hardwareinfo.GetGPUCard()
-		if gpuDeviceInfo != nil {
+		if gpuDeviceInfo != nil && gpuDeviceInfo.Product != nil {
 			foundGPUAdapterName = gpuDeviceInfo.Product.Name
 		}
 		if Hardwareinfo.IsNVIDIACard(gpuDeviceInfo) {

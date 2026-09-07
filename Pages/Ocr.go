@@ -10,6 +10,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"golang.design/x/clipboard"
 	"log"
+	"runtime"
 	"strings"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Logging"
@@ -158,6 +159,11 @@ func CreateOcrWindow() fyne.CanvasObject {
 		sendMessage.SendMessage()
 	})
 	ocrButton.Importance = widget.HighImportance
+	if runtime.GOOS != "windows" && Settings.Config.Run_backend {
+		// Window capture is Windows-only. Image/clipboard OCR remains available.
+		ocrButton.Disable()
+		Fields.Field.OcrWindowCombo.Disable()
+	}
 
 	ocrClipboardButtonRow := widget.NewButtonWithIcon(lang.L("Clipboard Scan & Translate"), theme.ContentPasteIcon(), func() {
 		clipboardData, clipboardFormat := GetClipboardImage()

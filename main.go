@@ -11,9 +11,11 @@ import (
 	"strings"
 	"time"
 	"whispering-tiger-ui/Fields"
+	"whispering-tiger-ui/LocalPlugins"
 	"whispering-tiger-ui/Logging"
 	"whispering-tiger-ui/Pages"
 	"whispering-tiger-ui/Pages/Advanced"
+	"whispering-tiger-ui/RemoteAudioView"
 	"whispering-tiger-ui/Resources"
 	"whispering-tiger-ui/RuntimeBackend"
 	"whispering-tiger-ui/Settings"
@@ -79,6 +81,20 @@ func determineWindowsFont(fontsDir string) string {
 }
 
 func main() {
+	// Desktop launchers need not use the executable's directory as their cwd.
+	// Profiles, plugin paths and the backend share this portable application root.
+	if runtime.GOOS == "linux" && !Utilities.FileExists("audioWhisper.py") {
+		executable, err := os.Executable()
+		if err != nil {
+			panic(err)
+		}
+		if resolved, err := filepath.EvalSymlinks(executable); err == nil {
+			executable = resolved
+		}
+		if err := os.Chdir(filepath.Dir(executable)); err != nil {
+			panic(err)
+		}
+	}
 	// main application
 	val, ok := os.LookupEnv("WT_SCALE")
 	if ok {
@@ -99,15 +115,33 @@ func main() {
 
 	Utilities.AppVersion = a.Metadata().Version
 	Utilities.AppBuild = strconv.Itoa(a.Metadata().Build)
+	for _, arg := range os.Args[1:] {
+		if arg == "--version" {
+			fmt.Println(Utilities.AppVersion + "." + Utilities.AppBuild)
+			return
+		}
+	}
 
 	w := a.NewWindow("Whispering Tiger")
 	w.SetMaster()
 	w.CenterOnScreen()
+	for _, arg := range os.Args[1:] {
+		if arg == "--remote-client" {
+			content, closeClient := RemoteAudioView.Client(w)
+			w.SetContent(content)
+			w.SetOnClosed(closeClient)
+			w.Resize(fyne.NewSize(640, 720))
+			w.ShowAndRun()
+			return
+		}
+	}
 
 	// initialize global fields (so they can use initialized languages)
 	Fields.InitializeGlobalFields()
 
 	w.SetOnClosed(func() {
+		LocalPlugins.Close()
+		go RemoteAudioView.StopIntegrated()
 		fyne.CurrentApp().Preferences().SetFloat("MainWindowWidth", float64(w.Canvas().Size().Width))
 		fyne.CurrentApp().Preferences().SetFloat("MainWindowHeight", float64(w.Canvas().Size().Height))
 	})
@@ -150,8 +184,10 @@ func main() {
 		RuntimeBackend.BackendsList[0].AttachEnvironment("CT2_CUDA_ALLOW_FP16", "1")
 		RuntimeBackend.BackendsList[0].AttachEnvironment("HF_HUB_DISABLE_IMPLICIT_TOKEN", "1")
 
-		// AMD ROCm support (Todo: does this work with NVIDIA?)
-		RuntimeBackend.BackendsList[0].AttachEnvironment("HSA_OVERRIDE_GFX_VERSION", "10.3.0")
+		// Keep the existing Windows environment; Linux uses the user's GPU configuration.
+		if runtime.GOOS == "windows" {
+			RuntimeBackend.BackendsList[0].AttachEnvironment("HSA_OVERRIDE_GFX_VERSION", "10.3.0")
+		}
 
 		// RuntimeBackend.BackendsList[0].AttachEnvironment("PYTHONVERBOSE", "1")
 
@@ -226,9 +262,11 @@ func main() {
 				tab.Content.Refresh()
 			}
 			if tab.Text == lang.L("Plugins") {
-				tab.Content.(*container.Scroll).Content = Advanced.CreatePluginSettingsPage()
-				tab.Content.(*container.Scroll).Content.Refresh()
-				tab.Content.(*container.Scroll).Refresh()
+				if !Settings.Config.Run_backend {
+					LocalPlugins.Start()
+				}
+				tab.Content = Advanced.CreatePluginSettingsPage()
+				tab.Content.Refresh()
 			}
 			if tab.Text == lang.L("Advanced") {
 				// check if tab content is of type container.AppTabs
@@ -291,7 +329,7 @@ func main() {
 		if err == nil && exePath != "" {
 			exeDir := filepath.Dir(exePath)
 			// check if enough free space is available if no whisper executable is found
-			if !Utilities.FileExists("audioWhisper/audioWhisper.exe") && !Utilities.FileExists("audioWhisper.py") {
+			if !Utilities.BackendInstalled(".") {
 				checkFreeSpace(profileWindow, exeDir, minFreeSpace)
 			}
 
