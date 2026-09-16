@@ -1,0 +1,70 @@
+# Runs without a Windows compiler: fake Fyne reproduces its metadata increment.
+# Real Windows resource packaging is checked separately in Docker with MinGW.
+$ErrorActionPreference = 'Stop'
+$fixtureRoot = Join-Path ([IO.Path]::GetTempPath()) ('wt-package-test-' + [guid]::NewGuid().ToString('N'))
+$helper = Join-Path $PSScriptRoot 'package-windows.ps1'
+New-Item -ItemType Directory -Path (Join-Path $fixtureRoot 'BuildTools') -Force | Out-Null
+Copy-Item -LiteralPath $helper -Destination (Join-Path $fixtureRoot 'BuildTools/package-windows.ps1')
+$global:wtPackageCopies = @()
+$global:wtPackageFailure = $false
+function global:git {
+    $global:LASTEXITCODE = 0
+    if ($args -contains '--others') {
+        'new.go', 'Resources/new.txt', 'profile.yaml', 'old.zip'
+    } else {
+        'FyneApp.toml', 'main.go', 'deleted.go', 'app-icon.png', 'LICENSE', 'BuildTools/package-windows.ps1'
+    }
+}
+function global:fyne {
+    if (($args -join ' ') -ne 'package --release') { throw 'Unexpected Fyne command.' }
+    $global:wtPackageCopies += (Get-Location).Path
+    foreach ($required in @('FyneApp.toml', 'main.go', 'new.go', 'Resources/new.txt', 'app-icon.png', 'LICENSE')) {
+        if (-not (Test-Path -LiteralPath $required)) { throw "Missing source: $required" }
+    }
+    foreach ($excluded in @('profile.yaml', 'old.zip', 'deleted.go')) {
+        if (Test-Path -LiteralPath $excluded) { throw "Unexpected source: $excluded" }
+    }
+    $toml = Get-Content -LiteralPath 'FyneApp.toml' -Raw
+    Set-Content -LiteralPath 'Whispering Tiger.exe' -Value $toml -NoNewline
+    Set-Content -LiteralPath 'FyneApp.toml' -Value ($toml -replace 'Build = 1', 'Build = 2') -NoNewline
+    $global:LASTEXITCODE = if ($global:wtPackageFailure) { 23 } else { 0 }
+}
+try {
+    $toml = "[Details]`nVersion = `"1.3.11`"`nBuild = 1`n"
+    Set-Content -LiteralPath (Join-Path $fixtureRoot 'FyneApp.toml') -Value $toml -NoNewline
+    foreach ($name in @('main.go', 'new.go', 'app-icon.png', 'LICENSE', 'profile.yaml', 'old.zip')) {
+        Set-Content -LiteralPath (Join-Path $fixtureRoot $name) -Value $name
+    }
+    New-Item -ItemType Directory -Path (Join-Path $fixtureRoot 'Resources') | Out-Null
+    Set-Content -LiteralPath (Join-Path $fixtureRoot 'Resources/new.txt') -Value 'resource'
+    foreach ($fail in @($false, $false, $true)) {
+        $global:wtPackageFailure = $fail
+        $caught = $false
+        try {
+            & (Join-Path $fixtureRoot 'BuildTools/package-windows.ps1')
+        } catch {
+            if (-not $fail -or $_ -notmatch 'packaging failed \(23\)') { throw }
+            $caught = $true
+        }
+        if ($caught -ne $fail) { throw 'Build failure was not propagated.' }
+        foreach ($name in @('FyneApp.toml', 'Whispering Tiger.exe')) {
+            if ((Get-Content -LiteralPath (Join-Path $fixtureRoot $name) -Raw) -cne $toml) {
+                throw "Repeated/failed build changed the release version in $name"
+            }
+        }
+        foreach ($copy in $global:wtPackageCopies) {
+            if (Test-Path -LiteralPath $copy) { throw "Build copy was not cleaned: $copy" }
+        }
+    }
+    Write-Host 'PASS: source selection, repeated builds, stable version, failure propagation and temporary cleanup.'
+} finally {
+    Remove-Item Function:\git, Function:\fyne
+    $resolvedFixture = [IO.Path]::GetFullPath($fixtureRoot)
+    $tempPrefix = [IO.Path]::GetFullPath([IO.Path]::GetTempPath()).TrimEnd([IO.Path]::DirectorySeparatorChar) + [IO.Path]::DirectorySeparatorChar
+    if (-not $resolvedFixture.StartsWith($tempPrefix, [StringComparison]::OrdinalIgnoreCase) -or
+        (Split-Path -Leaf $resolvedFixture) -notmatch '^wt-package-test-[0-9a-f]{32}$') {
+        throw "Unexpected fixture path: $resolvedFixture"
+    }
+    Remove-Item -LiteralPath $resolvedFixture -Recurse -Force
+    Remove-Variable wtPackageCopies, wtPackageFailure -Scope Global
+}

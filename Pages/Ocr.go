@@ -1,6 +1,8 @@
 package Pages
 
 import (
+	"context"
+	"errors"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/lang"
@@ -57,12 +59,18 @@ func GetClipboardImage() ([]byte, clipboard.Format) {
 		return nil, -1
 	}
 
-	clipboardBinary = clipboard.Read(clipboard.FmtImage)
-	if clipboardBinary != nil {
+	clipboardBinary, err = clipboard.Read(context.Background(), clipboard.FmtImage)
+	if err != nil && !errors.Is(err, clipboard.ErrNoData) {
+		Logging.CaptureException(err)
+	}
+	if err == nil && clipboardBinary != nil {
 		return clipboardBinary, clipboard.FmtImage
 	}
-	clipboardBinary = clipboard.Read(clipboard.FmtText)
-	if clipboardBinary != nil {
+	clipboardBinary, err = clipboard.Read(context.Background(), clipboard.FmtText)
+	if err != nil && !errors.Is(err, clipboard.ErrNoData) {
+		Logging.CaptureException(err)
+	}
+	if err == nil && clipboardBinary != nil {
 		return clipboardBinary, clipboard.FmtText
 	}
 

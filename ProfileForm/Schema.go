@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 	"whispering-tiger-ui/CustomWidget"
+	"whispering-tiger-ui/Settings"
 	"whispering-tiger-ui/Utilities/Hardwareinfo"
 
 	"fyne.io/fyne/v2/lang"
@@ -52,6 +53,9 @@ func AudioCppDeviceOptions(_ string) []TVO {
 }
 
 func STTDeviceOptions(modelType string) []TVO {
+	if modelType == "vibevoice_asr" || modelType == "vibevoice_asr_streaming" {
+		return []TVO{{Text: lang.L("CPU (most compatible, slower)"), Value: "cpu"}, {Text: lang.L("CUDA (NVIDIA, recommended)"), Value: "cuda"}}
+	}
 	if modelType == "audio_cpp" {
 		return AudioCppDeviceOptions(modelType)
 	}
@@ -365,6 +369,8 @@ func STTModelOptions(modelType string) (options []TVO, defaultIndex int, enableS
 		return []TVO{{Text: "Tiny", Value: "tiny"}, {Text: "Tiny (English only)", Value: "tiny.en"}, {Text: "Base", Value: "base"}, {Text: "Base (English only)", Value: "base.en"}, {Text: "Small", Value: "small"}, {Text: "Small (English only)", Value: "small.en"}, {Text: "Medium", Value: "medium"}, {Text: "Medium (English only)", Value: "medium.en"}, {Text: "Large V1", Value: "large-v1"}, {Text: "Large V2", Value: "large-v2"}, {Text: "Large V3", Value: "large-v3"}, {Text: "Large V3 Turbo", Value: "large-v3-turbo"}, {Text: "Custom (Place in '.cache/whisper/custom' directory)", Value: "custom"}}, 0, true
 	case "transformer_whisper":
 		return []TVO{{Text: "Tiny", Value: "tiny"}, {Text: "Tiny (English only)", Value: "tiny.en"}, {Text: "Base", Value: "base"}, {Text: "Base (English only)", Value: "base.en"}, {Text: "Small", Value: "small"}, {Text: "Small (English only)", Value: "small.en"}, {Text: "Medium", Value: "medium"}, {Text: "Medium (English only)", Value: "medium.en"}, {Text: "Large V1", Value: "large-v1"}, {Text: "Large V2", Value: "large-v2"}, {Text: "Large V3", Value: "large-v3"}, {Text: "Large V3 Turbo", Value: "large-v3-turbo"}, {Text: "Custom (Place in '.cache/whisper-transformer/custom' directory)", Value: "custom"}}, 0, true
+	case "vibevoice_asr_streaming":
+		return []TVO{{Text: lang.L("VibeVoice-ASR-Streaming-1.5B"), Value: "VibeVoice-ASR-Streaming-1.5B"}, {Text: lang.L("VibeVoice-ASR-Streaming-7B"), Value: "VibeVoice-ASR-Streaming-7B"}, {Text: lang.L("Custom"), Value: "custom"}}, 0, true
 	case "qwen3_asr":
 		return []TVO{{Text: "Qwen3-ASR 0.6B (faster / lower memory)", Value: "Qwen3-ASR-0.6B-hf"}, {Text: "Qwen3-ASR 1.7B (best quality)", Value: "Qwen3-ASR-1.7B-hf"}, {Text: "Custom (Place in '.cache/qwen3-asr/custom' directory)", Value: "custom"}}, 0, true
 	case "audio_cpp":
@@ -393,7 +399,12 @@ func STTModelOptions(modelType string) (options []TVO, defaultIndex int, enableS
 	case "speech_t5":
 		return nil, 0, false
 	case "vibevoice_asr":
-		return nil, 0, false
+		return []TVO{
+			{Text: lang.L("VibeVoice-ASR-HF"), Value: "VibeVoice-ASR-HF"},
+			{Text: lang.L("VibeVoice-ASR-Streaming-1.5B"), Value: "VibeVoice-ASR-Streaming-1.5B"},
+			{Text: lang.L("VibeVoice-ASR-Streaming-7B"), Value: "VibeVoice-ASR-Streaming-7B"},
+			{Text: lang.L("Custom") + " (" + lang.L("Streaming") + ")", Value: "custom-streaming"},
+		}, 0, true
 	case "higgs_audio":
 		return []TVO{{Text: "Higgs Audio v3", Value: "higgs-audio-v3-stt"}}, 0, true
 	default:
@@ -409,6 +420,8 @@ func STTPrecisionOptions(modelType string) (options []TVO, enablePrecision bool)
 		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}, {Text: "float16 " + lang.L("Precision"), Value: "float16"}}, true
 	case "transformer_whisper", "wav2vec_bert", "mms", "voxtral":
 		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}, {Text: "float16 " + lang.L("Precision"), Value: "float16"}, {Text: "8bit " + lang.L("Precision"), Value: "8bit"}, {Text: "4bit " + lang.L("Precision"), Value: "4bit"}}, true
+	case "vibevoice_asr_streaming":
+		return []TVO{{Text: "bfloat16 " + lang.L("Precision"), Value: "bfloat16"}, {Text: "float32 " + lang.L("Precision"), Value: "float32"}}, true
 	case "qwen3_asr":
 		return []TVO{{Text: "float32 " + lang.L("Precision"), Value: "float32"}, {Text: "float16 " + lang.L("Precision"), Value: "float16"}, {Text: "bfloat16 " + lang.L("Precision") + " (Compute >=8.0)", Value: "bfloat16"}, {Text: "8bit " + lang.L("Precision"), Value: "8bit"}, {Text: "4bit " + lang.L("Precision"), Value: "4bit"}}, true
 	case "audio_cpp":
@@ -429,9 +442,11 @@ func STTPrecisionOptions(modelType string) (options []TVO, enablePrecision bool)
 	}
 }
 
-// STTPrecisionOptionsForModel narrows audio.cpp to the downloadable (or, for
-// Audio8, locally supplied) package variants for the selected ASR model.
+// STTPrecisionOptionsForModel applies the selected checkpoint/runtime capabilities.
 func STTPrecisionOptionsForModel(modelType, modelName string) (options []TVO, enablePrecision bool) {
+	if Settings.IsVibeVoiceStreaming(modelType, modelName) {
+		return STTPrecisionOptions("vibevoice_asr_streaming")
+	}
 	if modelType != "audio_cpp" {
 		return STTPrecisionOptions(modelType)
 	}

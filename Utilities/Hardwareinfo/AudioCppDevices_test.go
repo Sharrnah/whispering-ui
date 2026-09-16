@@ -2,8 +2,37 @@ package Hardwareinfo
 
 import (
 	"os"
+	"path/filepath"
+	"runtime"
 	"testing"
 )
+
+func TestFindBundledLinuxAudioCppServer(t *testing.T) {
+	if runtime.GOOS != "linux" || runtime.GOARCH != "amd64" {
+		t.Skip("Linux x86-64 bundle")
+	}
+	root := t.TempDir()
+	t.Chdir(root)
+	t.Setenv("WHISPERING_TIGER_AUDIOCPP_SERVER", "")
+	t.Setenv("AUDIOCPP_SERVER_PATH", "")
+	server := filepath.Join(root, "toolchain", "audio.cpp", "v0.7.1-linux-x86_64", "audiocpp_server")
+	if err := os.MkdirAll(filepath.Dir(server), 0755); err != nil {
+		t.Fatal(err)
+	}
+	if err := os.WriteFile(server, []byte("test"), 0755); err != nil {
+		t.Fatal(err)
+	}
+	paths, err := cachedAudioCppServers()
+	if err != nil {
+		t.Fatal(err)
+	}
+	for _, path := range paths {
+		if path == server {
+			return
+		}
+	}
+	t.Fatalf("bundled runtime missing from %v", paths)
+}
 
 func TestParseAudioCppDevices(t *testing.T) {
 	output := `ggml_vulkan: Found 2 Vulkan devices:

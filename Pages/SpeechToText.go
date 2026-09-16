@@ -144,7 +144,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		speechTaskWidgetLabel.SetText("")
 		speechTaskWidget.Hide()
 	}
-	if Settings.Config.Stt_type == "qwen3_asr" || Settings.Config.Stt_type == "audio_cpp" {
+	if Settings.Config.Stt_type == "qwen3_asr" || Settings.Config.Stt_type == "audio_cpp" || Settings.IsVibeVoiceStreaming(Settings.Config.Stt_type, Settings.Config.Model) {
 		speechTaskWidgetLabel.SetText("")
 		speechTaskWidget.(*CustomWidget.TextValueSelect).Selected = "transcribe"
 		Settings.Config.Whisper_task = "transcribe"
@@ -320,6 +320,9 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 	))
 
 	leftVerticalBottomLayout := container.New(layout.NewVBoxLayout())
+	if Settings.IsVibeVoiceStreaming(Settings.Config.Stt_type, Settings.Config.Model) {
+		additionalWidgets = buildVibeVoiceStreamingSettings()
+	}
 	if additionalWidgets != nil {
 		leftVerticalBottomLayout.Add(additionalWidgets)
 	}

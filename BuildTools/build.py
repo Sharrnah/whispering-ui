@@ -15,21 +15,17 @@ import tomllib
 import zipfile
 
 
-# Include these source additions before their first Git commit, too.
-NEW_SOURCES = (
-    "Updater/Platform.go", "Updater/Platform_test.go",
-    "Utilities/BackendPath.go", "Utilities/BackendPath_test.go",
-    "Utilities/Hardwareinfo/UnknownGPU_test.go",
-    "RuntimeBackend/process_group_linux_test.go",
-)
-
-
 def snapshot(source, destination):
     names = subprocess.check_output([
         "git", "-c", f"safe.directory={source}", "-C", str(source), "ls-files", "-z",
     ]).decode().split("\0")
-    names += list(NEW_SOURCES)
-    names += [str(p.relative_to(source)) for p in (source / "BuildTools").rglob("*") if p.is_file()]
+    # Build the current worktree, including new Go source and embedded resources
+    # before commit. Ignore generated builds, profiles and unrelated artifacts.
+    untracked = subprocess.check_output([
+        "git", "-c", f"safe.directory={source}", "-C", str(source),
+        "ls-files", "--others", "--exclude-standard", "-z",
+    ]).decode().split("\0")
+    names += [name for name in untracked if name.endswith(".go") or name.startswith(("Resources/", "BuildTools/"))]
     for name in sorted(set(names) - {""}):
         original = source / name
         if original.is_file():
@@ -117,15 +113,8 @@ def build(source, args):
         with zipfile.ZipFile(archive, "w", zipfile.ZIP_DEFLATED) as bundle:
             bundle.write(args.output, args.output.name)
             bundle.write(source / "LICENSE", "LICENSE")
-            bundle.write(info_path, info_path.name)
-            if args.target == "linux":
-                bundle.writestr("README-LINUX.txt", (
-                    "Extract into a writable folder and run the UI as your normal desktop user.\n"
-                    "Requires x86-64 Linux, glibc 2.36+, X11/XWayland, OpenGL, and PulseAudio/PipeWire-Pulse.\n"
-                    f"Backend package: ai_platform_linux_amd64_{args.flavor}.\n"
-                    + ("Release build: the UI can download the backend from the application's update feed.\n" if release else
-                       "Preview: updates disabled. Extract the matching backend ZIP beside this UI first.\n")
-                ))
+            if args.target != "linux":
+                bundle.write(info_path, info_path.name)
         outputs.append(archive)
     hashes = []
     for output in outputs:

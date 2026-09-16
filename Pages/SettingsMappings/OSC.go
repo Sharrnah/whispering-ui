@@ -117,6 +117,7 @@ var OSCSettingsMapping = SettingsMapping{
 					{Text: lang.L("osc_send.option.Full"), Value: "full"},
 					{Text: lang.L("osc_send.option.Full or Scroll"), Value: "full_or_scroll"},
 					{Text: lang.L("osc_send.option.Scroll"), Value: "scroll"},
+					{Text: lang.L("Rolling live chatbox"), Value: "rolling"},
 				}, func(s CustomWidget.TextValueOption) {}, 0)
 				return settingWidget
 			},

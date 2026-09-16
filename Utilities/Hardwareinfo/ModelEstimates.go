@@ -43,6 +43,10 @@ var Models = []AIModel{
 	{"Whisper", "transformer_whisper", "medium", 7634.0},
 	{"Whisper", "transformer_whisper", "large", 13702.0},
 	// Qwen3-ASR models (weights plus a practical inference overhead allowance)
+	{"Whisper", "vibevoice_asr", "vibevoice-asr-streaming-1.5b", 14000.0},
+	{"Whisper", "vibevoice_asr_streaming", "vibevoice-asr-streaming-1.5b", 14000.0},
+	{"Whisper", "vibevoice_asr", "vibevoice-asr-streaming-7b", 38000.0},
+	{"Whisper", "vibevoice_asr_streaming", "vibevoice-asr-streaming-7b", 38000.0},
 	{"Whisper", "qwen3_asr", "qwen3-asr-0.6b-hf", 4200.0},
 	{"Whisper", "qwen3_asr", "qwen3-asr-1.7b-hf", 10000.0},
 	// audio.cpp GGUF estimates use a float32-equivalent base so Q8_0 and F16

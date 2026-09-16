@@ -479,13 +479,16 @@ func (c *Coordinator) ApplySTTTypeChange(modelType string) {
 	c.promptMultiModalAdoption(modelType, groupSTT)
 }
 
-// RefreshSTTPrecisionForModel applies the package-level GGUF variants exposed
-// by audio.cpp. Most backends have one precision list for the whole type.
+// RefreshSTTPrecisionForModel reconciles model-specific runtime capabilities.
 func (c *Coordinator) RefreshSTTPrecisionForModel() {
-	if c == nil || c.Controls == nil || selectedValue(c.Controls.STTType) != "audio_cpp" || c.Controls.STTPrecision == nil {
+	if c == nil || c.Controls == nil || c.Controls.STTPrecision == nil {
 		return
 	}
-	options, enabled := STTPrecisionOptionsForModel("audio_cpp", selectedValue(c.Controls.STTModelSize))
+	modelType := selectedValue(c.Controls.STTType)
+	if modelType != "audio_cpp" && modelType != "vibevoice_asr" && modelType != "vibevoice_asr_streaming" {
+		return
+	}
+	options, enabled := STTPrecisionOptionsForModel(modelType, selectedValue(c.Controls.STTModelSize))
 	c.SetOptionsWithFallback(c.Controls.STTPrecision, options)
 	if !enabled || len(options) <= 1 {
 		if len(options) == 1 {

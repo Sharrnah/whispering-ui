@@ -107,6 +107,14 @@ func cachedAudioCppServers() ([]string, error) {
 	seen := make(map[string]bool)
 	workingDirectory, _ := os.Getwd()
 	executable, _ := os.Executable()
+	if runtime.GOOS == "linux" && runtime.GOARCH == "amd64" {
+		for _, root := range []string{workingDirectory, filepath.Dir(executable)} {
+			bundled, _ := filepath.Glob(filepath.Join(root, "toolchain", "audio.cpp", "v*-linux-x86_64", "audiocpp_server"))
+			for _, server := range bundled {
+				addAudioCppServerPath(&paths, seen, server)
+			}
+		}
+	}
 	roots := []string{
 		filepath.Join(workingDirectory, ".cache", "audio.cpp", "runtime"),
 		filepath.Join(workingDirectory, "audioWhisper", ".cache", "audio.cpp", "runtime"),

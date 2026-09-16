@@ -157,6 +157,12 @@ func (e *FormEngine) LoadFromSettings(conf *Settings.Conf) {
 		return
 	}
 
+	// Normalize a copy: saving the form persists the unified selection, while
+	// simply opening it leaves the caller's profile snapshot untouched.
+	profile := *conf
+	profile.Stt_type, profile.Model = Settings.CanonicalVibeVoiceSelection(profile.Stt_type, profile.Model)
+	conf = &profile
+
 	// Model type controls determine the valid model-size and precision option
 	// sets. Load them first in a deterministic order, then populate their
 	// dependent controls below. Iterating the bindings map directly could load
@@ -319,11 +325,11 @@ func (e *FormEngine) LoadFromSettings(conf *Settings.Conf) {
 		}
 	}
 
-	// The audio.cpp precision choices depend on the selected package, while
+	// Some precision choices depend on the selected model, while
 	// profile bindings are intentionally stored in a map. Reconcile once after
 	// every field has loaded so map iteration order cannot discard a valid
 	// saved package precision.
-	if e.Coord != nil && selectedValue(e.Controls.STTType) == "audio_cpp" {
+	if e.Coord != nil && (selectedValue(e.Controls.STTType) == "audio_cpp" || selectedValue(e.Controls.STTType) == "vibevoice_asr") {
 		e.Coord.RefreshSTTPrecisionForModel()
 		e.selectSetByValueOrText(e.Controls.STTPrecision, conf.Whisper_precision, "")
 	}

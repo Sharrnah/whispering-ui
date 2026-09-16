@@ -292,7 +292,7 @@ func TestRouteDialogHidesUnsupportedTaskAndEditsOSCIndependently(t *testing.T) {
 	if recognition.Objects[2].Visible() || recognition.Objects[3].Visible() || route.Whisper_task != "transcribe" {
 		t.Fatal("transcription-only model exposes a task or retains translate")
 	}
-	output := details.Items[2].Detail.(*fyne.Container)
+	output := details.Items[3].Detail.(*fyne.Container)
 	var transfer *CustomWidget.TextValueSelect
 	for _, object := range output.Objects {
 		if selection, ok := object.(*CustomWidget.TextValueSelect); ok && strings.Contains(selection.Name, "osc_transfer") {

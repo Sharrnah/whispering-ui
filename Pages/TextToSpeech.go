@@ -1,6 +1,7 @@
 package Pages
 
 import (
+	"context"
 	"errors"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -130,8 +131,11 @@ func GetClipboardText() string {
 	clipboardText := ""
 	err := clipboard.Init()
 	if err == nil {
-		clipboardBinary := clipboard.Read(clipboard.FmtText)
-		if clipboardBinary != nil {
+		clipboardBinary, err := clipboard.Read(context.Background(), clipboard.FmtText)
+		if err != nil && !errors.Is(err, clipboard.ErrNoData) {
+			Logging.CaptureException(err)
+		}
+		if err == nil && clipboardBinary != nil {
 			clipboardText = string(clipboardBinary)
 		}
 	}

@@ -41,6 +41,10 @@ func cloneAudioRoutes(routes []Settings.AdditionalAudioRoute) []Settings.Additio
 	cloned := append([]Settings.AdditionalAudioRoute(nil), routes...)
 	for index := range cloned {
 		cloned[index].Plugins = append([]string(nil), routes[index].Plugins...)
+		if routes[index].Osc_chat_limit != nil {
+			value := *routes[index].Osc_chat_limit
+			cloned[index].Osc_chat_limit = &value
+		}
 	}
 	return cloned
 }
@@ -139,7 +143,7 @@ func newPluginRouteCheck(label string, checked bool, changed func(bool)) *widget
 // Routes share the primary model, including its task capabilities.
 func routeSpeechTaskOptions(sttType, model string) []CustomWidget.TextValueOption {
 	switch sttType {
-	case "qwen3_asr", "audio_cpp", "wav2vec_bert", "mms", "vibevoice_asr", "higgs_audio", "", "seamless_m4t", "nemo_canary":
+	case "qwen3_asr", "audio_cpp", "wav2vec_bert", "mms", "vibevoice_asr", "vibevoice_asr_streaming", "higgs_audio", "", "seamless_m4t", "nemo_canary":
 		return nil
 	case "faster_whisper", "transformer_whisper", "original_whisper":
 		if strings.HasSuffix(strings.ToLower(model), "-turbo") {
@@ -661,6 +665,8 @@ func createAudioRouteDetails(
 	}
 	updateSmartTurnState()
 
+	liveDisplay := newLiveDisplaySelect("streaming_display_"+route.ID, route.Streaming_display_mode, true, func(value string) { route.Streaming_display_mode = value })
+	chatLimit := newStreamingChatLimit(route.Osc_chat_limit, true, func(value *int) { route.Osc_chat_limit = value })
 	updateOSCState := func() {
 		if route.Osc_enabled && (route.Osc_type_transfer == "both" || route.Osc_type_transfer == "both_inverted") {
 			oscSplit.Enable()
@@ -672,11 +678,13 @@ func createAudioRouteDetails(
 			oscChatNotification.Enable()
 			oscChatPrefix.Enable()
 			oscTransfer.Enable()
+			chatLimit.Enable()
 		} else {
 			oscTypingIndicator.Disable()
 			oscChatNotification.Disable()
 			oscChatPrefix.Disable()
 			oscTransfer.Disable()
+			chatLimit.Disable()
 		}
 	}
 	oscTransfer.OnChanged = func(option CustomWidget.TextValueOption) {
@@ -710,6 +718,9 @@ func createAudioRouteDetails(
 		widget.NewLabel(lang.L("Source Language")), sourceLanguage,
 		widget.NewLabel(lang.L("Target Language")), targetLanguage,
 		widget.NewLabel(lang.L("txt_romaji.Name")), romaji,
+	)
+	outputForm := container.New(
+		layout.NewFormLayout(),
 		widget.NewLabel(lang.L("Show Results in Whispering Tiger")), websocketEnabled,
 		widget.NewLabel(lang.L("Automatic OSC (VRChat)")), oscEnabled,
 		widget.NewLabel(lang.L("osc_type_transfer.Name")), oscTransfer,
@@ -717,7 +728,16 @@ func createAudioRouteDetails(
 		widget.NewLabel(lang.L("osc_chat_prefix.Name")), oscChatPrefix,
 		widget.NewLabel(lang.L("VRChat Typing Indicator")), oscTypingIndicator,
 		widget.NewLabel(lang.L("VRChat Notification Sound")), oscChatNotification,
+		widget.NewLabel(lang.L("Maximum chatbox length")), chatLimit,
 	)
+	if Settings.IsVibeVoiceStreaming(Settings.Config.Stt_type, Settings.Config.Model) {
+		outputForm.Add(widget.NewLabel(lang.L("Live text display")))
+		outputForm.Add(liveDisplay)
+		realtime.OnChanged = nil
+		realtime.SetChecked(true)
+		realtime.Disable()
+		realtimeFrequencySlider.Disable()
+	}
 	processingForm := container.New(
 		layout.NewFormLayout(),
 		widget.NewLabel(lang.L("vad_confidence_threshold.Name")), vadConfidence,
@@ -736,6 +756,7 @@ func createAudioRouteDetails(
 		widget.NewAccordionItem(lang.L("Audio Source"), sourceForm),
 		widget.NewAccordionItem(lang.L("Speech-to-Text"), recognitionForm),
 		widget.NewAccordionItem(lang.L("Text-Translate"), translationOutputForm),
+		widget.NewAccordionItem(lang.L("Outputs"), outputForm),
 		widget.NewAccordionItem(lang.L("Audio Processing"), processingForm),
 	)
 	details.Open(0)

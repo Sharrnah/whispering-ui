@@ -37,6 +37,13 @@ type MessageStruct struct {
 	TxtTranslationTarget string `json:"txt_translation_target,omitempty"`
 	AudioSourceID        string `json:"audio_source_id,omitempty"`
 	AudioSourceName      string `json:"audio_source_name,omitempty"`
+	Streaming            bool   `json:"streaming,omitempty"`
+	StreamID             string `json:"stream_id,omitempty"`
+	StreamRevision       int64  `json:"stream_revision,omitempty"`
+	Final                bool   `json:"final,omitempty"`
+	DisplayMode          string `json:"display_mode,omitempty"`
+	DisplayRevision      int64  `json:"display_revision,omitempty"`
+	DisplayDone          bool   `json:"display_done,omitempty"`
 
 	// only in case of text translate message
 	TranslateResult string `json:"translate_result,omitempty"`
@@ -148,6 +155,10 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		scope.SetTag("GoRoutine", "Websocket\\messageHandler->HandleReceiveMessage")
 	})
 	var err error = nil
+	if c.Streaming && (c.Type == "processing_data" || c.Type == "transcript" || c.Type == "streaming_caption") {
+		handleStreamingTranscript(*c)
+		return
+	}
 
 	switch c.Type {
 	case "error":
