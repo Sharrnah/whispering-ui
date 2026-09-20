@@ -58,6 +58,17 @@ var Models = []AIModel{
 	{"Whisper", "audio_cpp", "voxtral-mini-4b-realtime-2602-gguf", 24000.0},
 	{"Whisper", "audio_cpp", "audio8-asr-0.1b-gguf", 4000.0},
 	{"Whisper", "audio_cpp", "kroko-asr-english-64l-gguf", 1600.0},
+
+	// audio.cpp 0.8.1: rough package size plus work-buffer allowance, not measured peaks.
+	{"Whisper", "audio_cpp", "canary-180m-flash-gguf", 1250.0},
+	{"Whisper", "audio_cpp", "cohere-transcribe-gguf", 9950.0},
+	{"Whisper", "audio_cpp", "moonshine-streaming-tiny-gguf", 2300.0},
+	{"Whisper", "audio_cpp", "moonshine-streaming-small-gguf", 3200.0},
+	{"Whisper", "audio_cpp", "moonshine-streaming-medium-gguf", 3250.0},
+	{"Whisper", "audio_cpp", "niagara-19m-batch-english-gguf", 750.0},
+	{"Whisper", "audio_cpp", "niagara-38m-batch-english-gguf", 900.0},
+	{"Whisper", "audio_cpp", "moss-transcribe-diarize-gguf", 5550.0},
+	{"Whisper", "audio_cpp", "vibevoice-asr-streaming-7b-gguf", 41700.0},
 	// Speech T5
 	{"Whisper", "speech_t5", "", 927.0},
 	// Seamless M4T
@@ -141,6 +152,31 @@ var Models = []AIModel{
 	{"ttsType", "audio_cpp", "omnivoice-gguf", 8000.0},
 	{"ttsType", "audio_cpp", "voxcpm1-0.5b-gguf", 6000.0},
 	{"ttsType", "audio_cpp", "voxcpm2-gguf", 14000.0},
+	// audio.cpp 0.8.1: rough package size plus work-buffer allowance, not measured peaks.
+	{"ttsType", "audio_cpp", "breeze-tts-2-gguf", 23450.0},
+	{"ttsType", "audio_cpp", "chatterbox-turbo-gguf", 4700.0},
+	{"ttsType", "audio_cpp", "cosyvoice3-gguf", 12700.0},
+	{"ttsType", "audio_cpp", "kokoro-82m-gguf", 2750.0},
+	{"ttsType", "audio_cpp", "audio8-tts-preview-0.6b-gguf", 9550.0},
+	{"ttsType", "audio_cpp", "sanotts-heart-nano-gguf", 150.0},
+	{"ttsType", "audio_cpp", "sanotts-heart-gguf", 150.0},
+	{"ttsType", "audio_cpp", "sanotts-amy-gguf", 150.0},
+	{"ttsType", "audio_cpp", "sanotts-hfc-gguf", 150.0},
+	{"ttsType", "audio_cpp", "sanotts-kristin-gguf", 150.0},
+	{"ttsType", "audio_cpp", "sanotts-vi-gguf", 150.0},
+	{"ttsType", "audio_cpp", "sanotts-id-gguf", 150.0},
+	{"ttsType", "audio_cpp", "sanotts-cs-gguf", 150.0},
+	{"ttsType", "audio_cpp", "sanotts-de-gguf", 150.0},
+	{"ttsType", "audio_cpp", "sanotts-es-gguf", 150.0},
+	{"ttsType", "audio_cpp", "sanotts-fr-gguf", 150.0},
+	{"ttsType", "audio_cpp", "sanotts-it-gguf", 150.0},
+	{"ttsType", "audio_cpp", "sanotts-pt-gguf", 150.0},
+	{"ttsType", "audio_cpp", "sanotts-ro-gguf", 150.0},
+	{"ttsType", "audio_cpp", "sanotts-ru-gguf", 150.0},
+	{"ttsType", "audio_cpp", "sanotts-tr-gguf", 150.0},
+	{"ttsType", "audio_cpp", "sanotts-ne-gguf", 150.0},
+	{"ttsType", "audio_cpp", "sanotts-hi-gguf", 150.0},
+
 	// OCR types
 	{"ocrType", "easyocr", "", 520.0},
 	{"ocrType", "got_ocr_20", "", 1559.0},
@@ -171,7 +207,7 @@ func PrecisionMemoryFactor(precision string) float64 {
 		return Float16
 	case "int8_float16", "int8", "int8_bfloat16", "8bit", "q8_0":
 		return Bit8
-	case "4bit", "q4", "q4_k":
+	case "4bit", "q4", "q4_k", "q4_0":
 		return Bit4
 	default:
 		return Float32

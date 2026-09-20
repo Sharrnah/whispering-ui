@@ -88,6 +88,9 @@ func audioCppSTTChunkMode(defaultValue string) audioCppSTTField {
 }
 
 func audioCppSTTSchemaForModel(model string) (audioCppSTTSchema, bool) {
+	if schema, ok := additionalAudioCppSTTSchema(model); ok {
+		return schema, true
+	}
 	switch model {
 	case "Qwen3-ASR-0.6B-GGUF", "Qwen3-ASR-1.7B-GGUF":
 		size := "0.6B"

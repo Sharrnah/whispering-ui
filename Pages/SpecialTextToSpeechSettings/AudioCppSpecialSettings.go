@@ -136,6 +136,9 @@ func audioCppTTSAudioPath(key, label string) audioCppTTSField {
 }
 
 func audioCppTTSSchemaForModel(model string) (audioCppTTSSchema, bool) {
+	if schema, ok := additionalAudioCppTTSSchema(model); ok {
+		return schema, true
+	}
 	switch model {
 	case "Supertonic-3-GGUF":
 		return audioCppTTSSchema{

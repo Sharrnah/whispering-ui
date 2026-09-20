@@ -188,6 +188,9 @@ func TTSPrecisionOptionsForModel(modelType, modelName string) (options []TVO, en
 	if modelType != "audio_cpp" {
 		return TTSPrecisionOptions(modelType)
 	}
+	if model, ok := additionalAudioCppModel(audioCppAdditionalTTSModels, modelName); ok {
+		return audioCppPublishedPrecisions(model)
+	}
 	q8 := TVO{Text: "Q8_0 GGUF — recommended balance", Value: "q8_0"}
 	f16 := TVO{Text: "F16 GGUF — higher precision, more memory", Value: "f16"}
 	bf16 := TVO{Text: "BF16 GGUF — higher precision, more memory", Value: "bf16"}
@@ -234,6 +237,9 @@ func TTSModelOptions(modelType string) (options []TVO, defaultIndex int, enableM
 			"VoxCPM1-0.5B-GGUF",
 			"VoxCPM2-GGUF",
 		}
+		for _, model := range audioCppAdditionalTTSModels {
+			modelNames = append(modelNames, model.name)
+		}
 		options = make([]TVO, 0, len(modelNames))
 		for _, modelName := range modelNames {
 			group, _ := TTSModelProfileGroup(modelType, modelName)
@@ -254,6 +260,9 @@ func TTSModelProfileGroup(modelType, modelName string) (string, bool) {
 	if modelType != "audio_cpp" {
 		return "", false
 	}
+	if model, ok := additionalAudioCppModel(audioCppAdditionalTTSModels, modelName); ok {
+		return model.group, true
+	}
 	switch modelName {
 	case "Supertonic-3-GGUF", "MagpieTTS-Multilingual-357M-GGUF":
 		return "Preset voices", true
@@ -273,6 +282,9 @@ func TTSModelProfileGroup(modelType, modelName string) (string, bool) {
 
 func TTSModelDisplayText(modelType, modelGroup, modelName string) string {
 	if modelType == "audio_cpp" {
+		if _, ok := additionalAudioCppModel(audioCppAdditionalTTSModels, modelName); ok {
+			return lang.L(modelName) + " (" + audioCppAdditionalLanguages[modelName] + ")"
+		}
 		descriptions := map[string]string{
 			"Supertonic-3-GGUF":                "fastest; 31 languages; 10 preset voices",
 			"Confucius4-TTS-GGUF":              "experimental multilingual voice cloning; very large",
@@ -374,7 +386,7 @@ func STTModelOptions(modelType string) (options []TVO, defaultIndex int, enableS
 	case "qwen3_asr":
 		return []TVO{{Text: "Qwen3-ASR 0.6B (faster / lower memory)", Value: "Qwen3-ASR-0.6B-hf"}, {Text: "Qwen3-ASR 1.7B (best quality)", Value: "Qwen3-ASR-1.7B-hf"}, {Text: "Custom (Place in '.cache/qwen3-asr/custom' directory)", Value: "custom"}}, 0, true
 	case "audio_cpp":
-		return []TVO{
+		return append([]TVO{
 			{Text: "Qwen3-ASR 0.6B — recommended general multilingual model", Value: "Qwen3-ASR-0.6B-GGUF"},
 			{Text: "Qwen3-ASR 1.7B — higher accuracy, more memory", Value: "Qwen3-ASR-1.7B-GGUF"},
 			{Text: "Nemotron 3.5 ASR 0.6B — fastest streaming, 40 locales, timestamps", Value: "Nemotron-3.5-ASR-Streaming-0.6B-GGUF"},
@@ -382,7 +394,7 @@ func STTModelOptions(modelType string) (options []TVO, defaultIndex int, enableS
 			{Text: "Voxtral Realtime 4B — low-latency multilingual; no timestamps", Value: "Voxtral-Mini-4B-Realtime-2602-GGUF"},
 			{Text: "Audio8-ASR 0.1B — tiny local-only model; non-commercial license", Value: "Audio8-ASR-0.1B-GGUF"},
 			{Text: "Kroko ASR 64L — tiny English streaming model with timestamps", Value: "Kroko-ASR-English-64L-GGUF"},
-		}, 0, true
+		}, audioCppAdditionalSTTOptions()...), 0, true
 	case "medusa_whisper":
 		return []TVO{{Text: "V1", Value: "v1"}}, 0, true
 	case "seamless_m4t":
@@ -449,6 +461,9 @@ func STTPrecisionOptionsForModel(modelType, modelName string) (options []TVO, en
 	}
 	if modelType != "audio_cpp" {
 		return STTPrecisionOptions(modelType)
+	}
+	if model, ok := additionalAudioCppModel(audioCppAdditionalSTTModels, modelName); ok {
+		return audioCppPublishedPrecisions(model)
 	}
 	q4 := TVO{Text: "Q4_K GGUF — smallest and fastest", Value: "q4_k"}
 	q8 := TVO{Text: "Q8_0 GGUF — recommended balance", Value: "q8_0"}
