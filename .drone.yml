@@ -12,7 +12,7 @@ steps:
     commands:
       - sh BuildTools/install-deps.sh
       # Use pinned Go/Fyne modules. Tags must match FyneApp.toml's Version.Build.
-      - python3 BuildTools/build.py --target linux --flavor cu128 --test --package --release-if-tag --output dist/linux/whispering-tiger-linux-amd64-cu128
+      - python3 BuildTools/build.py --target linux --flavor cu128 --test --package --release-if-tag --output dist/linux/whispering-tiger-linux-amd64
       # Compile the Windows app and all tests on every build; tests do not run on Linux.
       # Windows release packaging via build.bat / fyne package remains supported.
       - python3 BuildTools/build.py --target windows --test --package --release-if-tag --output "dist/windows/Whispering Tiger.exe"

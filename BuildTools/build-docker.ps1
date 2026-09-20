@@ -14,7 +14,7 @@ function Invoke-DockerChecked {
 Invoke-DockerChecked build -t whispering-tiger-ui-builder:go1.26.5 -f (Join-Path $PSScriptRoot 'Dockerfile') $PSScriptRoot
 $targets = if ($Target -eq 'all') { @('linux', 'windows') } else { @($Target) }
 foreach ($platform in $targets) {
-    $binary = if ($platform -eq 'windows') { 'Whispering Tiger.exe' } else { "whispering-tiger-linux-amd64-$Flavor" }
+    $binary = if ($platform -eq 'windows') { 'Whispering Tiger.exe' } else { 'whispering-tiger-linux-amd64' }
     $buildArgs = @('--target', $platform, '--flavor', $Flavor, '--test', '--package', '--output', "/output/$platform/$binary")
     if ($Release) { $buildArgs += '--release' }
     Invoke-DockerChecked run --rm --init `
