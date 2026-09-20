@@ -80,7 +80,7 @@ func BuildAudio8TTSSpecialSettings() fyne.CanvasObject {
 		if resetting {
 			return
 		}
-		UpdateSpecialTTSSettings(settingsGroup, "precision", precisionSelect.GetSelected().Value)
+		UpdateTTSPrecision(settingsGroup, precisionSelect.GetSelected().Value)
 		UpdateSpecialTTSSettings(settingsGroup, "attention", attentionSelect.GetSelected().Value)
 		UpdateSpecialTTSSettings(settingsGroup, "clone_mode", cloneModeSelect.GetSelected().Value)
 		UpdateSpecialTTSSettings(settingsGroup, "reference_text", referenceTextInput.Text)

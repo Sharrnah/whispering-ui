@@ -12,6 +12,7 @@ import (
 	"strconv"
 	"strings"
 	"sync"
+	"sync/atomic"
 	"time"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Logging"
@@ -67,6 +68,7 @@ type CurrentPlaybackDevice struct {
 	applicationMeter           *Utilities.ApplicationAudioMeter
 	applicationMeterGeneration uint64
 	applicationMeterMu         sync.Mutex
+	inputMeterUsesPeak         atomic.Bool
 }
 
 // Context lifecycle overview:
@@ -99,6 +101,10 @@ func (c *CurrentPlaybackDevice) StopApplicationAudioMeter() {
 	if inputWaveWidget != nil {
 		fyne.Do(func() { inputWaveWidget.SetValue(0) })
 	}
+}
+
+func (c *CurrentPlaybackDevice) SetInputMeterUsesPeak(usePeak bool) {
+	c.inputMeterUsesPeak.Store(usePeak)
 }
 
 func (c *CurrentPlaybackDevice) StartApplicationAudioMeter(processID uint32, executable string) error {
@@ -407,7 +413,9 @@ func (c *CurrentPlaybackDevice) InitDevices(isPlayback bool) error {
 		testAudioMutex.Unlock()
 
 		if len(pInputSamples) > 0 {
-			currentVolume := s32AudioMeterLevel(pInputSamples)
+			currentVolume := s32SpeechTriggerMeterLevel(
+				pInputSamples, c.inputMeterUsesPeak.Load(),
+			)
 			fyne.Do(func() {
 				c.InputWaveWidget.SetValue(currentVolume)
 			})
@@ -764,7 +772,16 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		{Text: lang.L("CPU, Low Memory (<=8GB), Accuracy optimized"), Value: "CPU-LowPerformance-Accuracy"},
 	}, nil, 0)
 
-	playBackDevice := CurrentPlaybackDevice{}
+	inputWaveWidget := widget.NewProgressBar()
+	inputWaveWidget.Max = audioMeterMax
+	inputWaveWidget.TextFormatter = func() string { return "" }
+	outputWaveWidget := widget.NewProgressBar()
+	outputWaveWidget.Max = audioMeterMax
+	outputWaveWidget.TextFormatter = func() string { return "" }
+	playBackDevice := CurrentPlaybackDevice{
+		InputWaveWidget:  inputWaveWidget,
+		OutputWaveWidget: outputWaveWidget,
+	}
 
 	playBackDevice.AudioAPI = AudioAPI.AudioBackends[0].Backend
 	playBackDevice.StartContext()
@@ -797,14 +814,49 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 	totalGPUMemory := int64(0)
 	var ComputeCapability float32 = 0.0
 	HasNvidiaGPU := false
+	var detectedGPUOptions []PF.TVO
+	var detectedGPUOptionsMu sync.RWMutex
+	detectedNativeGPUOptions := make(map[string][]PF.TVO)
+	var detectedNativeGPUOptionsMu sync.RWMutex
+	cloneNativeGPUOptions := func(source map[string][]PF.TVO) map[string][]PF.TVO {
+		result := make(map[string][]PF.TVO, len(source))
+		for backend, entries := range source {
+			result[backend] = append([]PF.TVO(nil), entries...)
+		}
+		return result
+	}
 	// Declare coordinator pointer early so later async updates can access it
 	var coord *PF.Coordinator
 	go func() {
+		audioCppDevices, _ := Hardwareinfo.GetAudioCppDevices()
+		nativeOptions := PF.AudioCppGPUOptions(audioCppDevices, Hardwareinfo.GetGraphicsDevices())
+		detectedNativeGPUOptionsMu.Lock()
+		detectedNativeGPUOptions = cloneNativeGPUOptions(nativeOptions)
+		detectedNativeGPUOptionsMu.Unlock()
+		fyne.Do(func() {
+			if coord != nil {
+				coord.SetNativeGPUOptions(nativeOptions)
+			}
+		})
+	}()
+	go func() {
 		foundGPUVendorName := "Unknown"
 		foundGPUAdapterName := ""
+		cudaDevices, cudaDevicesErr := Hardwareinfo.GetCUDADevices()
+		if cudaDevicesErr == nil && len(cudaDevices) > 0 {
+			options := PF.CUDADeviceOptions(cudaDevices)
+			detectedGPUOptionsMu.Lock()
+			detectedGPUOptions = options
+			detectedGPUOptionsMu.Unlock()
+			foundGPUVendorName = "NVIDIA"
+			foundGPUAdapterName = cudaDevices[0].Name
+			totalGPUMemory = cudaDevices[0].MemoryTotalMiB
+			ComputeCapability = cudaDevices[0].ComputeCapability
+			HasNvidiaGPU = true
+		}
 
 		gpuDeviceInfo := Hardwareinfo.GetGPUCard()
-		if gpuDeviceInfo != nil {
+		if gpuDeviceInfo != nil && gpuDeviceInfo.Product != nil {
 			foundGPUAdapterName = gpuDeviceInfo.Product.Name
 		}
 		if Hardwareinfo.IsNVIDIACard(gpuDeviceInfo) {
@@ -834,7 +886,9 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		if strings.Contains(strings.ToLower(foundGPUVendorName), "nvidia") {
 			HasNvidiaGPU = true
 		}
-		ComputeCapability = Hardwareinfo.GetGPUComputeCapability()
+		if ComputeCapability == 0 {
+			ComputeCapability = Hardwareinfo.GetGPUComputeCapability()
+		}
 
 		Logging.ConfigureScope(sentry.CurrentHub(), func(scope *sentry.Scope) {
 			scope.SetTag("GPU Vendor", foundGPUVendorName)
@@ -856,6 +910,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		// so that later model changes can set the maximum value correctly
 		fyne.Do(func() {
 			if coord != nil {
+				detectedGPUOptionsMu.RLock()
+				options := append([]PF.TVO(nil), detectedGPUOptions...)
+				detectedGPUOptionsMu.RUnlock()
+				coord.SetGPUOptions(options)
 				coord.ComputeCapability = ComputeCapability
 				coord.TotalGPUMemoryMiB = totalGPUMemory
 				if GPUMemoryBar.Max <= 0 && totalGPUMemory > 0 {
@@ -887,7 +945,10 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 		// Rendering and control creation is done centrally in BuildAndRenderFullProfile
 		updatingAudioDeviceOptions := false
 
-		audioInputProgress := playBackDevice.InputWaveWidget
+		audioInputThresholdMeter := newAudioThresholdMeter(
+			playBackDevice.InputWaveWidget, Settings.Config.Energy,
+		)
+		audioInputProgress := audioInputThresholdMeter.CanvasObject()
 		audioOutputProgress := container.NewBorder(nil, nil, nil, widget.NewButtonWithIcon(lang.L("Test"), theme.MediaPlayIcon(), func() { playBackDevice.PlayStopTestAudio() }), playBackDevice.OutputWaveWidget)
 
 		// Define local handlers for deps
@@ -1104,12 +1165,16 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			OnAudioInputChanged:       onAudioInputChanged,
 			OnAudioApplicationChanged: onAudioApplicationChanged,
 			OnAudioOutputChanged:      onAudioOutputChanged,
-			OnDetectEnergy:            onDetectEnergy,
-			AfterDetectEnergy:         afterDetectEnergy,
-			CPUMemoryBar:              CPUMemoryBar,
-			GPUMemoryBar:              GPUMemoryBar,
-			TotalGPUMemory:            func() int64 { return totalGPUMemory },
-			HasNvidiaGPU:              func() bool { return HasNvidiaGPU },
+			OnEnergyChanged: func(value float64) {
+				audioInputThresholdMeter.SetThreshold(int(value))
+			},
+			OnVADEnabledChanged: playBackDevice.SetInputMeterUsesPeak,
+			OnDetectEnergy:      onDetectEnergy,
+			AfterDetectEnergy:   afterDetectEnergy,
+			CPUMemoryBar:        CPUMemoryBar,
+			GPUMemoryBar:        GPUMemoryBar,
+			TotalGPUMemory:      func() int64 { return totalGPUMemory },
+			HasNvidiaGPU:        func() bool { return HasNvidiaGPU },
 		}
 		controls = PF.BuildAndRenderFullProfile(profileForm, engine, deps)
 		if controls.AudioApplication != nil {
@@ -1129,6 +1194,14 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 			GPUMemoryBar:      GPUMemoryBar,
 			TotalGPUMemoryMiB: totalGPUMemory,
 		}
+		detectedGPUOptionsMu.RLock()
+		options := append([]PF.TVO(nil), detectedGPUOptions...)
+		detectedGPUOptionsMu.RUnlock()
+		coord.SetGPUOptions(options)
+		detectedNativeGPUOptionsMu.RLock()
+		nativeOptions := cloneNativeGPUOptions(detectedNativeGPUOptions)
+		detectedNativeGPUOptionsMu.RUnlock()
+		coord.SetNativeGPUOptions(nativeOptions)
 
 		// After initialization: if total GPU memory is already detected, set it directly
 		if totalGPUMemory > 0 {
@@ -1351,7 +1424,8 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 				AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 			}
 			if controls.TTSType != nil && controls.TTSType.GetSelected() != nil {
-				AIModel = PF.BuildProfileMemoryOption("ttsType", controls.TTSType.GetSelected().Value, nil, nil, controls.TTSDevice)
+				AIModel = PF.BuildProfileMemoryOption("ttsType", controls.TTSType.GetSelected().Value, controls.TTSModel, controls.TTSPrecision, controls.TTSDevice)
+				AIModel.Precision = Hardwareinfo.Float32
 				AIModel.CalculateMemoryConsumption(CPUMemoryBar, GPUMemoryBar, totalGPUMemory)
 			}
 			if controls.OCRType != nil && controls.OCRType.GetSelected() != nil {
@@ -1402,6 +1476,7 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 
 			// Generic save of all registered controls
 			engine.SaveToSettings(&profileSettings)
+			profileSettings.SyncTTSPrecisionCompatibility()
 
 			// update existing settings or create new one if it does not exist yet
 			if Utilities.FileExists(selectedProfilePath) {
@@ -1430,25 +1505,31 @@ func CreateProfileWindow(onClose func()) fyne.CanvasObject {
 					Phrase_time_limit: profileSettings.Phrase_time_limit,
 
 					Ai_device:         profileSettings.Ai_device,
+					Ai_device_index:   profileSettings.Ai_device_index,
 					Model:             profileSettings.Model,
 					Whisper_precision: profileSettings.Whisper_precision,
 					Stt_type:          profileSettings.Stt_type,
 
 					Denoise_audio: profileSettings.Denoise_audio,
 
-					Txt_translator_device:    profileSettings.Txt_translator_device,
-					Txt_translator_size:      profileSettings.Txt_translator_size,
-					Txt_translator_precision: profileSettings.Txt_translator_precision,
-					Txt_translator:           profileSettings.Txt_translator,
+					Txt_translator_device:       profileSettings.Txt_translator_device,
+					Txt_translator_device_index: profileSettings.Txt_translator_device_index,
+					Txt_translator_size:         profileSettings.Txt_translator_size,
+					Txt_translator_precision:    profileSettings.Txt_translator_precision,
+					Txt_translator:              profileSettings.Txt_translator,
 
-					Tts_type:      profileSettings.Tts_type,
-					Tts_ai_device: profileSettings.Tts_ai_device,
+					Tts_type:            profileSettings.Tts_type,
+					Tts_ai_device:       profileSettings.Tts_ai_device,
+					Tts_ai_device_index: profileSettings.Tts_ai_device_index,
+					Tts_model:           append([]string(nil), profileSettings.Tts_model...),
+					Tts_precision:       profileSettings.Tts_precision,
 
-					Osc_ip:        profileSettings.Osc_ip,
-					Osc_port:      profileSettings.Osc_port,
-					Ocr_type:      profileSettings.Ocr_type,
-					Ocr_ai_device: profileSettings.Ocr_ai_device,
-					Ocr_precision: profileSettings.Ocr_precision,
+					Osc_ip:              profileSettings.Osc_ip,
+					Osc_port:            profileSettings.Osc_port,
+					Ocr_type:            profileSettings.Ocr_type,
+					Ocr_ai_device:       profileSettings.Ocr_ai_device,
+					Ocr_ai_device_index: profileSettings.Ocr_ai_device_index,
+					Ocr_precision:       profileSettings.Ocr_precision,
 				}
 				newProfileEntry.Save(selectedProfilePath)
 			}

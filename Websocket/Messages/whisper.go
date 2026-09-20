@@ -10,6 +10,8 @@ type WhisperResult struct {
 	Language             string `json:"language"`
 	TxtTranslation       string `json:"txt_translation,omitempty"`
 	TxtTranslationTarget string `json:"txt_translation_target,omitempty"`
+	AudioSourceID        string `json:"audio_source_id,omitempty"`
+	AudioSourceName      string `json:"audio_source_name,omitempty"`
 }
 
 func (res WhisperResult) String() string {
@@ -21,6 +23,8 @@ func (res WhisperResult) Update() {
 		Language:             res.Language,
 		TxtTranslation:       res.TxtTranslation,
 		TxtTranslationTarget: res.TxtTranslationTarget,
+		AudioSourceID:        res.AudioSourceID,
+		AudioSourceName:      res.AudioSourceName,
 	}
 
 	// prepend to slice Fields.DataBindings.WhisperResultsData

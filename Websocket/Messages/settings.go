@@ -78,7 +78,7 @@ func (res TranslateSetting) Update() *TranslateSetting {
 
 	// Set SourceLanguageCombo
 	if strings.ToLower(Fields.Field.SourceLanguageCombo.Text) != strings.ToLower(InstalledLanguages.GetNameByCode(res.Src_lang)) {
-		if Fields.Field.SourceLanguageCombo.Text == "" {
+		if Fields.Field.SourceLanguageCombo.Text == "" || !res.Run_backend {
 			Fields.Field.SourceLanguageCombo.Text = cases.Title(language.English, cases.Compact).String(InstalledLanguages.GetNameByCode(res.Src_lang))
 		}
 	} else if Fields.Field.SourceLanguageCombo.Text == "" && strings.ToLower(res.Src_lang) == "auto" {
@@ -195,6 +195,9 @@ func (res TranslateSetting) Update() *TranslateSetting {
 	Fields.OscLimitHintUpdateFunc()
 
 	Settings.Config = res.Conf
+	if Fields.AudioRoutesRefresh != nil {
+		Fields.AudioRoutesRefresh()
+	}
 
 	return &res
 }

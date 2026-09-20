@@ -1,6 +1,7 @@
 package Pages
 
 import (
+	"context"
 	"errors"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
@@ -130,8 +131,11 @@ func GetClipboardText() string {
 	clipboardText := ""
 	err := clipboard.Init()
 	if err == nil {
-		clipboardBinary := clipboard.Read(clipboard.FmtText)
-		if clipboardBinary != nil {
+		clipboardBinary, err := clipboard.Read(context.Background(), clipboard.FmtText)
+		if err != nil && !errors.Is(err, clipboard.ErrNoData) {
+			Logging.CaptureException(err)
+		}
+		if err == nil && clipboardBinary != nil {
 			clipboardText = string(clipboardBinary)
 		}
 	}
@@ -230,7 +234,7 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 			sendMessage.SendMessage()
 			Fields.Field.TtsVoiceCombo.SetSelected("last")
 		})
-	case "f5_e2", "zonos", "zonos2", "kokoro", "chatterbox", "index_tts", "qwen3_tts", "audio8_tts", "maya1":
+	case "f5_e2", "zonos", "zonos2", "kokoro", "chatterbox", "index_tts", "qwen3_tts", "audio8_tts", "audio_cpp", "maya1":
 		saveRandomVoiceButton = widget.NewButtonWithIcon("", theme.ViewRefreshIcon(), func() {
 			sendMessage := SendMessageChannel.SendMessageStruct{
 				Type: "tts_voice_reload_req",
@@ -258,6 +262,9 @@ func CreateTextToSpeechWindow() fyne.CanvasObject {
 		}
 		if Settings.Config.Tts_type == "audio8_tts" {
 			advancedSettings = SpecialTextToSpeechSettings.BuildAudio8TTSSpecialSettings()
+		}
+		if Settings.Config.Tts_type == "audio_cpp" {
+			advancedSettings = SpecialTextToSpeechSettings.BuildAudioCppSpecialSettings()
 		}
 		if Settings.Config.Tts_type == "maya1" {
 			advancedSettings = SpecialTextToSpeechSettings.BuildMaya1SpecialSettings()

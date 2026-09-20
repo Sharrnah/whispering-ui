@@ -232,7 +232,7 @@ func BuildChatterboxSpecialSettings() fyne.CanvasObject {
 	updateSpecialTTSSettings := func() {
 		UpdateSpecialTTSSettings("tts_chatterbox", "language", languageSelect.GetCurrentValueOptionEntry().Value)
 		UpdateSpecialTTSSettings("tts_chatterbox", "streaming_mode", streamingModeSelect.GetSelected().Value)
-		UpdateSpecialTTSSettings("tts_chatterbox", "precision", precisionInput.GetSelected().Value)
+		UpdateTTSPrecision("tts_chatterbox", precisionInput.GetSelected().Value)
 
 		UpdateSpecialTTSSettings("tts_chatterbox", "seed", seedInput.Text)
 		UpdateSpecialTTSSettings("tts_chatterbox", "reload_every", reloadEverySlider.Value)

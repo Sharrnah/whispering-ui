@@ -5,39 +5,38 @@ go 1.26.0
 toolchain go1.26.5
 
 //https://github.com/Sharrnah/fyne/commits/feature/setting-preferred-language/
-replace fyne.io/fyne/v2 => github.com/Sharrnah/fyne/v2 v2.0.0-20260713182612-2d9ad19ff619
+replace fyne.io/fyne/v2 => github.com/Sharrnah/fyne/v2 v2.0.0-20260913230347-4912b1233c4e
 
 require (
-	fyne.io/fyne/v2 v2.8.0
+	fyne.io/fyne/v2 v2.8.1
 	github.com/dustin/go-humanize v1.0.1
-	github.com/ebitengine/oto/v3 v3.4.0
-	github.com/gen2brain/malgo v0.11.25
+	github.com/ebitengine/oto/v3 v3.5.0
+	github.com/gen2brain/malgo v0.11.26
 	github.com/gorilla/websocket v1.5.3
 	github.com/hashicorp/go-cleanhttp v0.5.2
 	github.com/jaypipes/ghw v0.25.0
 	github.com/jeandeaual/go-locale v0.0.0-20250612000132-0ef82f21eade
 	github.com/youpy/go-wav v0.3.2
-	golang.org/x/text v0.40.0
+	golang.org/x/text v0.42.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
-	github.com/getsentry/sentry-go v0.47.0
+	github.com/getsentry/sentry-go v0.49.0
 	github.com/hypebeast/go-osc v0.0.0-20220308234300-cec5a8a1e5f5
 	github.com/lunarhue/metallic-flock-zeroconf v0.0.0-20260625182204-ad9a6b660c6a
-	golang.design/x/clipboard v0.8.0
-	golang.org/x/sys v0.47.0
+	golang.design/x/clipboard v0.9.0
+	golang.org/x/sys v0.48.0
 )
 
 require (
-	fyne.io/systray v1.12.2 // indirect
+	fyne.io/systray v1.12.3-0.20260810170012-af4e8e793ec4 // indirect
 	github.com/BurntSushi/toml v1.6.0 // indirect
 	github.com/FyshOS/fancyfs v0.0.1 // indirect
 	github.com/anthonynsimon/bild v0.16.1 // indirect
 	github.com/clipperhouse/uax29/v2 v2.7.0 // indirect
 	github.com/davecgh/go-spew v1.1.2-0.20180830191138-d8f796af33cc // indirect
-	github.com/ebitengine/purego v0.10.1 // indirect
-	github.com/fredbi/uri v1.1.1 // indirect
+	github.com/ebitengine/purego v0.11.0 // indirect
 	github.com/fsnotify/fsnotify v1.10.1 // indirect
 	github.com/fyne-io/gl-js v0.2.1-0.20260315212741-029c47fd27e8 // indirect
 	github.com/fyne-io/glfw-js v0.4.0 // indirect
@@ -52,6 +51,7 @@ require (
 	github.com/hack-pad/go-indexeddb v0.3.2 // indirect
 	github.com/hack-pad/safejs v0.1.1 // indirect
 	github.com/jaypipes/pcidb v1.1.1 // indirect
+	github.com/jfreymuth/pulse v0.1.3 // indirect
 	github.com/jsummers/gobmp v0.0.0-20230614200233-a9de23ed2e25 // indirect
 	github.com/mattn/go-runewidth v0.0.24 // indirect
 	github.com/miekg/dns v1.1.72 // indirect
@@ -70,9 +70,9 @@ require (
 	golang.org/x/exp/shiny v0.0.0-20260709172345-9ea1abe57597 // indirect
 	golang.org/x/image v0.44.0 // indirect
 	golang.org/x/mobile v0.0.0-20260709172247-6129f5bee9d5 // indirect
-	golang.org/x/mod v0.38.0 // indirect
-	golang.org/x/net v0.57.0 // indirect
-	golang.org/x/sync v0.22.0 // indirect
-	golang.org/x/tools v0.48.0 // indirect
+	golang.org/x/mod v0.41.0 // indirect
+	golang.org/x/net v0.58.0 // indirect
+	golang.org/x/sync v0.23.0 // indirect
+	golang.org/x/tools v0.49.0 // indirect
 	howett.net/plist v1.0.2-0.20250314012144-ee69052608d9 // indirect
 )

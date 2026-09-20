@@ -4,9 +4,9 @@ import (
 	"errors"
 	"fmt"
 	"reflect"
-	"strings"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Pages/SettingsMappings"
+	"whispering-tiger-ui/Utilities"
 	"whispering-tiger-ui/Utilities/Hardwareinfo"
 
 	"fyne.io/fyne/v2"
@@ -41,18 +41,19 @@ func BuildDefaultProfileLayout() []RowSpec {
 	rows = append(rows,
 		RowSpec{Spacer: true},
 		RowSpec{Label: lang.L("Speech-to-Text Type"), ControlNames: []string{"STTType"}, Cols: 2},
-		RowSpec{Label: lang.L("A.I. Device for Speech-to-Text"), ControlNames: []string{"STTDevice"}, Cols: 1},
+		RowSpec{Label: lang.L("A.I. Device for Speech-to-Text"), ControlNames: []string{"STTDevice", "STTGPU"}, Cols: 2},
 		RowSpec{Label: lang.L("Speech-to-Text A.I. Size"), ControlNames: []string{"STTModelSize", "STTPrecision"}, Cols: 2},
 		RowSpec{Spacer: true},
 		RowSpec{Label: lang.L("Text-Translation Type"), ControlNames: []string{"TxtType"}, Cols: 2},
-		RowSpec{Label: lang.L("A.I. Device for Text-Translation"), ControlNames: []string{"TxtDevice"}, Cols: 1},
+		RowSpec{Label: lang.L("A.I. Device for Text-Translation"), ControlNames: []string{"TxtDevice", "TxtGPU"}, Cols: 2},
 		RowSpec{Label: lang.L("Text-Translation A.I. Size"), ControlNames: []string{"TxtSize", "TxtPrecision"}, Cols: 2},
 		RowSpec{Spacer: true},
 		RowSpec{Label: lang.L("Integrated Text-to-Speech"), ControlNames: []string{"TTSType"}, Cols: 2},
-		RowSpec{Label: lang.L("A.I. Device for Text-to-Speech"), ControlNames: []string{"TTSDevice"}, Cols: 1},
+		RowSpec{Label: lang.L("A.I. Device for Text-to-Speech"), ControlNames: []string{"TTSDevice", "TTSGPU"}, Cols: 2},
+		RowSpec{Label: lang.L("Text-to-Speech Model"), ControlNames: []string{"TTSModel", "TTSPrecision"}, Cols: 2},
 		RowSpec{Spacer: true},
 		RowSpec{Label: lang.L("Integrated Image-to-Text"), ControlNames: []string{"OCRType"}, Cols: 1},
-		RowSpec{Label: lang.L("A.I. Device for Image-to-Text"), ControlNames: []string{"OCRDevice", "OCRPrecision"}, Cols: 2},
+		RowSpec{Label: lang.L("A.I. Device for Image-to-Text"), ControlNames: []string{"OCRDevice", "OCRGPU", "OCRPrecision"}, Cols: 3},
 	)
 	return rows
 }
@@ -75,25 +76,26 @@ func BuildFullProfileLayout() []RowSpec {
 	)
 	rows = append(rows,
 		RowSpec{Label: lang.L("energy.Name"), Hint: lang.L("The volume level at which the speech detection will trigger. (0 = Disabled, useful for Push2Talk)"), CustomKey: "EnergyRow"},
-		RowSpec{Label: lang.L("denoise_audio.Name"), Hint: strings.Replace(lang.L("denoise_audio.Description"), "\n", " ", -1), ControlNames: []string{"DenoiseAudio"}, Cols: 1},
+		RowSpec{Label: lang.L("denoise_audio.Name"), CustomKey: "DenoiseRow"},
 		RowSpec{Label: lang.L("pause.Name"), Hint: lang.L("pause.Description"), CustomKey: "PauseRow"},
 		RowSpec{Label: lang.L("phrase_time_limit.Name"), Hint: lang.L("phrase_time_limit.Description"), CustomKey: "PhraseRow"},
 	)
 	rows = append(rows,
 		RowSpec{Spacer: true},
 		RowSpec{Label: lang.L("Speech-to-Text Type"), ControlNames: []string{"STTType"}, Cols: 2},
-		RowSpec{Label: lang.L("A.I. Device for Speech-to-Text"), ControlNames: []string{"STTDevice"}, Cols: 1},
+		RowSpec{Label: lang.L("A.I. Device for Speech-to-Text"), ControlNames: []string{"STTDevice", "STTGPU"}, Cols: 2},
 		RowSpec{Label: lang.L("Speech-to-Text A.I. Size"), ControlNames: []string{"STTModelSize", "STTPrecision"}, Cols: 2},
 		RowSpec{Spacer: true},
 		RowSpec{Label: lang.L("Text-Translation Type"), ControlNames: []string{"TxtType"}, Cols: 2},
-		RowSpec{Label: lang.L("A.I. Device for Text-Translation"), ControlNames: []string{"TxtDevice"}, Cols: 1},
+		RowSpec{Label: lang.L("A.I. Device for Text-Translation"), ControlNames: []string{"TxtDevice", "TxtGPU"}, Cols: 2},
 		RowSpec{Label: lang.L("Text-Translation A.I. Size"), ControlNames: []string{"TxtSize", "TxtPrecision"}, Cols: 2},
 		RowSpec{Spacer: true},
 		RowSpec{Label: lang.L("Integrated Text-to-Speech"), ControlNames: []string{"TTSType"}, Cols: 2},
-		RowSpec{Label: lang.L("A.I. Device for Text-to-Speech"), ControlNames: []string{"TTSDevice"}, Cols: 1},
+		RowSpec{Label: lang.L("A.I. Device for Text-to-Speech"), ControlNames: []string{"TTSDevice", "TTSGPU"}, Cols: 2},
+		RowSpec{Label: lang.L("Text-to-Speech Model"), ControlNames: []string{"TTSModel", "TTSPrecision"}, Cols: 2},
 		RowSpec{Spacer: true},
 		RowSpec{Label: lang.L("Integrated Image-to-Text"), ControlNames: []string{"OCRType"}, Cols: 1},
-		RowSpec{Label: lang.L("A.I. Device for Image-to-Text"), ControlNames: []string{"OCRDevice", "OCRPrecision"}, Cols: 2},
+		RowSpec{Label: lang.L("A.I. Device for Image-to-Text"), ControlNames: []string{"OCRDevice", "OCRGPU", "OCRPrecision"}, Cols: 3},
 	)
 	return rows
 }
@@ -108,12 +110,14 @@ type FullFormDeps struct {
 	OnAudioInputChanged       func(CustomWidget.TextValueOption)
 	OnAudioApplicationChanged func(CustomWidget.TextValueOption)
 	OnAudioOutputChanged      func(CustomWidget.TextValueOption)
+	OnEnergyChanged           func(float64)
 	OnDetectEnergy            func(apiValue, deviceIndexValue, deviceText string) (float64, error)
 	AfterDetectEnergy         func()
 	CPUMemoryBar              *widget.ProgressBar
 	GPUMemoryBar              *widget.ProgressBar
 	TotalGPUMemory            func() int64
 	HasNvidiaGPU              func() bool
+	OnVADEnabledChanged       func(bool)
 }
 
 func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullFormDeps) *AllProfileControls {
@@ -146,7 +150,7 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 		PushToTalkBlock fyne.CanvasObject
 	}{GroupRow: build.VADGroupRow, ConfidenceRow: build.VADConfidenceRow, PushToTalkBlock: build.VADPushToTalkBlock}
 
-	energyState := widget.NewLabel("0.0")
+	energyState := widget.NewLabel(Utilities.FormatEnergyThresholdDBFS(0, lang.L("Disabled")))
 	energySlider := widget.NewSlider(0, SettingsMappings.EnergySliderMax)
 	engine.Controls.Energy = energySlider
 	engine.Register("energy", energySlider)
@@ -187,6 +191,9 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 		}()
 	})
 	energyRow := container.NewBorder(nil, nil, nil, container.NewHBox(energyState, energyBtn), energySlider)
+	if deps.OnEnergyChanged != nil {
+		deps.OnEnergyChanged(energySlider.Value)
+	}
 
 	pauseState := widget.NewLabel("0.0")
 	pauseSlider := widget.NewSlider(0, 5)
@@ -205,13 +212,33 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 	denoiseSelect := CustomWidget.NewTextValueSelect("denoise_audio", []CustomWidget.TextValueOption{{Text: lang.L("Disabled"), Value: ""}, {Text: "Noise Reduce", Value: "noise_reduce"}, {Text: "DeepFilterNet", Value: "deepfilter"}}, func(_ CustomWidget.TextValueOption) {}, 0)
 	engine.Controls.DenoiseAudio = denoiseSelect
 	engine.Register("denoise_audio", denoiseSelect)
+	denoiseBeforeTrigger := widget.NewCheck(lang.L("denoise_audio_before_trigger.Name"), func(bool) {})
+	engine.Controls.DenoiseBeforeTrigger = denoiseBeforeTrigger
+	engine.Register("denoise_audio_before_trigger", denoiseBeforeTrigger)
+	denoiseInfo := widget.NewButtonWithIcon("", theme.InfoIcon(), func() {
+		app := fyne.CurrentApp()
+		if app == nil || app.Driver() == nil {
+			return
+		}
+		windows := app.Driver().AllWindows()
+		if len(windows) == 0 {
+			return
+		}
+		message := lang.L("denoise_audio.Description") + "\n\n" +
+			lang.L("denoise_audio_before_trigger.Name") + ":\n" +
+			lang.L("denoise_audio_before_trigger.Description")
+		dialog.ShowInformation(lang.L("denoise_audio.Name"), message, windows[len(windows)-1])
+	})
+	denoiseTriggerControl := container.NewBorder(nil, nil, nil, denoiseInfo, denoiseBeforeTrigger)
+	denoiseRow := container.NewGridWithColumns(2, denoiseSelect, denoiseTriggerControl)
 
 	stt := &struct {
 		TypeSelect      *CustomWidget.TextValueSelect
 		DeviceSelect    *CustomWidget.TextValueSelect
+		GPUSelect       *CustomWidget.TextValueSelect
 		PrecisionSelect *CustomWidget.TextValueSelect
 		SizeSelect      *CustomWidget.TextValueSelect
-	}{TypeSelect: engine.Controls.STTType, DeviceSelect: engine.Controls.STTDevice, PrecisionSelect: engine.Controls.STTPrecision, SizeSelect: engine.Controls.STTModelSize}
+	}{TypeSelect: engine.Controls.STTType, DeviceSelect: engine.Controls.STTDevice, GPUSelect: engine.Controls.STTGPU, PrecisionSelect: engine.Controls.STTPrecision, SizeSelect: engine.Controls.STTModelSize}
 	if stt.TypeSelect != nil {
 		stt.TypeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
 			if engine.Coord != nil && !engine.Coord.InProgrammaticUpdate {
@@ -219,6 +246,9 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 			}
 		}
 		stt.DeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+			if engine.Coord != nil {
+				engine.Coord.updateGPUSelectorState(stt.DeviceSelect, stt.GPUSelect)
+			}
 			total := int64(0)
 			if deps.TotalGPUMemory != nil {
 				total = deps.TotalGPUMemory()
@@ -237,32 +267,20 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 				}
 			}
 		}
-		stt.PrecisionSelect.OnChanged = func(s CustomWidget.TextValueOption) {
-			precisionType := Hardwareinfo.Float32
-			switch s.Value {
-			case "float32":
-				precisionType = Hardwareinfo.Float32
-			case "float16":
-				precisionType = Hardwareinfo.Float16
-			case "int32":
-				precisionType = Hardwareinfo.Int32
-			case "int16":
-				precisionType = Hardwareinfo.Int16
-			case "int8_float16", "int8", "int8_bfloat16":
-				precisionType = Hardwareinfo.Int8
-			case "bfloat16":
-				precisionType = Hardwareinfo.Float16
-			case "8bit":
-				precisionType = Hardwareinfo.Bit8
-			case "4bit":
-				precisionType = Hardwareinfo.Bit4
+		if stt.GPUSelect != nil {
+			stt.GPUSelect.OnChanged = func(CustomWidget.TextValueOption) {
+				if engine.Coord != nil && !engine.Coord.InProgrammaticUpdate {
+					engine.Coord.HandleMultiModalAllSync()
+				}
 			}
+		}
+		stt.PrecisionSelect.OnChanged = func(s CustomWidget.TextValueOption) {
 			total := int64(0)
 			if deps.TotalGPUMemory != nil {
 				total = deps.TotalGPUMemory()
 			}
 			AIModel := BuildProfileMemoryOption("Whisper", selectedValue(stt.TypeSelect), stt.SizeSelect, stt.PrecisionSelect, stt.DeviceSelect)
-			AIModel.Precision = precisionType
+			AIModel.Precision = Hardwareinfo.PrecisionMemoryFactor(s.Value)
 			AIModel.CalculateMemoryConsumption(deps.CPUMemoryBar, deps.GPUMemoryBar, total)
 			if engine.Coord != nil && stt.DeviceSelect.GetSelected() != nil {
 				engine.Coord.EnsurePrecisionDeviceCompatibility(stt.DeviceSelect.GetSelected().Value, s.Value)
@@ -272,6 +290,9 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 			}
 		}
 		stt.SizeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+			if engine.Coord != nil {
+				engine.Coord.RefreshSTTPrecisionForModel()
+			}
 			total := int64(0)
 			if deps.TotalGPUMemory != nil {
 				total = deps.TotalGPUMemory()
@@ -288,11 +309,15 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 	txt := &struct {
 		TypeSelect      *CustomWidget.TextValueSelect
 		DeviceSelect    *CustomWidget.TextValueSelect
+		GPUSelect       *CustomWidget.TextValueSelect
 		PrecisionSelect *CustomWidget.TextValueSelect
 		SizeSelect      *CustomWidget.TextValueSelect
-	}{TypeSelect: engine.Controls.TxtType, DeviceSelect: engine.Controls.TxtDevice, PrecisionSelect: engine.Controls.TxtPrecision, SizeSelect: engine.Controls.TxtSize}
+	}{TypeSelect: engine.Controls.TxtType, DeviceSelect: engine.Controls.TxtDevice, GPUSelect: engine.Controls.TxtGPU, PrecisionSelect: engine.Controls.TxtPrecision, SizeSelect: engine.Controls.TxtSize}
 	if txt.TypeSelect != nil {
 		txt.DeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+			if engine.Coord != nil {
+				engine.Coord.updateGPUSelectorState(txt.DeviceSelect, txt.GPUSelect)
+			}
 			if s.Value == "cuda" && deps.HasNvidiaGPU != nil && !deps.HasNvidiaGPU() && (engine.Coord == nil || !engine.Coord.InProgrammaticUpdate) {
 				dialog.ShowInformation(lang.L("No NVIDIA Card found"), lang.L("No NVIDIA Card found. You might need to use CPU instead for it to work."), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
@@ -318,6 +343,13 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 				}
 				engine.Coord.EnsurePrecisionDeviceCompatibility(s.Value, prec)
 				if !engine.Coord.InProgrammaticUpdate {
+					engine.Coord.HandleMultiModalAllSync()
+				}
+			}
+		}
+		if txt.GPUSelect != nil {
+			txt.GPUSelect.OnChanged = func(CustomWidget.TextValueOption) {
+				if engine.Coord != nil && !engine.Coord.InProgrammaticUpdate {
 					engine.Coord.HandleMultiModalAllSync()
 				}
 			}
@@ -377,9 +409,15 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 		}
 	}
 
-	tts := &struct{ TypeSelect, DeviceSelect *CustomWidget.TextValueSelect }{TypeSelect: engine.Controls.TTSType, DeviceSelect: engine.Controls.TTSDevice}
+	tts := &struct{ TypeSelect, DeviceSelect, GPUSelect, ModelSelect, PrecisionSelect *CustomWidget.TextValueSelect }{
+		TypeSelect: engine.Controls.TTSType, DeviceSelect: engine.Controls.TTSDevice,
+		GPUSelect: engine.Controls.TTSGPU, ModelSelect: engine.Controls.TTSModel, PrecisionSelect: engine.Controls.TTSPrecision,
+	}
 	if tts.DeviceSelect != nil {
 		tts.DeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+			if engine.Coord != nil {
+				engine.Coord.updateGPUSelectorState(tts.DeviceSelect, tts.GPUSelect)
+			}
 			if s.Value == "cuda" && deps.HasNvidiaGPU != nil && !deps.HasNvidiaGPU() && (engine.Coord == nil || !engine.Coord.InProgrammaticUpdate) {
 				dialog.ShowInformation(lang.L("No NVIDIA Card found"), lang.L("No NVIDIA Card found. You might need to use CPU instead for it to work."), fyne.CurrentApp().Driver().AllWindows()[1])
 			}
@@ -387,8 +425,48 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 			if deps.TotalGPUMemory != nil {
 				total = deps.TotalGPUMemory()
 			}
-			AIModel := BuildProfileMemoryOption("ttsType", selectedValue(tts.TypeSelect), nil, nil, tts.DeviceSelect)
+			AIModel := BuildProfileMemoryOption("ttsType", selectedValue(tts.TypeSelect), tts.ModelSelect, tts.PrecisionSelect, tts.DeviceSelect)
+			if selectedValue(tts.TypeSelect) != "audio_cpp" {
+				AIModel.Precision = Hardwareinfo.Float32
+			}
 			AIModel.Device = s.Value
+			AIModel.CalculateMemoryConsumption(deps.CPUMemoryBar, deps.GPUMemoryBar, total)
+		}
+	}
+	if tts.PrecisionSelect != nil {
+		tts.PrecisionSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+			total := int64(0)
+			if deps.TotalGPUMemory != nil {
+				total = deps.TotalGPUMemory()
+			}
+			AIModel := BuildProfileMemoryOption("ttsType", selectedValue(tts.TypeSelect), tts.ModelSelect, tts.PrecisionSelect, tts.DeviceSelect)
+			// TTS estimates are measured per engine and already reflect their
+			// supported/default dtype. audio.cpp is the exception because its
+			// package selector exposes materially different GGUF variants.
+			if selectedValue(tts.TypeSelect) != "audio_cpp" {
+				AIModel.Precision = Hardwareinfo.Float32
+			}
+			AIModel.CalculateMemoryConsumption(deps.CPUMemoryBar, deps.GPUMemoryBar, total)
+			if engine.Coord != nil && tts.DeviceSelect.GetSelected() != nil {
+				engine.Coord.EnsurePrecisionDeviceCompatibility(tts.DeviceSelect.GetSelected().Value, s.Value)
+			}
+		}
+	}
+	if tts.ModelSelect != nil {
+		tts.ModelSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+			if engine.Coord != nil {
+				engine.Coord.RefreshTTSPrecisionForModel()
+			}
+			total := int64(0)
+			if deps.TotalGPUMemory != nil {
+				total = deps.TotalGPUMemory()
+			}
+			AIModel := BuildProfileMemoryOption("ttsType", selectedValue(tts.TypeSelect), tts.ModelSelect, tts.PrecisionSelect, tts.DeviceSelect)
+			AIModel.AIModelSize = s.Value
+			// TTS estimates are measured for their actual supported dtype.
+			if selectedValue(tts.TypeSelect) != "audio_cpp" {
+				AIModel.Precision = Hardwareinfo.Float32
+			}
 			AIModel.CalculateMemoryConsumption(deps.CPUMemoryBar, deps.GPUMemoryBar, total)
 		}
 	}
@@ -400,7 +478,7 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 		}
 	}
 
-	ocr := &struct{ TypeSelect, DeviceSelect, PrecisionSelect *CustomWidget.TextValueSelect }{TypeSelect: engine.Controls.OCRType, DeviceSelect: engine.Controls.OCRDevice, PrecisionSelect: engine.Controls.OCRPrecision}
+	ocr := &struct{ TypeSelect, DeviceSelect, GPUSelect, PrecisionSelect *CustomWidget.TextValueSelect }{TypeSelect: engine.Controls.OCRType, DeviceSelect: engine.Controls.OCRDevice, GPUSelect: engine.Controls.OCRGPU, PrecisionSelect: engine.Controls.OCRPrecision}
 	if ocr.TypeSelect != nil {
 		ocr.TypeSelect.OnChanged = func(s CustomWidget.TextValueOption) {
 			if engine.Coord != nil && !engine.Coord.InProgrammaticUpdate {
@@ -410,6 +488,9 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 	}
 	if ocr.DeviceSelect != nil {
 		ocr.DeviceSelect.OnChanged = func(s CustomWidget.TextValueOption) {
+			if engine.Coord != nil {
+				engine.Coord.updateGPUSelectorState(ocr.DeviceSelect, ocr.GPUSelect)
+			}
 			total := int64(0)
 			if deps.TotalGPUMemory != nil {
 				total = deps.TotalGPUMemory()
@@ -417,6 +498,13 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 			AIModel := BuildProfileMemoryOption("ocrType", selectedValue(ocr.TypeSelect), nil, ocr.PrecisionSelect, ocr.DeviceSelect)
 			AIModel.Device = s.Value
 			AIModel.CalculateMemoryConsumption(deps.CPUMemoryBar, deps.GPUMemoryBar, total)
+		}
+	}
+	if ocr.GPUSelect != nil {
+		ocr.GPUSelect.OnChanged = func(CustomWidget.TextValueOption) {
+			if engine.Coord != nil && !engine.Coord.InProgrammaticUpdate {
+				engine.Coord.HandleMultiModalAllSync()
+			}
 		}
 	}
 	if ocr.PrecisionSelect != nil {
@@ -447,10 +535,13 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 
 	zeroEnergyInfo := dialog.NewError(errors.New(lang.L("You did set Speech volume level to 0 and have no PushToTalk Button set.This would prevent the app from recording anything.")), fyne.CurrentApp().Driver().AllWindows()[1])
 	energySlider.OnChanged = func(v float64) {
+		if deps.OnEnergyChanged != nil {
+			deps.OnEnergyChanged(v)
+		}
 		if v >= energySlider.Max {
 			energySlider.Max += 10
 		}
-		energyState.SetText(fmt.Sprintf("%.0f", v))
+		energyState.SetText(Utilities.FormatEnergyThresholdDBFS(v, lang.L("Disabled")))
 		if engine.Controls.PushToTalk.Text == "" && v == 0 {
 			energySlider.SetValue(1)
 			zeroEnergyInfo.Show()
@@ -466,10 +557,13 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 	}
 	phraseSlider.OnChanged = func(v float64) { phraseState.SetText(fmt.Sprintf("%.1f", v)) }
 
-	custom := map[string]fyne.CanvasObject{"AudioInputRow": build.AudioInputRow, "AudioInputProgress": deps.AudioInputProgress, "AudioOutputProgress": deps.AudioOutputProgress, "VADGroup": vadSection.GroupRow, "VADConfidence": vadSection.ConfidenceRow, "EnergyRow": energyRow, "PauseRow": pauseRow, "PhraseRow": phraseRow}
+	custom := map[string]fyne.CanvasObject{"AudioInputRow": build.AudioInputRow, "AudioInputProgress": deps.AudioInputProgress, "AudioOutputProgress": deps.AudioOutputProgress, "VADGroup": vadSection.GroupRow, "VADConfidence": vadSection.ConfidenceRow, "EnergyRow": energyRow, "DenoiseRow": denoiseRow, "PauseRow": pauseRow, "PhraseRow": phraseRow}
 	AppendProfileLayout(form, engine.Controls, BuildFullProfileLayout(), custom)
 
 	engine.Controls.VadEnable.OnChanged = func(b bool) {
+		if deps.OnVADEnabledChanged != nil {
+			deps.OnVADEnabledChanged(b)
+		}
 		if b {
 			pauseSlider.Min = 0.0
 			phraseSlider.Min = 0.0
@@ -496,6 +590,9 @@ func BuildAndRenderFullProfile(form *widget.Form, engine *FormEngine, deps FullF
 			pauseSlider.Min = 0.1
 			phraseSlider.Min = 0.1
 		}
+	}
+	if deps.OnVADEnabledChanged != nil {
+		deps.OnVADEnabledChanged(engine.Controls.VadEnable.Checked)
 	}
 
 	var pushToTalkChanged bool

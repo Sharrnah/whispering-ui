@@ -51,7 +51,7 @@ func BuildQwen3TTSSpecialSettings() fyne.CanvasObject {
 	precisionSelect := CustomWidget.NewTextValueSelect("qwen3_tts_precision", []CustomWidget.TextValueOption{
 		{Text: "Auto (recommended)", Value: "auto"},
 		{Text: "BFloat16", Value: "bfloat16"},
-		{Text: "Float16 request (safe BF16/FP32 fallback)", Value: "float16"},
+		{Text: lang.L("Float16 request (safe BF16/FP32 fallback)"), Value: "float16"},
 		{Text: "Float32", Value: "float32"},
 	}, nil, 0)
 	precisionSelect.SetSelected(GetSpecialSettingFallback(settingsGroup, "precision", "auto").(string))
@@ -165,7 +165,7 @@ func BuildQwen3TTSSpecialSettings() fyne.CanvasObject {
 			return
 		}
 		UpdateSpecialTTSSettings(settingsGroup, "language", languageSelect.GetSelected().Value)
-		UpdateSpecialTTSSettings(settingsGroup, "precision", precisionSelect.GetSelected().Value)
+		UpdateTTSPrecision(settingsGroup, precisionSelect.GetSelected().Value)
 		UpdateSpecialTTSSettings(settingsGroup, "attention", attentionSelect.GetSelected().Value)
 		UpdateSpecialTTSSettings(settingsGroup, "clone_mode", cloneModeSelect.GetSelected().Value)
 		UpdateSpecialTTSSettings(settingsGroup, "model_text_mode", textModeSelect.GetSelected().Value)

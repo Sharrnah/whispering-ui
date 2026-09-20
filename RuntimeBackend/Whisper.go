@@ -169,6 +169,7 @@ func (c *WhisperProcessConfig) stopProcess(proc *exec.Cmd, process *os.Process, 
 	closeJobObject(c) // kills the complete process tree on Windows; no-op elsewhere
 
 	if process != nil {
+		killBackendProcessGroup(process.Pid)
 		_ = process.Kill()
 		_ = process.Signal(syscall.SIGKILL)
 		_ = process.Signal(syscall.SIGTERM)
@@ -558,18 +559,16 @@ func (c *WhisperProcessConfig) Start() {
 		if Utilities.FileExists("audioWhisper.py") {
 			cmdArguments = append([]string{"-u", "audioWhisper.py"}, cmdArguments...)
 			err = c.RunWithStreams("python", cmdArguments, tmpReader, c.WriterBackend, c.WriterBackend)
-		} else if Utilities.FileExists("audioWhisper/audioWhisper.exe") {
-			err = c.RunWithStreams("audioWhisper/audioWhisper.exe", cmdArguments, tmpReader, c.WriterBackend, c.WriterBackend)
-		} else if Utilities.FileExists("audioWhisper/audioWhisper") { // Linux variant without file extension
-			err = c.RunWithStreams("audioWhisper/audioWhisper", cmdArguments, tmpReader, c.WriterBackend, c.WriterBackend)
+		} else if Utilities.FileExists(Utilities.BackendExecutable(".")) {
+			err = c.RunWithStreams(Utilities.BackendExecutable("."), cmdArguments, tmpReader, c.WriterBackend, c.WriterBackend)
 		} else if Utilities.FileExists("audioWhisper/audioWhisper.py") && Utilities.FileExists("audioWhisper/venv/Scripts/python.exe") {
 			c.AttachEnvironment("VIRTUAL_ENV", "audioWhisper/venv/")
 			cmdArguments = append([]string{"-u", "audioWhisper.py"}, cmdArguments...)
 			err = c.RunWithStreams("audioWhisper/venv/Scripts/python.exe", cmdArguments, tmpReader, c.WriterBackend, c.WriterBackend)
-		} else if Utilities.FileExists("audioWhisper/audioWhisper.py") && Utilities.FileExists("audioWhisper/venv/Scripts/python") { // Linux variant without file extension
+		} else if Utilities.FileExists("audioWhisper/audioWhisper.py") && Utilities.FileExists("audioWhisper/venv/bin/python") {
 			c.AttachEnvironment("VIRTUAL_ENV", "audioWhisper/venv/")
-			cmdArguments = append([]string{"-u", "audioWhisper.py"}, cmdArguments...)
-			err = c.RunWithStreams("audioWhisper/venv/Scripts/python", cmdArguments, tmpReader, c.WriterBackend, c.WriterBackend)
+			cmdArguments = append([]string{"-u", "audioWhisper/audioWhisper.py"}, cmdArguments...)
+			err = c.RunWithStreams("audioWhisper/venv/bin/python", cmdArguments, tmpReader, c.WriterBackend, c.WriterBackend)
 		} else {
 			err = errors.New("could not start audioWhisper")
 		}

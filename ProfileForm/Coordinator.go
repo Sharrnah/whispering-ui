@@ -1,6 +1,7 @@
 package ProfileForm
 
 import (
+	"fmt"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Utilities/Hardwareinfo"
 
@@ -21,6 +22,82 @@ type Coordinator struct {
 	InProgrammaticUpdate bool
 	SuppressPrompts      bool
 	MirrorLocked         map[string]bool
+	GPUOptions           []TVO
+	NativeGPUOptions     map[string][]TVO
+}
+
+func (c *Coordinator) SetGPUOptions(options []TVO) {
+	if c == nil {
+		return
+	}
+	c.GPUOptions = append([]TVO(nil), options...)
+	if c.Controls == nil {
+		return
+	}
+	c.updateGPUSelectorState(c.Controls.STTDevice, c.Controls.STTGPU)
+	c.updateGPUSelectorState(c.Controls.TxtDevice, c.Controls.TxtGPU)
+	c.updateGPUSelectorState(c.Controls.TTSDevice, c.Controls.TTSGPU)
+	c.updateGPUSelectorState(c.Controls.OCRDevice, c.Controls.OCRGPU)
+}
+
+func (c *Coordinator) SetNativeGPUOptions(options map[string][]TVO) {
+	if c == nil {
+		return
+	}
+	c.NativeGPUOptions = make(map[string][]TVO, len(options))
+	for backend, entries := range options {
+		c.NativeGPUOptions[backend] = append([]TVO(nil), entries...)
+	}
+	if c.Controls == nil {
+		return
+	}
+	c.updateGPUSelectorState(c.Controls.STTDevice, c.Controls.STTGPU)
+	c.updateGPUSelectorState(c.Controls.TTSDevice, c.Controls.TTSGPU)
+}
+
+func currentGPUFallback(gpuSelect *CustomWidget.TextValueSelect, nativeBackend bool) []TVO {
+	index := "0"
+	if current := gpuSelect.GetSelected(); current != nil && current.Value != "" {
+		index = current.Value
+	}
+	text := fmt.Sprintf("%s %s", lang.L("GPU"), index)
+	if nativeBackend {
+		text += " - " + lang.L("not detected by audio.cpp")
+	}
+	return []TVO{{
+		Text:  text,
+		Value: index,
+	}}
+}
+
+func (c *Coordinator) updateGPUSelectorState(deviceSelect, gpuSelect *CustomWidget.TextValueSelect) {
+	if gpuSelect == nil {
+		return
+	}
+	device := selectedValue(deviceSelect)
+	usesGPUIndex := device == "cuda" || device == "vulkan" || device == "hip" || device == "rocm" || device == "metal"
+	if deviceSelect != nil && !deviceSelect.Disabled() && usesGPUIndex {
+		var options []TVO
+		if device == "cuda" {
+			options = c.GPUOptions
+			if len(options) == 0 {
+				options = currentGPUFallback(gpuSelect, false)
+			}
+		} else {
+			nativeDevice := device
+			if nativeDevice == "rocm" {
+				nativeDevice = "hip"
+			}
+			options = c.NativeGPUOptions[nativeDevice]
+			if len(options) == 0 {
+				options = currentGPUFallback(gpuSelect, true)
+			}
+		}
+		c.SetOptionsWithFallback(gpuSelect, options)
+		gpuSelect.Enable()
+		return
+	}
+	gpuSelect.Disable()
 }
 
 func (c *Coordinator) getParentWindow() fyne.Window {
@@ -195,20 +272,23 @@ func (c *Coordinator) enableGroup(g string) {
 	switch g {
 	case groupSTT:
 		c.Enable(c.Controls.STTModelSize, c.Controls.STTPrecision, c.Controls.STTDevice)
+		c.updateGPUSelectorState(c.Controls.STTDevice, c.Controls.STTGPU)
 	case groupTXT:
 		c.Enable(c.Controls.TxtSize, c.Controls.TxtPrecision, c.Controls.TxtDevice)
+		c.updateGPUSelectorState(c.Controls.TxtDevice, c.Controls.TxtGPU)
 	case groupOCR:
 		c.Enable(c.Controls.OCRPrecision, c.Controls.OCRDevice)
+		c.updateGPUSelectorState(c.Controls.OCRDevice, c.Controls.OCRGPU)
 	}
 }
 func (c *Coordinator) disableGroup(g string) {
 	switch g {
 	case groupSTT:
-		c.Disable(c.Controls.STTModelSize, c.Controls.STTPrecision, c.Controls.STTDevice)
+		c.Disable(c.Controls.STTModelSize, c.Controls.STTPrecision, c.Controls.STTDevice, c.Controls.STTGPU)
 	case groupTXT:
-		c.Disable(c.Controls.TxtSize, c.Controls.TxtPrecision, c.Controls.TxtDevice)
+		c.Disable(c.Controls.TxtSize, c.Controls.TxtPrecision, c.Controls.TxtDevice, c.Controls.TxtGPU)
 	case groupOCR:
-		c.Disable(c.Controls.OCRPrecision, c.Controls.OCRDevice)
+		c.Disable(c.Controls.OCRPrecision, c.Controls.OCRDevice, c.Controls.OCRGPU)
 	}
 }
 
@@ -247,6 +327,26 @@ func (c *Coordinator) mirrorFromTo(controller, target string) {
 	}
 	if devSource != nil && devTarget != nil && devSource.GetSelected() != nil && devTarget.ContainsEntry(devSource.GetSelected(), CustomWidget.CompareValue) {
 		devTarget.SetSelected(devSource.GetSelected().Value)
+	}
+	var gpuSource, gpuTarget *CustomWidget.TextValueSelect
+	switch controller {
+	case groupSTT:
+		gpuSource = c.Controls.STTGPU
+	case groupTXT:
+		gpuSource = c.Controls.TxtGPU
+	case groupOCR:
+		gpuSource = c.Controls.OCRGPU
+	}
+	switch target {
+	case groupSTT:
+		gpuTarget = c.Controls.STTGPU
+	case groupTXT:
+		gpuTarget = c.Controls.TxtGPU
+	case groupOCR:
+		gpuTarget = c.Controls.OCRGPU
+	}
+	if gpuSource != nil && gpuTarget != nil && gpuSource.GetSelected() != nil && gpuTarget.ContainsEntry(gpuSource.GetSelected(), CustomWidget.CompareValue) {
+		gpuTarget.SetSelected(gpuSource.GetSelected().Value)
 	}
 	var precSource, precTarget *CustomWidget.TextValueSelect
 	switch controller {
@@ -368,13 +468,36 @@ func (c *Coordinator) ApplySTTTypeChange(modelType string) {
 		c.Controls.STTModelSize,
 		c.Controls.STTPrecision,
 		c.Controls.STTDevice,
+		c.Controls.STTGPU,
 		STTModelOptions,
 		STTPrecisionOptions,
-		nil, // default device options
+		STTDeviceOptions,
 		"Whisper",
 		false,
 	)
+	c.RefreshSTTPrecisionForModel()
 	c.promptMultiModalAdoption(modelType, groupSTT)
+}
+
+// RefreshSTTPrecisionForModel reconciles model-specific runtime capabilities.
+func (c *Coordinator) RefreshSTTPrecisionForModel() {
+	if c == nil || c.Controls == nil || c.Controls.STTPrecision == nil {
+		return
+	}
+	modelType := selectedValue(c.Controls.STTType)
+	if modelType != "audio_cpp" && modelType != "vibevoice_asr" && modelType != "vibevoice_asr_streaming" {
+		return
+	}
+	options, enabled := STTPrecisionOptionsForModel(modelType, selectedValue(c.Controls.STTModelSize))
+	c.SetOptionsWithFallback(c.Controls.STTPrecision, options)
+	if !enabled || len(options) <= 1 {
+		if len(options) == 1 {
+			c.Controls.STTPrecision.SetSelected(options[0].Value)
+		}
+		c.Controls.STTPrecision.Disable()
+	} else {
+		c.Controls.STTPrecision.Enable()
+	}
 }
 
 func (c *Coordinator) ApplyTXTTypeChange(modelType string) {
@@ -388,6 +511,7 @@ func (c *Coordinator) ApplyTXTTypeChange(modelType string) {
 		c.Controls.TxtSize,
 		c.Controls.TxtPrecision,
 		c.Controls.TxtDevice,
+		c.Controls.TxtGPU,
 		TXTSizeOptions,
 		TXTPrecisionOptions,
 		nil, // default device options
@@ -403,17 +527,46 @@ func (c *Coordinator) ApplyTTSTypeChange(modelType string) {
 	}
 	c.InProgrammaticUpdate = true
 	defer func() { c.InProgrammaticUpdate = false }()
+	// The remaining TTS engines populate their model choices from the running
+	// backend. While loading, Engine keeps their exact saved model visible as a
+	// read-only entry. On an interactive type change, clear that now-incompatible
+	// entry instead of showing a model belonging to the previous engine.
+	loadingSettings := c.IsLoadingSettings != nil && *c.IsLoadingSettings
+	if modelType != "audio_cpp" && !loadingSettings && c.Controls.TTSModel != nil {
+		c.Controls.TTSModel.SetValueOptions(nil)
+		c.Controls.TTSModel.ClearSelected()
+	}
 	c.applyTypeChangeGeneric(
 		modelType,
-		nil,
-		nil,
+		c.Controls.TTSModel,
+		c.Controls.TTSPrecision,
 		c.Controls.TTSDevice,
-		nil,
-		nil,
-		nil, // default device options
+		c.Controls.TTSGPU,
+		TTSModelOptions,
+		TTSPrecisionOptions,
+		TTSDeviceOptions,
 		"ttsType",
-		true, // fixed float32 precision for memory estimation
+		modelType != "audio_cpp", // native GGUF packages have model-specific sizes
 	)
+	c.RefreshTTSPrecisionForModel()
+}
+
+// RefreshTTSPrecisionForModel keeps the precision selector in lockstep with
+// the selected audio.cpp package (some models publish only one GGUF variant).
+func (c *Coordinator) RefreshTTSPrecisionForModel() {
+	if c == nil || c.Controls == nil || selectedValue(c.Controls.TTSType) != "audio_cpp" || c.Controls.TTSPrecision == nil {
+		return
+	}
+	options, enabled := TTSPrecisionOptionsForModel("audio_cpp", selectedValue(c.Controls.TTSModel))
+	c.SetOptionsWithFallback(c.Controls.TTSPrecision, options)
+	if !enabled || len(options) <= 1 {
+		if len(options) == 1 {
+			c.Controls.TTSPrecision.SetSelected(options[0].Value)
+		}
+		c.Controls.TTSPrecision.Disable()
+	} else {
+		c.Controls.TTSPrecision.Enable()
+	}
 }
 
 func (c *Coordinator) ApplyOCRTypeChange(modelType string) {
@@ -427,6 +580,7 @@ func (c *Coordinator) ApplyOCRTypeChange(modelType string) {
 		nil,
 		c.Controls.OCRPrecision,
 		c.Controls.OCRDevice,
+		c.Controls.OCRGPU,
 		nil,
 		OCRPrecisionOptions,
 		OCRDeviceOptions,
@@ -470,7 +624,7 @@ func BuildProfileMemoryOption(
 // applyTypeChangeGeneric centralizes option population, enable/disable logic, and memory estimation.
 func (c *Coordinator) applyTypeChangeGeneric(
 	modelType string,
-	sizeSel, precSel, devSel *CustomWidget.TextValueSelect,
+	sizeSel, precSel, devSel, gpuSel *CustomWidget.TextValueSelect,
 	getSizeOptions func(string) ([]TVO, int, bool),
 	getPrecisionOptions func(string) ([]TVO, bool),
 	getDeviceOptions func(string) []TVO,
@@ -487,6 +641,9 @@ func (c *Coordinator) applyTypeChangeGeneric(
 		}
 		if devSel != nil {
 			devSel.Disable()
+		}
+		if gpuSel != nil {
+			gpuSel.Disable()
 		}
 		AIModel := BuildProfileMemoryOption(aiModel, "-", sizeSel, precSel, devSel)
 		if setFixedFloat32Precision {
@@ -512,6 +669,9 @@ func (c *Coordinator) applyTypeChangeGeneric(
 		} else {
 			devSel.Enable()
 		}
+	}
+	if gpuSel != nil {
+		c.updateGPUSelectorState(devSel, gpuSel)
 	}
 
 	// Size options

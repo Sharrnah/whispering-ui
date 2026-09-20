@@ -4,88 +4,22 @@ type: kubernetes
 name: build
 
 steps:
-  - name: lint-test
-    image: golang:1.23.1
+  - name: test-and-build-desktop
+    image: golang:1.26.5-bookworm
     environment:
       CGO_ENABLED: 1
+      GOTOOLCHAIN: local
     commands:
-      - TEST_RESULT=$(gofmt -l ./)
-      - printf "Test Result:\n"
-      - echo "$${TEST_RESULT}"
-      - test -z $${TEST_RESULT}
-
-  - name: build-fyne-cli
-    image: golang:1.23.1-bookworm
-    #image: fyneio/fyne-cross-images:linux
-    environment:
-      CGO_ENABLED: 1
-      CC: "gcc"
-      GOOS: linux
-      GOARCH: amd64
-      GOBIN: /drone/src/bin/
-    commands:
-      - mkdir -p mkdir -p /drone/src/dist/
-      - apt-get update
-      - apt-get install -y -q gcc build-essential libgl1-mesa-dev xorg-dev libfuse2
-      - go get fyne.io/fyne/v2@latest
-      - go install fyne.io/fyne/v2/cmd/fyne@latest
-    when:
-      status:
-        - success
-      event:
-        - tag
-    depends_on:
-      - lint-test
-
-#  - name: build-windows
-#    image: golang:1.23.1-bookworm
-#    #image: fyneio/fyne-cross-images:windows
-#    environment:
-#      CGO_ENABLED: 1
-#      CC: "x86_64-w64-mingw32-gcc"
-#      GOOS: windows
-#      GOARCH: amd64
-#      GOBIN: /drone/src/bin/
-#    commands:
-#      - mkdir -p /drone/src/dist/
-#      - apt-get update
-#      - apt-get install -y -q --no-install-recommends gcc build-essential libgl1-mesa-dev xorg-dev libfuse2 mingw-w64
-#      - $$GOBIN/fyne package --release --executable "/drone/src/dist/windows/Whispering Tiger.exe"
-#    when:
-#      status:
-#        - success
-#      event:
-#        - tag
-#    depends_on:
-#      - build-fyne-cli
-
-  - name: build-linux
-    image: golang:1.23.1-bookworm
-    #image: fyneio/fyne-cross-images:linux
-    environment:
-      CGO_ENABLED: 1
-      CC: "gcc"
-      GOOS: linux
-      GOARCH: amd64
-      GOBIN: /drone/src/bin/
-    commands:
-      - mkdir -p mkdir -p /drone/src/dist/
-      - apt-get update
-      - apt-get install -y -q gcc build-essential libgl1-mesa-dev xorg-dev libfuse2
-      - $$GOBIN/fyne package --release
-      - ls -lah /drone/src/
-    when:
-      status:
-        - success
-      event:
-        - tag
-    depends_on:
-      - build-fyne-cli
+      - sh BuildTools/install-deps.sh
+      # Use pinned Go/Fyne modules. Tags must match FyneApp.toml's Version.Build.
+      - python3 BuildTools/build.py --target linux --flavor cu128 --test --package --release-if-tag --output dist/linux/whispering-tiger-linux-amd64-cu128
+      # Compile the Windows app and all tests on every build; tests do not run on Linux.
+      # Windows release packaging via build.bat / fyne package remains supported.
+      - python3 BuildTools/build.py --target windows --test --package --release-if-tag --output "dist/windows/Whispering Tiger.exe"
 
   - name: upload-build-s3
     image: minio/mc
     environment:
-      SRCDIR: /drone/src
       MINIO_HOST:
         from_secret: s3-endpoint-s3
       MINIO_ACCESS_KEY:
@@ -93,48 +27,31 @@ steps:
       MINIO_SECRET_KEY:
         from_secret: s3-secret-key-s3
     commands:
-      - mc alias set s3_alias $${MINIO_HOST} $${MINIO_ACCESS_KEY} $${MINIO_SECRET_KEY}
-      - DIST_DIR="./dist"
-      #- mc cp "$${SRCDIR}/Whispering Tiger.exe" s3_alias/projects/whispering-ui/
-      - mc cp "$${SRCDIR}/Whispering Tiger.tar.xz" s3_alias/projects/whispering-ui/
+      - mc alias set s3_alias "$${MINIO_HOST}" "$${MINIO_ACCESS_KEY}" "$${MINIO_SECRET_KEY}"
+      - mc cp dist/linux/*.zip s3_alias/projects/whispering-ui/
+      - mc cp dist/linux/SHA256SUMS "s3_alias/projects/whispering-ui/$${DRONE_TAG#v}-linux-amd64-cu128.SHA256SUMS"
     when:
       event:
         - tag
     depends_on:
-      #- build-windows
-      - build-linux
-
-#  - name: git-release-windows
-#    image: plugins/gitea-release
-#    settings:
-#      api_key:
-#        from_secret: docker_password
-#      base_url: ${DRONE_REPO_LINK}
-#      files: "/drone/src/dist/Whispering Tiger.exe"
-#    when:
-#      event:
-#        - tag
-#    depends_on:
-#      - build-windows
+      - test-and-build-desktop
 
   - name: git-release-linux
     image: plugins/gitea-release
-    #image: woodpeckerci/plugin-release
     settings:
       api_key:
         from_secret: docker_password
-      base_url: ${DRONE_REPO_LINK}
+      base_url: ${DRONE_REPO_LINK%/*/*}
       files:
-        - '/drone/src/Whispering Tiger.tar.xz'
+        - dist/linux/*.zip
+        - dist/linux/SHA256SUMS
     when:
       event:
         - tag
     depends_on:
-      - build-linux
+      - test-and-build-desktop
 
 trigger:
-  #  event:
-  #    - push
   ref:
     exclude:
       - refs/pipelines/*

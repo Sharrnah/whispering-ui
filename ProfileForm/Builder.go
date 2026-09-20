@@ -2,6 +2,7 @@ package ProfileForm
 
 import (
 	"fmt"
+	"runtime"
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Utilities/AudioAPI"
 
@@ -94,6 +95,9 @@ func (b *ProfileBuilder) BuildAll(engine *FormEngine, inputOptions, applicationO
 	vadRealtime := b.newCheck(engine, "realtime", lang.L("Realtime"))
 	pushToTalk := CustomWidget.NewHotKeyEntry()
 	pushToTalk.PlaceHolder = lang.L("Keypress")
+	if runtime.GOOS == "linux" {
+		pushToTalk.Disable()
+	}
 	pushToTalkBlock := container.NewBorder(nil, nil, container.NewHBox(widget.NewLabel(lang.L("Push to Talk")), widget.NewIcon(theme.ComputerIcon())), nil, pushToTalk)
 	vadGroup := container.NewGridWithColumns(4, vadEnable, vadOnFullClip, vadRealtime, vadSmartTurn, pushToTalkBlock)
 	confSlider, confLabel, confRow := b.sliderWithLabel(engine, "vad_confidence_threshold", 0, 1, 0.01)
@@ -104,31 +108,37 @@ func (b *ProfileBuilder) BuildAll(engine *FormEngine, inputOptions, applicationO
 
 	// STT
 	sttDevice := b.newSelect(engine, "ai_device", DefaultDeviceOptions())
+	sttGPU := b.newSelect(engine, "ai_device_index", DefaultGPUOptions())
 	sttPrecision := b.newSelect(engine, "precision", GenericWhisperPrecisionOptions())
 	sttType := b.newSelect(engine, "stt_type", STTTypeOptions())
 	sttOpts, _, _ := STTModelOptions("faster_whisper")
 	sttModel := b.newSelect(engine, "model", sttOpts)
-	engine.Controls.STTDevice, engine.Controls.STTPrecision, engine.Controls.STTType, engine.Controls.STTModelSize = sttDevice, sttPrecision, sttType, sttModel
+	engine.Controls.STTDevice, engine.Controls.STTGPU, engine.Controls.STTPrecision, engine.Controls.STTType, engine.Controls.STTModelSize = sttDevice, sttGPU, sttPrecision, sttType, sttModel
 	engine.Register("whisper_precision", sttPrecision)
 
 	// TXT
 	txtType := b.newSelect(engine, "txt_translator", TXTTypeOptions())
 	txtDevice := b.newSelect(engine, "txt_translator_device", DefaultDeviceOptions())
+	txtGPU := b.newSelect(engine, "txt_translator_device_index", DefaultGPUOptions())
 	sOpts, _, _ := TXTSizeOptions("NLLB200_CT2")
 	txtSize := b.newSelect(engine, "txt_translator_size", sOpts)
 	txtPrecision := b.newSelect(engine, "txt_translator_precision", GenericTextPrecisionOptions())
-	engine.Controls.TxtType, engine.Controls.TxtDevice, engine.Controls.TxtSize, engine.Controls.TxtPrecision = txtType, txtDevice, txtSize, txtPrecision
+	engine.Controls.TxtType, engine.Controls.TxtDevice, engine.Controls.TxtGPU, engine.Controls.TxtSize, engine.Controls.TxtPrecision = txtType, txtDevice, txtGPU, txtSize, txtPrecision
 
 	// TTS
 	ttsType := b.newSelect(engine, "tts_type", TTSTypeOptions())
 	ttsDevice := b.newSelect(engine, "tts_ai_device", DefaultDeviceOptions())
-	engine.Controls.TTSType, engine.Controls.TTSDevice = ttsType, ttsDevice
+	ttsGPU := b.newSelect(engine, "tts_ai_device_index", DefaultGPUOptions())
+	ttsModel := b.newSelect(engine, "tts_model", nil)
+	ttsPrecision := b.newSelect(engine, "tts_precision", GenericTTSPrecisionOptions())
+	engine.Controls.TTSType, engine.Controls.TTSDevice, engine.Controls.TTSGPU, engine.Controls.TTSModel, engine.Controls.TTSPrecision = ttsType, ttsDevice, ttsGPU, ttsModel, ttsPrecision
 
 	// OCR
 	ocrType := b.newSelect(engine, "ocr_type", OcrTypeOptions())
 	ocrDevice := b.newSelect(engine, "ocr_ai_device", DefaultDeviceOptions())
+	ocrGPU := b.newSelect(engine, "ocr_ai_device_index", DefaultGPUOptions())
 	ocrPrecision := b.newSelect(engine, "ocr_precision", GenericOcrPrecisionOptions())
-	engine.Controls.OCRType, engine.Controls.OCRDevice, engine.Controls.OCRPrecision = ocrType, ocrDevice, ocrPrecision
+	engine.Controls.OCRType, engine.Controls.OCRDevice, engine.Controls.OCRGPU, engine.Controls.OCRPrecision = ocrType, ocrDevice, ocrGPU, ocrPrecision
 
 	return &BuildResult{AudioInputRow: audioInputRow, VADGroupRow: vadGroup, VADConfidenceRow: confRow, VADPushToTalkBlock: pushToTalkBlock}
 }

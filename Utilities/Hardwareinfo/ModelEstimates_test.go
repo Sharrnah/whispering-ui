@@ -112,6 +112,8 @@ func TestPrecisionMemoryFactor(t *testing.T) {
 	tests := map[string]float64{
 		"float32":  Float32,
 		"bfloat16": Float16,
+		"bf16":     Float16,
+		"f16":      Float16,
 		"int8":     Bit8,
 		"8bit":     Bit8,
 		"4bit":     Bit4,

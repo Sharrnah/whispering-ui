@@ -1,6 +1,8 @@
 package Pages
 
 import (
+	"context"
+	"errors"
 	"fyne.io/fyne/v2"
 	"fyne.io/fyne/v2/container"
 	"fyne.io/fyne/v2/lang"
@@ -10,6 +12,7 @@ import (
 	"github.com/getsentry/sentry-go"
 	"golang.design/x/clipboard"
 	"log"
+	"runtime"
 	"strings"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Logging"
@@ -56,12 +59,18 @@ func GetClipboardImage() ([]byte, clipboard.Format) {
 		return nil, -1
 	}
 
-	clipboardBinary = clipboard.Read(clipboard.FmtImage)
-	if clipboardBinary != nil {
+	clipboardBinary, err = clipboard.Read(context.Background(), clipboard.FmtImage)
+	if err != nil && !errors.Is(err, clipboard.ErrNoData) {
+		Logging.CaptureException(err)
+	}
+	if err == nil && clipboardBinary != nil {
 		return clipboardBinary, clipboard.FmtImage
 	}
-	clipboardBinary = clipboard.Read(clipboard.FmtText)
-	if clipboardBinary != nil {
+	clipboardBinary, err = clipboard.Read(context.Background(), clipboard.FmtText)
+	if err != nil && !errors.Is(err, clipboard.ErrNoData) {
+		Logging.CaptureException(err)
+	}
+	if err == nil && clipboardBinary != nil {
 		return clipboardBinary, clipboard.FmtText
 	}
 
@@ -158,6 +167,11 @@ func CreateOcrWindow() fyne.CanvasObject {
 		sendMessage.SendMessage()
 	})
 	ocrButton.Importance = widget.HighImportance
+	if runtime.GOOS != "windows" && Settings.Config.Run_backend {
+		// Window capture is Windows-only. Image/clipboard OCR remains available.
+		ocrButton.Disable()
+		Fields.Field.OcrWindowCombo.Disable()
+	}
 
 	ocrClipboardButtonRow := widget.NewButtonWithIcon(lang.L("Clipboard Scan & Translate"), theme.ContentPasteIcon(), func() {
 		clipboardData, clipboardFormat := GetClipboardImage()

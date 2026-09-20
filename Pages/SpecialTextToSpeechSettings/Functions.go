@@ -7,6 +7,24 @@ import (
 	"whispering-tiger-ui/Settings"
 )
 
+func stringInterfaceMap(value interface{}) map[string]interface{} {
+	switch typed := value.(type) {
+	case map[string]interface{}:
+		return typed
+	case map[interface{}]interface{}:
+		converted := make(map[string]interface{}, len(typed))
+		for key, item := range typed {
+			name, ok := key.(string)
+			if ok {
+				converted[name] = item
+			}
+		}
+		return converted
+	default:
+		return make(map[string]interface{})
+	}
+}
+
 // SetSpecialTTSSetting updates the in-memory profile without sending a backend
 // message. It is useful while constructing controls, before the WebSocket
 // sender is guaranteed to be running.
@@ -45,6 +63,19 @@ func UpdateSpecialTTSSettings(specialSettingType string, stringName string, valu
 		Value: inner,
 	}
 	sendMessage.SendMessage()
+}
+
+func UpdateTTSPrecision(specialSettingType string, precision string) {
+	changed := Settings.Config.Tts_precision != precision
+	Settings.Config.Tts_precision = precision
+	UpdateSpecialTTSSettings(specialSettingType, "precision", precision)
+	if changed {
+		SendMessageChannel.SendMessageStruct{
+			Type:  "setting_change",
+			Name:  "tts_precision",
+			Value: precision,
+		}.SendMessage()
+	}
 }
 
 func GetSpecialTTSSettings(specialSettingType string, stringName string) interface{} {
@@ -97,7 +128,10 @@ func GetSpecialSettingFallback(specialSettingType string, key string, fallback i
 	if !ok || raw == nil {
 		return fallback
 	}
+	return coerceSpecialSetting(raw, fallback)
+}
 
+func coerceSpecialSetting(raw, fallback interface{}) interface{} {
 	// Coerce based on the fallback type to ensure safe return types.
 	switch fb := fallback.(type) {
 	case string:
@@ -161,4 +195,60 @@ func GetSpecialSettingFallback(specialSettingType string, key string, fallback i
 		// Unknown target type, return fallback to be safe.
 		return fallback
 	}
+}
+
+// GetNestedSpecialSettingFallback reads the model-specific shape used by
+// audio.cpp: special_settings.<group>.<model-family>.<setting>.
+func GetNestedSpecialSettingFallback(group, modelFamily, key string, fallback interface{}) interface{} {
+	if Settings.Config.Special_settings == nil {
+		return fallback
+	}
+	root := stringInterfaceMap(Settings.Config.Special_settings[group])
+	model := stringInterfaceMap(root[modelFamily])
+	if value, ok := model[key]; ok {
+		return coerceSpecialSetting(value, fallback)
+	}
+	return fallback
+}
+
+// UpdateNestedSpecialSettings preserves settings for every other audio.cpp
+// model family and sends the complete group to the backend. Entry controls use
+// the debounced path so editing a number or prompt does not emit one WebSocket
+// request per keystroke.
+func UpdateNestedSpecialSettings(group, modelFamily, key string, value interface{}, debounce bool) {
+	if Settings.Config.Special_settings == nil {
+		Settings.Config.Special_settings = make(map[string]interface{})
+	}
+	root := stringInterfaceMap(Settings.Config.Special_settings[group])
+	model := stringInterfaceMap(root[modelFamily])
+	if old, exists := model[key]; exists && reflect.DeepEqual(old, value) {
+		return
+	}
+	model[key] = value
+	root[modelFamily] = model
+	Settings.Config.Special_settings[group] = root
+	message := SendMessageChannel.SendMessageStruct{
+		Type:  "special_settings",
+		Name:  group,
+		Value: root,
+	}
+	if debounce {
+		message.SendMessageDebounced()
+	} else {
+		message.SendMessage()
+	}
+}
+
+func ResetNestedSpecialSettings(group, modelFamily string) {
+	if Settings.Config.Special_settings == nil {
+		Settings.Config.Special_settings = make(map[string]interface{})
+	}
+	root := stringInterfaceMap(Settings.Config.Special_settings[group])
+	delete(root, modelFamily)
+	Settings.Config.Special_settings[group] = root
+	SendMessageChannel.SendMessageStruct{
+		Type:  "special_settings",
+		Name:  group,
+		Value: root,
+	}.SendMessage()
 }

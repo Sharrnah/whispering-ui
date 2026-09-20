@@ -406,6 +406,9 @@ func reportUpdateCheckError(window fyne.Window, checkErr error) {
 // VersionCheck performs network work synchronously and must be called from a
 // worker goroutine. All Fyne updates are dispatched to the UI thread.
 func VersionCheck(window fyne.Window, startBackend bool) (bool, error) {
+	if !Updater.UpdatesEnabled() {
+		return false, nil
+	}
 	updater := Updater.UpdatePackages{}
 	if err := updater.GetUpdateInfo(updateInfoUrl); err != nil {
 		checkErr := fmt.Errorf("%s: %w", lang.L("Could not retrieve update information. Check your internet connection or firewall, then try again."), err)
@@ -413,7 +416,8 @@ func VersionCheck(window fyne.Window, startBackend bool) (bool, error) {
 		return false, checkErr
 	}
 
-	platformInfo, platformExists := updater.Packages["ai_platform"]
+	platformPackage := Updater.PlatformPackageName()
+	platformInfo, platformExists := updater.Packages[platformPackage]
 	appInfo, appExists := updater.Packages["app"]
 	if !platformExists || platformInfo.Version == "" || !appExists || appInfo.Version == "" {
 		checkErr := fmt.Errorf("%s", lang.L("The update information is incomplete. Please try again later."))
@@ -422,9 +426,9 @@ func VersionCheck(window fyne.Window, startBackend bool) (bool, error) {
 	}
 
 	updateAvailable := false
-	platformFileWithoutVersion := !Utilities.FileExists(currentPlatformFile) && (Utilities.FileExists("audioWhisper/audioWhisper.exe") || Utilities.FileExists("audioWhisper.py"))
+	platformFileWithoutVersion := !Utilities.FileExists(currentPlatformFile) && Utilities.BackendInstalled(".")
 	platformRequiresUpdate := GetCurrentPlatformVersion() != platformInfo.Version
-	platformMissing := !Utilities.FileExists("audioWhisper/audioWhisper.exe") && !Utilities.FileExists("audioWhisper.py")
+	platformMissing := !Utilities.BackendInstalled(".")
 
 	platformUpdateTitle := lang.L("Platform Update available")
 	platformUpdateText := lang.L("There is a new Update of the Platform available. Update to new version now?", map[string]interface{}{"Version": platformInfo.Version})
@@ -469,7 +473,7 @@ func VersionCheck(window fyne.Window, startBackend bool) (bool, error) {
 						}
 					}
 
-					if downloadErr := versionDownload(updater, "ai_platform", "audioWhisper_platform.zip", window, startBackend, progressTitle, true, cleanUpFunc); downloadErr == nil {
+					if downloadErr := versionDownload(updater, platformPackage, "audioWhisper_platform.zip", window, startBackend, progressTitle, true, cleanUpFunc); downloadErr == nil {
 						platformInfo.WriteYaml(currentPlatformFile)
 					}
 				}()

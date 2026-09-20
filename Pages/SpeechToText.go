@@ -144,7 +144,7 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		speechTaskWidgetLabel.SetText("")
 		speechTaskWidget.Hide()
 	}
-	if Settings.Config.Stt_type == "qwen3_asr" {
+	if Settings.Config.Stt_type == "qwen3_asr" || Settings.Config.Stt_type == "audio_cpp" || Settings.IsVibeVoiceStreaming(Settings.Config.Stt_type, Settings.Config.Model) {
 		speechTaskWidgetLabel.SetText("")
 		speechTaskWidget.(*CustomWidget.TextValueSelect).Selected = "transcribe"
 		Settings.Config.Whisper_task = "transcribe"
@@ -320,10 +320,18 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 	))
 
 	leftVerticalBottomLayout := container.New(layout.NewVBoxLayout())
+	if Settings.IsVibeVoiceStreaming(Settings.Config.Stt_type, Settings.Config.Model) {
+		additionalWidgets = buildVibeVoiceStreamingSettings()
+	}
 	if additionalWidgets != nil {
 		leftVerticalBottomLayout.Add(additionalWidgets)
 	}
 	leftVerticalBottomLayout.Add(quickOptionsRow)
+	leftVerticalBottomLayout.Add(createAdditionalAudioRoutesPanel())
+	if Settings.Config.Stt_type == "audio_cpp" {
+		leftVerticalBottomLayout.Add(widget.NewSeparator())
+		leftVerticalBottomLayout.Add(buildAudioCppSTTSpecialSettings())
+	}
 
 	// main layout
 	leftVerticalLayout := container.NewBorder(
@@ -374,20 +382,26 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 			originalTranscriptionLabel := originalTranscriptionContainer.Objects[0].(*widget.Label)
 			originalTranscriptionLabel.Wrapping = fyne.TextWrapWord
 			originalTranscriptionLanguageLabel := originalTranscriptionContainer.Objects[1].(*widget.Label)
+			resultLanguage := whisperMessage.Language
+			translationLanguage := whisperMessage.TxtTranslationTarget
+			if whisperMessage.AudioSourceID != "" && whisperMessage.AudioSourceID != "main" && whisperMessage.AudioSourceName != "" {
+				resultLanguage = whisperMessage.AudioSourceName + " · " + resultLanguage
+				translationLanguage = whisperMessage.AudioSourceName + " · " + translationLanguage
+			}
 
 			// bind data to elements if no translation is generated (sets transcription to top label)
 			if whisperMessage.TxtTranslation == "" {
 				translateResultLabel.SetText(whisperMessage.Text)
-				translateResultLanguageLabel.SetText("[" + whisperMessage.Language + "]")
+				translateResultLanguageLabel.SetText("[" + resultLanguage + "]")
 
 				originalTranscriptionLabel.SetText("")
 				originalTranscriptionLanguageLabel.SetText("")
 			} else { // bind data to elements if translation was generated
 				translateResultLabel.SetText(whisperMessage.TxtTranslation)
-				translateResultLanguageLabel.SetText("[" + whisperMessage.TxtTranslationTarget + "]")
+				translateResultLanguageLabel.SetText("[" + translationLanguage + "]")
 
 				originalTranscriptionLabel.SetText(whisperMessage.Text)
-				originalTranscriptionLanguageLabel.SetText("[" + whisperMessage.Language + "]")
+				originalTranscriptionLanguageLabel.SetText("[" + resultLanguage + "]")
 			}
 
 			// resize
@@ -413,12 +427,14 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		}()
 	}
 
-	if !Settings.Config.Realtime {
-		Fields.Field.RealtimeResultLabel.Hide()
+	if Settings.Config.Realtime {
+		Fields.Field.RealtimeResultScroll.Show()
+	} else {
+		Fields.Field.RealtimeResultScroll.Hide()
 	}
 	realtimeWhisperResultBlock := container.NewBorder(
 		nil, container.NewVBox(widget.NewSeparator(), widget.NewSeparator()), nil, nil,
-		Fields.Field.RealtimeResultLabel,
+		Fields.Field.RealtimeResultScroll,
 	)
 
 	clearResultListButton := widget.NewButtonWithIcon(lang.L("Clear"), theme.ContentClearIcon(), func() {

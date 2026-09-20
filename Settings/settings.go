@@ -56,6 +56,11 @@ type Conf struct {
 	Audio_input_process_id int    `yaml:"audio_input_process_id,omitempty" json:"audio_input_process_id,omitempty"`
 	Audio_output_device    string `yaml:"audio_output_device" json:"audio_output_device"`
 
+	Additional_audio_routes []AdditionalAudioRoute `yaml:"additional_audio_routes" json:"additional_audio_routes"`
+	// nil preserves the legacy behavior where every plugin receives microphone
+	// audio. A non-nil pointer is an explicit allowlist, including an empty list.
+	Main_audio_plugins *[]string `yaml:"main_audio_plugins" json:"main_audio_plugins"`
+
 	Phrase_time_limit float64 `yaml:"phrase_time_limit" json:"phrase_time_limit"`
 	Pause             float64 `yaml:"pause" json:"pause"`
 	Energy            int     `yaml:"energy" json:"energy"`
@@ -81,6 +86,7 @@ type Conf struct {
 	// Whisper Settings
 	Stt_enabled                           bool        `yaml:"stt_enabled" json:"stt_enabled"`
 	Ai_device                             interface{} `yaml:"ai_device" json:"ai_device"`
+	Ai_device_index                       int         `yaml:"ai_device_index" json:"ai_device_index"`
 	Whisper_task                          string      `yaml:"whisper_task" json:"whisper_task"`
 	Current_language                      string      `yaml:"current_language" json:"current_language"`
 	Target_language                       string      `yaml:"target_language" json:"target_language"`
@@ -112,11 +118,11 @@ type Conf struct {
 	Faster_without_timestamps             bool        `yaml:"faster_without_timestamps" json:"faster_without_timestamps"`       // if enabled, faster whisper will only sample text tokens. (only when using stt_type=faster_whisper)
 	Denoise_audio                         string      `yaml:"denoise_audio" json:"denoise_audio"`                               // if enabled, audio will be de-noised before processing. (Can be empty, "deepfilter" or "noise_reduce")
 	Denoise_audio_post_filter             bool        `yaml:"denoise_audio_post_filter" json:"denoise_audio_post_filter"`       // Enable post filter for some minor, extra noise reduction.
-	Denoise_audio_before_trigger          bool        `yaml:"denoise_audio_before_trigger" json:"denoise_audio_before_trigger"` // if enabled, noise cancellation will be applied on the audio chunks before recording trigger conditions are detected.
+	Denoise_audio_before_trigger          bool        `yaml:"denoise_audio_before_trigger" json:"denoise_audio_before_trigger"` // Re-check candidate volume after background denoising; raw VAD remains callback-owned.
 	Denoise_strength                      float64     `yaml:"denoise_strength" json:"denoise_strength"`                         // Denoise strength (0.0 - 1.0)
 	Whisper_apply_voice_markers           bool        `yaml:"whisper_apply_voice_markers" json:"whisper_apply_voice_markers"`
 	Max_sentence_repetition               int         `yaml:"max_sentence_repetition" json:"max_sentence_repetition"`
-	Thread_per_transcription              bool        `yaml:"thread_per_transcription" json:"thread_per_transcription"`                           // Enable a new thread for each transcription. (can improve speed)
+	Thread_per_transcription              bool        `yaml:"thread_per_transcription" json:"thread_per_transcription"`                           // Legacy profile compatibility; STT inference is serialized.
 	Only_no_speech_threshold_for_segments bool        `yaml:"only_no_speech_threshold_for_segments" json:"only_no_speech_threshold_for_segments"` //  if enabled, only use no_speech_threshold for silence detection in segments.
 	Language_detection_on_each_segment    bool        `yaml:"language_detection_on_each_segment" json:"language_detection_on_each_segment"`       //  if enabled, perform language detection on each segment. (faster-whisper only)
 	Stt_llm_prompt                        string      `yaml:"stt_llm_prompt" json:"stt_llm_prompt"`                                               // LLM prompt for STT (if using LLM for STT)
@@ -137,6 +143,7 @@ type Conf struct {
 	// text translate settings
 	Txt_translate               bool   `yaml:"txt_translate" json:"txt_translate"`
 	Txt_translator_device       string `yaml:"txt_translator_device" json:"txt_translator_device"`
+	Txt_translator_device_index int    `yaml:"txt_translator_device_index" json:"txt_translator_device_index"`
 	Src_lang                    string `yaml:"src_lang" json:"src_lang"`
 	Trg_lang                    string `yaml:"trg_lang" json:"trg_lang"`
 	Txt_romaji                  bool   `yaml:"txt_romaji" json:"txt_romaji"`
@@ -165,6 +172,7 @@ type Conf struct {
 	Osc_convert_ascii                  bool    `yaml:"osc_convert_ascii" json:"osc_convert_ascii"`
 	Osc_auto_processing_enabled        bool    `yaml:"osc_auto_processing_enabled" json:"osc_auto_processing_enabled"`
 	Osc_chat_prefix                    string  `yaml:"osc_chat_prefix" json:"osc_chat_prefix"`
+	Streaming_display_mode             string  `yaml:"streaming_display_mode,omitempty" json:"streaming_display_mode,omitempty"`
 	Osc_chat_limit                     int     `yaml:"osc_chat_limit" json:"osc_chat_limit"`
 	Osc_type_transfer                  string  `yaml:"osc_type_transfer" json:"osc_type_transfer"`
 	Osc_type_transfer_split            string  `yaml:"osc_type_transfer_split" json:"osc_type_transfer_split"`
@@ -186,17 +194,20 @@ type Conf struct {
 	Osc_sync_afk    bool   `yaml:"osc_sync_afk" json:"osc_sync_afk"`
 
 	// OCR settings
-	Ocr_type         string `yaml:"ocr_type" json:"ocr_type"`
-	Ocr_ai_device    string `yaml:"ocr_ai_device" json:"ocr_ai_device"`
-	Ocr_precision    string `yaml:"ocr_precision" json:"ocr_precision"`
-	Ocr_txt_src_lang string `yaml:"ocr_txt_src_lang" json:"ocr_txt_src_lang"`
-	Ocr_txt_trg_lang string `yaml:"ocr_txt_trg_lang" json:"ocr_txt_trg_lang"`
-	Ocr_lang         string `yaml:"ocr_lang" json:"ocr_lang"`
-	Ocr_window_name  string `yaml:"ocr_window_name" json:"ocr_window_name"`
+	Ocr_type            string `yaml:"ocr_type" json:"ocr_type"`
+	Ocr_ai_device       string `yaml:"ocr_ai_device" json:"ocr_ai_device"`
+	Ocr_ai_device_index int    `yaml:"ocr_ai_device_index" json:"ocr_ai_device_index"`
+	Ocr_precision       string `yaml:"ocr_precision" json:"ocr_precision"`
+	Ocr_txt_src_lang    string `yaml:"ocr_txt_src_lang" json:"ocr_txt_src_lang"`
+	Ocr_txt_trg_lang    string `yaml:"ocr_txt_trg_lang" json:"ocr_txt_trg_lang"`
+	Ocr_lang            string `yaml:"ocr_lang" json:"ocr_lang"`
+	Ocr_window_name     string `yaml:"ocr_window_name" json:"ocr_window_name"`
 
 	// TTS settings
 	Tts_type                      string   `yaml:"tts_type" json:"tts_type"`
 	Tts_ai_device                 string   `yaml:"tts_ai_device" json:"tts_ai_device"`
+	Tts_ai_device_index           int      `yaml:"tts_ai_device_index" json:"tts_ai_device_index"`
+	Tts_precision                 string   `yaml:"tts_precision" json:"tts_precision"`
 	Tts_answer                    bool     `yaml:"tts_answer" json:"tts_answer"`
 	Tts_model                     []string `yaml:"tts_model" json:"tts_model"`
 	Tts_voice                     string   `yaml:"tts_voice" json:"tts_voice"`
@@ -225,6 +236,49 @@ type Conf struct {
 	Special_settings             map[string]interface{} `yaml:"special_settings,omitempty" json:"special_settings,omitempty"`
 }
 
+//goland:noinspection GoSnakeCaseUsage
+type AdditionalAudioRoute struct {
+	ID                                   string      `yaml:"id" json:"id"`
+	Name                                 string      `yaml:"name" json:"name"`
+	Enabled                              bool        `yaml:"enabled" json:"enabled"`
+	Audio_api                            string      `yaml:"audio_api" json:"audio_api"`
+	Audio_input_device                   string      `yaml:"audio_input_device" json:"audio_input_device"`
+	Audio_input_process                  string      `yaml:"audio_input_process,omitempty" json:"audio_input_process,omitempty"`
+	Audio_input_process_id               int         `yaml:"audio_input_process_id,omitempty" json:"audio_input_process_id,omitempty"`
+	Device_index                         interface{} `yaml:"device_index,omitempty" json:"device_index,omitempty"`
+	Stt_enabled                          bool        `yaml:"stt_enabled" json:"stt_enabled"`
+	Current_language                     string      `yaml:"current_language" json:"current_language"`
+	Whisper_task                         string      `yaml:"whisper_task" json:"whisper_task"`
+	Target_language                      string      `yaml:"target_language,omitempty" json:"target_language,omitempty"`
+	Energy                               int         `yaml:"energy" json:"energy"`
+	Vad_confidence_threshold             float64     `yaml:"vad_confidence_threshold" json:"vad_confidence_threshold"`
+	Phrase_time_limit                    float64     `yaml:"phrase_time_limit" json:"phrase_time_limit"`
+	Pause                                float64     `yaml:"pause" json:"pause"`
+	Realtime                             bool        `yaml:"realtime" json:"realtime"`
+	Realtime_frequency_time              float64     `yaml:"realtime_frequency_time" json:"realtime_frequency_time"`
+	Silence_cutting_enabled              bool        `yaml:"silence_cutting_enabled" json:"silence_cutting_enabled"`
+	Denoise_audio                        string      `yaml:"denoise_audio" json:"denoise_audio"`
+	Denoise_strength                     float64     `yaml:"denoise_strength" json:"denoise_strength"`
+	Vad_smart_turn_enabled               bool        `yaml:"vad_smart_turn_enabled" json:"vad_smart_turn_enabled"`
+	Vad_smart_turn_min_length            float64     `yaml:"vad_smart_turn_min_length" json:"vad_smart_turn_min_length"`
+	Vad_smart_turn_probability_threshold float64     `yaml:"vad_smart_turn_probability_threshold" json:"vad_smart_turn_probability_threshold"`
+	Vad_smart_turn_pause_length          float64     `yaml:"vad_smart_turn_pause_length" json:"vad_smart_turn_pause_length"`
+	Txt_translate                        bool        `yaml:"txt_translate" json:"txt_translate"`
+	Src_lang                             string      `yaml:"src_lang" json:"src_lang"`
+	Trg_lang                             string      `yaml:"trg_lang" json:"trg_lang"`
+	Txt_romaji                           bool        `yaml:"txt_romaji" json:"txt_romaji"`
+	Websocket_enabled                    bool        `yaml:"websocket_enabled" json:"websocket_enabled"`
+	Osc_enabled                          bool        `yaml:"osc_enabled" json:"osc_enabled"`
+	Osc_typing_indicator                 bool        `yaml:"osc_typing_indicator" json:"osc_typing_indicator"`
+	Osc_chat_notification                bool        `yaml:"osc_chat_notification" json:"osc_chat_notification"`
+	Osc_chat_prefix                      string      `yaml:"osc_chat_prefix" json:"osc_chat_prefix"`
+	Osc_type_transfer                    string      `yaml:"osc_type_transfer,omitempty" json:"osc_type_transfer,omitempty"`
+	Osc_type_transfer_split              *string     `yaml:"osc_type_transfer_split,omitempty" json:"osc_type_transfer_split,omitempty"`
+	Streaming_display_mode               string      `yaml:"streaming_display_mode,omitempty" json:"streaming_display_mode,omitempty"`
+	Osc_chat_limit                       *int        `yaml:"osc_chat_limit,omitempty" json:"osc_chat_limit,omitempty"`
+	Plugins                              []string    `yaml:"plugins,omitempty" json:"plugins,omitempty"`
+}
+
 var ConfigValues map[string]interface{} = nil
 
 // ExcludeConfigFields excludes fields from settings window (all lowercase)
@@ -249,6 +303,8 @@ var ExcludeConfigFields = []string{
 	"audio_input_process",
 	"audio_input_process_id",
 	"audio_output_device",
+	"additional_audio_routes",
+	"main_audio_plugins",
 	"last_auto_txt_translate_lang",
 	"stt_enabled",
 	"ocr_txt_src_lang",
@@ -370,7 +426,73 @@ func (c *Conf) LoadYamlSettings(fileName string) error {
 		//log.Fatalf("Unmarshal: %v", err)
 		return err
 	}
+	var rawSettings map[string]interface{}
+	if err = yaml.Unmarshal(yamlFile, &rawSettings); err != nil {
+		return err
+	}
+	if _, exists := rawSettings["tts_precision"]; !exists {
+		c.Tts_precision = legacyTTSPrecision(c.Tts_type, c.Special_settings)
+	}
+	c.SyncTTSPrecisionCompatibility()
 	return nil
+}
+
+func legacyTTSPrecision(ttsType string, specialSettings map[string]interface{}) string {
+	defaults := map[string]string{
+		"silero": "float32", "f5_e2": "float32", "zonos": "bfloat16",
+		"zonos2": "bfloat16", "kokoro": "float32", "orpheus": "8bit",
+		"chatterbox": "float32", "index_tts": "bfloat16", "qwen3_tts": "auto",
+		"audio8_tts": "auto", "audio_cpp": "orig", "maya1": "bfloat16",
+	}
+	precision := defaults[ttsType]
+	if precision == "" {
+		precision = "float32"
+	}
+	specialNames := map[string]string{
+		"chatterbox": "tts_chatterbox",
+		"index_tts":  "tts_index_tts",
+		"qwen3_tts":  "tts_qwen3_tts",
+		"audio8_tts": "tts_audio8_tts",
+	}
+	settingsName := specialNames[ttsType]
+	if settingsName == "" || specialSettings == nil {
+		return precision
+	}
+	modelSettings, ok := specialSettings[settingsName].(map[string]interface{})
+	if !ok {
+		return precision
+	}
+	if legacyPrecision, ok := modelSettings["precision"].(string); ok && strings.TrimSpace(legacyPrecision) != "" {
+		return strings.ToLower(strings.TrimSpace(legacyPrecision))
+	}
+	return precision
+}
+
+// SyncTTSPrecisionCompatibility keeps the legacy per-engine field aligned
+// while older backend versions and the advanced TTS panels still understand it.
+func (c *Conf) SyncTTSPrecisionCompatibility() {
+	if c == nil || strings.TrimSpace(c.Tts_precision) == "" {
+		return
+	}
+	specialNames := map[string]string{
+		"chatterbox": "tts_chatterbox",
+		"index_tts":  "tts_index_tts",
+		"qwen3_tts":  "tts_qwen3_tts",
+		"audio8_tts": "tts_audio8_tts",
+	}
+	settingsName := specialNames[c.Tts_type]
+	if settingsName == "" {
+		return
+	}
+	if c.Special_settings == nil {
+		c.Special_settings = make(map[string]interface{})
+	}
+	modelSettings, ok := c.Special_settings[settingsName].(map[string]interface{})
+	if !ok || modelSettings == nil {
+		modelSettings = make(map[string]interface{})
+		c.Special_settings[settingsName] = modelSettings
+	}
+	modelSettings["precision"] = c.Tts_precision
 }
 
 func (c *Conf) WriteYamlSettings(fileName string) {

@@ -108,6 +108,22 @@ func getPluginStatusString(pluginClassName string) string {
 	return pluginStatusString
 }
 
+func routeNewlyEnabledPluginToMainMicrophone(pluginClassName string) bool {
+	if pluginClassName == "SecondaryProfilePlugin" || Settings.Config.Main_audio_plugins == nil {
+		return false
+	}
+
+	selected := append([]string(nil), (*Settings.Config.Main_audio_plugins)...)
+	for _, pluginName := range selected {
+		if pluginName == pluginClassName {
+			return false
+		}
+	}
+	selected = append(selected, pluginClassName)
+	Settings.Config.Main_audio_plugins = &selected
+	return true
+}
+
 func _getFilePathDialogInitPath(v map[string]interface{}, entry *widget.Entry) (fyne.ListableURI, string) {
 	// get file dialog start folder
 	appExec, _ := os.Executable()
@@ -138,9 +154,9 @@ func _getFilePathDialogInitPath(v map[string]interface{}, entry *widget.Entry) (
 var onlyShowEnabledPlugins bool
 var openPluginItem = -1
 
-func RebuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widget.AccordionItem, pluginAccordion *widget.Accordion, reloadButtonRef *widget.Button, window *fyne.Window) {
+func RebuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widget.AccordionItem, pluginAccordion *widget.Accordion, reloadButtonRef *widget.Button, window *fyne.Window, scopes ...*pluginScope) {
 	if pluginAccordionItem != nil {
-		pluginSettingsContainer := BuildSinglePluginSettings(pluginClassName, pluginAccordionItem, pluginAccordion, reloadButtonRef, *window)
+		pluginSettingsContainer := BuildSinglePluginSettings(pluginClassName, pluginAccordionItem, pluginAccordion, reloadButtonRef, *window, scopes...)
 
 		pluginAccordionItem.Detail = pluginSettingsContainer
 		pluginAccordionItem.Detail.Refresh()
@@ -152,16 +168,35 @@ func RebuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *wi
 	}
 }
 
-func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widget.AccordionItem, pluginAccordion *widget.Accordion, reloadButtonRef *widget.Button, window fyne.Window) fyne.CanvasObject {
+func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widget.AccordionItem, pluginAccordion *widget.Accordion, reloadButtonRef *widget.Button, window fyne.Window, scopes ...*pluginScope) fyne.CanvasObject {
 	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
 		scope.SetTag("GoRoutine", "Pages\\Advanced\\PluginSettings->BuildSinglePluginSettings")
 	})
 
-	// load settings file for plugin settings
-	SettingsFile := Settings.Conf{}
-	err := SettingsFile.LoadYamlSettings(filepath.Join(Settings.GetConfProfileDir(), Settings.Config.SettingsFilename))
-	if err != nil {
-		SettingsFile = Settings.Config
+	config := &Settings.Config
+	send := func(m SendMessageChannel.SendMessageStruct) { m.SendMessage() }
+	resetSettings, reinitSettings := resetSettings, reinitSettings
+	if len(scopes) > 0 {
+		config = scopes[0].config
+		send = scopes[0].send
+		resetSettings = func(name string) {
+			send(SendMessageChannel.SendMessageStruct{Type: "setting_reset_all", Name: "plugin", Value: name})
+		}
+		reinitSettings = func(name string) {
+			send(SendMessageChannel.SendMessageStruct{Type: "setting_reinit", Name: "plugin", Value: name})
+		}
+	}
+	getPluginStatusString := func(name string) string {
+		if config.Plugins[name] {
+			return " (\u2705)"
+		}
+		return " (\u274c)"
+	}
+	SettingsFile := *config
+	if len(scopes) == 0 && Settings.Config.Run_backend {
+		if err := SettingsFile.LoadYamlSettings(filepath.Join(Settings.GetConfProfileDir(), Settings.Config.SettingsFilename)); err != nil {
+			SettingsFile = *config
+		}
 	}
 
 	// plugin to window button
@@ -170,11 +205,11 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 		pluginWindow := fyne.CurrentApp().NewWindow(pluginClassName + " " + lang.L("Settings"))
 		reloadButton := widget.NewButtonWithIcon(lang.L("Reload"), theme.ViewRefreshIcon(), nil)
 
-		pluginContentWin := BuildSinglePluginSettings(pluginClassName, nil, nil, reloadButton, pluginWindow)
+		pluginContentWin := BuildSinglePluginSettings(pluginClassName, nil, nil, reloadButton, pluginWindow, scopes...)
 		pluginWindowContainer := container.NewVScroll(pluginContentWin)
 
 		reloadButton.OnTapped = func() {
-			pluginContentWin = BuildSinglePluginSettings(pluginClassName, nil, nil, reloadButton, pluginWindow)
+			pluginContentWin = BuildSinglePluginSettings(pluginClassName, nil, nil, reloadButton, pluginWindow, scopes...)
 			pluginWindowContainer.Content = pluginContentWin
 			pluginWindowContainer.Refresh()
 			pluginWindow.Content().Refresh()
@@ -220,9 +255,12 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 			go func() {
 				if reset {
 					resetSettings(pluginClassName)
+					if len(scopes) > 0 {
+						return
+					}
 					time.Sleep(2 * time.Second)
 
-					RebuildSinglePluginSettings(pluginClassName, pluginAccordionItem, pluginAccordion, reloadButtonRef, &toResetWindow)
+					RebuildSinglePluginSettings(pluginClassName, pluginAccordionItem, pluginAccordion, reloadButtonRef, &toResetWindow, scopes...)
 				}
 			}()
 		}, toResetWindow)
@@ -242,9 +280,12 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 			go func() {
 				if reset {
 					reinitSettings(pluginClassName)
+					if len(scopes) > 0 {
+						return
+					}
 					time.Sleep(2 * time.Second)
 
-					RebuildSinglePluginSettings(pluginClassName, pluginAccordionItem, pluginAccordion, reloadButtonRef, &toResetWindow)
+					RebuildSinglePluginSettings(pluginClassName, pluginAccordionItem, pluginAccordion, reloadButtonRef, &toResetWindow, scopes...)
 				}
 			}()
 		}, toResetWindow)
@@ -253,20 +294,23 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 
 	// plugin enabled checkbox
 	pluginEnabledCheckbox := widget.NewCheck(lang.L("pluginClass enabled", map[string]interface{}{"PluginClass": pluginClassName}), func(enabled bool) {
-		Settings.Config.Plugins[pluginClassName] = enabled
+		config.Plugins[pluginClassName] = enabled
+		if enabled && len(scopes) == 0 {
+			routeNewlyEnabledPluginToMainMicrophone(pluginClassName)
+		}
 		sendMessage := SendMessageChannel.SendMessageStruct{
 			Type:  "setting_change",
 			Name:  "plugins",
-			Value: Settings.Config.Plugins,
+			Value: config.Plugins,
 		}
-		sendMessage.SendMessage()
+		send(sendMessage)
 
 		if pluginAccordionItem != nil && pluginAccordion != nil {
 			pluginAccordionItem.Title = pluginClassName + getPluginStatusString(pluginClassName)
 			pluginAccordion.Refresh()
 		}
 	})
-	pluginEnabledCheckbox.Checked = Settings.Config.Plugins[pluginClassName]
+	pluginEnabledCheckbox.Checked = config.Plugins[pluginClassName]
 
 	beginLine := canvas.NewHorizontalGradient(&color.NRGBA{R: 198, G: 123, B: 0, A: 255}, &color.NRGBA{R: 198, G: 123, B: 0, A: 0})
 	beginLine.Resize(fyne.NewSize(pluginEnabledCheckbox.Size().Width, 2))
@@ -332,7 +376,7 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 						sort.Strings(settingsGroup)
 						for _, settingName := range settingsGroup {
 							if _, ok := pluginSettings[settingName]; ok && settingName != "settings_groups" {
-								settingsFields := createSettingsFields(pluginSettings, settingName, &SettingsFile, pluginClassName, window)
+								settingsFields := createSettingsFields(pluginSettings, settingName, &SettingsFile, pluginClassName, window, scopes...)
 								for _, field := range settingsFields {
 									groupContainer.Add(field)
 								}
@@ -353,7 +397,7 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 									continue
 								}
 								if _, ok := pluginSettings[settingName]; ok && settingName != "settings_groups" {
-									settingsFields := createSettingsFields(pluginSettings, settingName, &SettingsFile, pluginClassName, window)
+									settingsFields := createSettingsFields(pluginSettings, settingName, &SettingsFile, pluginClassName, window, scopes...)
 									columnFields = append(columnFields, settingsFields...)
 								}
 							}
@@ -392,7 +436,7 @@ func BuildSinglePluginSettings(pluginClassName string, pluginAccordionItem *widg
 
 		for _, settingName := range sortedSettingNames {
 			if settingName != "settings_groups" {
-				settingsFields := createSettingsFields(pluginSettings, settingName, &SettingsFile, pluginClassName, window)
+				settingsFields := createSettingsFields(pluginSettings, settingName, &SettingsFile, pluginClassName, window, scopes...)
 				for _, field := range settingsFields {
 					pluginSettingsContainer.Add(field)
 				}
@@ -434,27 +478,48 @@ func BuildPluginSettingsAccordion(window fyne.Window) (fyne.CanvasObject, int) {
 	}
 	pluginAccordion := widget.NewAccordion()
 
-	for _, file := range files {
-		if !file.IsDir() && !strings.HasPrefix(file.Name(), ".") && !strings.HasPrefix(file.Name(), "__init__") && (strings.HasSuffix(file.Name(), ".py")) {
-			pluginFiles = append(pluginFiles, file.Name())
-			pluginClassName := GetClassNameOfPlugin(filepath.Join(".", "Plugins", file.Name()))
-
-			// only display enabled plugins if onlyShowEnabledPlugins is true
-			if onlyShowEnabledPlugins && !Settings.Config.Plugins[pluginClassName] {
-				continue
+	names := []string{}
+	if Settings.Config.Run_backend {
+		for _, file := range files {
+			if !file.IsDir() && strings.HasSuffix(file.Name(), ".py") && !strings.HasPrefix(file.Name(), "__") {
+				name := GetClassNameOfPlugin(filepath.Join(".", "Plugins", file.Name()))
+				if name != "" {
+					names = append(names, name)
+				}
 			}
-
-			pluginAccordionItem := widget.NewAccordionItem(
-				pluginClassName+getPluginStatusString(pluginClassName),
-				nil,
-			)
-
-			pluginSettingsContainer := BuildSinglePluginSettings(pluginClassName, pluginAccordionItem, pluginAccordion, nil, window)
-
-			pluginAccordionItem.Detail = pluginSettingsContainer
-
-			pluginAccordion.Append(pluginAccordionItem)
 		}
+	} else {
+		seen := map[string]bool{}
+		for name := range Settings.Config.Plugins {
+			seen[name] = true
+		}
+		if values, ok := Settings.Config.Plugin_settings.(map[string]interface{}); ok {
+			for name := range values {
+				seen[name] = true
+			}
+		}
+		for name := range seen {
+			names = append(names, name)
+		}
+		sort.Strings(names)
+	}
+	pluginFiles = names
+	for _, pluginClassName := range names {
+		// only display enabled plugins if onlyShowEnabledPlugins is true
+		if onlyShowEnabledPlugins && !Settings.Config.Plugins[pluginClassName] {
+			continue
+		}
+
+		pluginAccordionItem := widget.NewAccordionItem(
+			pluginClassName+getPluginStatusString(pluginClassName),
+			nil,
+		)
+
+		pluginSettingsContainer := BuildSinglePluginSettings(pluginClassName, pluginAccordionItem, pluginAccordion, nil, window)
+
+		pluginAccordionItem.Detail = pluginSettingsContainer
+
+		pluginAccordion.Append(pluginAccordionItem)
 	}
 
 	//if openPluginItem >= 0 {
@@ -463,7 +528,7 @@ func BuildPluginSettingsAccordion(window fyne.Window) (fyne.CanvasObject, int) {
 	return pluginAccordion, len(pluginFiles)
 }
 
-func CreatePluginSettingsPage() fyne.CanvasObject {
+func createBackendPluginSettingsPage() fyne.CanvasObject {
 	defer Logging.GoRoutineErrorHandler(func(scope *sentry.Scope) {
 		scope.SetTag("GoRoutine", "Pages\\Advanced\\PluginSettings->CreatePluginSettingsPage")
 	})
@@ -528,6 +593,10 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 			}
 		}, true)
 	}
+	if !Settings.Config.Run_backend {
+		downloadButton.SetText(lang.L("Install plugins on the AI PC"))
+		downloadButton.Disable()
+	}
 	downloadButton.Importance = widget.HighImportance
 	downloadButton.Refresh()
 
@@ -576,7 +645,20 @@ func CreatePluginSettingsPage() fyne.CanvasObject {
 	return pluginsContent
 }
 
-func createSettingsFields(pluginSettings map[string]interface{}, settingName string, SettingsFile *Settings.Conf, pluginClassName string, window fyne.Window) []fyne.CanvasObject {
+func createSettingsFields(pluginSettings map[string]interface{}, settingName string, SettingsFile *Settings.Conf, pluginClassName string, window fyne.Window, scopes ...*pluginScope) []fyne.CanvasObject {
+	updateSettings := updateSettings
+	send := func(m SendMessageChannel.SendMessageStruct) { m.SendMessage() }
+	if len(scopes) > 0 {
+		send = scopes[0].send
+		updateSettings = func(conf Settings.Conf, name string, values map[string]interface{}) {
+			all, _ := conf.Plugin_settings.(map[string]interface{})
+			if all == nil {
+				all = map[string]interface{}{}
+			}
+			all[name] = values
+			send(SendMessageChannel.SendMessageStruct{Type: "setting_change", Name: "plugin_settings", Value: all})
+		}
+	}
 	var settingsFields []fyne.CanvasObject
 
 	if window == nil {
@@ -684,7 +766,7 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 					Name:  pluginClassName,
 					Value: settingName,
 				}
-				sendMessage.SendMessage()
+				send(sendMessage)
 			})
 
 			if buttonStyle, ok := v["style"].(string); ok && buttonStyle == "primary" {

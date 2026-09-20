@@ -35,6 +35,15 @@ type MessageStruct struct {
 	TxtTranslation       string `json:"txt_translation,omitempty"`
 	TxtTranslationSource string `json:"txt_translation_source,omitempty"`
 	TxtTranslationTarget string `json:"txt_translation_target,omitempty"`
+	AudioSourceID        string `json:"audio_source_id,omitempty"`
+	AudioSourceName      string `json:"audio_source_name,omitempty"`
+	Streaming            bool   `json:"streaming,omitempty"`
+	StreamID             string `json:"stream_id,omitempty"`
+	StreamRevision       int64  `json:"stream_revision,omitempty"`
+	Final                bool   `json:"final,omitempty"`
+	DisplayMode          string `json:"display_mode,omitempty"`
+	DisplayRevision      int64  `json:"display_revision,omitempty"`
+	DisplayDone          bool   `json:"display_done,omitempty"`
 
 	// only in case of text translate message
 	TranslateResult string `json:"translate_result,omitempty"`
@@ -146,6 +155,10 @@ func (c *MessageStruct) HandleReceiveMessage() {
 		scope.SetTag("GoRoutine", "Websocket\\messageHandler->HandleReceiveMessage")
 	})
 	var err error = nil
+	if c.Streaming && (c.Type == "processing_data" || c.Type == "transcript" || c.Type == "streaming_caption") {
+		handleStreamingTranscript(*c)
+		return
+	}
 
 	switch c.Type {
 	case "error":
@@ -259,19 +272,26 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			log.Println("failed to type assert data")
 		}
 	case "translate_settings":
+		local := Settings.Config
 		// skip received run_backend value from receiving
 		var runBackend = true
 		var websocketIp string
 		var websocketPort int
-		if !Messages.TranslateSettings.Run_backend {
+		if !local.Run_backend {
 			runBackend = false
-			websocketIp = Messages.TranslateSettings.Websocket_ip
-			websocketPort = Messages.TranslateSettings.Websocket_port
+			websocketIp = local.Websocket_ip
+			websocketPort = local.Websocket_port
 		}
 
 		err = json.Unmarshal(c.Data, &Messages.TranslateSettings)
 
 		if !runBackend {
+			Messages.TranslateSettings.Audio_api = local.Audio_api
+			Messages.TranslateSettings.Audio_input_device = local.Audio_input_device
+			Messages.TranslateSettings.Audio_input_process = local.Audio_input_process
+			Messages.TranslateSettings.Audio_input_process_id = local.Audio_input_process_id
+			Messages.TranslateSettings.Audio_output_device = local.Audio_output_device
+			Messages.TranslateSettings.Push_to_talk_key = local.Push_to_talk_key
 			Messages.TranslateSettings.Run_backend = runBackend
 			Messages.TranslateSettings.Websocket_ip = websocketIp
 			Messages.TranslateSettings.Websocket_port = websocketPort
@@ -316,6 +336,30 @@ func (c *MessageStruct) HandleReceiveMessage() {
 				log.Printf("Could not switch audio output: %s", result.Error)
 			}
 		})
+	case "audio_routes_update_result":
+		result := struct {
+			RequestID        string                          `json:"request_id"`
+			Success          bool                            `json:"success"`
+			Error            string                          `json:"error"`
+			Routes           []Settings.AdditionalAudioRoute `json:"routes"`
+			MainAudioPlugins *[]string                       `json:"main_audio_plugins"`
+		}{}
+		err = json.Unmarshal(c.Data, &result)
+		if err != nil {
+			log.Println(err)
+			return
+		}
+		fyne.Do(func() {
+			if result.Success {
+				Settings.Config.Additional_audio_routes = result.Routes
+				Settings.Config.Main_audio_plugins = result.MainAudioPlugins
+			}
+			if Fields.AudioRoutesUpdateResult != nil {
+				Fields.AudioRoutesUpdateResult(result.RequestID, result.Success, result.Error)
+			} else if !result.Success {
+				log.Printf("Could not update audio routes: %s", result.Error)
+			}
+		})
 	case "transcript":
 		c.Text = strings.TrimSpace(c.Text)
 		c.TxtTranslation = strings.TrimSpace(c.TxtTranslation)
@@ -324,6 +368,8 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			Language:             c.Language,
 			TxtTranslation:       c.TxtTranslation,
 			TxtTranslationTarget: c.TxtTranslationTarget,
+			AudioSourceID:        c.AudioSourceID,
+			AudioSourceName:      c.AudioSourceName,
 		}
 
 		//go func() {
@@ -470,6 +516,9 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			log.Println(err)
 			return
 		}
+		if c.AudioSourceID != "" && c.AudioSourceID != "main" && c.AudioSourceName != "" {
+			processingData = c.AudioSourceName + ": " + processingData
+		}
 
 		if processingData != "" {
 			go func(procData_ string) {
@@ -483,7 +532,7 @@ func (c *MessageStruct) HandleReceiveMessage() {
 			fyne.Do(func() {
 				Fields.Field.ProcessingStatus.Start()
 				//Fields.Field.ProcessingStatus.Refresh()
-				Fields.Field.RealtimeResultLabel.Show()
+				Fields.Field.RealtimeResultScroll.Show()
 				//Fields.Field.RealtimeResultLabel.SetText(processingData)
 				//Fields.Field.RealtimeResultLabel.Refresh()
 			})

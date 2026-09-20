@@ -28,36 +28,43 @@ type AllProfileControls struct {
 	AudioOutput      *CustomWidget.TextValueSelect
 
 	// VAD / Recording
-	VadEnable       *widget.Check
-	VadOnFullClip   *widget.Check
-	VadRealtime     *widget.Check
-	vadSmartTurn    *widget.Check
-	PushToTalk      *CustomWidget.HotKeyEntry
-	VadConfidence   *widget.Slider
-	Energy          *widget.Slider
-	DenoiseAudio    *CustomWidget.TextValueSelect
-	PauseSeconds    *widget.Slider
-	PhraseTimeLimit *widget.Slider
+	VadEnable            *widget.Check
+	VadOnFullClip        *widget.Check
+	VadRealtime          *widget.Check
+	vadSmartTurn         *widget.Check
+	PushToTalk           *CustomWidget.HotKeyEntry
+	VadConfidence        *widget.Slider
+	Energy               *widget.Slider
+	DenoiseAudio         *CustomWidget.TextValueSelect
+	DenoiseBeforeTrigger *widget.Check
+	PauseSeconds         *widget.Slider
+	PhraseTimeLimit      *widget.Slider
 
 	// STT
 	STTType      *CustomWidget.TextValueSelect
 	STTDevice    *CustomWidget.TextValueSelect
+	STTGPU       *CustomWidget.TextValueSelect
 	STTModelSize *CustomWidget.TextValueSelect
 	STTPrecision *CustomWidget.TextValueSelect
 
 	// Text translation
 	TxtType      *CustomWidget.TextValueSelect
 	TxtDevice    *CustomWidget.TextValueSelect
+	TxtGPU       *CustomWidget.TextValueSelect
 	TxtSize      *CustomWidget.TextValueSelect
 	TxtPrecision *CustomWidget.TextValueSelect
 
 	// TTS
-	TTSType   *CustomWidget.TextValueSelect
-	TTSDevice *CustomWidget.TextValueSelect
+	TTSType      *CustomWidget.TextValueSelect
+	TTSDevice    *CustomWidget.TextValueSelect
+	TTSGPU       *CustomWidget.TextValueSelect
+	TTSModel     *CustomWidget.TextValueSelect
+	TTSPrecision *CustomWidget.TextValueSelect
 
 	// OCR
 	OCRType      *CustomWidget.TextValueSelect
 	OCRDevice    *CustomWidget.TextValueSelect
+	OCRGPU       *CustomWidget.TextValueSelect
 	OCRPrecision *CustomWidget.TextValueSelect
 }
 
@@ -150,6 +157,12 @@ func (e *FormEngine) LoadFromSettings(conf *Settings.Conf) {
 		return
 	}
 
+	// Normalize a copy: saving the form persists the unified selection, while
+	// simply opening it leaves the caller's profile snapshot untouched.
+	profile := *conf
+	profile.Stt_type, profile.Model = Settings.CanonicalVibeVoiceSelection(profile.Stt_type, profile.Model)
+	conf = &profile
+
 	// Model type controls determine the valid model-size and precision option
 	// sets. Load them first in a deterministic order, then populate their
 	// dependent controls below. Iterating the bindings map directly could load
@@ -231,6 +244,24 @@ func (e *FormEngine) LoadFromSettings(conf *Settings.Conf) {
 				}
 			}
 		case *CustomWidget.TextValueSelect:
+			if key == "tts_model" {
+				if len(conf.Tts_model) < 2 || strings.TrimSpace(conf.Tts_model[1]) == "" {
+					continue
+				}
+				modelGroup := strings.TrimSpace(conf.Tts_model[0])
+				modelName := strings.TrimSpace(conf.Tts_model[1])
+				modelEntry := &CustomWidget.TextValueOption{Value: modelName}
+				if !c.ContainsEntry(modelEntry, CustomWidget.CompareValue) {
+					modelType := selectedValue(e.Controls.TTSType)
+					c.SetValueOptions([]CustomWidget.TextValueOption{{
+						Text:  TTSModelDisplayText(modelType, modelGroup, modelName),
+						Value: modelName,
+					}})
+					c.Disable()
+				}
+				c.SetSelected(modelName)
+				continue
+			}
 			// default: set by value. For audio devices we also have name fields as fallback
 			val := e.getOptionByLowercase(conf, key)
 			strVal := fmt.Sprint(val)
@@ -293,6 +324,19 @@ func (e *FormEngine) LoadFromSettings(conf *Settings.Conf) {
 			}
 		}
 	}
+
+	// Some precision choices depend on the selected model, while
+	// profile bindings are intentionally stored in a map. Reconcile once after
+	// every field has loaded so map iteration order cannot discard a valid
+	// saved package precision.
+	if e.Coord != nil && (selectedValue(e.Controls.STTType) == "audio_cpp" || selectedValue(e.Controls.STTType) == "vibevoice_asr") {
+		e.Coord.RefreshSTTPrecisionForModel()
+		e.selectSetByValueOrText(e.Controls.STTPrecision, conf.Whisper_precision, "")
+	}
+	if e.Coord != nil && selectedValue(e.Controls.TTSType) == "audio_cpp" {
+		e.Coord.RefreshTTSPrecisionForModel()
+		e.selectSetByValueOrText(e.Controls.TTSPrecision, conf.Tts_precision, "")
+	}
 }
 
 // getOptionByLowercase retrieves a field value from Settings.Conf by matching the lowercase key
@@ -332,6 +376,20 @@ func (e *FormEngine) SaveToSettings(conf *Settings.Conf) {
 			conf.SetOption(key, c.Value)
 		case *CustomWidget.TextValueSelect:
 			sel := c.GetSelected()
+			if key == "tts_model" {
+				if sel == nil || strings.TrimSpace(sel.Value) == "" {
+					// Most TTS engines obtain their model list dynamically from the
+					// running backend. A blank/read-only profile control must not
+					// destroy their existing [group, model] selection.
+					continue
+				}
+				if group, ok := TTSModelProfileGroup(selectedValue(e.Controls.TTSType), sel.Value); ok {
+					conf.Tts_model = []string{group, sel.Value}
+				}
+				// Unknown/dynamic models were inserted from conf.Tts_model while
+				// loading and are intentionally preserved unchanged.
+				continue
+			}
 			if sel == nil {
 				if key == "device_index" {
 					conf.SetOption("audio_input_process", "")

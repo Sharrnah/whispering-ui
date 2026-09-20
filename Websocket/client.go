@@ -1,7 +1,6 @@
 package Websocket
 
 import (
-	"bytes"
 	"encoding/json"
 	"flag"
 	"fyne.io/fyne/v2"
@@ -14,6 +13,7 @@ import (
 	"github.com/gorilla/websocket"
 	"io"
 	"log"
+	"net"
 	"net/url"
 	"os"
 	"os/signal"
@@ -22,6 +22,7 @@ import (
 	"whispering-tiger-ui/CustomWidget"
 	"whispering-tiger-ui/Fields"
 	"whispering-tiger-ui/Logging"
+	"whispering-tiger-ui/RemoteAudioView"
 	"whispering-tiger-ui/RuntimeBackend"
 	"whispering-tiger-ui/SendMessageChannel"
 	"whispering-tiger-ui/Settings"
@@ -29,7 +30,7 @@ import (
 )
 
 const (
-	maxMessageSize = 10 / Utilities.MiB
+	maxMessageSize = 64 * Utilities.MiB
 )
 
 type Client struct {
@@ -50,6 +51,7 @@ func NewClient(addr string) *Client {
 }
 
 func (c *Client) Close() {
+	go RemoteAudioView.StopIntegrated()
 	c.InterruptChan <- os.Interrupt
 }
 
@@ -62,6 +64,9 @@ func (c *Client) Start() {
 	previouslyConnected := false
 
 	runBackend := Settings.Config.Run_backend
+	if !runBackend {
+		RemoteAudioView.SetReceiver(func(raw []byte) { ReceiveMessageChannel <- raw })
+	}
 
 	statusBar := widget.NewProgressBarInfinite()
 	connectingStateContainer := container.NewVBox()
@@ -102,6 +107,15 @@ func (c *Client) Start() {
 	signal.Notify(c.InterruptChan, os.Interrupt)
 
 	u := url.URL{Scheme: "ws", Host: c.Addr, Path: "/"}
+	if host, port, err := net.SplitHostPort(c.Addr); err == nil {
+		if ip := net.ParseIP(host); ip != nil && ip.IsUnspecified() {
+			loopback := "127.0.0.1"
+			if ip.To4() == nil {
+				loopback = "::1"
+			}
+			u.Host = net.JoinHostPort(loopback, port)
+		}
+	}
 	log.Printf("connecting to %s", u.String())
 
 	fyne.Do(func() {
@@ -130,6 +144,9 @@ func (c *Client) Start() {
 		connectingStateDialog.Hide()
 	})
 	previouslyConnected = true
+	if !runBackend {
+		fyne.Do(RemoteAudioView.StartIntegrated)
+	}
 
 	defer c.Conn.Close()
 	c.Conn.SetReadLimit(maxMessageSize)
@@ -186,63 +203,24 @@ func (c *Client) Start() {
 					}
 					sendMessage.SendMessage()
 				}
+				if !runBackend {
+					fyne.Do(RemoteAudioView.StartIntegrated)
+				}
 				continue
 			}
 
 			previouslyConnected = true
 
-			// Read the message using io.Reader
-			// buf := make([]byte, 1024)
-			buf := make([]byte, 4096)
-			var buffer []byte // Holds incoming data
-			for {
-				// Read data into buf as before
-				n, err := r.Read(buf)
-				if err != nil {
-					if err != io.EOF {
-						log.Println("Error reading message:", err)
-					}
-					break
-				}
-				buffer = append(buffer, buf[:n]...)
-
-				// Create a new reader and decoder for the current state of buffer
-				reader := bytes.NewReader(buffer)
-				decoder := json.NewDecoder(reader)
-
-				for decoder.More() {
-					var msgStruct interface{} // Use the specific struct you expect to decode, or interface{} for generic JSON objects
-					err := decoder.Decode(&msgStruct)
-
-					if err != nil {
-						log.Println("Error decoding JSON:", err)
-						// If an error occurs, break out of the loop. You'll need to handle partial messages
-						break
-					}
-
-					// Successfully decoded a message, now send it to ReceiveMessageChannel
-					// Since decoder doesn't provide directly the raw message, you might need to re-marshal if you need the exact JSON
-					processedJSON, err := json.Marshal(msgStruct)
-					if err != nil {
-						log.Println("Error marshaling decoded JSON:", err)
-						break
-					}
-					ReceiveMessageChannel <- processedJSON
-
-					// Update buffer to remove processed message
-					// This is a bit tricky since decoder does not tell us directly how much of the input it consumed
-					// We'll have to rely on re-marshaling and knowing the structure of our JSON to get the byte length, or
-					// we assume the decoder consumed exactly what was needed for the message it decoded.
-					newPos := reader.Size() - int64(reader.Len()) // Calculate how much of the buffer we've processed
-					buffer = buffer[newPos:]                      // This assumes all data before newPos is processed, which might not always be accurate
-				}
-
-				// Handle case where buffer might be empty or contain partial data
-				if len(buffer) == 0 || !decoder.More() {
-					// Clear the buffer or handle partial data
-					buffer = nil // Reset the buffer if we think we've processed all messages
-				}
+			// A WebSocket message may span many reads (notably returned WAV files).
+			raw, readErr := io.ReadAll(r)
+			if readErr != nil {
+				log.Println("read message:", readErr)
+				continue
 			}
+			if !RemoteAudioView.HandleIntegratedReceive(raw) {
+				ReceiveMessageChannel <- raw
+			}
+
 		}
 	}()
 
@@ -255,6 +233,9 @@ func (c *Client) Start() {
 			//case <-done:
 			//	return
 			case message := <-c.sendMessageChan:
+				if RemoteAudioView.HandleIntegratedMessage(&message) {
+					continue
+				}
 				HandleSendMessage(&message)
 				if message.Value != SkipMessage {
 					sendMessage, err := json.Marshal(message)
