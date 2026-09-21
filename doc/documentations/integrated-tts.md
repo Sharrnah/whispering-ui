@@ -1,14 +1,19 @@
 # Integrated Text-to-Speech Models
 
+Choose the TTS type in your profile, then select a model and voice. Device support depends on the runtime; see [hardware and runtimes](../hardware-support.md).
+
 ## Content
 - [Silero-TTS](#silero-tts)
+- [audio.cpp native GGUF models](#audiocpp-native-gguf-models)
 - [Chatterbox-TTS](#chatterbox-tts)
   - [Add own voice](#add-own-voice)
   - [Generate Audio with multiple speakers](#generate-audio-with-multiple-speakers)
+- [ZONOS2](#zonos2)
 - [F5-TTS / E2-TTS](#f5-tts--e2-tts)
   - [Add own voice](#add-own-voice-1)
   - [Generate Audio with multiple speakers](#generate-audio-with-multiple-speakers-1)
 - [Kokoro-TTS](#kokoro-tts)
+- [IndexTTS 2.5](#indextts-25)
 - [Zonos-TTS](#zonos-tts)
   - [Add own voice](#add-own-voice-2)
 - [Orpheus TTS](#orpheus-tts)
@@ -39,6 +44,20 @@ Supported Tags are:
 - prosody `<prosody rate="x-slow" pitch="x-high">` where _rate_ can be **x-slow, slow, medium, fast, x-fast**, and _pitch_ can be **x-low, low, medium, high, x-high**
 - p `<p>text</p>` Represents a paragraph, equivalent to x-strong pause.
 - s `<s>text</s>` Represents a sentence, equivalent to strong pause.
+
+## audio.cpp native GGUF models
+
+Select **audio.cpp (native GGUF runtime)**, then choose the model and an available GGUF precision.
+
+- **Supertonic 3 / MagpieTTS:** preset voices (M1-M5 and F1-F5 / Aria, Jason, John, Leo and Sofia).
+- **Confucius4, DotTTS SOAR/MeanFlow, IndexTTS 2/2.5, OmniVoice, VoxCPM:** voice cloning. IndexTTS also supports emotion controls (text, vector, random or reference audio); OmniVoice and VoxCPM2 support voice-design instructions.
+- **DotTTS Edit:** edits an existing recording.
+
+Add reference samples to `.cache/chatterbox-tts-cache/voices`. Add a same-name UTF-8 `.txt` transcript for transcript-aware cloning; OmniVoice requires it. **Advanced** contains the selected model's controls and a reset button.
+
+Use **Vulkan** for AMD/Intel GPUs, **CUDA** for NVIDIA on Windows, or **CPU**. Linux audio.cpp offers CPU/Vulkan; HIP/ROCm needs a custom server. See [runtime limits](../hardware-support.md).
+
+Streaming depends on the model. TTS voice-conversion plugins such as Tiger Voice Pro or RVC buffer the complete utterance before conversion and playback.
 
 ## Chatterbox-TTS
 Chatterbox-TTS is a TTS Model that supports voice cloning based on an audio sample with fast inference and Multi-Style / Multi-Speaker Generation.
@@ -180,6 +199,12 @@ generated output normally.
 
 Demo:
 <video src='https://github.com/user-attachments/assets/8bd6ecb8-1f67-4b97-abac-dc218d8590fa' width=300></video>
+
+## IndexTTS 2.5
+
+IndexTTS 2.5 supports voice cloning and emotion control. The stock model supports Chinese, English, Japanese, Arabic and Spanish. Select **IndexTTS-2.5-German** for German and keep **Text Normalization** enabled. Auto language detection also supports German with that checkpoint.
+
+Add reference samples to `.cache/chatterbox-tts-cache/voices` and select one in the voice list. Line-start `[voice_name]` tags switch speakers; `[main]` uses the selected voice. See the [multi-speaker example](#generate-audio-with-multiple-speakers).
 
 ## Zonos-TTS
 Zonos-TTS is a TTS Model that supports voice cloning based on an audio samples.

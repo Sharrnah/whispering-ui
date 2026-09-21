@@ -2,7 +2,7 @@
 
 Realtime mode will display intermediate transcriptions and translations as they are being processed.
 
-It is recommended to run the AI Model on a GPU (`CUDA`) for realtime mode.
+A GPU can reduce transcription latency: use CUDA for compatible models, or Vulkan with audio.cpp. See [hardware and runtimes](hardware-support.md). The Whisper-specific settings below do not apply to every runtime.
 
 ![realtime-profile-option.png](images%2Frealtime-profile-option.png)
 
