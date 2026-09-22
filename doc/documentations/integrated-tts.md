@@ -204,7 +204,7 @@ Demo:
 
 IndexTTS 2.5 supports voice cloning and emotion control. The stock model supports Chinese, English, Japanese, Arabic and Spanish. Select **IndexTTS-2.5-German** for German and keep **Text Normalization** enabled. Auto language detection also supports German with that checkpoint.
 
-Add reference samples to `.cache/chatterbox-tts-cache/voices` and select one in the voice list. Line-start `[voice_name]` tags switch speakers; `[main]` uses the selected voice. See the [multi-speaker example](#generate-audio-with-multiple-speakers).
+Add reference samples to `.cache/index-tts/voices` and select one in the voice list. Line-start `[voice_name]` tags switch speakers; `[main]` uses the selected voice. See the [multi-speaker example](#generate-audio-with-multiple-speakers).
 
 ## Zonos-TTS
 Zonos-TTS is a TTS Model that supports voice cloning based on an audio samples.
