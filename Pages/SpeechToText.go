@@ -467,7 +467,6 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		}, fyne.CurrentApp().Driver().AllWindows()[0])
 
 		fileDialog.SetFilter(storage.NewExtensionFileFilter([]string{".csv"}))
-		fileDialog.Resize(dialogSize)
 
 		if saveStartingPath != "" {
 			// check if folder exists
@@ -486,6 +485,8 @@ func CreateSpeechToTextWindow() fyne.CanvasObject {
 		fileDialog.SetFileName("transcription_" + time.Now().Format("2006-01-02_15-04-05") + ".csv")
 
 		fileDialog.Show()
+		// Show initializes the internal dialog required by Resize.
+		fileDialog.Resize(dialogSize)
 	})
 	lastResultLine := container.NewBorder(nil, nil, saveCsvButton, clearResultListButton)
 

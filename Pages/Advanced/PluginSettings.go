@@ -964,7 +964,6 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 					dialogSize := window.Canvas().Size()
 					dialogSize.Height = dialogSize.Height - 50
 					dialogSize.Width = dialogSize.Width - 50
-					fileDialog.Resize(dialogSize)
 
 					// update dialog initpath on change
 					fileLister, currentFilename = _getFilePathDialogInitPath(v, entry)
@@ -972,6 +971,8 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 					fileDialog.SetFileName(currentFilename)
 
 					fileDialog.Show()
+					// Show initializes the internal dialog required by Resize.
+					fileDialog.Resize(dialogSize)
 				}
 			} else if v["type"] == "file_save" {
 				fileDialog := dialog.NewFileSave(func(writer fyne.URIWriteCloser, err error) {
@@ -986,7 +987,6 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 					dialogSize := window.Canvas().Size()
 					dialogSize.Height = dialogSize.Height - 50
 					dialogSize.Width = dialogSize.Width - 50
-					fileDialog.Resize(dialogSize)
 
 					// update dialog initpath on change
 					fileLister, currentFilename = _getFilePathDialogInitPath(v, entry)
@@ -994,6 +994,8 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 					fileDialog.SetFileName(currentFilename)
 
 					fileDialog.Show()
+					// Show initializes the internal dialog required by Resize.
+					fileDialog.Resize(dialogSize)
 				}
 			} else if v["type"] == "folder_open" || v["type"] == "dir_open" {
 				selectButtonLabel = lang.L("Select Folder")
@@ -1007,13 +1009,14 @@ func createSettingsFields(pluginSettings map[string]interface{}, settingName str
 					dialogSize := window.Canvas().Size()
 					dialogSize.Height = dialogSize.Height - 50
 					dialogSize.Width = dialogSize.Width - 50
-					fileDialog.Resize(dialogSize)
 
 					// update dialog initpath on change
 					fileLister, currentFilename = _getFilePathDialogInitPath(v, entry)
 					fileDialog.SetLocation(fileLister)
 
 					fileDialog.Show()
+					// Show initializes the internal dialog required by Resize.
+					fileDialog.Resize(dialogSize)
 				}
 			}
 
